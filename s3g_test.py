@@ -149,8 +149,63 @@ class PacketStreamDecoderTests(unittest.TestCase):
       self.s.ParseByte(payload[i])
     self.assertRaises(s3g.PacketCRCError,self.s.ParseByte,s3g.CalculateCRC(payload)+1)
 
-  def test_accepts_crc(self):
-    payload = 'abcde'
+  def test_reject_response_generic_error(self):
+    payload = bytearray()
+    payload.append(s3g.response_code_dict['GENERIC_ERROR'])
+
+    self.s.ParseByte(s3g.header)
+    self.s.ParseByte(len(payload))
+    for i in range (0, len(payload)):
+      self.s.ParseByte(payload[i])
+    self.assertRaises(s3g.PacketResponseCodeError,self.s.ParseByte,s3g.CalculateCRC(payload))
+
+  def test_reject_response_action_buffer_overflow(self):
+    payload = bytearray()
+    payload.append(s3g.response_code_dict['ACTION_BUFFER_OVERFLOW'])
+
+    self.s.ParseByte(s3g.header)
+    self.s.ParseByte(len(payload))
+    for i in range (0, len(payload)):
+      self.s.ParseByte(payload[i])
+    self.assertRaises(s3g.PacketResponseCodeError,self.s.ParseByte,s3g.CalculateCRC(payload))
+
+  def test_reject_response_crc_mismatch(self):
+    payload = bytearray()
+    payload.append(s3g.response_code_dict['CRC_MISMATCH'])
+
+    self.s.ParseByte(s3g.header)
+    self.s.ParseByte(len(payload))
+    for i in range (0, len(payload)):
+      self.s.ParseByte(payload[i])
+    self.assertRaises(s3g.PacketResponseCodeError,self.s.ParseByte,s3g.CalculateCRC(payload))
+
+  def test_reject_response_downstream_timeout(self):
+    payload = bytearray()
+    payload.append(s3g.response_code_dict['DOWNSTREAM_TIMEOUT'])
+
+    self.s.ParseByte(s3g.header)
+    self.s.ParseByte(len(payload))
+    for i in range (0, len(payload)):
+      self.s.ParseByte(payload[i])
+    self.assertRaises(s3g.PacketResponseCodeError,self.s.ParseByte,s3g.CalculateCRC(payload))
+
+  def test_accept_packet(self):
+    payload = bytearray()
+    payload.append(s3g.response_code_dict['SUCCESS'])
+    payload.extend('abcde')
+    self.s.ParseByte(s3g.header)
+    self.s.ParseByte(len(payload))
+    for i in range (0, len(payload)):
+      self.s.ParseByte(payload[i])
+    self.s.ParseByte(s3g.CalculateCRC(payload))
+    assert(self.s.state == 'PAYLOAD_READY')
+    assert(self.s.payload == payload)
+
+  def test_accept_packet_ignore_response_code(self):
+    self.s = s3g.PacketStreamDecoder(False)
+
+    payload = bytearray()
+    payload.extend('abcde')
     self.s.ParseByte(s3g.header)
     self.s.ParseByte(len(payload))
     for i in range (0, len(payload)):
@@ -160,12 +215,12 @@ class PacketStreamDecoderTests(unittest.TestCase):
     assert(self.s.payload == payload)
 
 
-class ReplicatorTests(unittest.TestCase):
+class S3gTests(unittest.TestCase):
   """
   Emulate a machine
   """
   def setUp(self):
-    self.r = s3g.Replicator()
+    self.r = s3g.s3g()
     self.outputstream = io.BytesIO() # Stream that we will send responses on
     self.inputstream = io.BytesIO()  # Stream that we will receive commands on
     self.file = io.BufferedRWPair(self.outputstream, self.inputstream)
@@ -202,7 +257,10 @@ class ReplicatorTests(unittest.TestCase):
     payload = 'abcde'
     expected_packet = s3g.EncodePayload(payload)
 
-    expected_response_payload = '12345'
+    expected_response_payload = bytearray()
+    expected_response_payload.append(s3g.response_code_dict['SUCCESS'])
+    expected_response_payload.extend('12345')
+
     for i in range (0, s3g.max_retry_count - 1):
       self.outputstream.write('a')
     self.outputstream.write(s3g.EncodePayload(expected_response_payload))
@@ -224,7 +282,10 @@ class ReplicatorTests(unittest.TestCase):
     """
     payload = 'abcde'
 
-    expected_response_payload = '12345'
+    expected_response_payload = bytearray()
+    expected_response_payload.append(s3g.response_code_dict['SUCCESS'])
+    expected_response_payload.extend('12345')
+
     self.outputstream.write(s3g.EncodePayload(expected_response_payload))
     #TODO: We should use a queue here, it doesn't make sense to shove this in a file buffer?
     self.outputstream.seek(0)
@@ -237,12 +298,12 @@ class ReplicatorTests(unittest.TestCase):
   def test_queue_extended_point(self):
     expected_target = [1,2,3,4,5]
     expected_velocity = 6
-    self.r.Move(expected_target, expected_velocity)
+    self.r.QueueExtendedPoint(expected_target, expected_velocity)
 
     packet = bytearray(self.inputstream.getvalue())
 
     payload = s3g.DecodePacket(packet)
-    assert payload[0] == s3g.command_map['QUEUE_EXTENDED_POINT']
+    assert payload[0] == s3g.command_dict['QUEUE_EXTENDED_POINT']
     for i in range(0, 5):
       assert s3g.EncodeInt32(expected_target[i]) == payload[(i*4+1):(i*4+5)]
 

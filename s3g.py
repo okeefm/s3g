@@ -2,8 +2,36 @@
 import struct
 import time
 
-command_map = {
-  'QUEUE_EXTENDED_POINT'    : 139,
+command_dict = {
+#  'QUEUE_POINT'               : 129,
+#  'SET_POSIITON'              : 130,
+#  'FIND_AXES_MINIMUMS'        : 131,
+#  'FIND_AXES_MAXIMUMS'        : 132,
+#  'DELAY'                     : 133,
+#  'CHANGE_TOOL'               : 134,
+#  'WAIT_FOR_TOOL_READY'       : 135,
+#  'TOOL_ACTION_COMMAND'       : 136,
+#  'ENABLE_AXES'               : 137,
+#  'USER_BLOCK'                : 138,
+  'QUEUE_EXTENDED_POINT'      : 139,
+#  'SET_EXTENDED_POSITION'     : 140,
+#  'WAIT_FOR_PLATFORM_READY'   : 141,
+#  'QUEUE_EXTENDED_POINT_NEW'  : 142,
+#  'STORE_HOME_POSITIONS'      : 143,
+#  'RECALL_HOME_POSITIONS'     : 144,
+#  'PAUSE_FOR_INTERACTION'     : 145,
+#  'DISPLAY_MESSAGE'           : 146,
+}
+
+response_code_dict = {
+  'GENERIC_ERROR'              : 0x80,
+  'SUCCESS'                    : 0x81,
+  'ACTION_BUFFER_OVERFLOW'     : 0x82,
+  'CRC_MISMATCH'               : 0x83,
+#  'QUERY_TOO_BIG'              : 0x84,
+#  'COMMAND_NOT_SUPPORTED'      : 0x85,
+#  'SUCCESS_MORE_DATA'          : 0x86,
+  'DOWNSTREAM_TIMEOUT'         : 0x87,
 }
 
 # TODO: convention for naming these?
@@ -13,6 +41,9 @@ max_retry_count = 5
 timeout_length = .5
 
 class PacketError(Exception):
+  """
+  Error that occured when evaluating a packet.
+  """
   def __init__(self, value):
      self.value = value
   def __str__(self):
@@ -21,22 +52,27 @@ class PacketError(Exception):
 class PacketLengthError(PacketError):
   def __init__(self, length, expected_length):
     self.value='Invalid length. Got=%i, Expected=%i'%(length, expected_length)
-    pass
 
 class PacketLengthFieldError(PacketError):
   def __init__(self, length, expected_length):
     self.value='Invalid length field. Got=%i, Expected=%i'%(length, expected_length)
-    pass
 
 class PacketHeaderError(PacketError):
   def __init__(self, header, expected_header):
     self.value='Invalid header. Got=%x, Expected=%x'%(header, expected_header)
-    pass
 
 class PacketCRCError(PacketError):
   def __init__(self, crc, expected_crc):
     self.value='Invalid crc. Got=%x, Expected=%x'%(crc, expected_crc)
-    pass
+
+class PacketResponseCodeError(PacketError):
+  def __init__(self, response_code):
+    try:
+      response_code_string = (key for key,value in response_code_dict.items() if value==response_code).next()
+    except StopIteration:
+      response_code_string = ''
+
+    self.value='Packet response code error. Got=%x (%s)'%(response_code,response_code_string)
 
 class TransmissionError(Exception):
   def __init__(self, value):
@@ -119,6 +155,8 @@ def DecodePacket(packet):
   @param packet byte array containing the input packet
   @return payload of the packet
   """
+  # TODO: This is also implemented in PacketStreamDecoder, combine?
+
   assert type(packet) is bytearray
 
   if len(packet) < 4:
@@ -141,10 +179,16 @@ class PacketStreamDecoder:
   A state machine that accepts bytes from an s3g packet stream, checks the validity of
   each packet, then extracts and returns the payload.
   """
-  def __init__(self):
+  def __init__(self, expect_response_code = True):
+    """
+    Initialize the packet decoder
+    @param expect_response_code If true, treat the first byte of the payload as a return
+           response code, and verify that it is correct.
+    """
     self.state = 'WAIT_FOR_HEADER'
     self.payload = bytearray()
     self.expected_length = 0
+    self.expect_response_code = expect_response_code
 
 
   def ParseByte(self, byte):
@@ -179,10 +223,17 @@ class PacketStreamDecoder:
       if CalculateCRC(self.payload) != byte:
         raise PacketCRCError(byte, CalculateCRC(self.payload))
 
-      self.state = 'PAYLOAD_READY'
+      if self.expect_response_code:
+        if self.payload[0] == response_code_dict['SUCCESS']:
+          self.state = 'PAYLOAD_READY'
+        else:
+          raise PacketResponseCodeError(self.payload[0])
+
+      else:
+        self.state = 'PAYLOAD_READY'
 
 
-class Replicator:
+class s3g:
   def __init__(self):
     self.file = None
 
@@ -197,7 +248,7 @@ class Replicator:
     retry_count = 0
 
     while True:
-      decoder = PacketStreamDecoder()
+      decoder = PacketStreamDecoder(True)
       self.file.write(packet)
       self.file.flush()
 
@@ -212,11 +263,13 @@ class Replicator:
             if (time.time() > start_time + timeout_length):
               raise IOError("timeout")
 
+            # pySerial streams handle blocking read. Be sure to set up a timeout when
+            # initializing them, or this could hang forever
             data = self.file.read(1)
 
           data = ord(data)
           decoder.ParseByte(data)
-
+        
         return decoder.payload
 
       except (PacketError, IOError) as e:
@@ -227,14 +280,14 @@ class Replicator:
         if retry_count >= max_retry_count:
           raise TransmissionError("Failed to send packet")
 
-  def Move(self, position, rate):
+  def QueueExtendedPoint(self, position, rate):
     """
     Move the toolhead to a new position at the given rate
     @param position array 5D position to move to. All dimension should be in mm.
     @param rate double Movement speed, in mm/minute
     """
     payload = bytearray()
-    payload.append(command_map['QUEUE_EXTENDED_POINT'])
+    payload.append(command_dict['QUEUE_EXTENDED_POINT'])
     payload.extend(EncodeInt32(position[0]))
     payload.extend(EncodeInt32(position[1]))
     payload.extend(EncodeInt32(position[2]))

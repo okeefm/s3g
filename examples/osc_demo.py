@@ -28,7 +28,7 @@ parser.add_option("-p", "--oscport", dest="oscport",
 
 
 print "here!"
-r = s3g.Replicator()
+r = s3g.s3g()
 print "here!"
 r.file = serial.Serial(options.serialportname, 115200)
 print "here!"
@@ -52,7 +52,7 @@ def move_handler(addr, tags, stuff, source):
     y = stuff[1] * 3000
 
     target = [x, y, 0, 0, 0]
-    r.Move(target, r.velocity)
+    r.QueueExtendedPoint(target, r.velocity)
 
     while r.file.inWaiting() > 0:
       r.file.read()

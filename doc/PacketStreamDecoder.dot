@@ -36,7 +36,16 @@ digraph
   "STATE=WAIT_FOR_CRC?" -> "ERROR" [label="no"];
   "CALCULATE CRC" -> "VALID CRC?";
   "VALID CRC?" [shape=diamond];
-  "VALID CRC?" -> "STATE=PAYLOAD_READY" [label="yes"];
+  "VALID CRC?" -> "EXPECT RESPONSE CODE?" [label="yes"];
   "VALID CRC?" -> "ERROR" [label="no"];
+
+  "EXPECT RESPONSE CODE?" [shape=diamond];
+  "EXPECT RESPONSE CODE?" -> "PAYLOAD[0]=SUCCESS?" [label="yes"];
+  "EXPECT RESPONSE CODE?" -> "STATE=PAYLOAD_READY" [label="no"];
+
+  "PAYLOAD[0]=SUCCESS?" [shape=diamond];
+  "PAYLOAD[0]=SUCCESS?" -> "STATE=PAYLOAD_READY" [label="yes"];
+  "PAYLOAD[0]=SUCCESS?" -> "ERROR" [label="no"];
+
   "STATE=PAYLOAD_READY" -> "RETURN";
 }
