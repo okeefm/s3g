@@ -34,6 +34,23 @@ class EncodeTests(unittest.TestCase):
     for case in cases:
       assert s3g.EncodeUint32(case[0]) == case[1]
 
+  def test_encode_uint16(self):
+    cases = [
+      [0,       '\x00\x00'],
+      [32767,   '\xFF\x7F'],
+      [65535,   '\xFF\xFF'],
+    ]
+    for case in cases:
+      assert s3g.EncodeUint16(case[0]) == case[1]
+
+  def test_decode_uint16(self):
+    cases = [
+      [0,       '\x00\x00'],
+      [32767,   '\xFF\x7F'],
+      [65535,   '\xFF\xFF'],
+    ]
+    for case in cases:
+      assert s3g.DecodeUint16(case[1]) == case[0]
 
 class PacketEncodeTests(unittest.TestCase):
   def test_reject_oversize_payload(self):
@@ -109,17 +126,17 @@ class PacketStreamDecoderTests(unittest.TestCase):
     self.s = None
 
   def test_starts_in_wait_for_header_mode(self):
-    assert(self.s.state == 'WAIT_FOR_HEADER')
-    assert(len(self.s.payload) == 0)
-    assert(self.s.expected_length == 0)
+    assert self.s.state == 'WAIT_FOR_HEADER'
+    assert len(self.s.payload) == 0
+    assert self.s.expected_length == 0
 
   def test_reject_bad_header(self):
     self.assertRaises(s3g.PacketHeaderError,self.s.ParseByte,0x00)
-    assert(self.s.state == 'WAIT_FOR_HEADER')
+    assert self.s.state == 'WAIT_FOR_HEADER'
 
   def test_accept_header(self):
     self.s.ParseByte(s3g.header)
-    assert(self.s.state == 'WAIT_FOR_LENGTH')
+    assert self.s.state == 'WAIT_FOR_LENGTH'
 
   def test_reject_bad_size(self):
     self.s.ParseByte(s3g.header)
@@ -247,7 +264,7 @@ class S3gTests(unittest.TestCase):
 
     for i in range (0, s3g.max_retry_count):
       for byte in expected_packet:
-        assert byte == ord(self.inputstream.read(1))
+        assert(byte == ord(self.inputstream.read(1)))
 
   def test_send_command_many_bad_responses(self):
     """
@@ -268,7 +285,7 @@ class S3gTests(unittest.TestCase):
     #TODO: We should use a queue here, it doesn't make sense to shove this in a file buffer?
     self.outputstream.seek(0)
 
-    assert (expected_response_payload == self.r.SendCommand(payload))
+    assert(expected_response_payload == self.r.SendCommand(payload))
     #TODO: We should use a queue here, it doesn't make sense to shove this in a file buffer?
     self.inputstream.seek(0)
     for i in range (0, s3g.max_retry_count - 1):
@@ -290,14 +307,87 @@ class S3gTests(unittest.TestCase):
     #TODO: We should use a queue here, it doesn't make sense to shove this in a file buffer?
     self.outputstream.seek(0)
 
-    assert (expected_response_payload == self.r.SendCommand(payload))
-    assert (s3g.EncodePayload(payload) == self.inputstream.getvalue())
+    assert expected_response_payload == self.r.SendCommand(payload)
+    assert s3g.EncodePayload(payload) == self.inputstream.getvalue()
 
   # TODO: Test timing based errors- can we send half a response, get it to re-send, then send a regular response?
+
+  def test_get_version(self):
+    expected_version = 0x5DD5
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend(s3g.EncodeUint16(expected_version))
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    assert self.r.GetVersion() == expected_version
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.command_dict['GET_VERSION']
+    assert payload[1:3] == s3g.EncodeUint16(s3g.s3g_version)
+
+  # TODO: Broken version handling?
+
+  def test_get_build_name(self):
+    expected_build_name = 'abcdefghijklmnop'
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend(expected_build_name)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    assert self.r.GetBuildName() == expected_build_name
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.command_dict['GET_BUILD_NAME']
+
+  def test_get_next_filename_reset(self):
+    expected_filename = 'abcdefghijkl'
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.append(s3g.sd_error_dict['SUCCESS'])
+    response_payload.extend(expected_filename)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    assert self.r.GetNextFilename(True) == expected_filename
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.command_dict['GET_NEXT_FILENAME']
+    assert payload[1] == 1
+
+  def test_get_next_filename_no_reset(self):
+    expected_filename = 'abcdefghijkl'
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.append(s3g.sd_error_dict['SUCCESS'])
+    response_payload.extend(expected_filename)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    assert self.r.GetNextFilename(False) == expected_filename
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.command_dict['GET_NEXT_FILENAME']
+    assert payload[1] == 0
+
+  # TODO: Test known error cases
 
   def test_queue_extended_point(self):
     expected_target = [1,2,3,4,5]
     expected_velocity = 6
+
+    self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
+    self.outputstream.seek(0)
+
     self.r.QueueExtendedPoint(expected_target, expected_velocity)
 
     packet = bytearray(self.inputstream.getvalue())

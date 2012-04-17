@@ -27,11 +27,8 @@ parser.add_option("-p", "--oscport", dest="oscport",
 (options, args) = parser.parse_args()
 
 
-print "here!"
 r = s3g.s3g()
-print "here!"
-r.file = serial.Serial(options.serialportname, 115200)
-print "here!"
+r.file = serial.Serial(options.serialportname, 115200, timeout=0)
 
 r.velocity = 1600
 

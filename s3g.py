@@ -3,6 +3,31 @@ import struct
 import time
 
 command_dict = {
+  'GET_VERSION'               : 0,
+#  'INIT'                      : 1,
+#  'GET_AVAILABLE_BUFFER_SIZE' : 2,
+#  'CLEAR_BUFFER'              : 3,
+#  'GET_POSITION'              : 4,
+#  'ABORT_IMMEDIATELY'         : 7,
+#  'PAUSE'                     : 8,
+#  'PROBE'                     : 9,
+#  'TOOL_QUERY'                : 10,
+#  'IS_FINISHED'               : 11,
+#  'READ_FROM_EEPROM'          : 12,
+#  'WRITE_TO_EEPROM'           : 13,
+#  'CAPTURE_TO_FILE'           : 14,
+#  'END_CAPTURE'               : 15,
+#  'PLAYBACK_CAPTURE'          : 16,
+#  'RESET'                     : 17,
+  'GET_NEXT_FILENAME'         : 18,
+#  'READ_DEBUG_REGISTERS'      : 19,
+  'GET_BUILD_NAME'            : 20,
+#  'GET_EXTENDED_POSITION'     : 21,
+#  'EXTENDED_STOP'             : 22,
+#  'GET_MOTHERBOARD_STATUS'    : 23,
+#  'BUILD_START_NOTIFICATION'  : 24,
+#  'BUILD_END_NOTIFICATION'    : 25,
+#  'GET_COMMUNICATION_STATS'   : 26,
 #  'QUEUE_POINT'               : 129,
 #  'SET_POSIITON'              : 130,
 #  'FIND_AXES_MINIMUMS'        : 131,
@@ -34,15 +59,26 @@ response_code_dict = {
   'DOWNSTREAM_TIMEOUT'         : 0x87,
 }
 
+sd_error_dict = {
+  'SUCCESS'                    : 000,
+  'NO_CARD_PRESENT'            : 001,
+  'INITIALIZATION_FAILED'      : 002,
+  'PARTITION_TABLE_ERROR'      : 003,
+  'FILESYSTEM_ERROR'           : 004,
+  'DIRECTORY_ERROR'            : 005,
+}
+
 # TODO: convention for naming these?
 header = 0xD5
 maximum_payload_length = 32
 max_retry_count = 5
 timeout_length = .5
+s3g_version = 100
 
 class PacketError(Exception):
   """
-  Error that occured when evaluating a packet.
+  Error that occured when evaluating a packet. These errors are caused by problems that
+  are potentially recoverable.
   """
   def __init__(self, value):
      self.value = value
@@ -68,17 +104,50 @@ class PacketCRCError(PacketError):
 class PacketResponseCodeError(PacketError):
   def __init__(self, response_code):
     try:
+      # TODO: this appears to be broken.
       response_code_string = (key for key,value in response_code_dict.items() if value==response_code).next()
     except StopIteration:
       response_code_string = ''
 
     self.value='Packet response code error. Got=%x (%s)'%(response_code,response_code_string)
+  def __str__(self):
+    return repr(self.value)
 
-class TransmissionError(Exception):
+class TransmissionError(IOError):
+  """
+  A transmission error is raised when the s3g driver encounters too many errors while communicating.
+  This error is non-recoverable without resetting the state of the machine.
+  """
   def __init__(self, value):
      self.value = value
   def __str__(self):
     return repr(self.value)
+
+class SDCardError(Exception):
+  """
+  An SD card error is thrown if there was a problem accessing the SD card. This should be recoverable,
+  if the user replaces or reseats the SD card.
+  """
+  def __init__(self, response_code):
+    try:
+      response_code_string = (key for key,value in sd_error_dict.items() if value==response_code).next()
+    except StopIteration:
+      response_code_string = ''
+
+    self.value='SD Card error %x (%s)'%(response_code,response_code_string)
+  def __str__(self):
+    return repr(self.value)
+
+#class ProtocolError(Exception):
+#  """
+#  A protocol error is caused when a machine provides a valid response packet with an invalid
+#  response (for example, too many or two few resposne variables). It means that the machine is not
+#  implementing the protocol correctly.
+#  """
+#  def __init__(self, value):
+#     self.value = value
+#  def __str__(self):
+#    return repr(self.value)
 
 def CalculateCRC(data):
   """
@@ -116,7 +185,7 @@ def CalculateCRC(data):
 
 def EncodeInt32(number):
   """
-  Interpret number as a 32-bit integer, and 
+  Encode a 32-bit signed integer as a 4-byte string
   @param number 
   @return byte array of size 4 that represents the integer
   """
@@ -124,11 +193,27 @@ def EncodeInt32(number):
 
 def EncodeUint32(number):
   """
-  Interpret number as a 32-bit integer, and 
+  Encode a 32-bit unsigned integer as a 4-byte string
   @param number 
   @return byte array of size 4 that represents the integer
   """
   return struct.pack('<I', number)
+
+def EncodeUint16(number):
+  """
+  Encode a 16-bit unsigned integer as a 2-byte string
+  @param number 
+  @return byte array of size 2 that represents the integer
+  """
+  return struct.pack('<H', number)
+
+def DecodeUint16(data):
+  """
+  Decode a 2-byte string as a 16-bit integer
+  @param data byte array of size 2 that represents the integer
+  @return decoded integer
+  """
+  return struct.unpack('<H', data)[0]
 
 def EncodePayload(payload):
   """
@@ -280,6 +365,54 @@ class s3g:
         if retry_count >= max_retry_count:
           raise TransmissionError("Failed to send packet")
 
+  def GetVersion(self):
+    """
+    Get the firmware version number of the connected machine
+    @return Version number
+    """
+    payload = bytearray()
+    payload.append(command_dict['GET_VERSION'])
+    payload.extend(EncodeUint16(s3g_version))
+   
+    response = self.SendCommand(payload)
+
+    S = struct.Struct('<BH')
+    [response_code, version] = S.unpack_from(buffer(response))
+
+    return version
+
+  # Todo: handle getting a bad response back from the machine?
+
+  def GetNextFilename(self, reset):
+    """
+    Get the next filename from the machine
+    @param reset If true, reset the file index to zero and return the first available filename.
+    """
+    payload = bytearray()
+    payload.append(command_dict['GET_NEXT_FILENAME'])
+    if reset == True:
+      payload.append(1)
+    else:
+      payload.append(0)
+   
+    response = self.SendCommand(payload)
+
+    if response[1] != sd_error_dict['SUCCESS']:
+      raise SDCardError(response[1])
+
+    return response[2:]
+
+  def GetBuildName(self):
+    """
+    Get the build name of the file printing on the machine, if any.
+    """
+    payload = bytearray()
+    payload.append(command_dict['GET_BUILD_NAME'])
+   
+    response = self.SendCommand(payload)
+
+    return response[1:]
+
   def QueueExtendedPoint(self, position, rate):
     """
     Move the toolhead to a new position at the given rate
@@ -295,7 +428,4 @@ class s3g:
     payload.extend(EncodeInt32(position[4]))
     payload.extend(EncodeUint32(rate))
     
-    packet = EncodePayload(payload)
-    self.file.write(packet)
-    self.file.flush()
-
+    self.SendCommand(payload)
