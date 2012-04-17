@@ -312,6 +312,33 @@ class S3gTests(unittest.TestCase):
 
   # TODO: Test timing based errors- can we send half a response, get it to re-send, then send a regular response?
 
+  def test_unpack_response_no_format(self):
+    self.assertRaises(s3g.ProtocolError,self.r.UnpackResponse,'','abcde')
+
+  def test_unpack_response_short_data(self):
+    self.assertRaises(s3g.ProtocolError,self.r.UnpackResponse,'<I','abc')
+
+  def test_unpack_response(self):
+    expected_data = [1,'a','b','c']
+    data = self.r.UnpackResponse('<Iccc','\x01\x00\x00\x00abc')
+    for i in range(0, len(expected_data)):
+      assert(data[i] == expected_data[i])
+
+  def test_unpack_response_with_string_no_format(self):
+    expected_string = 'abcde\x00'
+    data = self.r.UnpackResponseWithString('',expected_string)
+    assert(len(data) == 1)
+    assert data[0] == expected_string
+
+  def test_unpack_response_with_string_missing_string(self):
+    self.assertRaises(s3g.ProtocolError,self.r.UnpackResponseWithString,'<I','abcd')
+
+  def test_unpack_response_with_string(self):
+    expected_data = [1,'a','b','c','ABCDE\x00']
+    data = self.r.UnpackResponseWithString('<Iccc','\x01\x00\x00\x00abcABCDE\x00')
+    for i in range(0, len(expected_data)):
+      assert(data[i] == expected_data[i])
+
   def test_get_version(self):
     expected_version = 0x5DD5
 
@@ -379,7 +406,25 @@ class S3gTests(unittest.TestCase):
     assert payload[0] == s3g.command_dict['GET_NEXT_FILENAME']
     assert payload[1] == 0
 
-  # TODO: Test known error cases
+  def test_get_next_filename_error_codes(self):
+    expected_filename = 'abcdefghijkl'
+
+    error_codes = [
+      'NO_CARD_PRESENT',
+      'INITIALIZATION_FAILED',
+      'PARTITION_TABLE_ERROR',
+      'FILESYSTEM_ERROR',
+      'DIRECTORY_ERROR',
+    ]
+    for error_code in error_codes:
+      response_payload = bytearray()
+      response_payload.append(s3g.response_code_dict['SUCCESS'])
+      response_payload.append(s3g.sd_error_dict[error_code])
+      response_payload.append('\x00')
+      self.outputstream.write(s3g.EncodePayload(response_payload))
+      self.outputstream.seek(0)
+
+      self.assertRaises(s3g.SDCardError,self.r.GetNextFilename,False)
 
   def test_queue_extended_point(self):
     expected_target = [1,2,3,4,5]

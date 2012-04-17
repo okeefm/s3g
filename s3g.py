@@ -138,16 +138,16 @@ class SDCardError(Exception):
   def __str__(self):
     return repr(self.value)
 
-#class ProtocolError(Exception):
-#  """
-#  A protocol error is caused when a machine provides a valid response packet with an invalid
-#  response (for example, too many or two few resposne variables). It means that the machine is not
-#  implementing the protocol correctly.
-#  """
-#  def __init__(self, value):
-#     self.value = value
-#  def __str__(self):
-#    return repr(self.value)
+class ProtocolError(Exception):
+  """
+  A protocol error is caused when a machine provides a valid response packet with an invalid
+  response (for example, too many or two few resposne variables). It means that the machine is not
+  implementing the protocol correctly.
+  """
+  def __init__(self, value):
+     self.value = value
+  def __str__(self):
+    return repr(self.value)
 
 def CalculateCRC(data):
   """
@@ -259,6 +259,7 @@ def DecodePacket(packet):
   return packet[2:(len(packet)-1)]
 
 
+
 class PacketStreamDecoder:
   """
   A state machine that accepts bytes from an s3g packet stream, checks the validity of
@@ -365,6 +366,40 @@ class s3g:
         if retry_count >= max_retry_count:
           raise TransmissionError("Failed to send packet")
 
+  def UnpackResponse(self, format, data):
+    """
+    Attempt to unpack the given data using the specified format. Throws a protocol
+    error if the unpacking fails.
+    
+    @param format Format string to use for unpacking
+    @param data Data to unpack, including a string if specified
+    @return list of values unpacked, if successful.
+    """
+
+    try:
+      return struct.unpack(format, buffer(data))
+    except struct.error as e:
+      raise ProtocolError("Unexpected data returned from machine: " + str(e))
+
+  def UnpackResponseWithString(self, format, data):
+    """
+    Attempt to unpack the given data using the specified format, and with a trailing,
+    null-terminated string. Throws a protocol error if the unpacking fails.
+    
+    @param format Format string to use for unpacking
+    @param data Data to unpack, including a string if specified
+    @return list of values unpacked, if successful.
+    """
+    if (len(data) < struct.calcsize(format) + 1):
+      raise ProtocolError("Not enough data received from machine, expected=%i, got=%i"%
+        (struct.calcsize(format)+1,len(data))
+      )
+
+    output = self.UnpackResponse(format, data[0:struct.calcsize(format)])
+    output += data[struct.calcsize(format):],
+
+    return output
+
   def GetVersion(self):
     """
     Get the firmware version number of the connected machine
@@ -375,9 +410,7 @@ class s3g:
     payload.extend(EncodeUint16(s3g_version))
    
     response = self.SendCommand(payload)
-
-    S = struct.Struct('<BH')
-    [response_code, version] = S.unpack_from(buffer(response))
+    [response_code, version] = self.UnpackResponse('<BH', response)
 
     return version
 
@@ -396,11 +429,12 @@ class s3g:
       payload.append(0)
    
     response = self.SendCommand(payload)
+    [response_code, sd_response_code, filename] = self.UnpackResponseWithString('<BB', response)
 
-    if response[1] != sd_error_dict['SUCCESS']:
-      raise SDCardError(response[1])
+    if sd_response_code != sd_error_dict['SUCCESS']:
+      raise SDCardError(sd_response_code)
 
-    return response[2:]
+    return filename
 
   def GetBuildName(self):
     """
