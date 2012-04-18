@@ -27,11 +27,21 @@ void setup() {
   myRemoteLocation = new NetAddress("127.0.0.1",10000);
 
   ChangeVelocity(400);
+  ToggleLed(true);
 }
 
 
 void draw() {
   background(0);  
+  
+  println("down");
+  TogglePen(true);
+  ToggleLed(true);
+  delay(10);
+  println("up");
+  TogglePen(false);
+  ToggleLed(false);
+  delay(10);
 }
 
 
@@ -41,6 +51,30 @@ void ChangeVelocity(float velocity) {
 
   OscMessage myMessage = new OscMessage("/velocity");
   myMessage.add(velocity);
+
+  oscP5.send(myMessage, myRemoteLocation);
+}
+
+void ToggleLed(boolean state) {
+  OscMessage myMessage = new OscMessage("/led");
+  if (state == true) {
+    myMessage.add(1);
+  }
+  else {
+    myMessage.add(0);
+  }
+
+  oscP5.send(myMessage, myRemoteLocation);
+}
+
+void TogglePen(boolean state) {
+  OscMessage myMessage = new OscMessage("/pen");
+  if (state == true) {
+    myMessage.add(1);
+  }
+  else {
+    myMessage.add(0);
+  }
 
   oscP5.send(myMessage, myRemoteLocation);
 }

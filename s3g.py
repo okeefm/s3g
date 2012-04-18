@@ -2,7 +2,7 @@
 import struct
 import time
 
-command_dict = {
+host_command_dict = {
   'GET_VERSION'               : 0,
 #  'INIT'                      : 1,
   'GET_AVAILABLE_BUFFER_SIZE' : 2,
@@ -35,7 +35,7 @@ command_dict = {
 #  'DELAY'                     : 133,
 #  'CHANGE_TOOL'               : 134,
 #  'WAIT_FOR_TOOL_READY'       : 135,
-#  'TOOL_ACTION_COMMAND'       : 136,
+  'TOOL_ACTION_COMMAND'       : 136,
 #  'ENABLE_AXES'               : 137,
 #  'USER_BLOCK'                : 138,
   'QUEUE_EXTENDED_POINT'      : 139,
@@ -46,6 +46,47 @@ command_dict = {
 #  'RECALL_HOME_POSITIONS'     : 144,
 #  'PAUSE_FOR_INTERACTION'     : 145,
 #  'DISPLAY_MESSAGE'           : 146,
+}
+
+slave_command_dict = {
+#  'VERSION'                    : 0,
+#  'INIT'                       : 1,
+#  'GET_TEMP'                   : 2,
+#  'SET_TARGET_TEMP'            : 3,
+#  'SET_MOTOR_1_SPEED_PWM'      : 4,
+#  'SET_MOTOR_2_SPEED_PWM'      : 5,
+#  'SET_MOTOR_1_SPEED_RPM'      : 6,
+#  'SET_MOTOR_2_SPEED_RPM'      : 7,
+#  'SET_MOTOR_1_DIRECTION'      : 8,
+#  'SET_MOTOR_2_DIRECTION'      : 9,
+#  'TOGGLE_MOTOR_1'             : 10,
+#  'TOGGLE_MOTOR_2'             : 11,
+  'TOGGLE_FAN'                 : 12,
+  'TOGGLE_VALVE'               : 13,
+#  'SET_SERVO_1_POSITION'       : 14,
+#  'SET_SERVO_2_POSITION'       : 15,
+#  'FILAMENT_STATUS'            : 16,
+#  'GET_MOTOR_1_SPEED_RPM'      : 17,
+#  'GET_MOTOR_2_SPEED_RPM'      : 18,
+#  'GET_MOTOR_1_SPEED_PWM'      : 19,
+#  'GET_MOTOR_2_SPEED_PWM'      : 20,
+#  'SELECT_TOOL'                : 21,
+#  'IS_TOOL_READY'              : 22,
+#  'PAUSE'                      : 23,
+#  'ABORT'                      : 24,
+#  'READ_FROM_EEPROM'           : 25,
+#  'WRITE_TO_EEPROM'            : 26,
+#  'GET_BUILD_PLATFORM_TEMP'    : 30,
+#  'SET_BUILD_PLATFORM_TEMP'    : 31,
+#  'GET_EXTRUDER_TARGET_TEMP'   : 32,
+#  'GET_BUILD_PLATFORM_TEMP'    : 33,
+#  'GET_BUILD_NAME'             : 34,
+#  'IS_BUILD_PLATFORM_READY'    : 35,
+#  'GET_TOOL_STATUS'            : 36,
+#  'GET_PID_STATE'              : 37,
+#  'SET_MOTOR_1_SPEED_DDA'      : 38,
+#  'SET_MOTOR_2_SPEED_DDA'      : 39,
+#  'LIGHT_INDICATOR_LED'        : 40,
 }
 
 response_code_dict = {
@@ -361,7 +402,7 @@ class s3g:
       except (PacketError, IOError) as e:
         """ PacketError: header, length, crc error """
         """ IOError: pyserial timeout error, etc """
-        #print "packet error: " + str(e)
+        print "packet error: " + str(e)
         retry_count = retry_count + 1
         if retry_count >= max_retry_count:
           raise TransmissionError("Failed to send packet")
@@ -406,7 +447,7 @@ class s3g:
     @return Version number
     """
     payload = bytearray()
-    payload.append(command_dict['GET_VERSION'])
+    payload.append(host_command_dict['GET_VERSION'])
     payload.extend(EncodeUint16(s3g_version))
    
     response = self.SendCommand(payload)
@@ -420,7 +461,7 @@ class s3g:
     @return Available buffer size, in bytes
     """
     payload = bytearray()
-    payload.append(command_dict['GET_AVAILABLE_BUFFER_SIZE'])
+    payload.append(host_command_dict['GET_AVAILABLE_BUFFER_SIZE'])
    
     response = self.SendCommand(payload)
     [response_code, buffer_size] = self.UnpackResponse('<BI', response)
@@ -433,7 +474,7 @@ class s3g:
     @param reset If true, reset the file index to zero and return the first available filename.
     """
     payload = bytearray()
-    payload.append(command_dict['GET_NEXT_FILENAME'])
+    payload.append(host_command_dict['GET_NEXT_FILENAME'])
     if reset == True:
       payload.append(1)
     else:
@@ -452,7 +493,7 @@ class s3g:
     Get the build name of the file printing on the machine, if any.
     """
     payload = bytearray()
-    payload.append(command_dict['GET_BUILD_NAME'])
+    payload.append(host_command_dict['GET_BUILD_NAME'])
    
     response = self.SendCommand(payload)
     [response_code, filename] = self.UnpackResponseWithString('<B', response)
@@ -466,13 +507,39 @@ class s3g:
     @param rate double Movement speed, in mm/minute
     """
     payload = bytearray()
-    payload.append(command_dict['QUEUE_POINT'])
+    payload.append(host_command_dict['QUEUE_POINT'])
     payload.extend(EncodeInt32(position[0]))
     payload.extend(EncodeInt32(position[1]))
     payload.extend(EncodeInt32(position[2]))
     payload.extend(EncodeUint32(rate))
     
     self.SendCommand(payload)
+
+  def ToolActionCommand(self, tool_index, command, tool_payload):
+    """
+    Send a command to a toolhead
+    @param position array 3D position to move to. All dimension should be in mm.
+    @param rate double Movement speed, in mm/minute
+    """
+    # TODO: check packet length?
+    # TODO: check tool_index range
+
+    payload = bytearray()
+    payload.append(host_command_dict['TOOL_ACTION_COMMAND'])
+    payload.append(tool_index)
+    payload.append(command)
+    payload.append(len(tool_payload))
+    payload.extend(tool_payload)
+    print len(payload), 'payload',
+    for byte in payload:
+      print byte,
+    print ''
+    
+    response = self.SendCommand(payload)
+    print len(response), 'response',
+    for byte in response:
+      print byte,
+    print ''
 
   def QueueExtendedPoint(self, position, rate):
     """
@@ -481,7 +548,7 @@ class s3g:
     @param rate double Movement speed, in mm/minute
     """
     payload = bytearray()
-    payload.append(command_dict['QUEUE_EXTENDED_POINT'])
+    payload.append(host_command_dict['QUEUE_EXTENDED_POINT'])
     payload.extend(EncodeInt32(position[0]))
     payload.extend(EncodeInt32(position[1]))
     payload.extend(EncodeInt32(position[2]))
@@ -490,3 +557,31 @@ class s3g:
     payload.extend(EncodeUint32(rate))
     
     self.SendCommand(payload)
+
+  def ToggleFan(self, tool_index, state):
+    """
+    Turn the fan output on or off
+    @param tool_index Index of the toolhead that the valve is connected to
+    @param state If True, turn the fan on, otherwise off.
+    """
+    payload = bytearray()
+    if state == True:
+      payload.append(1)
+    else:
+      payload.append(0)
+
+    self.ToolActionCommand(tool_index, slave_command_dict['TOGGLE_FAN'], payload)
+
+  def ToggleValve(self, tool_index, state):
+    """
+    Turn the valve output on or off
+    @param tool_index Index of the toolhead that the valve is connected to
+    @param state If True, turn the valvue on, otherwise off.
+    """
+    payload = bytearray()
+    if state == True:
+      payload.append(1)
+    else:
+      payload.append(0)
+
+    self.ToolActionCommand(tool_index, slave_command_dict['TOGGLE_VALVE'], payload)

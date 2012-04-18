@@ -19,11 +19,11 @@ import OSC
 import threading
 
 parser = optparse.OptionParser()
-parser.add_option("-s", "--serialport", dest="serialportname",
+parser.add_option("-p", "--serialport", dest="serialportname",
                   help="serial port (ex: /dev/ttyUSB0)", default="/dev/ttyACM0")
 parser.add_option("-b", "--baud", dest="serialbaud",
                   help="serial port baud rate", default="115200")
-parser.add_option("-p", "--oscport", dest="oscport",
+parser.add_option("-o", "--oscport", dest="oscport",
                   help="OSC port to listen on", default="10000")
 (options, args) = parser.parse_args()
 
@@ -50,18 +50,25 @@ def move_handler(addr, tags, stuff, source):
     y = stuff[1] * 3000
 
     target = [x, y, 0, 0, 0]
-    #r.QueueExtendedPoint(target, r.velocity)
     r.QueueExtendedPoint(target, int(r.velocity))
 
-    while r.file.inWaiting() > 0:
-      r.file.read()
-      #print ord(r.file.read())
+def led_handler(addr, tags, stuff, source):
+    print addr, tags, stuff, source
+
+    r.ToggleValve(0, stuff[0] == 1)
+
+def pen_handler(addr, tags, stuff, source):
+    print addr, tags, stuff, source
+
+    r.ToggleFan(0, stuff[0] == 1)
 
 print "starting server"
 s = OSC.OSCServer(('127.0.0.1', int(options.oscport)))
 s.addDefaultHandlers()
 s.addMsgHandler("/move", move_handler)
 s.addMsgHandler("/velocity", velocity_handler)
+s.addMsgHandler("/led", led_handler)
+s.addMsgHandler("/pen", pen_handler)
 st = threading.Thread(target=s.serve_forever)
 st.start()
 

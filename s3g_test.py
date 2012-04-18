@@ -352,7 +352,7 @@ class S3gTests(unittest.TestCase):
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
-    assert payload[0] == s3g.command_dict['GET_VERSION']
+    assert payload[0] == s3g.host_command_dict['GET_VERSION']
     assert payload[1:3] == s3g.EncodeUint16(s3g.s3g_version)
 
   def test_get_available_buffer_size(self):
@@ -368,7 +368,7 @@ class S3gTests(unittest.TestCase):
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
-    assert payload[0] == s3g.command_dict['GET_AVAILABLE_BUFFER_SIZE']
+    assert payload[0] == s3g.host_command_dict['GET_AVAILABLE_BUFFER_SIZE']
 
   def test_get_build_name(self):
     expected_build_name = 'abcdefghijklmnop'
@@ -383,7 +383,7 @@ class S3gTests(unittest.TestCase):
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
-    assert payload[0] == s3g.command_dict['GET_BUILD_NAME']
+    assert payload[0] == s3g.host_command_dict['GET_BUILD_NAME']
 
   def test_get_next_filename_reset(self):
     expected_filename = 'abcdefghijkl'
@@ -399,7 +399,7 @@ class S3gTests(unittest.TestCase):
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
-    assert payload[0] == s3g.command_dict['GET_NEXT_FILENAME']
+    assert payload[0] == s3g.host_command_dict['GET_NEXT_FILENAME']
     assert payload[1] == 1
 
   def test_get_next_filename_no_reset(self):
@@ -416,7 +416,7 @@ class S3gTests(unittest.TestCase):
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
-    assert payload[0] == s3g.command_dict['GET_NEXT_FILENAME']
+    assert payload[0] == s3g.host_command_dict['GET_NEXT_FILENAME']
     assert payload[1] == 0
 
   def test_get_next_filename_error_codes(self):
@@ -451,9 +451,26 @@ class S3gTests(unittest.TestCase):
     packet = bytearray(self.inputstream.getvalue())
 
     payload = s3g.DecodePacket(packet)
-    assert payload[0] == s3g.command_dict['QUEUE_POINT']
+    assert payload[0] == s3g.host_command_dict['QUEUE_POINT']
     for i in range(0, 3):
       assert s3g.EncodeInt32(expected_target[i]) == payload[(i*4+1):(i*4+5)]
+
+  def test_tool_action_command(self):
+    expected_tool_index = 2
+    expected_command = 
+
+    self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
+    self.outputstream.seek(0)
+
+    self.r.QueuePoint(expected_target, expected_velocity)
+
+    packet = bytearray(self.inputstream.getvalue())
+
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_command_dict['QUEUE_POINT']
+    for i in range(0, 3):
+      assert s3g.EncodeInt32(expected_target[i]) == payload[(i*4+1):(i*4+5)]
+    
 
   def test_queue_extended_point(self):
     expected_target = [1,2,3,4,5]
@@ -467,7 +484,7 @@ class S3gTests(unittest.TestCase):
     packet = bytearray(self.inputstream.getvalue())
 
     payload = s3g.DecodePacket(packet)
-    assert payload[0] == s3g.command_dict['QUEUE_EXTENDED_POINT']
+    assert payload[0] == s3g.host_command_dict['QUEUE_EXTENDED_POINT']
     for i in range(0, 5):
       assert s3g.EncodeInt32(expected_target[i]) == payload[(i*4+1):(i*4+5)]
 
