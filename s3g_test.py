@@ -257,7 +257,7 @@ class S3gTests(unittest.TestCase):
     payload = 'abcde'
     expected_packet = s3g.EncodePayload(payload)
 
-    self.assertRaises(s3g.TransmissionError,self.r.SendCommand,payload)
+    self.assertRaises(s3g.TransmissionError,self.r.SendCommand, payload)
 
     #TODO: We should use a queue here, it doesn't make sense to shove this in a file buffer?
     self.inputstream.seek(0)
@@ -274,18 +274,18 @@ class S3gTests(unittest.TestCase):
     payload = 'abcde'
     expected_packet = s3g.EncodePayload(payload)
 
-    expected_response_payload = bytearray()
-    expected_response_payload.append(s3g.response_code_dict['SUCCESS'])
-    expected_response_payload.extend('12345')
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend('12345')
 
     for i in range (0, s3g.max_retry_count - 1):
       self.outputstream.write('a')
-    self.outputstream.write(s3g.EncodePayload(expected_response_payload))
+    self.outputstream.write(s3g.EncodePayload(response_payload))
 
     #TODO: We should use a queue here, it doesn't make sense to shove this in a file buffer?
     self.outputstream.seek(0)
 
-    assert(expected_response_payload == self.r.SendCommand(payload))
+    assert(response_payload == self.r.SendCommand(payload))
     #TODO: We should use a queue here, it doesn't make sense to shove this in a file buffer?
     self.inputstream.seek(0)
     for i in range (0, s3g.max_retry_count - 1):
@@ -299,15 +299,15 @@ class S3gTests(unittest.TestCase):
     """
     payload = 'abcde'
 
-    expected_response_payload = bytearray()
-    expected_response_payload.append(s3g.response_code_dict['SUCCESS'])
-    expected_response_payload.extend('12345')
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend('12345')
 
-    self.outputstream.write(s3g.EncodePayload(expected_response_payload))
+    self.outputstream.write(s3g.EncodePayload(response_payload))
     #TODO: We should use a queue here, it doesn't make sense to shove this in a file buffer?
     self.outputstream.seek(0)
 
-    assert expected_response_payload == self.r.SendCommand(payload)
+    assert response_payload == self.r.SendCommand(payload)
     assert s3g.EncodePayload(payload) == self.inputstream.getvalue()
 
   # TODO: Test timing based errors- can we send half a response, get it to re-send, then send a regular response?
@@ -340,15 +340,15 @@ class S3gTests(unittest.TestCase):
       assert(data[i] == expected_data[i])
 
   def test_get_version(self):
-    expected_version = 0x5DD5
+    version = 0x5DD5
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
-    response_payload.extend(s3g.EncodeUint16(expected_version))
+    response_payload.extend(s3g.EncodeUint16(version))
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    assert self.r.GetVersion() == expected_version
+    assert self.r.GetVersion() == version
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
@@ -356,86 +356,86 @@ class S3gTests(unittest.TestCase):
     assert payload[1:3] == s3g.EncodeUint16(s3g.s3g_version)
 
   def test_tool_query_no_payload(self):
-    expected_tool_index = 2
-    expected_command = 0x12
-    expected_response = 'abcdef'
+    tool_index = 2
+    command = 0x12
+    response = 'abcdef'
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
-    response_payload.extend(expected_response)
+    response_payload.extend(response)
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
     
-    assert self.r.ToolQuery(expected_tool_index, expected_command) == response_payload
+    assert self.r.ToolQuery(tool_index, command) == response_payload
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
-    assert payload[1] == expected_tool_index
-    assert payload[2] == expected_command
+    assert payload[1] == tool_index
+    assert payload[2] == command
 
   def test_tool_query_payload(self):
-    expected_tool_index = 2
-    expected_command = 0x12
-    expected_payload = 'ABCDEF'
-    expected_response = 'abcdef'
+    tool_index = 2
+    command = 0x12
+    command_payload = 'ABCDEF'
+    response = 'abcdef'
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
-    response_payload.extend(expected_response)
+    response_payload.extend(response)
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
     
-    assert self.r.ToolQuery(expected_tool_index, expected_command, expected_payload) == response_payload
+    assert self.r.ToolQuery(tool_index, command, command_payload) == response_payload
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
-    assert payload[1] == expected_tool_index
-    assert payload[2] == expected_command
-    assert payload[3:] == expected_payload
+    assert payload[1] == tool_index
+    assert payload[2] == command
+    assert payload[3:] == command_payload
 
   def test_get_available_buffer_size(self):
-    expected_buffer_size = 0xDEADBEEF
+    buffer_size = 0xDEADBEEF
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
-    response_payload.extend(s3g.EncodeUint32(expected_buffer_size))
+    response_payload.extend(s3g.EncodeUint32(buffer_size))
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    assert self.r.GetAvailableBufferSize() == expected_buffer_size
+    assert self.r.GetAvailableBufferSize() == buffer_size
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_query_command_dict['GET_AVAILABLE_BUFFER_SIZE']
 
   def test_get_build_name(self):
-    expected_build_name = 'abcdefghijklmnop'
+    build_name = 'abcdefghijklmnop'
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
-    response_payload.extend(expected_build_name)
+    response_payload.extend(build_name)
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    assert self.r.GetBuildName() == expected_build_name
+    assert self.r.GetBuildName() == build_name
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_query_command_dict['GET_BUILD_NAME']
 
   def test_get_next_filename_reset(self):
-    expected_filename = 'abcdefghijkl'
+    filename = 'abcdefghijkl'
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
     response_payload.append(s3g.sd_error_dict['SUCCESS'])
-    response_payload.extend(expected_filename)
+    response_payload.extend(filename)
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    assert self.r.GetNextFilename(True) == expected_filename
+    assert self.r.GetNextFilename(True) == filename
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
@@ -443,16 +443,16 @@ class S3gTests(unittest.TestCase):
     assert payload[1] == 1
 
   def test_get_next_filename_no_reset(self):
-    expected_filename = 'abcdefghijkl'
+    filename = 'abcdefghijkl'
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
     response_payload.append(s3g.sd_error_dict['SUCCESS'])
-    response_payload.extend(expected_filename)
+    response_payload.extend(filename)
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    assert self.r.GetNextFilename(False) == expected_filename
+    assert self.r.GetNextFilename(False) == filename
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
@@ -460,8 +460,6 @@ class S3gTests(unittest.TestCase):
     assert payload[1] == 0
 
   def test_get_next_filename_error_codes(self):
-    expected_filename = 'abcdefghijkl'
-
     error_codes = [
       'NO_CARD_PRESENT',
       'INITIALIZATION_FAILED',
@@ -480,105 +478,105 @@ class S3gTests(unittest.TestCase):
       self.assertRaises(s3g.SDCardError,self.r.GetNextFilename,False)
 
   def test_queue_point(self):
-    expected_target = [1,2,3]
-    expected_velocity = 6
+    target = [1,2,3]
+    velocity = 6
 
     self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
     self.outputstream.seek(0)
 
-    self.r.QueuePoint(expected_target, expected_velocity)
+    self.r.QueuePoint(target, velocity)
 
     packet = bytearray(self.inputstream.getvalue())
 
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_action_command_dict['QUEUE_POINT']
     for i in range(0, 3):
-      assert s3g.EncodeInt32(expected_target[i]) == payload[(i*4+1):(i*4+5)]
+      assert s3g.EncodeInt32(target[i]) == payload[(i*4+1):(i*4+5)]
 
   def test_tool_action_command_bad_tool_index(self):
-    expected_tool_indices = [-1, s3g.max_tool_index + 1]
-    expected_command = 0x12
-    expected_tool_payload = 'abcdefghij'
+    tool_indices = [-1, s3g.max_tool_index + 1]
+    command = 0x12
+    command_payload = 'abcdefghij'
 
-    for expected_tool_index in expected_tool_indices:
+    for tool_index in tool_indices:
       self.assertRaises(s3g.ProtocolError,
                         self.r.ToolActionCommand,
-                        expected_tool_index, expected_command, expected_tool_payload)
+                        tool_index, command, command_payload)
 
   def test_tool_action_command(self):
-    expected_tool_index = 2
-    expected_command = 0x12
-    expected_tool_payload = 'abcdefghij'
+    tool_index = 2
+    command = 0x12
+    command_payload = 'abcdefghij'
 
     self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
     self.outputstream.seek(0)
 
-    self.r.ToolActionCommand(expected_tool_index, expected_command, expected_tool_payload)
+    self.r.ToolActionCommand(tool_index, command, tool_payload)
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
 
     assert payload[0] == s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
-    assert payload[1] == expected_tool_index
-    assert payload[2] == expected_command
-    assert payload[3] == len(expected_tool_payload)
-    assert payload[4:] == expected_tool_payload
+    assert payload[1] == tool_index
+    assert payload[2] == command
+    assert payload[3] == len(tool_payload)
+    assert payload[4:] == command_payload
 
   def test_queue_extended_point(self):
-    expected_target = [1,2,3,4,5]
-    expected_velocity = 6
+    target = [1,2,3,4,5]
+    velocity = 6
 
     self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
     self.outputstream.seek(0)
 
-    self.r.QueueExtendedPoint(expected_target, expected_velocity)
+    self.r.QueueExtendedPoint(target, velocity)
 
     packet = bytearray(self.inputstream.getvalue())
 
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_action_command_dict['QUEUE_EXTENDED_POINT']
     for i in range(0, 5):
-      assert s3g.EncodeInt32(expected_target[i]) == payload[(i*4+1):(i*4+5)]
+      assert s3g.EncodeInt32(target[i]) == payload[(i*4+1):(i*4+5)]
 
   def test_toggle_fan(self):
-    expected_tool_index = 2
-    expected_fan_states = [True, False]
+    tool_index = 2
+    fan_states = [True, False]
 
-    for expected_fan_state in expected_fan_states:
+    for fan_state in fan_states:
       self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
       self.outputstream.seek(0)
       self.inputstream.seek(0)
  
-      self.r.ToggleFan(expected_tool_index, expected_fan_state)
+      self.r.ToggleFan(tool_index, fan_state)
  
       packet = bytearray(self.inputstream.getvalue())
       payload = s3g.DecodePacket(packet)
  
       assert payload[0] == s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
-      assert payload[1] == expected_tool_index
+      assert payload[1] == tool_index
       assert payload[2] == s3g.slave_action_command_dict['TOGGLE_FAN']
       assert payload[3] == 1
-      assert payload[4] == expected_fan_state
+      assert payload[4] == fan_state
 
   def test_toggle_valve(self):
-    expected_tool_index = 2
-    expected_fan_states = [True, False]
+    tool_index = 2
+    fan_states = [True, False]
 
-    for expected_fan_state in expected_fan_states:
+    for fan_state in fan_states:
       self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
       self.outputstream.seek(0)
       self.inputstream.seek(0)
  
-      self.r.ToggleValve(expected_tool_index, expected_fan_state)
+      self.r.ToggleValve(tool_index, fan_state)
  
       packet = bytearray(self.inputstream.getvalue())
       payload = s3g.DecodePacket(packet)
  
       assert payload[0] == s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
-      assert payload[1] == expected_tool_index
+      assert payload[1] == tool_index
       assert payload[2] == s3g.slave_action_command_dict['TOGGLE_VALVE']
       assert payload[3] == 1
-      assert payload[4] == expected_fan_state
+      assert payload[4] == fan_state
 
 if __name__ == "__main__":
   unittest.main()
