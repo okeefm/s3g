@@ -2,7 +2,7 @@
 import struct
 import time
 
-host_command_dict = {
+host_query_command_dict = {
   'GET_VERSION'               : 0,
 #  'INIT'                      : 1,
   'GET_AVAILABLE_BUFFER_SIZE' : 2,
@@ -11,7 +11,7 @@ host_command_dict = {
 #  'ABORT_IMMEDIATELY'         : 7,
 #  'PAUSE'                     : 8,
 #  'PROBE'                     : 9,
-#  'TOOL_QUERY'                : 10,
+  'TOOL_QUERY'                : 10,
 #  'IS_FINISHED'               : 11,
 #  'READ_FROM_EEPROM'          : 12,
 #  'WRITE_TO_EEPROM'           : 13,
@@ -27,7 +27,10 @@ host_command_dict = {
 #  'GET_MOTHERBOARD_STATUS'    : 23,
 #  'BUILD_START_NOTIFICATION'  : 24,
 #  'BUILD_END_NOTIFICATION'    : 25,
-#  'GET_COMMUNICATION_STATS'   : 26,
+#  'GET_COMMUNICATION_STATS'   : 26
+}
+
+host_action_command_dict = {
   'QUEUE_POINT'               : 129,
 #  'SET_POSIITON'              : 130,
 #  'FIND_AXES_MINIMUMS'        : 131,
@@ -48,10 +51,25 @@ host_command_dict = {
 #  'DISPLAY_MESSAGE'           : 146,
 }
 
-slave_command_dict = {
+slave_query_command_dict = {
 #  'VERSION'                    : 0,
-#  'INIT'                       : 1,
 #  'GET_TEMP'                   : 2,
+#  'GET_MOTOR_1_SPEED_RPM'      : 17,
+#  'GET_MOTOR_2_SPEED_RPM'      : 18,
+#  'GET_MOTOR_1_SPEED_PWM'      : 19,
+#  'GET_MOTOR_2_SPEED_PWM'      : 20,
+#  'READ_FROM_EEPROM'           : 25,
+#  'WRITE_TO_EEPROM'            : 26,
+#  'GET_BUILD_PLATFORM_TEMP'    : 30,
+#  'SET_BUILD_PLATFORM_TEMP'    : 31,
+#  'GET_EXTRUDER_TARGET_TEMP'   : 32,
+#  'GET_BUILD_PLATFORM_TEMP'    : 33,
+#  'GET_BUILD_NAME'             : 34,
+#  'GET_TOOL_STATUS'            : 36,
+#  'GET_PID_STATE'              : 37,
+}
+
+slave_action_command_dict = {
 #  'SET_TARGET_TEMP'            : 3,
 #  'SET_MOTOR_1_SPEED_PWM'      : 4,
 #  'SET_MOTOR_2_SPEED_PWM'      : 5,
@@ -65,27 +83,19 @@ slave_command_dict = {
   'TOGGLE_VALVE'               : 13,
 #  'SET_SERVO_1_POSITION'       : 14,
 #  'SET_SERVO_2_POSITION'       : 15,
+#  'SET_BUILD_PLATFORM_TEMP'    : 31,
+#  'SET_MOTOR_1_SPEED_DDA'      : 38,
+#  'SET_MOTOR_2_SPEED_DDA'      : 39,
+}
+
+slave_unknown_command_dict = {
+#  'INIT'                       : 1,
 #  'FILAMENT_STATUS'            : 16,
-#  'GET_MOTOR_1_SPEED_RPM'      : 17,
-#  'GET_MOTOR_2_SPEED_RPM'      : 18,
-#  'GET_MOTOR_1_SPEED_PWM'      : 19,
-#  'GET_MOTOR_2_SPEED_PWM'      : 20,
 #  'SELECT_TOOL'                : 21,
 #  'IS_TOOL_READY'              : 22,
 #  'PAUSE'                      : 23,
 #  'ABORT'                      : 24,
-#  'READ_FROM_EEPROM'           : 25,
-#  'WRITE_TO_EEPROM'            : 26,
-#  'GET_BUILD_PLATFORM_TEMP'    : 30,
-#  'SET_BUILD_PLATFORM_TEMP'    : 31,
-#  'GET_EXTRUDER_TARGET_TEMP'   : 32,
-#  'GET_BUILD_PLATFORM_TEMP'    : 33,
-#  'GET_BUILD_NAME'             : 34,
 #  'IS_BUILD_PLATFORM_READY'    : 35,
-#  'GET_TOOL_STATUS'            : 36,
-#  'GET_PID_STATE'              : 37,
-#  'SET_MOTOR_1_SPEED_DDA'      : 38,
-#  'SET_MOTOR_2_SPEED_DDA'      : 39,
 #  'LIGHT_INDICATOR_LED'        : 40,
 }
 
@@ -446,7 +456,7 @@ class s3g:
     @return Version number
     """
     payload = bytearray()
-    payload.append(host_command_dict['GET_VERSION'])
+    payload.append(host_query_command_dict['GET_VERSION'])
     payload.extend(EncodeUint16(s3g_version))
    
     response = self.SendCommand(payload)
@@ -454,13 +464,35 @@ class s3g:
 
     return version
 
+  def ToolQuery(self, tool_index, command, tool_payload = None):
+    """
+    Query a toolhead for some information
+    @param tool_index toolhead index
+    @param command command to send to the toolhead
+    @param tool_payload payload that goes along with the command, or None
+           if the command does not have a payload
+    @return payload received from the tool
+    """
+    if tool_index > max_tool_index or tool_index < 0:
+      raise ProtocolError('Tool index out of range, got=%i, max=%i'%(tool_index, max_tool_index))
+
+    payload = bytearray()
+    payload.append(host_query_command_dict['TOOL_QUERY'])
+    payload.append(tool_index)
+    payload.append(command)
+
+    if tool_payload != None:
+      payload.extend(tool_payload)
+
+    return self.SendCommand(payload)
+
   def GetAvailableBufferSize(self):
     """
     Gets the available buffer size
     @return Available buffer size, in bytes
     """
     payload = bytearray()
-    payload.append(host_command_dict['GET_AVAILABLE_BUFFER_SIZE'])
+    payload.append(host_query_command_dict['GET_AVAILABLE_BUFFER_SIZE'])
    
     response = self.SendCommand(payload)
     [response_code, buffer_size] = self.UnpackResponse('<BI', response)
@@ -473,7 +505,7 @@ class s3g:
     @param reset If true, reset the file index to zero and return the first available filename.
     """
     payload = bytearray()
-    payload.append(host_command_dict['GET_NEXT_FILENAME'])
+    payload.append(host_query_command_dict['GET_NEXT_FILENAME'])
     if reset == True:
       payload.append(1)
     else:
@@ -492,7 +524,7 @@ class s3g:
     Get the build name of the file printing on the machine, if any.
     """
     payload = bytearray()
-    payload.append(host_command_dict['GET_BUILD_NAME'])
+    payload.append(host_query_command_dict['GET_BUILD_NAME'])
    
     response = self.SendCommand(payload)
     [response_code, filename] = self.UnpackResponseWithString('<B', response)
@@ -506,7 +538,7 @@ class s3g:
     @param rate double Movement speed, in mm/minute
     """
     payload = bytearray()
-    payload.append(host_command_dict['QUEUE_POINT'])
+    payload.append(host_action_command_dict['QUEUE_POINT'])
     payload.extend(EncodeInt32(position[0]))
     payload.extend(EncodeInt32(position[1]))
     payload.extend(EncodeInt32(position[2]))
@@ -517,14 +549,15 @@ class s3g:
   def ToolActionCommand(self, tool_index, command, tool_payload):
     """
     Send a command to a toolhead
-    @param position array 3D position to move to. All dimension should be in mm.
-    @param rate double Movement speed, in mm/minute
+    @param tool_index toolhead index
+    @param command command to send to the toolhead
+    @param tool_payload payload that goes along with the command
     """
     if tool_index > max_tool_index or tool_index < 0:
       raise ProtocolError('Tool index out of range, got=%i, max=%i'%(tool_index, max_tool_index))
 
     payload = bytearray()
-    payload.append(host_command_dict['TOOL_ACTION_COMMAND'])
+    payload.append(host_action_command_dict['TOOL_ACTION_COMMAND'])
     payload.append(tool_index)
     payload.append(command)
     payload.append(len(tool_payload))
@@ -539,7 +572,7 @@ class s3g:
     @param rate double Movement speed, in mm/minute
     """
     payload = bytearray()
-    payload.append(host_command_dict['QUEUE_EXTENDED_POINT'])
+    payload.append(host_action_command_dict['QUEUE_EXTENDED_POINT'])
     payload.extend(EncodeInt32(position[0]))
     payload.extend(EncodeInt32(position[1]))
     payload.extend(EncodeInt32(position[2]))
@@ -559,8 +592,7 @@ class s3g:
       payload = [0x01]
     else:
       payload = [0x00]
-
-    self.ToolActionCommand(tool_index, slave_command_dict['TOGGLE_FAN'], payload)
+    self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_FAN'], payload)
 
   def ToggleValve(self, tool_index, state):
     """
@@ -573,4 +605,4 @@ class s3g:
     else:
       payload = [0x00]
 
-    self.ToolActionCommand(tool_index, slave_command_dict['TOGGLE_VALVE'], payload)
+    self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_VALVE'], payload)
