@@ -17,21 +17,27 @@ import optparse
 parser = optparse.OptionParser()
 parser.add_option("-s", "--serialport", dest="serialportname",
                   help="serial port (ex: /dev/ttyUSB0)", default="/dev/ttyACM0")
+parser.add_option("-b", "--baud", dest="serialbaud",
+                  help="serial port baud rate", default="115200")
 parser.add_option("-p", "--oscport", dest="oscport",
                   help="OSC port to listen on", default="10000")
 (options, args) = parser.parse_args()
 
 
 r = s3g.s3g()
-r.file = serial.Serial(options.serialportname, 115200, timeout=0)
+r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 
 print "firmware version: %i"%(r.GetVersion())
 print "build name: %s"%(r.GetBuildName())
 
-print "SD Card name: " + r.GetNextFilename(True)
-while True:
-  filename = r.GetNextFilename(False)
-  if filename == '\x00':
-    break
-  print ' ' + filename
+try:
+  print "SD Card name: " + r.GetNextFilename(True)
+  while True:
+    filename = r.GetNextFilename(False)
+    if filename == '\x00':
+      break
+    print ' ' + filename
+except s3g.SDCardError:
+  print "SD Card error"
 
+print "Available buffer size=%i"%(r.GetAvailableBufferSize())

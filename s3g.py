@@ -5,7 +5,7 @@ import time
 command_dict = {
   'GET_VERSION'               : 0,
 #  'INIT'                      : 1,
-#  'GET_AVAILABLE_BUFFER_SIZE' : 2,
+  'GET_AVAILABLE_BUFFER_SIZE' : 2,
 #  'CLEAR_BUFFER'              : 3,
 #  'GET_POSITION'              : 4,
 #  'ABORT_IMMEDIATELY'         : 7,
@@ -28,7 +28,7 @@ command_dict = {
 #  'BUILD_START_NOTIFICATION'  : 24,
 #  'BUILD_END_NOTIFICATION'    : 25,
 #  'GET_COMMUNICATION_STATS'   : 26,
-#  'QUEUE_POINT'               : 129,
+  'QUEUE_POINT'               : 129,
 #  'SET_POSIITON'              : 130,
 #  'FIND_AXES_MINIMUMS'        : 131,
 #  'FIND_AXES_MAXIMUMS'        : 132,
@@ -361,7 +361,7 @@ class s3g:
       except (PacketError, IOError) as e:
         """ PacketError: header, length, crc error """
         """ IOError: pyserial timeout error, etc """
-#        print "packet error: " + str(e)
+        #print "packet error: " + str(e)
         retry_count = retry_count + 1
         if retry_count >= max_retry_count:
           raise TransmissionError("Failed to send packet")
@@ -414,7 +414,18 @@ class s3g:
 
     return version
 
-  # Todo: handle getting a bad response back from the machine?
+  def GetAvailableBufferSize(self):
+    """
+    Gets the available buffer size
+    @return Available buffer size, in bytes
+    """
+    payload = bytearray()
+    payload.append(command_dict['GET_AVAILABLE_BUFFER_SIZE'])
+   
+    response = self.SendCommand(payload)
+    [response_code, buffer_size] = self.UnpackResponse('<BI', response)
+
+    return buffer_size
 
   def GetNextFilename(self, reset):
     """
@@ -444,8 +455,24 @@ class s3g:
     payload.append(command_dict['GET_BUILD_NAME'])
    
     response = self.SendCommand(payload)
+    [response_code, filename] = self.UnpackResponseWithString('<B', response)
 
-    return response[1:]
+    return filename
+
+  def QueuePoint(self, position, rate):
+    """
+    Move the toolhead to a new position at the given rate
+    @param position array 3D position to move to. All dimension should be in mm.
+    @param rate double Movement speed, in mm/minute
+    """
+    payload = bytearray()
+    payload.append(command_dict['QUEUE_POINT'])
+    payload.extend(EncodeInt32(position[0]))
+    payload.extend(EncodeInt32(position[1]))
+    payload.extend(EncodeInt32(position[2]))
+    payload.extend(EncodeUint32(rate))
+    
+    self.SendCommand(payload)
 
   def QueueExtendedPoint(self, position, rate):
     """

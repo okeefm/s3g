@@ -1,3 +1,10 @@
+"""
+Control an s3g device (Makerbot, etc) using osc!
+
+Requires these modules:
+* pySerial: http://pypi.python.org/pypi/pyserial
+* pyOSC: https://trac.v2.nl/wiki/pyOSC
+"""
 
 # To use this example without installing s3g, we need this hack:
 import os, sys
@@ -11,24 +18,18 @@ import optparse
 import OSC
 import threading
 
-"""
-Control an s3g device (Makerbot, etc) using osc!
-
-Requires these modules:
-* pySerial: http://pypi.python.org/pypi/pyserial
-* pyOSC: https://trac.v2.nl/wiki/pyOSC
-"""
-
 parser = optparse.OptionParser()
 parser.add_option("-s", "--serialport", dest="serialportname",
                   help="serial port (ex: /dev/ttyUSB0)", default="/dev/ttyACM0")
+parser.add_option("-b", "--baud", dest="serialbaud",
+                  help="serial port baud rate", default="115200")
 parser.add_option("-p", "--oscport", dest="oscport",
                   help="OSC port to listen on", default="10000")
 (options, args) = parser.parse_args()
 
 
 r = s3g.s3g()
-r.file = serial.Serial(options.serialportname, 115200, timeout=0)
+r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 
 r.velocity = 1600
 
@@ -49,7 +50,8 @@ def move_handler(addr, tags, stuff, source):
     y = stuff[1] * 3000
 
     target = [x, y, 0, 0, 0]
-    r.QueueExtendedPoint(target, r.velocity)
+    #r.QueueExtendedPoint(target, r.velocity)
+    r.QueueExtendedPoint(target, int(r.velocity))
 
     while r.file.inWaiting() > 0:
       r.file.read()
