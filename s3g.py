@@ -115,6 +115,7 @@ maximum_payload_length = 32
 max_retry_count = 5
 timeout_length = .5
 s3g_version = 100
+max_tool_index = 127
 
 class PacketError(Exception):
   """
@@ -323,10 +324,6 @@ class PacketStreamDecoder:
     Entry point, call for each byte added to the stream.
     @param byte Byte to add to the stream
     """
-    # Python streams seem to suck. Some give chars, others give
-    # integers. I give up.
-#    if type(byte) == type(str):
-#      byte = ord(byte)
 
     if self.state == 'WAIT_FOR_HEADER':
       if byte != header:
@@ -374,6 +371,8 @@ class s3g:
     packet = EncodePayload(payload)
     retry_count = 0
 
+    #TODO: check that the payload is not too large?
+
     while True:
       decoder = PacketStreamDecoder(True)
       self.file.write(packet)
@@ -402,7 +401,7 @@ class s3g:
       except (PacketError, IOError) as e:
         """ PacketError: header, length, crc error """
         """ IOError: pyserial timeout error, etc """
-        print "packet error: " + str(e)
+        #print "packet error: " + str(e)
         retry_count = retry_count + 1
         if retry_count >= max_retry_count:
           raise TransmissionError("Failed to send packet")
@@ -521,8 +520,8 @@ class s3g:
     @param position array 3D position to move to. All dimension should be in mm.
     @param rate double Movement speed, in mm/minute
     """
-    # TODO: check packet length?
-    # TODO: check tool_index range
+    if tool_index > max_tool_index or tool_index < 0:
+      raise ProtocolError('Tool index out of range, got=%i, max=%i'%(tool_index, max_tool_index))
 
     payload = bytearray()
     payload.append(host_command_dict['TOOL_ACTION_COMMAND'])
@@ -530,16 +529,8 @@ class s3g:
     payload.append(command)
     payload.append(len(tool_payload))
     payload.extend(tool_payload)
-    print len(payload), 'payload',
-    for byte in payload:
-      print byte,
-    print ''
-    
-    response = self.SendCommand(payload)
-    print len(response), 'response',
-    for byte in response:
-      print byte,
-    print ''
+
+    self.SendCommand(payload)
 
   def QueueExtendedPoint(self, position, rate):
     """
@@ -564,11 +555,10 @@ class s3g:
     @param tool_index Index of the toolhead that the valve is connected to
     @param state If True, turn the fan on, otherwise off.
     """
-    payload = bytearray()
     if state == True:
-      payload.append(1)
+      payload = [0x01]
     else:
-      payload.append(0)
+      payload = [0x00]
 
     self.ToolActionCommand(tool_index, slave_command_dict['TOGGLE_FAN'], payload)
 
@@ -578,10 +568,9 @@ class s3g:
     @param tool_index Index of the toolhead that the valve is connected to
     @param state If True, turn the valvue on, otherwise off.
     """
-    payload = bytearray()
     if state == True:
-      payload.append(1)
+      payload = [0x01]
     else:
-      payload.append(0)
+      payload = [0x00]
 
     self.ToolActionCommand(tool_index, slave_command_dict['TOGGLE_VALVE'], payload)

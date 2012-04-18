@@ -455,22 +455,34 @@ class S3gTests(unittest.TestCase):
     for i in range(0, 3):
       assert s3g.EncodeInt32(expected_target[i]) == payload[(i*4+1):(i*4+5)]
 
+  def test_tool_action_command_bad_tool_index(self):
+    expected_tool_indices = [-1, s3g.max_tool_index + 1]
+    expected_command = 0x12
+    expected_tool_payload = 'abcdefghij'
+
+    for expected_tool_index in expected_tool_indices:
+      self.assertRaises(s3g.ProtocolError,
+                        self.r.ToolActionCommand,
+                        expected_tool_index, expected_command, expected_tool_payload)
+
   def test_tool_action_command(self):
     expected_tool_index = 2
-    expected_command = 
+    expected_command = 0x12
+    expected_tool_payload = 'abcdefghij'
 
     self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
     self.outputstream.seek(0)
 
-    self.r.QueuePoint(expected_target, expected_velocity)
+    self.r.ToolActionCommand(expected_tool_index, expected_command, expected_tool_payload)
 
     packet = bytearray(self.inputstream.getvalue())
-
     payload = s3g.DecodePacket(packet)
-    assert payload[0] == s3g.host_command_dict['QUEUE_POINT']
-    for i in range(0, 3):
-      assert s3g.EncodeInt32(expected_target[i]) == payload[(i*4+1):(i*4+5)]
-    
+
+    assert payload[0] == s3g.host_command_dict['TOOL_ACTION_COMMAND']
+    assert payload[1] == expected_tool_index
+    assert payload[2] == expected_command
+    assert payload[3] == len(expected_tool_payload)
+    assert payload[4:] == expected_tool_payload
 
   def test_queue_extended_point(self):
     expected_target = [1,2,3,4,5]
@@ -488,6 +500,45 @@ class S3gTests(unittest.TestCase):
     for i in range(0, 5):
       assert s3g.EncodeInt32(expected_target[i]) == payload[(i*4+1):(i*4+5)]
 
+  def test_toggle_fan(self):
+    expected_tool_index = 2
+    expected_fan_states = [True, False]
+
+    for expected_fan_state in expected_fan_states:
+      self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
+      self.outputstream.seek(0)
+      self.inputstream.seek(0)
+ 
+      self.r.ToggleFan(expected_tool_index, expected_fan_state)
+ 
+      packet = bytearray(self.inputstream.getvalue())
+      payload = s3g.DecodePacket(packet)
+ 
+      assert payload[0] == s3g.host_command_dict['TOOL_ACTION_COMMAND']
+      assert payload[1] == expected_tool_index
+      assert payload[2] == s3g.slave_command_dict['TOGGLE_FAN']
+      assert payload[3] == 1
+      assert payload[4] == expected_fan_state
+
+  def test_toggle_valve(self):
+    expected_tool_index = 2
+    expected_fan_states = [True, False]
+
+    for expected_fan_state in expected_fan_states:
+      self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
+      self.outputstream.seek(0)
+      self.inputstream.seek(0)
+ 
+      self.r.ToggleValve(expected_tool_index, expected_fan_state)
+ 
+      packet = bytearray(self.inputstream.getvalue())
+      payload = s3g.DecodePacket(packet)
+ 
+      assert payload[0] == s3g.host_command_dict['TOOL_ACTION_COMMAND']
+      assert payload[1] == expected_tool_index
+      assert payload[2] == s3g.slave_command_dict['TOGGLE_VALVE']
+      assert payload[3] == 1
+      assert payload[4] == expected_fan_state
 
 if __name__ == "__main__":
   unittest.main()
