@@ -15,12 +15,10 @@ import optparse
 
 
 parser = optparse.OptionParser()
-parser.add_option("-s", "--serialport", dest="serialportname",
+parser.add_option("-p", "--serialport", dest="serialportname",
                   help="serial port (ex: /dev/ttyUSB0)", default="/dev/ttyACM0")
 parser.add_option("-b", "--baud", dest="serialbaud",
                   help="serial port baud rate", default="115200")
-parser.add_option("-p", "--oscport", dest="oscport",
-                  help="OSC port to listen on", default="10000")
 (options, args) = parser.parse_args()
 
 
@@ -41,3 +39,9 @@ except s3g.SDCardError:
   print "SD Card error"
 
 print "Available buffer size=%i"%(r.GetAvailableBufferSize())
+
+print "toolhead_0=%i, toolhead_1=%i, platform=%i"%(
+  r.GetToolheadTemperature(0),
+  r.GetToolheadTemperature(1),
+  r.GetPlatformTemperature(0)
+ )

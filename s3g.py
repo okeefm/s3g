@@ -53,7 +53,7 @@ host_action_command_dict = {
 
 slave_query_command_dict = {
 #  'VERSION'                    : 0,
-#  'GET_TEMP'                   : 2,
+  'GET_TOOLHEAD_TEMP'          : 2,
 #  'GET_MOTOR_1_SPEED_RPM'      : 17,
 #  'GET_MOTOR_2_SPEED_RPM'      : 18,
 #  'GET_MOTOR_1_SPEED_PWM'      : 19,
@@ -62,15 +62,15 @@ slave_query_command_dict = {
 #  'WRITE_TO_EEPROM'            : 26,
 #  'GET_BUILD_PLATFORM_TEMP'    : 30,
 #  'SET_BUILD_PLATFORM_TEMP'    : 31,
-#  'GET_EXTRUDER_TARGET_TEMP'   : 32,
-#  'GET_BUILD_PLATFORM_TEMP'    : 33,
+#  'GET_TOOLHEAD_TARGET_TEMP'   : 32,
+  'GET_BUILD_PLATFORM_TEMP'    : 33,
 #  'GET_BUILD_NAME'             : 34,
 #  'GET_TOOL_STATUS'            : 36,
 #  'GET_PID_STATE'              : 37,
 }
 
 slave_action_command_dict = {
-#  'SET_TARGET_TEMP'            : 3,
+#  'SET_TOOLHEAD_TARGET_TEMP'   : 3,
 #  'SET_MOTOR_1_SPEED_PWM'      : 4,
 #  'SET_MOTOR_2_SPEED_PWM'      : 5,
 #  'SET_MOTOR_1_SPEED_RPM'      : 6,
@@ -406,6 +406,7 @@ class s3g:
           data = ord(data)
           decoder.ParseByte(data)
         
+        # TODO: Should we chop the response code?
         return decoder.payload
 
       except (PacketError, IOError) as e:
@@ -582,10 +583,32 @@ class s3g:
     
     self.SendCommand(payload)
 
+  def GetToolheadTemperature(self, tool_index):
+    """
+    Retrieve the toolhead temperature
+    @param tool_index Toolhead Index
+    @return temperature reported by the toolhead
+    """
+    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOLHEAD_TEMP'])
+    [response_code, temperature] = self.UnpackResponse('<BH', response)
+
+    return temperature
+
+  def GetPlatformTemperature(self, tool_index):
+    """
+    Retrieve the platform temperature
+    @param tool_index Toolhead Index
+    @return temperature reported by the toolhead
+    """
+    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_BUILD_PLATFORM_TEMP'])
+    [response_code, temperature] = self.UnpackResponse('<BH', response)
+
+    return temperature
+
   def ToggleFan(self, tool_index, state):
     """
     Turn the fan output on or off
-    @param tool_index Index of the toolhead that the valve is connected to
+    @param tool_index Toolhead Index
     @param state If True, turn the fan on, otherwise off.
     """
     if state == True:
@@ -597,7 +620,7 @@ class s3g:
   def ToggleValve(self, tool_index, state):
     """
     Turn the valve output on or off
-    @param tool_index Index of the toolhead that the valve is connected to
+    @param tool_index Toolhead Index
     @param state If True, turn the valvue on, otherwise off.
     """
     if state == True:
@@ -606,3 +629,4 @@ class s3g:
       payload = [0x00]
 
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_VALVE'], payload)
+

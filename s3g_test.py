@@ -511,7 +511,7 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
     self.outputstream.seek(0)
 
-    self.r.ToolActionCommand(tool_index, command, tool_payload)
+    self.r.ToolActionCommand(tool_index, command, command_payload)
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
@@ -519,7 +519,7 @@ class S3gTests(unittest.TestCase):
     assert payload[0] == s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
     assert payload[1] == tool_index
     assert payload[2] == command
-    assert payload[3] == len(tool_payload)
+    assert payload[3] == len(command_payload)
     assert payload[4:] == command_payload
 
   def test_queue_extended_point(self):
@@ -537,6 +537,42 @@ class S3gTests(unittest.TestCase):
     assert payload[0] == s3g.host_action_command_dict['QUEUE_EXTENDED_POINT']
     for i in range(0, 5):
       assert s3g.EncodeInt32(target[i]) == payload[(i*4+1):(i*4+5)]
+
+  def test_get_toolhead_temperature(self):
+    tool_index = 2
+    temperature = 1234
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend(s3g.EncodeUint16(temperature))
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    assert self.r.GetToolheadTemperature(tool_index) == temperature
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
+    assert payload[1] == tool_index
+    assert payload[2] == s3g.slave_query_command_dict['GET_TOOLHEAD_TEMP']
+
+  def test_get_platform_temperature(self):
+    tool_index = 2
+    temperature = 1234
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend(s3g.EncodeUint16(temperature))
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    assert self.r.GetPlatformTemperature(tool_index) == temperature
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
+    assert payload[1] == tool_index
+    assert payload[2] == s3g.slave_query_command_dict['GET_BUILD_PLATFORM_TEMP']
 
   def test_toggle_fan(self):
     tool_index = 2
