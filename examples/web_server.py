@@ -13,7 +13,6 @@ sys.path.append(lib_path)
 import s3g
 import serial
 import optparse
-import io
 import json
 import BaseHTTPServer
 import SimpleHTTPServer
@@ -27,31 +26,18 @@ parser.add_option("-b", "--baud", dest="serialbaud",
 parser.add_option("-a", "--httpaddress", dest="httpaddress",
                   help="http address", default="127.0.0.1")
 parser.add_option("-o", "--httpport", dest="httpport",
-                  help="http port", default=9000)
+                  help="http port", default=8080)
 (options, args) = parser.parse_args()
 
 
 if __name__ == '__main__':
   r = s3g.s3g()
 
-  # TODO: just use a real serial port.
-#  outputstream = io.BytesIO() # Stream that we will send responses on
-#  inputstream = io.BytesIO()  # Stream that we will receive commands on
-#  r.file = io.BufferedRWPair(outputstream, inputstream)
   r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 
   tool_0_temp_data = []
   tool_1_temp_data = []
-#
-#      temperature_data.append([len(temperature_data), bound_mth(0)])
-#      response = {"label" : "Toolhead 0 Temperature", "data" : temperature_data}
-#
-#      web.header('Content-Type', 'application/json')
-#
-#      print '>>' + json.dumps(response) + '<<'
-#
-#      return json.dumps(response)
-  #class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+
   class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
       def do_GET(s):
           """Respond to a GET request."""
@@ -75,8 +61,6 @@ if __name__ == '__main__':
           s.path = '/web_server/' + s.path 
           SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(s)
           
-          
-  #MyHandler.protocol_version="HTTP/1.1"
   httpd = SocketServer.TCPServer((options.httpaddress, options.httpport), MyHandler)
 
   print "serving at port", options.httpport
