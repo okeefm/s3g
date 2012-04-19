@@ -13,17 +13,22 @@ sys.path.append(lib_path)
 import s3g
 import serial
 import optparse
-import web
 import io
 import json
+import BaseHTTPServer
+import SimpleHTTPServer
+import SocketServer
 
 parser = optparse.OptionParser()
 parser.add_option("-p", "--serialport", dest="serialportname",
                   help="serial port (ex: /dev/ttyUSB0)", default="/dev/ttyACM0")
 parser.add_option("-b", "--baud", dest="serialbaud",
                   help="serial port baud rate", default="115200")
+parser.add_option("-a", "--httpaddress", dest="httpaddress",
+                  help="http address", default="127.0.0.1")
+parser.add_option("-o", "--httpport", dest="httpport",
+                  help="http port", default=9000)
 (options, args) = parser.parse_args()
-
 
 
 if __name__ == '__main__':
@@ -35,32 +40,44 @@ if __name__ == '__main__':
 #  r.file = io.BufferedRWPair(outputstream, inputstream)
   r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 
-  urls = (
-    '/(.*)', 'index'
-  )
+  tool_0_temp_data = []
+  tool_1_temp_data = []
+#
+#      temperature_data.append([len(temperature_data), bound_mth(0)])
+#      response = {"label" : "Toolhead 0 Temperature", "data" : temperature_data}
+#
+#      web.header('Content-Type', 'application/json')
+#
+#      print '>>' + json.dumps(response) + '<<'
+#
+#      return json.dumps(response)
+  #class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
+  class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+      def do_GET(s):
+          """Respond to a GET request."""
+          # If the request was for a temperature, handle it.
+          print s.path
+          if s.path == '/temp':
+              tool_0_temp_data.append([len(tool_0_temp_data), r.GetToolheadTemperature(0)])
+              tool_1_temp_data.append([len(tool_1_temp_data), r.GetToolheadTemperature(1)])
+           
+              response = {"tool_0_temp" : {"label" : "Toolhead 0 Temperature", "data" : tool_0_temp_data},
+                          "tool_1_temp" : {"label" : "Toolhead 1 Temperature", "data" : tool_1_temp_data}}
+              content = json.dumps(response)
+           
+              s.send_response(200)
+              s.send_header("Content-Type",   "application/json")
+              s.end_headers()
+              s.wfile.write(content)
+              return
+           
+          # Otherwise pass it down
+          s.path = '/web_server/' + s.path 
+          SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(s)
+          
+          
+  #MyHandler.protocol_version="HTTP/1.1"
+  httpd = SocketServer.TCPServer((options.httpaddress, options.httpport), MyHandler)
 
-  temperature_data = []
-
-  class index:
-    def GET(self, name):
-      # TODO: Haha, this is dnagerous???
-      bound_mth = getattr(r, name)
-
-      # TODO: Fake temperature!
-#      temperature = 1234
-#      response_payload = bytearray()
-#      response_payload.append(s3g.response_code_dict['SUCCESS'])
-#      response_payload.extend(s3g.EncodeUint16(temperature))
-#      outputstream.write(s3g.EncodePayload(response_payload))
-#      outputstream.seek(0)
-      temperature_data.append([len(temperature_data), bound_mth(0)])
-      response = {"label" : "Toolhead 0 Temperature", "data" : temperature_data}
-
-      web.header('Content-Type', 'application/json')
-
-      print '>>' + json.dumps(response) + '<<'
-
-      return json.dumps(response)
-
-  app = web.application(urls, globals())
-  app.run()
+  print "serving at port", options.httpport
+  httpd.serve_forever()
