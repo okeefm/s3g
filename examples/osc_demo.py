@@ -62,6 +62,10 @@ def pen_handler(addr, tags, stuff, source):
 
     r.ToggleFan(0, stuff[0] == 1)
 
+print "starting client"
+t = OSC.OSCMultiClient()
+t.setOSCTarget(('127.0.0.1', 10001))
+
 print "starting server"
 s = OSC.OSCServer(('127.0.0.1', int(options.oscport)))
 s.addDefaultHandlers()
@@ -69,12 +73,20 @@ s.addMsgHandler("/move", move_handler)
 s.addMsgHandler("/velocity", velocity_handler)
 s.addMsgHandler("/led", led_handler)
 s.addMsgHandler("/pen", pen_handler)
+
 st = threading.Thread(target=s.serve_forever)
 st.start()
 
+
 try:
     while True:
-        time.sleep(0.1)        
+        time.sleep(1)
+        msg = OSC.OSCMessage("/temps")
+        msg.append(r.GetToolheadTemperature(0))
+        msg.append(r.GetToolheadTemperature(1))
+        msg.append(r.GetPlatformTemperature(0))
+        t.send(msg)
+
 except KeyboardInterrupt:
     exit(1)
     pass
