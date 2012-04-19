@@ -17,6 +17,7 @@ import json
 import BaseHTTPServer
 import SimpleHTTPServer
 import SocketServer
+import threading
 
 parser = optparse.OptionParser()
 parser.add_option("-p", "--serialport", dest="serialportname",
@@ -31,37 +32,58 @@ parser.add_option("-o", "--httpport", dest="httpport",
 
 
 if __name__ == '__main__':
-  r = s3g.s3g()
+    r = s3g.s3g()
+ 
+    r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
+ 
+    tool_0_temp_data = []
+    tool_1_temp_data = []
 
-  r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
+    def update_temp_thread():
+        t = threading.Timer(2.0, update_temp_thread)
+        t.start()
 
-  tool_0_temp_data = []
-  tool_1_temp_data = []
+        tool_0_temp_data.append([len(tool_0_temp_data), r.GetToolheadTemperature(0)])
+        tool_1_temp_data.append([len(tool_1_temp_data), r.GetToolheadTemperature(1)])
 
-  class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-      def do_GET(s):
-          """Respond to a GET request."""
-          # If the request was for a temperature, handle it.
-          print s.path
-          if s.path == '/temp':
-              tool_0_temp_data.append([len(tool_0_temp_data), r.GetToolheadTemperature(0)])
-              tool_1_temp_data.append([len(tool_1_temp_data), r.GetToolheadTemperature(1)])
-           
-              response = {"tool_0_temp" : {"label" : "Toolhead 0 Temperature", "data" : tool_0_temp_data},
-                          "tool_1_temp" : {"label" : "Toolhead 1 Temperature", "data" : tool_1_temp_data}}
-              content = json.dumps(response)
-           
-              s.send_response(200)
-              s.send_header("Content-Type",   "application/json")
-              s.end_headers()
-              s.wfile.write(content)
-              return
-           
-          # Otherwise pass it down
-          s.path = '/web_server/' + s.path 
-          SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(s)
-          
-  httpd = SocketServer.TCPServer((options.httpaddress, options.httpport), MyHandler)
+#        if (tool_0_temp_data != None):
+#            if (len(tool_0_temp_data) > 200):
+#                tool_0_temp_data = tool_0_temp_data[-200:]
+#                tool_1_temp_data = tool_1_temp_data[-200:]
 
-  print "serving at port", options.httpport
-  httpd.serve_forever()
+
+    update_temp_thread()
+    
+ 
+    class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+        def do_GET(s):
+            """Respond to a GET request."""
+            # If the request was for a temperature, handle it.
+            print s.path
+            if s.path == '/temp':
+#                tool_0_temp_data.append([len(tool_0_temp_data), r.GetToolheadTemperature(0)])
+#                tool_1_temp_data.append([len(tool_1_temp_data), r.GetToolheadTemperature(1)])
+ 
+                #if (tool_0_temp_data != None):
+                #    if (len(tool_0_temp_data) > 200):
+                #        tool_0_temp_data = tool_0_temp_data[-200:]
+                #        tool_1_temp_data = tool_1_temp_data[-200:]
+             
+                response = {"tool_0_temp" : {"label" : "Toolhead 0 Temperature", "data" : tool_0_temp_data},
+                            "tool_1_temp" : {"label" : "Toolhead 1 Temperature", "data" : tool_1_temp_data}}
+                content = json.dumps(response)
+             
+                s.send_response(200)
+                s.send_header("Content-Type",   "application/json")
+                s.end_headers()
+                s.wfile.write(content)
+                return
+             
+            # Otherwise pass it down
+            s.path = '/web_server/' + s.path 
+            SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(s)
+            
+    httpd = SocketServer.TCPServer((options.httpaddress, options.httpport), MyHandler)
+ 
+    print "serving at port", options.httpport
+    httpd.serve_forever()
