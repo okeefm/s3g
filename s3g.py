@@ -33,8 +33,8 @@ host_query_command_dict = {
 host_action_command_dict = {
   'QUEUE_POINT'               : 129,
 #  'SET_POSIITON'              : 130,
-#  'FIND_AXES_MINIMUMS'        : 131,
-#  'FIND_AXES_MAXIMUMS'        : 132,
+  'FIND_AXES_MINIMUMS'        : 131,
+  'FIND_AXES_MAXIMUMS'        : 132,
 #  'DELAY'                     : 133,
 #  'CHANGE_TOOL'               : 134,
 #  'WAIT_FOR_TOOL_READY'       : 135,
@@ -266,6 +266,27 @@ def DecodeUint16(data):
   @return decoded integer
   """
   return struct.unpack('<H', data)[0]
+
+def EncodeAxes(axes):
+  """
+  Encode an array of axes names into an axis bitfield
+  @param axes Array of axis names ['x', 'y', ...] 
+  @return bitfield containing a representation of the axes map
+  """
+  axes_map = {
+    'x':0x01,
+    'y':0x02,
+    'z':0x04,
+    'a':0x08,
+    'b':0x10,
+  }
+
+  bitfield = 0
+
+  for axis in axes:
+    bitfield |= axes_map[axis]
+
+  return bitfield
 
 def EncodePayload(payload):
   """
@@ -535,8 +556,8 @@ class s3g:
   def QueuePoint(self, position, rate):
     """
     Move the toolhead to a new position at the given rate
-    @param position array 3D position to move to. All dimension should be in mm.
-    @param rate double Movement speed, in mm/minute
+    @param position array 3D position to move to. All dimension should be in steps.
+    @param rate double Movement speed, in steps/??
     """
     payload = bytearray()
     payload.append(host_action_command_dict['QUEUE_POINT'])
@@ -545,6 +566,36 @@ class s3g:
     payload.extend(EncodeInt32(position[2]))
     payload.extend(EncodeUint32(rate))
     
+    self.SendCommand(payload)
+
+  def FindAxesMinimums(self, axes, rate, timeout):
+    """
+    Move the toolhead in the negativedirection, along the specified axes,
+    until an endstop is reached or a timeout occurs.
+    @param axes Array of axis names ['x', 'y', ...] to move
+    @param rate Movement rate, in steps/??
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['FIND_AXES_MINIMUMS'])
+    payload.append(EncodeAxes(axes))
+    payload.extend(EncodeUint32(rate))
+    payload.extend(EncodeUint16(timeout))
+ 
+    self.SendCommand(payload)
+  
+  def FindAxesMaximums(self, axes, rate, timeout):
+    """
+    Move the toolhead in the positive direction, along the specified axes,
+    until an endstop is reached or a timeout occurs.
+    @param axes Array of axis names ['x', 'y', ...] to move
+    @param rate Movement rate, in steps/??
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['FIND_AXES_MAXIMUMS'])
+    payload.append(EncodeAxes(axes))
+    payload.extend(EncodeUint32(rate))
+    payload.extend(EncodeUint16(timeout))
+ 
     self.SendCommand(payload)
 
   def ToolActionCommand(self, tool_index, command, tool_payload):
@@ -569,8 +620,8 @@ class s3g:
   def QueueExtendedPoint(self, position, rate):
     """
     Move the toolhead to a new position at the given rate
-    @param position array 5D position to move to. All dimension should be in mm.
-    @param rate double Movement speed, in mm/minute
+    @param position array 5D position to move to. All dimension should be in steps.
+    @param rate double Movement speed, in steps/??
     """
     payload = bytearray()
     payload.append(host_action_command_dict['QUEUE_EXTENDED_POINT'])

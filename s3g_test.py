@@ -52,6 +52,20 @@ class EncodeTests(unittest.TestCase):
     for case in cases:
       assert s3g.DecodeUint16(case[1]) == case[0]
 
+  def test_encode_axes(self):
+    cases = [
+      [['x','y','z','a','b'], 0x1F],
+      [['x'],                 0x01],
+      [['y'],                 0x02],
+      [['z'],                 0x04],
+      [['a'],                 0x08],
+      [['b'],                 0x10],
+      [[],                    0x00],
+    ]
+    for case in cases:
+      assert s3g.EncodeAxes(case[0]) == case[1]
+
+
 class PacketEncodeTests(unittest.TestCase):
   def test_reject_oversize_payload(self):
     payload = bytearray()
@@ -492,6 +506,42 @@ class S3gTests(unittest.TestCase):
     assert payload[0] == s3g.host_action_command_dict['QUEUE_POINT']
     for i in range(0, 3):
       assert s3g.EncodeInt32(target[i]) == payload[(i*4+1):(i*4+5)]
+
+  def test_find_axes_minimums(self):
+    axes = ['x', 'y', 'z', 'b']
+    rate = 2500
+    timeout = 45
+
+    self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
+    self.outputstream.seek(0)
+
+    self.r.FindAxesMinimums(axes, rate, timeout)
+
+    packet = bytearray(self.inputstream.getvalue())
+
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_action_command_dict['FIND_AXES_MINIMUMS']
+    assert payload[1] == s3g.EncodeAxes(axes)
+    assert payload[2:6] == s3g.EncodeUint32(rate)
+    assert payload[6:8] == s3g.EncodeUint16(timeout)
+  
+  def test_find_axes_maximums(self):
+    axes = ['x', 'y', 'z', 'b']
+    rate = 2500
+    timeout = 45
+
+    self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
+    self.outputstream.seek(0)
+
+    self.r.FindAxesMaximums(axes, rate, timeout)
+
+    packet = bytearray(self.inputstream.getvalue())
+
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_action_command_dict['FIND_AXES_MAXIMUMS']
+    assert payload[1] == s3g.EncodeAxes(axes)
+    assert payload[2:6] == s3g.EncodeUint32(rate)
+    assert payload[6:8] == s3g.EncodeUint16(timeout)
 
   def test_tool_action_command_bad_tool_index(self):
     tool_indices = [-1, s3g.max_tool_index + 1]
