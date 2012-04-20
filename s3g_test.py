@@ -501,11 +501,27 @@ class S3gTests(unittest.TestCase):
     self.r.QueuePoint(target, velocity)
 
     packet = bytearray(self.inputstream.getvalue())
-
     payload = s3g.DecodePacket(packet)
+
     assert payload[0] == s3g.host_action_command_dict['QUEUE_POINT']
     for i in range(0, 3):
-      assert s3g.EncodeInt32(target[i]) == payload[(i*4+1):(i*4+5)]
+      assert payload[(i*4+1):(i*4+5)] == s3g.EncodeInt32(target[i])
+    payload[13:17] == s3g.EncodeInt32(velocity)
+
+  def test_set_position(self):
+    target = [1,2,3]
+
+    self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
+    self.outputstream.seek(0)
+
+    self.r.SetPosition(target)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+
+    assert payload[0] == s3g.host_action_command_dict['SET_POSITION']
+    for i in range(0, 3):
+      assert payload[(i*4+1):(i*4+5)] == s3g.EncodeInt32(target[i])
 
   def test_find_axes_minimums(self):
     axes = ['x', 'y', 'z', 'b']
@@ -585,6 +601,22 @@ class S3gTests(unittest.TestCase):
 
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_action_command_dict['QUEUE_EXTENDED_POINT']
+    for i in range(0, 5):
+      assert payload[(i*4+1):(i*4+5)] == s3g.EncodeInt32(target[i])
+    assert payload[21:25] == s3g.EncodeInt32(velocity)
+
+  def test_set_extended_position(self):
+    target = [1,2,3,4,5]
+
+    self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
+    self.outputstream.seek(0)
+
+    self.r.SetExtendedPosition(target)
+
+    packet = bytearray(self.inputstream.getvalue())
+
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_action_command_dict['SET_EXTENDED_POSITION']
     for i in range(0, 5):
       assert s3g.EncodeInt32(target[i]) == payload[(i*4+1):(i*4+5)]
 

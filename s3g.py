@@ -32,7 +32,7 @@ host_query_command_dict = {
 
 host_action_command_dict = {
   'QUEUE_POINT'               : 129,
-#  'SET_POSIITON'              : 130,
+  'SET_POSITION'              : 130,
   'FIND_AXES_MINIMUMS'        : 131,
   'FIND_AXES_MAXIMUMS'        : 132,
 #  'DELAY'                     : 133,
@@ -42,7 +42,7 @@ host_action_command_dict = {
 #  'ENABLE_AXES'               : 137,
 #  'USER_BLOCK'                : 138,
   'QUEUE_EXTENDED_POINT'      : 139,
-#  'SET_EXTENDED_POSITION'     : 140,
+  'SET_EXTENDED_POSITION'     : 140,
 #  'WAIT_FOR_PLATFORM_READY'   : 141,
 #  'QUEUE_EXTENDED_POINT_NEW'  : 142,
 #  'STORE_HOME_POSITIONS'      : 143,
@@ -430,6 +430,10 @@ class s3g:
         # TODO: Should we chop the response code?
         return decoder.payload
 
+       # TODO: There is a problem here, we need to pick up ACTION_BUFFER_OVERFLOW
+#      except (PacketResponseCodeError) as e:
+#        pass
+
       except (PacketError, IOError) as e:
         """ PacketError: header, length, crc error """
         """ IOError: pyserial timeout error, etc """
@@ -568,6 +572,19 @@ class s3g:
     
     self.SendCommand(payload)
 
+  def SetPosition(self, position):
+    """
+    Inform the machine that it should consider this p
+    @param position 3D position to set the machine to, in steps.
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['SET_POSITION'])
+    payload.extend(EncodeInt32(position[0]))
+    payload.extend(EncodeInt32(position[1]))
+    payload.extend(EncodeInt32(position[2]))
+    
+    self.SendCommand(payload)
+
   def FindAxesMinimums(self, axes, rate, timeout):
     """
     Move the toolhead in the negativedirection, along the specified axes,
@@ -620,7 +637,7 @@ class s3g:
   def QueueExtendedPoint(self, position, rate):
     """
     Move the toolhead to a new position at the given rate
-    @param position array 5D position to move to. All dimension should be in steps.
+    @param position 5D position to move to. All dimension should be in steps.
     @param rate double Movement speed, in steps/??
     """
     payload = bytearray()
@@ -631,6 +648,21 @@ class s3g:
     payload.extend(EncodeInt32(position[3]))
     payload.extend(EncodeInt32(position[4]))
     payload.extend(EncodeUint32(rate))
+    
+    self.SendCommand(payload)
+
+  def SetExtendedPosition(self, position):
+    """
+    Inform the machine that it should consider this p
+    @param position 5D position to set the machine to, in steps.
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['SET_EXTENDED_POSITION'])
+    payload.extend(EncodeInt32(position[0]))
+    payload.extend(EncodeInt32(position[1]))
+    payload.extend(EncodeInt32(position[2]))
+    payload.extend(EncodeInt32(position[3]))
+    payload.extend(EncodeInt32(position[4]))
     
     self.SendCommand(payload)
 
