@@ -1,6 +1,6 @@
 # S3G protocol (formerly RepRap Generation 3 Protocol Specification)
 
-** Overview
+## Overview
 
 This document describes the protocol by which 3rd and 4th generation RepRap electronics communicate with their host machine, as well as the protocol by which the RepRap host communicates with its subsystems. The same simple packet protocol is used for both purposes.
 
@@ -39,65 +39,34 @@ The host network is generally implemented over a standard TTL-level RS
 Packet Protocol
  Protocol Overview
 
-Each network has a single host: in the case of the host network, this is the host computer, and in the case of the slave network, this is the host
-controller.  All network communications are initiated by the network host; a slave node can never initiate a data transfer.
+Each network has a single host: in the case of the host network, this is the host computer, and in the case of the slave network, this is the host controller.  All network communications are initiated by the network host; a slave node can never initiate a data transfer.
 
 Data is sent over the network as a series of simple packets.  Packets are variable-length, with a maximum payload size of 32 bytes.
 
 Each network transaction consists of at least two packets: a host packet, followed by a response packet.  Every packet from a host must be responded to.
 
-Commands will be sent in packets. All commands are query/response.  The
-host in each pair will always initiate communications, never the slave.  All
-packets are synchronous; they will wait for a response from the client
-before sending the next packet.  The firmware will continue rendering
-buffered commands while receiving new commands and replying to them.
+Commands will be sent in packets. All commands are query/response.  The host in each pair will always initiate communications, never the slave.  All packets are synchronous; they will wait for a response from the client before sending the next packet.  The firmware will continue rendering buffered commands while receiving new commands and replying to them.
 
 Timeouts
 
-Packets must be responded to promptly.  No command should ever block. 
-If a query would require more than the timeout period to respond to, it
-must be recast as a poll-driven operation.
+Packets must be responded to promptly.  No command should ever block. If a query would require more than the timeout period to respond to, it must be recast as a poll-driven operation.
 
 
 
 
-All communications, both host-mb and mb-toolboard, are at 38400bps.  It
-should take approximately 1/3rd ms. to transmit one byte at those speeds. 
-The maximum packet size of 32+3 bytes should take no more than 12ms to
-transmit.  We establish a 20ms. window from the reception of a start byte
-until packet completion.  If a packet is not completed within this window, it
+All communications, both host-mb and mb-toolboard, are at 38400bps.  It should take approximately 1/3rd ms. to transmit one byte at those speeds. The maximum packet size of 32+3 bytes should take no more than 12ms to transmit.  We establish a 20ms. window from the reception of a start byte until packet completion.  If a packet is not completed within this window, it is considered to have timed out.
 
-
-
-is considered to have timed out.
-
-It is expected that there will be a lag between the completion of a
-command packet and the beginning of a response packet.  This may include
-
-a round-trip request to a toolhead, for example.  This window is expected to
-be 36ms. at the most.  Again, if the first byte of the response packet is not
-received by the time 36ms. has passed, the packet is presumed to have
-timed out.
+It is expected that there will be a lag between the completion of a command packet and the beginning of a response packet.  This may include a round-trip request to a toolhead, for example.  This window is expected to be 36ms. at the most.  Again, if the first byte of the response packet is not received by the time 36ms. has passed, the packet is presumed to have timed out.
 
 Handling Packet Failures
-If a packet has timed out, the host or board should treat the entire packet
-transaction as void.  It should:
+If a packet has timed out, the host or board should treat the entire packet transaction as void.  It should:
 ●Return its packet reception state machine to a ready state.
 ●Presume that no action has been taken on the transaction
 ●Attempt to resend the packet, if it was a host packet.
 
 
- Command Buffering
-To ensure smooth motion, as well as to support print queueing, we'll want
-certain commands to be queued in a buffer.  This means we won't get
-immediate feedback from any queued command.  To this end we will break
-commands down into two categories: action commands that are put in the
-command buffer, and query commands that require an immediate
-response.  In order to make it simple to differentiate the commands on the
-firmware side, we will break them up into two sets: commands numbered
-0-127 will be query commands, and commands numbered 128-255 will be
-action commands to be put into the buffer.  The firmware can then simply
-look at the highest bit to determine which type of packet it is. 
+Command Buffering
+To ensure smooth motion, as well as to support print queueing, we'll want certain commands to be queued in a buffer.  This means we won't get immediate feedback from any queued command.  To this end we will break commands down into two categories: action commands that are put in the command buffer, and query commands that require an immediate response.  In order to make it simple to differentiate the commands on the firmware side, we will break them up into two sets: commands numbered 0-127 will be query commands, and commands numbered 128-255 will be action commands to be put into the buffer.  The firmware can then simply look at the highest bit to determine which type of packet it is. 
 
 
 # Commands
@@ -269,28 +238,12 @@ Test commands existed from 0x70-0x78, and 0xF0. They are considered legacy.
 This command allows the host and firmware to exchange version numbers. It also allows for automated discovery of the firmware. Version numbers will always be stored as a single number, Arduino / Processing style.
 
 Payload
-<table>
-<tr>
- <th>Type</th>
- <th>Description</th>
-</tr>
-<tr>
- <td>uint16</td>
- <td>Host Version</td>
-</tr>
-</table>
+
+    uint16: Host Version
 
 Response
-<table>
-<tr>
- <th>Type</th>
- <th>Description</th>
-</tr>
-<tr>
- <td>uint16</td>
- <td>Firmware Version</td>
-</tr>
-</table>
+
+    uint16: Firmware Version
 
 ## 0x01 - Init: Initialize firmware to boot state
 Initialization consists of:
@@ -300,6 +253,7 @@ Initialization consists of:
     * Setting range to EEPROM value (TODO: Does this exist?)
 
 Payload (0 bytes)
+
 Response (0 bytes)
 
 ## 0x02 - Get Available Buffer Size: Determine how much free memory is available for buffering commands
@@ -308,71 +262,30 @@ This command will let us know how much buffer space we have available for action
 Payload (0 bytes)
 
 Response
-<table>
-<tr>
- <th>Type</th>
- <th>Description</th>
-</tr>
-<tr>
- <td>uint32</td>
- <td>Number of bytes availabe in the command buffer</td>
-</tr>
-</table>
+
+    uint32: Number of bytes availabe in the command buffer
 
 ## 0x03 - Clear Buffer: Empty the command buffer
 This command will empty our buffer, and reset all pointers, etc to the beginning of the buffer.  If writing to an SD card, it will reset the file pointer back to the beginning of the currently open file.  Obviously, it should halt all execution of action commands as well.
 
 Payload (0 bytes)
+
 Response (0 bytes)
 
 ## 0x04 - Get Position: Get the current position of the toolhead
+Useful for determining current position of the toolhead.  It is up to the host software to add or subtract the toolhead offset to determine the actual position of the toolhead.  It will also return the status of the various endstops for diagnostic information.
 
-Payload
-<table>
-<tr>
- <th>Type</th>
- <th>Description</th>
-</tr>
-<tr>
- <td></td>
- <td></td>
-</tr>
-</table>
+Payload (0 bytes)
 
 Response
-<table>
-<tr>
- <th>Type</th>
- <th>Description</th>
-</tr>
-<tr>
- <td></td>
- <td></td>
-</tr>
-</table>
+
+    int32: X position, in steps
+    int32: X position, in steps
+    int32: X position, in steps
+    uint8: Axes Bitfield corresponding to the endstop status
 
 ## 0xXX
 
-Payload
-<table>
-<tr>
- <th>Type</th>
- <th>Description</th>
-</tr>
-<tr>
- <td></td>
- <td></td>
-</tr>
-</table>
+Payload (0 bytes)
 
-Response
-<table>
-<tr>
- <th>Type</th>
- <th>Description</th>
-</tr>
-<tr>
- <td></td>
- <td></td>
-</tr>
-</table>
+Response (0 bytes)
