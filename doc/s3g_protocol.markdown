@@ -101,7 +101,7 @@ All packets have the following structure:
 </tr>
 </table>
 
-## Host Payload Structure
+## Host Bus Payload Structure
 The payload of a host packet contains one command. Each command consists of a command code, and 0 or more arguments:
 
 <table>
@@ -122,7 +122,7 @@ The payload of a host packet contains one command. Each command consists of a co
 </tr>
 </table>
 
-## Slave Payload Structure
+## Slave Bus Payload Structure
 The payload of a slave packet contains one command. Each command consists of a Slave ID, a command code, and 0 or more arguments:
 
 <table>
@@ -154,7 +154,7 @@ The slave ID is the ID number of a toolhead. A toolhead may only respond to comm
 
 The exception to this is the slave ID 127. This represents any listening device. The address 127 should only be used when setting the ID of a slave. _Note: Before firmware version 2.92, the broadcast address was 255._
 
-## Response Packet Structure (both Host and Slave)
+## Response Packet Structure (both Host and Slave Busses)
 The response payload contains the response to a single command:
 
 <table>
@@ -226,7 +226,47 @@ Response code values can be as follows:
 </table>
 
 # Data formats
-TODO
+
+TODO:
+
+uint8, uint16, int16, uint32, int32, axes bitfield
+
+## SD Response codes
+<table>
+<tr>
+ <th>Response Code</th>
+ <th>Details</th>
+</tr>
+<tr>
+ <td>0x00</td>
+ <td>Operation successful</td>
+</tr>
+<tr>
+ <td>0x01</td>
+ <td>SD Card not present</td>
+</tr>
+<tr>
+ <td>0x02</td>
+ <td>SD Card initialization failed</td>
+</tr>
+<tr>
+ <td>0x03</td>
+ <td>Partition table could not be read</td>
+</tr>
+<tr>
+ <td>0x04</td>
+ <td>Filesystem could not be opened</td>
+</tr>
+<tr>
+ <td>0x05</td>
+ <td>Root directory could not be opened</td>
+</tr>
+</table>
+<tr>
+ <td>0x06</td>
+ <td>SD Card is locked</td>
+</tr>
+
 
 # Test Commands
 
@@ -234,7 +274,7 @@ Test commands existed from 0x70-0x78, and 0xF0. They are considered legacy.
 
 # Host Query Commands
 
-## 0x00 - Get Version: Query firmware for version information
+## 00 - Get Version: Query firmware for version information
 This command allows the host and firmware to exchange version numbers. It also allows for automated discovery of the firmware. Version numbers will always be stored as a single number, Arduino / Processing style.
 
 Payload
@@ -245,10 +285,10 @@ Response
 
     uint16: Firmware Version
 
-## 0x01 - Init: Initialize firmware to boot state
+## 01 - Init: Initialize firmware to boot state
 Initialization consists of:
 
-    * Resetting current position to [0,0,0,0,0]
+    * Resetting all axes positions to 0
     * Clearing command buffer
     * Setting range to EEPROM value (TODO: Does this exist?)
 
@@ -256,7 +296,7 @@ Payload (0 bytes)
 
 Response (0 bytes)
 
-## 0x02 - Get Available Buffer Size: Determine how much free memory is available for buffering commands
+## 02 - Get Available Buffer Size: Determine how much free memory is available for buffering commands
 This command will let us know how much buffer space we have available for action commands.  It can be used to determine if and when the buffer is available for writing.  If we are writing to the SD card, it will generally always report the maximum number of bytes available.
 
 Payload (0 bytes)
@@ -265,27 +305,334 @@ Response
 
     uint32: Number of bytes availabe in the command buffer
 
-## 0x03 - Clear Buffer: Empty the command buffer
+## 03 - Clear Buffer: Empty the command buffer
 This command will empty our buffer, and reset all pointers, etc to the beginning of the buffer.  If writing to an SD card, it will reset the file pointer back to the beginning of the currently open file.  Obviously, it should halt all execution of action commands as well.
 
 Payload (0 bytes)
 
 Response (0 bytes)
 
-## 0x04 - Get Position: Get the current position of the toolhead
-Useful for determining current position of the toolhead.  It is up to the host software to add or subtract the toolhead offset to determine the actual position of the toolhead.  It will also return the status of the various endstops for diagnostic information.
+## 04 - Get Position: Get the current position of the toolhead
+Retrieve the curent position of the XYZ axes
 
 Payload (0 bytes)
 
 Response
 
     int32: X position, in steps
-    int32: X position, in steps
-    int32: X position, in steps
-    uint8: Axes Bitfield corresponding to the endstop status
+    int32: Y position, in steps
+    int32: Z position, in steps
+    uint8: Axes bitfield corresponding to the endstop status
 
-## 0xXX
+## 07 - Abort Immediately: Stop machine, shut down job permanently
+This function is intended to be used to terminate a print during printing. Disables steppers, heaters, and any toolheads, and clears all command buffers.
 
 Payload (0 bytes)
 
 Response (0 bytes)
+
+## 08 - Pause/Resume: Halt Execution Temporarily
+This function is inteded to be called infrequently by the end user in order to make build-time adjustments during a print. It differes from 'Abort Immediately', in that the command buffers and heaters are not disabled.
+
+On Pause, it stops all stepper movement and halts extrusion.
+On Resume, it restarts extrusion and resumes movement.
+
+Payload (0 bytes)
+
+Response (0 bytes)
+
+## 10 - Tool Query: Query a tool for information
+This command is for sending a query to the tool. The master firmware will then pass the query along to the appropriate tool, as well as passing the response back as well.  This allows the tool specific commands to be developed independently between.
+
+Payload
+
+    uint8: Slave index 
+    0-N bytes: Payload containing the query command to send to the slave.
+
+Response
+
+    0-N bytes: Response payload from the slave query command, if any.
+
+## 11 - Is Finished: See if the machine is currently busy
+This command queries the machine to determine if it currently executing commands from a command queue.
+
+Payload (0 bytes)
+
+Response
+
+    uint8: 0 if busy, 1 if finished.
+
+## 12 - Read from EEPROM
+Read the specified number of bytes from the given offset in the EEPROM, and return them in a response packet. The maximum read size is 32 bytes.
+TODO: Is this 32 or 16??
+
+Payload
+
+    uint16: EEPROM memory offset to begin reading from
+    uint8: Number of bytes to read, N.
+
+Response
+
+    N bytes: Data read from the EEPROM
+
+## 13 - Write to EEPROM
+Write the given bytes to the EEPROM, starting at the given offset.
+
+Payload
+
+    uint16: EEPROM memory offset to begin writing to
+    uint8: Number of bytes to write
+    N bytes: Data to write to EEPROM
+
+Response
+
+    uint8: Number of bytes successfully written to the EEPROM
+
+## 14 - Capture to file
+Capture all subsequent commands up to the 'end capture' command to a file with the given name on the SD card.  The file will be stored in the root of the fat16 filesystem on the SD card.  The maximum file name length permitted is 12 characters, including the '.' and file name extension.
+
+Payload
+
+    1+N bytes: Filename to write to, in ASCII, terminated with a null character. N can be 1-12 bytes long, not including the null character.
+
+Response
+
+    uint8: SD response code
+
+## 15 - End capture to file
+Complete an ongoing file capture by closing the file, and return to regular operation.
+
+Payload (0 bytes)
+
+Response
+
+    uint32: Number of bytes captured to file.
+
+## 16 - Play back capture
+Play back a file containing a stream of captured commands. While the macine is in playback mode, it will only respond to pause, unpause, and stop commands.
+
+Payload
+
+    1+N bytes: Filename to play back, in ASCII, terminated with a null character. N can be 1-12 bytes long, not including the null character.
+
+Response
+
+    uint8: SD response code
+
+## 17 - Reset
+Reset the microcontroller. This could be used, for example, to reprogram the microcontroller. TODO: Does this work?
+
+Payload (0 bytes)
+
+Response (0 bytes)
+
+## 18 - Get next filename
+Retrieve the volume name of the SD card or the next valid filename from the SD card. If a non-zero value is passed to the 'restart' parameter, the file list will begin again from the start of the directory.  The file list state will be reset if any other SD operations are performed. 
+If all the filenames have been retrieved, an empty string is returned.
+
+Payload
+
+    uint8: 0 if file listing should continue, 1 to restart listing.
+
+Response
+
+    uint8: SD Response code
+    1+N bytes: Name of the next file, in ASCII, terminated with a null character. If the operation was unsuccessful, this will be a null character.
+
+## 20 - Get build name
+Retrieve the name of the file currently being built. If the machine is not currently printing, ?? (TODO)
+
+Payload (0 bytes)
+
+Response
+
+    1+N bytes: A null terminated string representing the filename of the current build.
+
+## 21 - Get Extended position: Get the current 
+Retrieve the curent position of all axes that the machine supports. Unsupported axes will return 0 (TODO: is this true?)
+
+Payload (0 bytes)
+
+Response
+
+    int32: X position, in steps
+    int32: Y position, in steps
+    int32: Z position, in steps
+    int32: A position, in steps
+    int32: B position, in steps
+    uint16: Axes bitfield corresponding to the endstop status
+
+## 22 - Extended stop: Stop a subset of systems
+TODO: This command conflicts with other commands (Abort, Pause/Resume). Why do we have it?
+
+Stop the stepper motor motion or other subsystems.
+
+Payload
+
+    uint8: Bitfield indicating which subsystems to shut down. If bit 0 is set, halt all stepper motion. If bit 1 is set, clear the command queue.
+
+Response
+
+    int8: 0 If the command terminated normally, 1 if there was an error
+
+## 23 -  Get motherboard Status
+Retrieve some status information from the motherboard
+
+Payload (0 bytes)
+
+Response
+
+    uint8: Bitfield containing status information (see below)
+
+<table>
+<tr>
+ <th>Bit</th>
+ <th>Name</th>
+ <th>Details</th>
+</tr>
+<tr>
+ <td>7</td>
+ <td>POWER_ERRPR</td>
+ <td>An error was detected with the system power. For Gen4 electronics, this means ATX_5V is not present</td>
+</tr>
+<tr>
+ <td>6</td>
+ <td>N/A</td>
+ <td></td>
+</tr>
+<tr>
+ <td>5</td>
+ <td>WDRF</td>
+ <td>Watchdog reset flag was set at restart</td>
+</tr>
+<tr>
+ <td>4</td>
+ <td>BORF</td>
+ <td>Brownout reset flag was set at restart</td>
+</tr>
+<tr>
+ <td>3</td>
+ <td>EXTRF</td>
+ <td>External reset flag was set at restart</td>
+</tr>
+<tr>
+ <td>2</td>
+ <td>PORF</td>
+ <td>Power-on reset flag was set at restart</td>
+</tr>
+<tr>
+ <td>1</td>
+ <td>N/A</td>
+ <td></td>
+</tr>
+<tr>
+ <td>0</td>
+ <td>N/A</td>
+ <td></td>
+</tr>
+</table>
+
+## 24 - Build start notification
+Tells the motherboard that a build is about to begin, and provides the name of the job for status reporting.  
+
+Payload
+
+    uint32: Number of steps (commands?) in the build
+    1+N bytes: Name of the build, in ASCII, null terminated (TODO: verify null termination)
+
+Response (0 bytes)
+
+## 25 - Build end notification
+Tells the motherboard that a build has been completed or aborted.
+
+Payload (0 bytes)
+
+Response (0 bytes)
+
+## 26 - Get communication statistics
+Gathers statistics about communication over the slave bus. This was intended for use while troubleshooting Gen3/4 machines.
+
+Payload (0 bytes)
+
+Response
+
+    uint32: Packets received from the host interface
+    uint32: Packets sent over the slave interface
+    uint32: Number of packets sent over the slave interface that were not repsonded to
+    uint32: Number of packet retries on the slave interface
+    uint32: Number of bytes received over the slave interface that were discarded as noise
+
+# Host Buffered Commands
+
+## 129 - Queue point
+This queues an absolute point to move to. _Historical note: This implementation is much more wordy than an incremental solution, which likely impacts processing time and buffer sizes on the resource-constrained firmware_
+
+Payload
+
+    int32: X coordinate, in steps
+    int32: Y coordinate, in steps
+    int32: Z coordinate, in steps
+    uint32: Feedrate, in microseconds between steps on the max delta.
+
+## 130 - Set position
+Reset the current position of the axes to the given values.
+
+Payload
+
+    int32: X position, in steps
+    int32: Y position, in steps
+    int32: Z position, in steps
+
+## 131 - Find axes minimums: Move specified axes in the negative direction until their limit switch is triggered.
+This function will find the minimum position that the hardware can travel to, then stop. Note that all axes are moved syncronously. If one of the axes (Z, for example) should be moved separately, then a seperate command should be sent to move that axis. Note that a minimum endstop is required for each axis that is to be moved.
+
+Payload
+    uint8: Axes bitfield. Axes whose bits are set will be moved.
+    uint32: Feedrate, in microseconds between steps on the max delta.
+    uint16: Timeout, in seconds.
+
+## 132 - Find axes maximums: Move specified axes in the positive direction until their limit switch is triggered.
+This function will find the maximum position that the hardware can travel to, then stop. Note that all axes are moved syncronously. If one of the axes (Z, for example) should be moved separately, then a seperate command should be sent to move that axis. Note that a maximum endstop is required for each axis that is to be moved.
+
+Payload
+    uint8: Axes bitfield. Axes whose bits are set will be moved.
+    uint32: Feedrate, in microseconds between steps on the max delta.
+    uint16: Timeout, in seconds.
+
+## 133 - Delay: Pause all motion for the specified time
+Halt all motion for the specified amount of time.
+
+Payload
+
+    uint32: Delay, in microseconds
+
+## 135 - Wait for tool ready: Wait until a tool is ready before proceeding
+This command halts machine motion until the specified slave device reaches a ready state. Tool ready can mean
+
+Payload
+
+## 1
+
+Payload
+
+## 1
+
+Payload
+
+## 1
+
+Payload
+
+## 1
+
+Payload
+
+## 1
+
+Payload
+
+## 1
+
+Payload
+
+
