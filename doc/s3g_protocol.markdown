@@ -102,7 +102,7 @@ All packets have the following structure:
 </table>
 
 ## Host Bus Payload Structure
-The payload of a host packet contains one command. Each command consists of a command code, and 0 or more arguments:
+The payload of a packet sent over the master bus contains one command. Each command consists of a command code, and 0 or more arguments:
 
 <table>
 <tr>
@@ -123,7 +123,7 @@ The payload of a host packet contains one command. Each command consists of a co
 </table>
 
 ## Slave Bus Payload Structure
-The payload of a slave packet contains one command. Each command consists of a Slave ID, a command code, and 0 or more arguments:
+The payload of a packet sent over the slave bus contains one command. Each command consists of a Slave ID, a command code, and 0 or more arguments:
 
 <table>
 <tr>
@@ -342,7 +342,7 @@ Payload (0 bytes)
 Response (0 bytes)
 
 ## 10 - Tool Query: Query a tool for information
-This command is for sending a query to the tool. The master firmware will then pass the query along to the appropriate tool, as well as passing the response back as well.  This allows the tool specific commands to be developed independently between.
+This command is for sending a query command to the tool.  The host firmware will then pass the query along to the appropriate tool, wait for a response from the tool, and pass the response back to the host. TODO: Does the master handle retries?
 
 Payload
 
@@ -572,7 +572,7 @@ Payload
     int32: X coordinate, in steps
     int32: Y coordinate, in steps
     int32: Z coordinate, in steps
-    uint32: Feedrate, in microseconds between steps on the max delta.
+    uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
 
 ## 130 - Set position
 Reset the current position of the axes to the given values.
@@ -588,7 +588,7 @@ This function will find the minimum position that the hardware can travel to, th
 
 Payload
     uint8: Axes bitfield. Axes whose bits are set will be moved.
-    uint32: Feedrate, in microseconds between steps on the max delta.
+    uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
     uint16: Timeout, in seconds.
 
 ## 132 - Find axes maximums: Move specified axes in the positive direction until their limit switch is triggered.
@@ -596,7 +596,7 @@ This function will find the maximum position that the hardware can travel to, th
 
 Payload
     uint8: Axes bitfield. Axes whose bits are set will be moved.
-    uint32: Feedrate, in microseconds between steps on the max delta.
+    uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
     uint16: Timeout, in seconds.
 
 ## 133 - Delay: Pause all motion for the specified time
@@ -607,31 +607,199 @@ Payload
     uint32: Delay, in microseconds
 
 ## 135 - Wait for tool ready: Wait until a tool is ready before proceeding
-This command halts machine motion until the specified slave device reaches a ready state. Tool ready can mean
+This command halts machine motion until the specified toolhead reaches a ready state. A tool is ready when it's temperature is within range of the setpoint.
 
 Payload
 
-## 1
+    uint8: Slave ID of the tool to wait for
+    uint16: Delay between query packets sent to the slave, in ms (nominally 100 ms)
+    uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
+
+## 136 - Tool action command: Send an action command to a tool for execution
+This command is for sending an action command to the tool.  The host firmware will then pass the query along to the appropriate tool, wait for a response from the tool, and pass the response back to the host. TODO: Does the master handle retries?
 
 Payload
 
-## 1
+    uint8: Slave ID of the tool to query
+    uint8: Action command to send to the tool
+    uint8: Length of the tool command payload (N)
+    N bytes: Tool command payload, 0-? bytes.
+
+## 137 - Enable/Disable Axes: Explicitly enable or disable stepper motor controllers
+This command is used to explicitly power steppers on or off.  Generally, it is used to shut down the steppers after a build to save power and avoid generating excessive heat.
 
 Payload
 
-## 1
+    uint8: Bitfield codifying the command (see below)
+
+<table>
+<tr>
+ <th>Bit</th>
+ <th>Details</th>
+</tr>
+<tr>
+ <th>7</th>
+ <th>If set to 1, enable all selected axes. Otherwise, disable all selected axes.</th>
+</tr>
+<tr>
+ <th>6</th>
+ <th>N/A</th>
+</tr>
+<tr>
+ <th>5</th>
+ <th>N/A</th>
+</tr>
+<tr>
+ <th>4</th>
+ <th>B axis select</th>
+</tr>
+<tr>
+ <th>3</th>
+ <th>A axis select</th>
+</tr>
+<tr>
+ <th>2</th>
+ <th>Z axis select</th>
+</tr>
+<tr>
+ <th>1</th>
+ <th>Y axis select</th>
+</tr>
+<tr>
+ <th>0</th>
+ <th>X axis select</th>
+</tr>
+</table>
+
+## 139 - Queue extended point
+This queues an absolute point to move to. _Historical note: This implementation is much more wordy than an incremental solution, which likely impacts processing time and buffer sizes on the resource-constrained firmware_
 
 Payload
 
-## 1
+    int32: X coordinate, in steps
+    int32: Y coordinate, in steps
+    int32: Z coordinate, in steps
+    int32: A coordinate, in steps
+    int32: B coordinate, in steps
+    uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
+
+## 140 - Set Extended Position
+Reset the current position of the axes to the given values.
 
 Payload
 
-## 1
+    int32: X position, in steps
+    int32: Y position, in steps
+    int32: Z position, in steps
+    int32: A position, in steps
+    int32: B position, in steps
+
+## 141 - Wait for Platform Ready: Wait until a build platform is ready before proceeding
+This command halts machine motion until the specified slave device reaches a ready state. A build platform is ready when it's temperature is within range of the setpoint.
 
 Payload
 
-## 1
+    uint8: Slave ID of the build platform to wait for
+    uint16: Delay between query packets sent to the slave, in ms (nominally 100 ms)
+    uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
+
+## 142 - Queue extended point, new style
+This queues a point to move to.
+
+_Historical note: It differs from old-style point queues (see command 139 et. al.) in that it no longer uses the DDA abstraction and instead specifies the total move time in microseconds.  Additionally, each axis can be specified as relative or absolute.  If the 'relative' bit is set on an axis, then the motion is considered to be relative; otherwise, it is absolute._
+
+Payload
+
+    int32: X coordinate, in steps
+    int32: Y coordinate, in steps
+    int32: Z coordinate, in steps
+    int32: A coordinate, in steps
+    int32: B coordinate, in steps
+    uint32: Duration of the movement, in microseconds
+    uint8: Axes bitfield to specify which axes are relative. Any axis with a bit set should make a relative movement.
+
+## 143 - Store home positions
+Record the positions of the selected axes to device EEPROM
+
+Payload
+    uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
+
+## 144 - Recall home positions
+Recall the positions of the selected axes from device EEPROM
+
+Payload
+    uint8: Axes bitfield to specify which axes' positions to recall. Any axes with a bit set should have it's position recalled.
+
+## 148 - Wait for button
+Wait until either a user presses a button on the interface board, or a timeout occurs.
+
+Payload
+    uint8: Bit field of buttons to wait for (TODO: define these)
+    uint16: Timeout, in seconds. A value of 0 indicates that the command should not time out.
+    uint8: Options bitfield (see below)
+
+<table>
+<tr>
+ <th>Bit</th>
+ <th>Name</th>
+ <th>Details</th>
+</tr>
+<tr>
+ <td>7</td>
+ <td>N/A</td>
+ <td></td>
+</tr>
+<tr>
+ <td>6</td>
+ <td>N/A</td>
+ <td></td>
+</tr>
+<tr>
+ <td>5</td>
+ <td>N/A</td>
+ <td></td>
+</tr>
+<tr>
+ <td>4</td>
+ <td>N/A</td>
+ <td></td>
+</tr>
+<tr>
+ <td>3</td>
+ <td>N/A</td>
+ <td></td>
+</tr>
+<tr>
+<td>2</td>
+ <td>N/A</td>
+ <td></td>
+</tr>
+<tr>
+ <td>1</td>
+ <td>Clear message on button press</td>
+ <td></td>
+</tr>
+<tr>
+ <td>0</td>
+ <td>Reset machine on timeout</td>
+ <td></td>
+</tr>
+</table>
+
+
+## 149 - Display Message to LCD
+This command will display a message to the LCD for a specified number of seconds, then revert to previous GUI if there is a running display.
+
+Text will auto-wrap at end of line. \n is recognized as new line start. \r is ignored. Note: words do not wrap automatically. You will need to insert newlines manually.
+
+Payload
+    uint8: Options bitmap (see below)
+    uint8: Vertical position to display the message at (0-3)
+    uint8: Horizontal position to display the message at (0-19)
+    uint8: Timeout, in seconds. If 0, this message will left on the screen
+    1+N bytes: Message to write to the screen, in ASCII, terminated with a null character.
+
+## -
 
 Payload
 
