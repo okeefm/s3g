@@ -87,17 +87,17 @@ All packets have the following structure:
 <tr>
  <td>1</td>
  <td>Length</td>
- <td>The length of the payload, in bytes<td>
+ <td>The length of the payload, in bytes</td>
 </tr>
 <tr>
  <td>2..(1+N)</td>
  <td>Payload</td>
- <td>The packet payload. The payload can be N bytes long (TODO: maximum length?).<td>
+ <td>The packet payload. The payload can be N bytes long (TODO: maximum length?).</td>
 </tr>
 <tr>
  <td>2+N</td>
  <td>CRC</td>
- <td>The [8-bit iButton/Maxim CRC](http://www.maxim-ic.com/app-notes/index.mvp/id/27) of the payload<td>
+ <td>The [8-bit iButton/Maxim CRC](http://www.maxim-ic.com/app-notes/index.mvp/id/27) of the payload</td>
 </tr>
 </table>
 
@@ -742,47 +742,38 @@ Payload
 <tr>
  <th>Bit</th>
  <th>Name</th>
- <th>Details</th>
 </tr>
 <tr>
  <td>7</td>
  <td>N/A</td>
- <td></td>
 </tr>
 <tr>
  <td>6</td>
  <td>N/A</td>
- <td></td>
 </tr>
 <tr>
  <td>5</td>
  <td>N/A</td>
- <td></td>
 </tr>
 <tr>
  <td>4</td>
  <td>N/A</td>
- <td></td>
 </tr>
 <tr>
  <td>3</td>
  <td>N/A</td>
- <td></td>
 </tr>
 <tr>
 <td>2</td>
  <td>N/A</td>
- <td></td>
 </tr>
 <tr>
  <td>1</td>
  <td>Clear message on button press</td>
- <td></td>
 </tr>
 <tr>
  <td>0</td>
  <td>Reset machine on timeout</td>
- <td></td>
 </tr>
 </table>
 
