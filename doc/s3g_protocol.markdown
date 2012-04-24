@@ -87,7 +87,7 @@ All packets have the following structure:
 <tr>
  <td>1</td>
  <td>Length</td>
- <td>The length of the payload, in bytes</td>
+ <td>The length of the payload, in bytes<td>
 </tr>
 <tr>
  <td>2..(1+N)</td>
@@ -297,7 +297,7 @@ Payload (0 bytes)
 Response (0 bytes)
 
 ## 02 - Get Available Buffer Size: Determine how much free memory is available for buffering commands
-This command will let us know how much buffer space we have available for action commands.  It can be used to determine if and when the buffer is available for writing.  If we are writing to the SD card, it will generally always report the maximum number of bytes available.
+This command will let us know how much buffer space we have available for action commands. It can be used to determine if and when the buffer is available for writing. If we are writing to the SD card, it will generally always report the maximum number of bytes available.
 
 Payload (0 bytes)
 
@@ -306,7 +306,7 @@ Response
     uint32: Number of bytes availabe in the command buffer
 
 ## 03 - Clear Buffer: Empty the command buffer
-This command will empty our buffer, and reset all pointers, etc to the beginning of the buffer.  If writing to an SD card, it will reset the file pointer back to the beginning of the currently open file.  Obviously, it should halt all execution of action commands as well.
+This command will empty our buffer, and reset all pointers, etc to the beginning of the buffer. If writing to an SD card, it will reset the file pointer back to the beginning of the currently open file. Obviously, it should halt all execution of action commands as well.
 
 Payload (0 bytes)
 
@@ -342,7 +342,7 @@ Payload (0 bytes)
 Response (0 bytes)
 
 ## 10 - Tool Query: Query a tool for information
-This command is for sending a query command to the tool.  The host firmware will then pass the query along to the appropriate tool, wait for a response from the tool, and pass the response back to the host. TODO: Does the master handle retries?
+This command is for sending a query command to the tool. The host firmware will then pass the query along to the appropriate tool, wait for a response from the tool, and pass the response back to the host. TODO: Does the master handle retries?
 
 Payload
 
@@ -389,7 +389,7 @@ Response
     uint8: Number of bytes successfully written to the EEPROM
 
 ## 14 - Capture to file
-Capture all subsequent commands up to the 'end capture' command to a file with the given name on the SD card.  The file will be stored in the root of the fat16 filesystem on the SD card.  The maximum file name length permitted is 12 characters, including the '.' and file name extension.
+Capture all subsequent commands up to the 'end capture' command to a file with the given name on the SD card. The file will be stored in the root of the fat16 filesystem on the SD card. The maximum file name length permitted is 12 characters, including the '.' and file name extension.
 
 Payload
 
@@ -427,7 +427,7 @@ Payload (0 bytes)
 Response (0 bytes)
 
 ## 18 - Get next filename
-Retrieve the volume name of the SD card or the next valid filename from the SD card. If a non-zero value is passed to the 'restart' parameter, the file list will begin again from the start of the directory.  The file list state will be reset if any other SD operations are performed. 
+Retrieve the volume name of the SD card or the next valid filename from the SD card. If a non-zero value is passed to the 'restart' parameter, the file list will begin again from the start of the directory. The file list state will be reset if any other SD operations are performed. 
 If all the filenames have been retrieved, an empty string is returned.
 
 Payload
@@ -475,7 +475,7 @@ Response
 
     int8: 0 If the command terminated normally, 1 if there was an error
 
-## 23 -  Get motherboard Status
+## 23 - Get motherboard status
 Retrieve some status information from the motherboard
 
 Payload (0 bytes)
@@ -533,7 +533,7 @@ Response
 </table>
 
 ## 24 - Build start notification
-Tells the motherboard that a build is about to begin, and provides the name of the job for status reporting.  
+Tells the motherboard that a build is about to begin, and provides the name of the job for status reporting. 
 
 Payload
 
@@ -616,7 +616,7 @@ Payload
     uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
 
 ## 136 - Tool action command: Send an action command to a tool for execution
-This command is for sending an action command to the tool.  The host firmware will then pass the query along to the appropriate tool, wait for a response from the tool, and pass the response back to the host. TODO: Does the master handle retries?
+This command is for sending an action command to the tool. The host firmware will then pass the query along to the appropriate tool, wait for a response from the tool, and pass the response back to the host. TODO: Does the master handle retries?
 
 Payload
 
@@ -625,8 +625,8 @@ Payload
     uint8: Length of the tool command payload (N)
     N bytes: Tool command payload, 0-? bytes.
 
-## 137 - Enable/Disable Axes: Explicitly enable or disable stepper motor controllers
-This command is used to explicitly power steppers on or off.  Generally, it is used to shut down the steppers after a build to save power and avoid generating excessive heat.
+## 137 - Enable/disable Axes: Explicitly enable or disable stepper motor controllers
+This command is used to explicitly power steppers on or off. Generally, it is used to shut down the steppers after a build to save power and avoid generating excessive heat.
 
 Payload
 
@@ -706,7 +706,7 @@ Payload
 ## 142 - Queue extended point, new style
 This queues a point to move to.
 
-_Historical note: It differs from old-style point queues (see command 139 et. al.) in that it no longer uses the DDA abstraction and instead specifies the total move time in microseconds.  Additionally, each axis can be specified as relative or absolute.  If the 'relative' bit is set on an axis, then the motion is considered to be relative; otherwise, it is absolute._
+_Historical note: It differs from old-style point queues (see command 139 et. al.) in that it no longer uses the DDA abstraction and instead specifies the total move time in microseconds. Additionally, each axis can be specified as relative or absolute. If the 'relative' bit is set on an axis, then the motion is considered to be relative; otherwise, it is absolute._
 
 Payload
 
@@ -790,8 +790,341 @@ Payload
     uint8: Timeout, in seconds. If 0, this message will left on the screen
     1+N bytes: Message to write to the screen, in ASCII, terminated with a null character.
 
-## -
+# Slave Query Commands
+
+## 00 - Get Version: Query firmware for version information
+This command allows the host and firmware to exchange version numbers. It also allows for automated discovery of the firmware. Version numbers will always be stored as a single number, Arduino / Processing style.
 
 Payload
 
+    uint16: Host Version
 
+Response
+
+    uint16: Firmware Version
+
+Payload
+
+## 02 - Get Toolhead Temperature
+This returns the last recorded temperature of the toolhead. It's important for speed purposes that it does not actually trigger a temperature reading, but rather returns the last reading. The slave firmware should be constantly monitoring its temperature and keeping track of the latest readings.
+
+Payload (0 bytes)
+
+Response
+
+    int16: Current temperature, in Celsius
+
+## 17 - Get motor speed (RPM)
+
+Payload (0 bytes)
+
+Response
+
+    uint32: Duration of each rotation, in microseconds
+
+## 22 - Is tool ready?
+Query the tool to determine if it has reached target temperature. Note that this only queries the toolhead, not the build platform.
+
+Payload (0 bytes)
+
+Response
+
+    uint8: 1 if the tool is ready, 0 otherwise.
+
+## 25 - Read from EEPROM
+Read the specified number of bytes from the given offset in the EEPROM, and return them in a response packet. The maximum read size is 32 bytes.
+TODO: Is this 32 or 16??
+
+Payload
+
+    uint16: EEPROM memory offset to begin reading from
+    uint8: Number of bytes to read, N.
+
+Response
+
+    N bytes: Data read from the EEPROM
+
+## 26 - Write to EEPROM
+Write the given bytes to the EEPROM, starting at the given offset.
+
+Payload
+
+    uint16: EEPROM memory offset to begin writing to
+    uint8: Number of bytes to write
+    N bytes: Data to write to EEPROM
+
+Response
+
+    uint8: Number of bytes successfully written to the EEPROM
+
+## 30 - Get build platform temperature
+This returns the last recorded temperature of the build platform. It's important for speed purposes that it does not actually trigger a temperature reading, but rather returns the last reading. The slave firmware should be constantly monitoring its temperature and keeping track of the latest readings.
+
+Payload (0 bytes)
+
+Response
+
+    int16: Current temperature, in Celsius
+
+## 32 - Get toolhead target temperature
+This returns the target temperature (setpoint) of the toolhead.
+
+Payload (0 bytes)
+
+Response
+
+    int16: Target temperature, in Celsius
+
+## 33 - Get build platform target temperature
+This returns the target temperature (setpoint) of the build platform.
+
+Payload (0 bytes)
+
+Response
+
+    int16: Target temperature, in Celsius
+
+## 34 - Get firmware build name
+Retrieve the firmware build name, which is a human-readable string describing the build. Names should be chosen with an eye towards disambiguating builds targeted for different tools.
+
+Payload (0 bytes)
+
+Response
+
+    1+N bytes: A null terminated string representing the filename of the current build.
+
+## 35 - Is build platform ready?
+Query the build platform to determine if it has reached target temperature. Note that this only queries the toolhead, not the build platform.
+
+Payload (0 bytes)
+
+Response
+
+    uint8: 1 if the tool is ready, 0 otherwise.
+
+## 36 - Get tool status
+Retrieve some status information from the tool
+
+Payload (0 bytes)
+
+Response
+
+    uint8: Bitfield containing status information (see below)
+
+<table>
+<tr>
+ <th>Bit</th>
+ <th>Name</th>
+ <th>Details</th>
+</tr>
+<tr>
+ <th>7</th>
+ <th>EXTRUDER_ERROR</th>
+ <th>An error was detected with the extruder heater (if the tool supports one). The extruder heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.</th>
+</tr>
+<tr>
+ <th>6</th>
+ <th>PLATFORM_ERROR</th>
+ <th>An error was detected with the platform heater (if the tool supports one). The platform heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.</th>
+</tr>
+<tr>
+ <td>5</td>
+ <td>WDRF</td>
+ <td>Watchdog reset flag was set at restart</td>
+</tr>
+<tr>
+ <td>4</td>
+ <td>BORF</td>
+ <td>Brownout reset flag was set at restart</td>
+</tr>
+<tr>
+ <td>3</td>
+ <td>EXTRF</td>
+ <td>External reset flag was set at restart</td>
+</tr>
+<tr>
+ <td>2</td>
+ <td>PORF</td>
+ <td>Power-on reset flag was set at restart</td>
+</tr>
+<tr>
+ <td>1</td>
+ <td>N/A</td>
+ <td></td>
+</tr>
+<tr>
+ <td>0</td>
+ <td>EXTRUDER_READY</td>
+ <td>The extruder has reached target temperature</td>
+</tr>
+</table>
+
+## 37 - Get PID state
+Retrieve the state variables of the PID controller. This is intended for tuning the PID constants.
+
+Payload (0 bytes)
+
+Response
+    int16: Extruder heater error term
+    int16: Extruder heater delta term
+    int16: Extruder heater last output
+    int16: Platform heater error term
+    int16: Platform heater delta term
+    int16: Platform heater last output
+
+# Slave Action Commands
+
+## 01 - Init: Initialize firmware to boot state
+Initialization consists of:
+
+    * Resetting target temperatures to 0
+    * Turning off all outputs (fan, motor, etc)
+    * Detaching all servo devices
+    * Resetting motor speed to 0
+
+Payload (0 bytes)
+
+Response (0 bytes)
+
+## 03 - Set toolhead target temperature
+This sets the desired temperature for the heating element. The slave firmware will then attempt to maintain this temperature as closely as possible.
+
+Payload
+
+    int16: Desired target temperature, in Celsius
+
+Response (0 bytes)
+
+## 06 - Set motor speed (RPM)
+This sets the motor speed as an RPM value, but does not enable/disable it.
+
+Payload
+
+    uint32: Duration of each rotation, in microseconds
+
+Response (0 bytes)
+
+## 10 - Enable/disable motor
+This command can be used to turn the motor on or off. The motor direction must be specified when enabling the motor.
+
+Payload
+
+    uint8: Bitfield codifying the command (see below)
+
+Response (0 bytes)
+
+<table>
+<tr>
+ <th>Bit</th>
+ <th>Name</th>
+ <th>Details</th>
+</tr>
+<tr>
+ <th>7</th>
+ <th>N/A</th>
+ <th></th>
+</tr>
+<tr>
+ <th>6</th>
+ <th>N/A</th>
+ <th></th>
+</tr>
+<tr>
+ <th>5</th>
+ <th>N/A</th>
+ <th></th>
+</tr>
+<tr>
+ <th>4</th>
+ <th>N/A</th>
+ <th></th>
+</tr>
+<tr>
+ <th>3</th>
+ <th>N/A</th>
+ <th></th>
+</tr>
+<tr>
+ <th>2</th>
+ <th>N/A</th>
+ <th></th>
+</tr>
+<tr>
+ <th>1</th>
+ <th>DIR</th>
+ <th>If set, motor should be turned in a clockwise direciton. Otherwise, it should be turned in a counterclockwise direction</th>
+</tr>
+<tr>
+ <th>0</th>
+ <th>ENABLE</th>
+ <th>If set, enable the motor. If unset, disable the motor</th>
+</tr>
+</table>
+
+## 12 - Enable/disable fan
+Turn the fan output on or off
+
+Payload
+
+    uint8: 1 to enable, 0 to disable.
+
+Response (0 bytes)
+
+## 13 - Enable/disable valve
+Turn the valve output on or off
+
+Payload
+
+    uint8: 1 to enable, 0 to disable.
+
+Response (0 bytes)
+
+## 14 - Set servo 1 position
+Set the position of a servo connected to the first servo output.
+
+Payload
+
+    uint8: Desired angle, from 0 - 180
+
+Response (0 bytes)
+
+## 23 - Pause/Resume: Halt Execution Temporarily
+This function is inteded to be called infrequently by the end user in order to make build-time adjustments during a print.
+
+Payload (0 bytes)
+
+Response (0 bytes)
+
+## 24 - Abort immediately: Terminate all operations and reset
+This function is intended to be used to terminate a print during printing. Disables any engaged heaters and motors. 
+
+Payload (0 bytes)
+
+Response (0 bytes)
+
+## 31 - Set build platform target temperature
+This sets the desired temperature for the build platform. The slave firmware will then attempt to maintain this temperature as closely as possible.
+
+Payload
+
+    int16: Desired target temperature, in Celsius
+
+Response (0 bytes)
+
+## 38 - Set motor speed (DDA)
+This sets the motor speed as a DDA value, in microseconds between step. It should not actually enable the motor until the motor enable command is given. For future implementation of 5D (vs 4D) two DDA codes are sent - the DDA to start with and the DDA to end with. The third uint32 is the number of steps to take. The direction to go is set by code 8, 'Set motor direction'
+
+Payload
+
+    uint32: Speed, in microseconds between steps (start of movement)
+    uint32: Speed, in microseconds between steps (end of movement)
+    uint32: total steps to take.
+
+Response (0 bytes)
+
+## 40 - Light indicator LED
+This command turns on an indicator light (for gen 4, the motor direction LED). This command is intended to serve as visual feedback to an operator that the electronics are communicating properly. Note that it should not be used during regular operation, because it interferes with h-bridge operation.
+
+Payload (0 bytes)
+
+Response (0 bytes)
