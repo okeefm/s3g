@@ -12,13 +12,15 @@ sys.path.append(lib_path)
 import s3g
 import serial
 import optparse
-
+import binascii
 
 parser = optparse.OptionParser()
 parser.add_option("-p", "--serialport", dest="serialportname",
                   help="serial port (ex: /dev/ttyUSB0)", default="/dev/ttyACM0")
 parser.add_option("-b", "--baud", dest="serialbaud",
                   help="serial port baud rate", default="115200")
+parser.add_option("-t", "--toolheads", dest="toolheads",
+                  help="toolhead count", type='int', default=2)
 (options, args) = parser.parse_args()
 
 
@@ -40,8 +42,20 @@ except s3g.SDCardError:
 
 print "Available buffer size=%i"%(r.GetAvailableBufferSize())
 
-print "toolhead_0=%i, toolhead_1=%i, platform=%i"%(
-  r.GetToolheadTemperature(0),
-  r.GetToolheadTemperature(1),
-  r.GetPlatformTemperature(0)
- )
+for tool_index in range(0, options.toolheads):
+  print "Tool %i"%(tool_index)
+  print "  Version=%i"%(r.GetToolheadVersion(tool_index))
+  print "  Extruder_temp=%i"%(r.GetPlatformTemperature(tool_index))
+  print "  Platform_temp=%i"%(r.GetPlatformTemperature(tool_index))
+
+print "Host EEPROM memory map:"
+for offset in range(0, 1024, 16):
+  data = r.ReadFromEEPROM(offset, 16)
+  print '%04i'%(offset), binascii.hexlify(buffer(data))
+
+for tool_index in range(0, options.toolheads):
+  print "Tool %i EEPROM memory map:"%(tool_index)
+  for offset in range(0, 1024, 16):
+    data = r.ReadFromToolheadEEPROM(tool_index, offset, 16)
+    print '%04i'%(offset), binascii.hexlify(buffer(data))
+

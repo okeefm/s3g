@@ -13,8 +13,8 @@ host_query_command_dict = {
 #  'PROBE'                     : 9,
   'TOOL_QUERY'                : 10,
 #  'IS_FINISHED'               : 11,
-#  'READ_FROM_EEPROM'          : 12,
-#  'WRITE_TO_EEPROM'           : 13,
+  'READ_FROM_EEPROM'          : 12,
+  'WRITE_TO_EEPROM'           : 13,
 #  'CAPTURE_TO_FILE'           : 14,
 #  'END_CAPTURE'               : 15,
 #  'PLAYBACK_CAPTURE'          : 16,
@@ -36,7 +36,6 @@ host_action_command_dict = {
   'FIND_AXES_MINIMUMS'        : 131,
   'FIND_AXES_MAXIMUMS'        : 132,
 #  'DELAY'                     : 133,
-#  'CHANGE_TOOL'               : 134,
 #  'WAIT_FOR_TOOL_READY'       : 135,
   'TOOL_ACTION_COMMAND'       : 136,
 #  'ENABLE_AXES'               : 137,
@@ -52,50 +51,36 @@ host_action_command_dict = {
 }
 
 slave_query_command_dict = {
-#  'VERSION'                    : 0,
+  'GET_VERSION'                : 0,
   'GET_TOOLHEAD_TEMP'          : 2,
 #  'GET_MOTOR_1_SPEED_RPM'      : 17,
-#  'GET_MOTOR_2_SPEED_RPM'      : 18,
-#  'GET_MOTOR_1_SPEED_PWM'      : 19,
-#  'GET_MOTOR_2_SPEED_PWM'      : 20,
-#  'READ_FROM_EEPROM'           : 25,
-#  'WRITE_TO_EEPROM'            : 26,
+#  'IS_TOOL_READY'              : 22,
+  'READ_FROM_EEPROM'           : 25,
+  'WRITE_TO_EEPROM'            : 26,
 #  'GET_BUILD_PLATFORM_TEMP'    : 30,
 #  'SET_BUILD_PLATFORM_TEMP'    : 31,
 #  'GET_TOOLHEAD_TARGET_TEMP'   : 32,
   'GET_BUILD_PLATFORM_TEMP'    : 33,
 #  'GET_BUILD_NAME'             : 34,
+#  'IS_BUILD_PLATFORM_READY'    : 35,
 #  'GET_TOOL_STATUS'            : 36,
 #  'GET_PID_STATE'              : 37,
 }
 
 slave_action_command_dict = {
+#  'INIT'                       : 1,
 #  'SET_TOOLHEAD_TARGET_TEMP'   : 3,
-#  'SET_MOTOR_1_SPEED_PWM'      : 4,
-#  'SET_MOTOR_2_SPEED_PWM'      : 5,
 #  'SET_MOTOR_1_SPEED_RPM'      : 6,
-#  'SET_MOTOR_2_SPEED_RPM'      : 7,
 #  'SET_MOTOR_1_DIRECTION'      : 8,
-#  'SET_MOTOR_2_DIRECTION'      : 9,
 #  'TOGGLE_MOTOR_1'             : 10,
-#  'TOGGLE_MOTOR_2'             : 11,
   'TOGGLE_FAN'                 : 12,
   'TOGGLE_VALVE'               : 13,
 #  'SET_SERVO_1_POSITION'       : 14,
 #  'SET_SERVO_2_POSITION'       : 15,
-#  'SET_BUILD_PLATFORM_TEMP'    : 31,
-#  'SET_MOTOR_1_SPEED_DDA'      : 38,
-#  'SET_MOTOR_2_SPEED_DDA'      : 39,
-}
-
-slave_unknown_command_dict = {
-#  'INIT'                       : 1,
-#  'FILAMENT_STATUS'            : 16,
-#  'SELECT_TOOL'                : 21,
-#  'IS_TOOL_READY'              : 22,
 #  'PAUSE'                      : 23,
 #  'ABORT'                      : 24,
-#  'IS_BUILD_PLATFORM_READY'    : 35,
+#  'SET_BUILD_PLATFORM_TEMP'    : 31,
+#  'SET_MOTOR_1_SPEED_DDA'      : 38,
 #  'LIGHT_INDICATOR_LED'        : 40,
 }
 
@@ -349,7 +334,6 @@ class PacketStreamDecoder:
     self.expected_length = 0
     self.expect_response_code = expect_response_code
 
-
   def ParseByte(self, byte):
     """
     Entry point, call for each byte added to the stream.
@@ -512,6 +496,45 @@ class s3g:
 
     return self.SendCommand(payload)
 
+  def ReadFromEEPROM(self, offset, length):
+    """
+    Read some data from the machine. The data structure is implementation specific.
+    @param offset EEPROM location to begin reading from
+    @param length Number of bytes to read from the EEPROM (max 31)
+    @return byte array of data read from EEPROM
+    """
+    if length > maximum_payload_length - 1:
+      raise ProtocolError('Length out of range, got=%i, max=%i'%(length, maximum_payload_length))
+
+    payload = bytearray()
+    payload.append(host_query_command_dict['READ_FROM_EEPROM'])
+    payload.extend(EncodeUint16(offset))
+    payload.append(length)
+
+    response = self.SendCommand(payload)
+
+    return response[1:]
+
+  def WriteToEEPROM(self, offset, data):
+    """
+    Write some data to the machine. The data structure is implementation specific.
+    @param offset EEPROM location to begin writing to
+    @param data Data to write to the EEPROM
+    """
+    if len(data) > maximum_payload_length - 4:
+      raise ProtocolError('Length out of range, got=%i, max=%i'%(len(data), maximum_payload_length - 4))
+
+    payload = bytearray()
+    payload.append(host_query_command_dict['WRITE_TO_EEPROM'])
+    payload.extend(EncodeUint16(offset))
+    payload.append(len(data))
+    payload.extend(data)
+
+    response = self.SendCommand(payload)
+
+    if response[1] != len(data):
+      raise ProtocolError('Write length mismatch, got=%i, expected=%i'%(response[1], len(data)))
+
   def GetAvailableBufferSize(self):
     """
     Gets the available buffer size
@@ -666,6 +689,19 @@ class s3g:
     
     self.SendCommand(payload)
 
+  def GetToolheadVersion(self, tool_index):
+    """
+    Get the firmware version number of the specified toolhead
+    @return Version number
+    """
+    payload = bytearray()
+    payload.extend(EncodeUint16(s3g_version))
+   
+    response = self.ToolQuery(tool_index,slave_query_command_dict['GET_VERSION'], payload)
+    [response_code, version] = self.UnpackResponse('<BH', response)
+
+    return version
+
   def GetToolheadTemperature(self, tool_index):
     """
     Retrieve the toolhead temperature
@@ -676,6 +712,44 @@ class s3g:
     [response_code, temperature] = self.UnpackResponse('<BH', response)
 
     return temperature
+
+  def ReadFromToolheadEEPROM(self, tool_index, offset, length):
+    """
+    Read some data from the toolhead. The data structure is implementation specific.
+    @param offset EEPROM location to begin reading from
+    @param length Number of bytes to read from the EEPROM (max 31)
+    @return byte array of data read from EEPROM
+    """
+    if length > maximum_payload_length - 1:
+      raise ProtocolError('Length out of range, got=%i, max=%i'%(length, maximum_payload_length))
+
+    payload = bytearray()
+    payload.extend(EncodeUint16(offset))
+    payload.append(length)
+
+    response = self.ToolQuery(tool_index, slave_query_command_dict['READ_FROM_EEPROM'], payload)
+
+    return response[1:]
+
+  def WriteToToolheadEEPROM(self, tool_index, offset, data):
+    """
+    Write some data to the toolhead. The data structure is implementation specific.
+    @param offset EEPROM location to begin writing to
+    @param data Data to write to the EEPROM
+    """
+    # TODO: this length is bad
+    if len(data) > maximum_payload_length - 6:
+      raise ProtocolError('Length out of range, got=%i, max=%i'%(len(data), maximum_payload_length - 6))
+
+    payload = bytearray()
+    payload.extend(EncodeUint16(offset))
+    payload.append(len(data))
+    payload.extend(data)
+
+    response = self.ToolQuery(tool_index, slave_query_command_dict['WRITE_TO_EEPROM'], payload)
+
+    if response[1] != len(data):
+      raise ProtocolError('Write length mismatch, got=%i, expected=%i'%(response[1], len(data)))
 
   def GetPlatformTemperature(self, tool_index):
     """

@@ -409,6 +409,79 @@ class S3gTests(unittest.TestCase):
     assert payload[2] == command
     assert payload[3:] == command_payload
 
+  def test_read_from_eeprom_bad_length(self):
+    offset = 1234
+    length = s3g.maximum_payload_length
+
+    self.assertRaises(s3g.ProtocolError,self.r.ReadFromEEPROM,offset, length)
+
+  def test_read_from_eeprom(self):
+    offset = 1234
+    length = s3g.maximum_payload_length - 1
+    data = bytearray()
+    for i in range (0, length):
+      data.append(i)
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend(data)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    assert self.r.ReadFromEEPROM(offset, length) == data
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['READ_FROM_EEPROM']
+    assert payload[1:3] == s3g.EncodeUint16(offset)
+    assert payload[3] == length
+
+  def test_write_to_eeprom_too_much_data(self):
+    offset = 1234
+    length = s3g.maximum_payload_length - 3
+    data = bytearray()
+    for i in range (0, length):
+      data.append(i)
+
+    self.assertRaises(s3g.ProtocolError,self.r.WriteToEEPROM, offset, data)
+
+  def test_write_to_eeprom_bad_response_length(self):
+    offset = 1234
+    length = s3g.maximum_payload_length - 4
+    data = bytearray()
+    for i in range (0, length):
+      data.append(i)
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.append(length+1)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.assertRaises(s3g.ProtocolError, self.r.WriteToEEPROM,offset, data)
+
+  def test_write_to_eeprom(self):
+    offset = 1234
+    length = s3g.maximum_payload_length - 4
+    data = bytearray()
+    for i in range (0, length):
+      data.append(i)
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.append(length)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.WriteToEEPROM(offset, data)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['WRITE_TO_EEPROM']
+    assert payload[1:3] == s3g.EncodeUint16(offset)
+    assert payload[3] == length
+    assert payload[4:] == data
+
   def test_get_available_buffer_size(self):
     buffer_size = 0xDEADBEEF
 
@@ -620,6 +693,25 @@ class S3gTests(unittest.TestCase):
     for i in range(0, 5):
       assert s3g.EncodeInt32(target[i]) == payload[(i*4+1):(i*4+5)]
 
+  def test_get_toolhead_version(self):
+    tool_index = 2
+    version = 0x5DD5
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend(s3g.EncodeUint16(version))
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    assert self.r.GetToolheadVersion(tool_index) == version
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
+    assert payload[1] == tool_index
+    assert payload[2] == s3g.slave_query_command_dict['GET_VERSION']
+    assert payload[3:5] == s3g.EncodeUint16(s3g.s3g_version)
+
   def test_get_toolhead_temperature(self):
     tool_index = 2
     temperature = 1234
@@ -637,6 +729,87 @@ class S3gTests(unittest.TestCase):
     assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
     assert payload[1] == tool_index
     assert payload[2] == s3g.slave_query_command_dict['GET_TOOLHEAD_TEMP']
+
+  def test_read_from_toolhead_eeprom_bad_length(self):
+    tool_index = 2
+    offset = 1234
+    length = s3g.maximum_payload_length
+
+    self.assertRaises(s3g.ProtocolError,self.r.ReadFromToolheadEEPROM, tool_index, offset, length)
+
+  def test_read_from_toolhead_eeprom(self):
+    tool_index = 2
+    offset = 1234
+    length = s3g.maximum_payload_length - 1
+    data = bytearray()
+    for i in range (0, length):
+      data.append(i)
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend(data)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    assert self.r.ReadFromToolheadEEPROM(tool_index, offset, length) == data
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
+    assert payload[1] == tool_index
+    assert payload[2] == s3g.slave_query_command_dict['READ_FROM_EEPROM']
+    assert payload[3:5] == s3g.EncodeUint16(offset)
+    assert payload[5] == length
+
+  def test_write_to_toolhead_eeprom_too_much_data(self):
+    tool_index = 2
+    offset = 1234
+    length = s3g.maximum_payload_length - 5
+    data = bytearray()
+    for i in range (0, length):
+      data.append(i)
+
+    self.assertRaises(s3g.ProtocolError,self.r.WriteToToolheadEEPROM, tool_index, offset, data)
+
+  def test_write_to_toolhead_eeprom_bad_response_length(self):
+    tool_index = 2
+    offset = 1234
+    length = s3g.maximum_payload_length - 6
+    data = bytearray()
+    for i in range (0, length):
+      data.append(i)
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.append(length+1)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.assertRaises(s3g.ProtocolError, self.r.WriteToToolheadEEPROM, tool_index, offset, data)
+
+  def test_write_to_toolhead_eeprom(self):
+    tool_index = 2
+    offset = 1234
+    length = s3g.maximum_payload_length - 6
+    data = bytearray()
+    for i in range (0, length):
+      data.append(i)
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.append(length)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.WriteToToolheadEEPROM(tool_index, offset, data)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
+    assert payload[1] == tool_index
+    assert payload[2] == s3g.slave_query_command_dict['WRITE_TO_EEPROM']
+    assert payload[3:5] == s3g.EncodeUint16(offset)
+    assert payload[6:] == data
 
   def test_get_platform_temperature(self):
     tool_index = 2

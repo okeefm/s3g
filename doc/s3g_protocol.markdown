@@ -87,7 +87,7 @@ All packets have the following structure:
 <tr>
  <td>1</td>
  <td>Length</td>
- <td>The length of the payload, in bytes<td>
+ <td>The length of the payload, in bytes</td>
 </tr>
 <tr>
  <td>2..(1+N)</td>
@@ -290,7 +290,6 @@ Initialization consists of:
 
     * Resetting all axes positions to 0
     * Clearing command buffer
-    * Setting range to EEPROM value (TODO: Does this exist?)
 
 Payload (0 bytes)
 
@@ -363,8 +362,7 @@ Response
     uint8: 0 if busy, 1 if finished.
 
 ## 12 - Read from EEPROM
-Read the specified number of bytes from the given offset in the EEPROM, and return them in a response packet. The maximum read size is 32 bytes.
-TODO: Is this 32 or 16??
+Read the specified number of bytes from the given offset in the EEPROM, and return them in a response packet. The maximum read size is 31 bytes.
 
 Payload
 
@@ -832,8 +830,7 @@ Response
     uint8: 1 if the tool is ready, 0 otherwise.
 
 ## 25 - Read from EEPROM
-Read the specified number of bytes from the given offset in the EEPROM, and return them in a response packet. The maximum read size is 32 bytes.
-TODO: Is this 32 or 16??
+Read the specified number of bytes from the given offset in the EEPROM, and return them in a response packet. The maximum read size is 31 bytes.
 
 Payload
 
