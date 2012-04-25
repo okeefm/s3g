@@ -21,6 +21,8 @@ parser.add_option("-b", "--baud", dest="serialbaud",
                   help="serial port baud rate", default="115200")
 parser.add_option("-t", "--toolheads", dest="toolheads",
                   help="toolhead count", type='int', default=2)
+parser.add_option("-d", "--dumpeeprom", dest="dump_eeprom",
+                  help="dump eeprom data", default=False)
 (options, args) = parser.parse_args()
 
 
@@ -31,12 +33,13 @@ print "firmware version: %i"%(r.GetVersion())
 print "build name: %s"%(r.GetBuildName())
 
 try:
-  print "SD Card name: " + r.GetNextFilename(True)
+  sd_name = r.GetNextFilename(True)
+  print "SD Card name: " + sd_name
   while True:
     filename = r.GetNextFilename(False)
     if filename == '\x00':
       break
-    print ' ' + filename
+    print '  ' + filename
 except s3g.SDCardError:
   print "SD Card error"
 
@@ -45,17 +48,21 @@ print "Available buffer size=%i"%(r.GetAvailableBufferSize())
 for tool_index in range(0, options.toolheads):
   print "Tool %i"%(tool_index)
   print "  Version=%i"%(r.GetToolheadVersion(tool_index))
-  print "  Extruder_temp=%i"%(r.GetPlatformTemperature(tool_index))
+  print "  Extruder_temp=%i"%(r.GetToolheadTemperature(tool_index))
+  print "  Extruder_target=%i"%(r.GetToolheadTargetTemperature(tool_index))
   print "  Platform_temp=%i"%(r.GetPlatformTemperature(tool_index))
+  print "  Platform_target=%i"%(r.GetPlatformTargetTemperature(tool_index))
 
-print "Host EEPROM memory map:"
-for offset in range(0, 1024, 16):
-  data = r.ReadFromEEPROM(offset, 16)
-  print '%04i'%(offset), binascii.hexlify(buffer(data))
 
-for tool_index in range(0, options.toolheads):
-  print "Tool %i EEPROM memory map:"%(tool_index)
+if options.dump_eeprom:
+  print "Host EEPROM memory map:"
   for offset in range(0, 1024, 16):
-    data = r.ReadFromToolheadEEPROM(tool_index, offset, 16)
+    data = r.ReadFromEEPROM(offset, 16)
     print '%04i'%(offset), binascii.hexlify(buffer(data))
+
+  for tool_index in range(0, options.toolheads):
+    print "Tool %i EEPROM memory map:"%(tool_index)
+    for offset in range(0, 1024, 16):
+      data = r.ReadFromToolheadEEPROM(tool_index, offset, 16)
+      print '%04i'%(offset), binascii.hexlify(buffer(data))
 

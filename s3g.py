@@ -57,12 +57,11 @@ slave_query_command_dict = {
 #  'IS_TOOL_READY'              : 22,
   'READ_FROM_EEPROM'           : 25,
   'WRITE_TO_EEPROM'            : 26,
-#  'GET_BUILD_PLATFORM_TEMP'    : 30,
-#  'SET_BUILD_PLATFORM_TEMP'    : 31,
-#  'GET_TOOLHEAD_TARGET_TEMP'   : 32,
-  'GET_BUILD_PLATFORM_TEMP'    : 33,
+  'GET_PLATFORM_TEMP'          : 30,
+  'GET_TOOLHEAD_TARGET_TEMP'   : 32,
+  'GET_PLATFORM_TARGET_TEMP'   : 33,
 #  'GET_BUILD_NAME'             : 34,
-#  'IS_BUILD_PLATFORM_READY'    : 35,
+#  'IS_PLATFORM_READY'          : 35,
 #  'GET_TOOL_STATUS'            : 36,
 #  'GET_PID_STATE'              : 37,
 }
@@ -79,7 +78,7 @@ slave_action_command_dict = {
 #  'SET_SERVO_2_POSITION'       : 15,
 #  'PAUSE'                      : 23,
 #  'ABORT'                      : 24,
-#  'SET_BUILD_PLATFORM_TEMP'    : 31,
+#  'SET_PLATFORM_TEMP'          : 31,
 #  'SET_MOTOR_1_SPEED_DDA'      : 38,
 #  'LIGHT_INDICATOR_LED'        : 40,
 }
@@ -753,11 +752,33 @@ class s3g:
 
   def GetPlatformTemperature(self, tool_index):
     """
-    Retrieve the platform temperature
+    Retrieve the build platform temperature
     @param tool_index Toolhead Index
     @return temperature reported by the toolhead
     """
-    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_BUILD_PLATFORM_TEMP'])
+    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PLATFORM_TEMP'])
+    [response_code, temperature] = self.UnpackResponse('<BH', response)
+
+    return temperature
+
+  def GetToolheadTargetTemperature(self, tool_index):
+    """
+    Retrieve the toolhead target temperature (setpoint)
+    @param tool_index Toolhead Index
+    @return temperature that the toolhead is attempting to achieve
+    """
+    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOLHEAD_TARGET_TEMP'])
+    [response_code, temperature] = self.UnpackResponse('<BH', response)
+
+    return temperature
+
+  def GetPlatformTargetTemperature(self, tool_index):
+    """
+    Retrieve the build platform target temperature (setpoint)
+    @param tool_index Toolhead Index
+    @return temperature that the build platform is attempting to achieve
+    """
+    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PLATFORM_TARGET_TEMP'])
     [response_code, temperature] = self.UnpackResponse('<BH', response)
 
     return temperature
