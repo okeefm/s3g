@@ -272,13 +272,11 @@ class S3gTests(unittest.TestCase):
     expected_packet = s3g.EncodePayload(payload)
 
     self.assertRaises(s3g.TransmissionError,self.r.SendCommand, payload)
-
-    #TODO: We should use a queue here, it doesn't make sense to shove this in a file buffer?
     self.inputstream.seek(0)
 
     for i in range (0, s3g.max_retry_count):
       for byte in expected_packet:
-        assert(byte == ord(self.inputstream.read(1)))
+        assert byte == ord(self.inputstream.read(1))
 
   def test_send_command_many_bad_responses(self):
     """
@@ -295,12 +293,10 @@ class S3gTests(unittest.TestCase):
     for i in range (0, s3g.max_retry_count - 1):
       self.outputstream.write('a')
     self.outputstream.write(s3g.EncodePayload(response_payload))
-
-    #TODO: We should use a queue here, it doesn't make sense to shove this in a file buffer?
     self.outputstream.seek(0)
 
-    assert(response_payload == self.r.SendCommand(payload))
-    #TODO: We should use a queue here, it doesn't make sense to shove this in a file buffer?
+    assert response_payload == self.r.SendCommand(payload)
+
     self.inputstream.seek(0)
     for i in range (0, s3g.max_retry_count - 1):
       for byte in expected_packet:
@@ -316,9 +312,7 @@ class S3gTests(unittest.TestCase):
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
     response_payload.extend('12345')
-
     self.outputstream.write(s3g.EncodePayload(response_payload))
-    #TODO: We should use a queue here, it doesn't make sense to shove this in a file buffer?
     self.outputstream.seek(0)
 
     assert response_payload == self.r.SendCommand(payload)
@@ -497,20 +491,24 @@ class S3gTests(unittest.TestCase):
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_query_command_dict['GET_AVAILABLE_BUFFER_SIZE']
 
-  def test_get_build_name(self):
-    build_name = 'abcdefghijklmnop'
-
+  def test_get_position(self):
+    position = [1, -2, 3]
+    endstop_states = s3g.EncodeAxes(['x','y'])
+    
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
-    response_payload.extend(build_name)
+    response_payload.extend(s3g.EncodeInt32(position[0]))
+    response_payload.extend(s3g.EncodeInt32(position[1]))
+    response_payload.extend(s3g.EncodeInt32(position[2]))
+    response_payload.append(endstop_states)
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    assert self.r.GetBuildName() == build_name
+    assert self.r.GetPosition() == position
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
-    assert payload[0] == s3g.host_query_command_dict['GET_BUILD_NAME']
+    assert payload[0] == s3g.host_query_command_dict['GET_POSITION']
 
   def test_get_next_filename_reset(self):
     filename = 'abcdefghijkl'
@@ -555,6 +553,9 @@ class S3gTests(unittest.TestCase):
       'DIRECTORY_ERROR',
     ]
     for error_code in error_codes:
+      self.outputstream.seek(0)
+      self.outputstream.truncate(0)
+
       response_payload = bytearray()
       response_payload.append(s3g.response_code_dict['SUCCESS'])
       response_payload.append(s3g.sd_error_dict[error_code])
@@ -564,8 +565,23 @@ class S3gTests(unittest.TestCase):
 
       self.assertRaises(s3g.SDCardError,self.r.GetNextFilename,False)
 
+  def test_get_build_name(self):
+    build_name = 'abcdefghijklmnop'
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend(build_name)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    assert self.r.GetBuildName() == build_name
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['GET_BUILD_NAME']
+
   def test_queue_point(self):
-    target = [1,2,3]
+    target = [1,-2,3]
     velocity = 6
 
     self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
@@ -582,7 +598,7 @@ class S3gTests(unittest.TestCase):
     payload[13:17] == s3g.EncodeInt32(velocity)
 
   def test_set_position(self):
-    target = [1,2,3]
+    target = [1,-2,3]
 
     self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
     self.outputstream.seek(0)
@@ -662,7 +678,7 @@ class S3gTests(unittest.TestCase):
     assert payload[4:] == command_payload
 
   def test_queue_extended_point(self):
-    target = [1,2,3,4,5]
+    target = [1,-2,3,-4,5]
     velocity = 6
 
     self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
@@ -679,7 +695,7 @@ class S3gTests(unittest.TestCase):
     assert payload[21:25] == s3g.EncodeInt32(velocity)
 
   def test_set_extended_position(self):
-    target = [1,2,3,4,5]
+    target = [1,-2,3,-4,5]
 
     self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
     self.outputstream.seek(0)
@@ -729,6 +745,46 @@ class S3gTests(unittest.TestCase):
     assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
     assert payload[1] == tool_index
     assert payload[2] == s3g.slave_query_command_dict['GET_TOOLHEAD_TEMP']
+
+  # TODO: also test for bad codes, both here and in platform.
+  def test_is_tool_ready_bad_response(self):
+    tool_index = 2
+    ready_state = 2
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.append(ready_state)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+    self.inputstream.seek(0)
+
+    self.assertRaises(s3g.ProtocolError, self.r.IsToolReady, tool_index)
+
+  # TODO: also test for bad codes, both here and in platform.
+  def test_is_tool_ready(self):
+    tool_index = 2
+    ready_states = [[True, 1],
+                    [False,0]]
+
+    for ready_state in ready_states:
+      self.outputstream.seek(0)
+      self.outputstream.truncate(0)
+
+      response_payload = bytearray()
+      response_payload.append(s3g.response_code_dict['SUCCESS'])
+      response_payload.append(ready_state[1])
+      self.outputstream.write(s3g.EncodePayload(response_payload))
+      self.outputstream.seek(0)
+      self.inputstream.seek(0)
+
+      assert self.r.IsToolReady(tool_index) == ready_state[0]
+
+      packet = bytearray(self.inputstream.getvalue())
+      payload = s3g.DecodePacket(packet)
+      assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
+      assert payload[1] == tool_index
+      assert payload[2] == s3g.slave_query_command_dict['IS_TOOL_READY']
+    
 
   def test_read_from_toolhead_eeprom_bad_length(self):
     tool_index = 2
@@ -829,24 +885,6 @@ class S3gTests(unittest.TestCase):
     assert payload[1] == tool_index
     assert payload[2] == s3g.slave_query_command_dict['GET_PLATFORM_TEMP']
 
-  def test_get_build_platform_target_temperature(self):
-    tool_index = 2
-    temperature = 1234
-
-    response_payload = bytearray()
-    response_payload.append(s3g.response_code_dict['SUCCESS'])
-    response_payload.extend(s3g.EncodeUint16(temperature))
-    self.outputstream.write(s3g.EncodePayload(response_payload))
-    self.outputstream.seek(0)
-
-    assert self.r.GetPlatformTargetTemperature(tool_index) == temperature
-
-    packet = bytearray(self.inputstream.getvalue())
-    payload = s3g.DecodePacket(packet)
-    assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
-    assert payload[1] == tool_index
-    assert payload[2] == s3g.slave_query_command_dict['GET_PLATFORM_TARGET_TEMP']
-
   def test_get_toolhead_target_temperature(self):
     tool_index = 2
     temperature = 1234
@@ -865,11 +903,69 @@ class S3gTests(unittest.TestCase):
     assert payload[1] == tool_index
     assert payload[2] == s3g.slave_query_command_dict['GET_TOOLHEAD_TARGET_TEMP']
 
+  def test_get_platform_target_temperature(self):
+    tool_index = 2
+    temperature = 1234
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend(s3g.EncodeUint16(temperature))
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    assert self.r.GetPlatformTargetTemperature(tool_index) == temperature
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
+    assert payload[1] == tool_index
+    assert payload[2] == s3g.slave_query_command_dict['GET_PLATFORM_TARGET_TEMP']
+
+  def test_is_platform_ready_bad_response(self):
+    tool_index = 2
+    ready_state = 2
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.append(ready_state)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+    self.inputstream.seek(0)
+
+    self.assertRaises(s3g.ProtocolError, self.r.IsPlatformReady, tool_index)
+
+  def test_is_platform_ready(self):
+    tool_index = 2
+    ready_states = [[True, 1],
+                    [False,0]]
+
+    for ready_state in ready_states:
+      self.outputstream.seek(0)
+      self.outputstream.truncate(0)
+
+      response_payload = bytearray()
+      response_payload.append(s3g.response_code_dict['SUCCESS'])
+      response_payload.append(ready_state[1])
+      self.outputstream.write(s3g.EncodePayload(response_payload))
+      self.outputstream.seek(0)
+      self.inputstream.seek(0)
+
+      assert self.r.IsPlatformReady(tool_index) == ready_state[0]
+
+      packet = bytearray(self.inputstream.getvalue())
+      payload = s3g.DecodePacket(packet)
+      assert payload[0] == s3g.host_query_command_dict['TOOL_QUERY']
+      assert payload[1] == tool_index
+      assert payload[2] == s3g.slave_query_command_dict['IS_PLATFORM_READY']
+
   def test_toggle_fan(self):
     tool_index = 2
     fan_states = [True, False]
 
     for fan_state in fan_states:
+      self.outputstream.seek(0)
+      self.outputstream.truncate(0)
+
       self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
       self.outputstream.seek(0)
       self.inputstream.seek(0)
@@ -890,6 +986,9 @@ class S3gTests(unittest.TestCase):
     fan_states = [True, False]
 
     for fan_state in fan_states:
+      self.outputstream.seek(0)
+      self.outputstream.truncate(0)
+
       self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
       self.outputstream.seek(0)
       self.inputstream.seek(0)

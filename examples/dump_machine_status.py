@@ -50,8 +50,10 @@ for tool_index in range(0, options.toolheads):
   print "  Version=%i"%(r.GetToolheadVersion(tool_index))
   print "  Extruder_temp=%i"%(r.GetToolheadTemperature(tool_index))
   print "  Extruder_target=%i"%(r.GetToolheadTargetTemperature(tool_index))
+  print "  Extruder_ready?=%s"%(r.IsToolReady(tool_index))
   print "  Platform_temp=%i"%(r.GetPlatformTemperature(tool_index))
   print "  Platform_target=%i"%(r.GetPlatformTargetTemperature(tool_index))
+  print "  Platform_ready?=%s"%(r.IsPlatformReady(tool_index))
 
 
 if options.dump_eeprom:

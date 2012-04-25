@@ -7,7 +7,7 @@ host_query_command_dict = {
 #  'INIT'                      : 1,
   'GET_AVAILABLE_BUFFER_SIZE' : 2,
 #  'CLEAR_BUFFER'              : 3,
-#  'GET_POSITION'              : 4,
+  'GET_POSITION'              : 4,
 #  'ABORT_IMMEDIATELY'         : 7,
 #  'PAUSE'                     : 8,
 #  'PROBE'                     : 9,
@@ -20,7 +20,6 @@ host_query_command_dict = {
 #  'PLAYBACK_CAPTURE'          : 16,
 #  'RESET'                     : 17,
   'GET_NEXT_FILENAME'         : 18,
-#  'READ_DEBUG_REGISTERS'      : 19,
   'GET_BUILD_NAME'            : 20,
 #  'GET_EXTENDED_POSITION'     : 21,
 #  'EXTENDED_STOP'             : 22,
@@ -54,14 +53,14 @@ slave_query_command_dict = {
   'GET_VERSION'                : 0,
   'GET_TOOLHEAD_TEMP'          : 2,
 #  'GET_MOTOR_1_SPEED_RPM'      : 17,
-#  'IS_TOOL_READY'              : 22,
+  'IS_TOOL_READY'              : 22,
   'READ_FROM_EEPROM'           : 25,
   'WRITE_TO_EEPROM'            : 26,
   'GET_PLATFORM_TEMP'          : 30,
   'GET_TOOLHEAD_TARGET_TEMP'   : 32,
   'GET_PLATFORM_TARGET_TEMP'   : 33,
 #  'GET_BUILD_NAME'             : 34,
-#  'IS_PLATFORM_READY'          : 35,
+  'IS_PLATFORM_READY'          : 35,
 #  'GET_TOOL_STATUS'            : 36,
 #  'GET_PID_STATE'              : 37,
 }
@@ -178,7 +177,8 @@ class ProtocolError(Exception):
   """
   A protocol error is caused when a machine provides a valid response packet with an invalid
   response (for example, too many or two few resposne variables). It means that the machine is not
-  implementing the protocol correctly.
+  implementing the protocol correctly. A protocol error may also be thrown if invalid data is
+  provided to a machine.
   """
   def __init__(self, value):
      self.value = value
@@ -257,6 +257,8 @@ def EncodeAxes(axes):
   @param axes Array of axis names ['x', 'y', ...] 
   @return bitfield containing a representation of the axes map
   """
+  # TODO: Test cases?
+
   axes_map = {
     'x':0x01,
     'y':0x02,
@@ -291,14 +293,11 @@ def EncodePayload(payload):
 
 def DecodePacket(packet):
   """
-  Read in a packet, extract the payload, and verify that the CRC of the
-  packet is correct. Raises a PacketError exception if there was an error
-  decoding the packet
+  Non-streaming packet decoder. Accepts a byte array containing a single
+  packet, and attempts to parse the packet and return the payload.
   @param packet byte array containing the input packet
   @return payload of the packet
   """
-  # TODO: This is also implemented in PacketStreamDecoder, combine?
-
   assert type(packet) is bytearray
 
   if len(packet) < 4:
@@ -316,7 +315,6 @@ def DecodePacket(packet):
   return packet[2:(len(packet)-1)]
 
 
-
 class PacketStreamDecoder:
   """
   A state machine that accepts bytes from an s3g packet stream, checks the validity of
@@ -326,7 +324,8 @@ class PacketStreamDecoder:
     """
     Initialize the packet decoder
     @param expect_response_code If true, treat the first byte of the payload as a return
-           response code, and verify that it is correct.
+           response code, and verify that it is correct. This should be set to true when
+           decoding response packets, and to false when decoding response packets.
     """
     self.state = 'WAIT_FOR_HEADER'
     self.payload = bytearray()
@@ -370,6 +369,8 @@ class PacketStreamDecoder:
       else:
         self.state = 'PAYLOAD_READY'
 
+    else:
+      raise ProtocolError('Parser in bad state: too much data provided?')
 
 class s3g:
   def __init__(self):
@@ -384,8 +385,6 @@ class s3g:
     """
     packet = EncodePayload(payload)
     retry_count = 0
-
-    #TODO: check that the payload is not too large?
 
     while True:
       decoder = PacketStreamDecoder(True)
@@ -413,9 +412,10 @@ class s3g:
         # TODO: Should we chop the response code?
         return decoder.payload
 
-       # TODO: There is a problem here, we need to pick up ACTION_BUFFER_OVERFLOW
-#      except (PacketResponseCodeError) as e:
-#        pass
+       # TODO: Implement retries for response codes that can handle them, errors for response codes that can't, and free retries for
+       #       ones that don't count
+      except (PacketResponseCodeError) as e:
+        pass
 
       except (PacketError, IOError) as e:
         """ PacketError: header, length, crc error """
@@ -546,6 +546,22 @@ class s3g:
     [response_code, buffer_size] = self.UnpackResponse('<BI', response)
 
     return buffer_size
+
+  def GetPosition(self):
+    """
+    Gets the current machine position
+    @return position 3D position the machine is currently located at
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['GET_POSITION'])
+  
+    position = [0,0,0]
+ 
+    response = self.SendCommand(payload)
+    [response_code, position[0], position[1], position[2], axes_bits] = self.UnpackResponse('<BiiiB', response)
+
+    return position
+
 
   def GetNextFilename(self, reset):
     """
@@ -712,6 +728,22 @@ class s3g:
 
     return temperature
 
+  def IsToolReady(self, tool_index):
+    """
+    Determine if the tool is at temperature, and is therefore ready to be used.
+    @param tool_index Toolhead Index
+    @return true if the toolhead is ready
+    """
+    response = self.ToolQuery(tool_index, slave_query_command_dict['IS_TOOL_READY'])
+    [response_code, ready] = self.UnpackResponse('<BB', response)
+
+    if ready == 1:
+      return 1
+    elif ready == 0:
+      return 0
+    else:
+      raise ProtocolError('Expected 0 or 1 for ready value, got=%i'%(ready))
+
   def ReadFromToolheadEEPROM(self, tool_index, offset, length):
     """
     Read some data from the toolhead. The data structure is implementation specific.
@@ -782,6 +814,22 @@ class s3g:
     [response_code, temperature] = self.UnpackResponse('<BH', response)
 
     return temperature
+
+  def IsPlatformReady(self, tool_index):
+    """
+    Determine if the platform is at temperature, and is therefore ready to be used.
+    @param tool_index Toolhead Index
+    @return true if the platform is ready
+    """
+    response = self.ToolQuery(tool_index, slave_query_command_dict['IS_PLATFORM_READY'])
+    [response_code, ready] = self.UnpackResponse('<BB', response)
+
+    if ready == 1:
+      return 1
+    elif ready == 0:
+      return 0
+    else:
+      raise ProtocolError('Expected 0 or 1 for ready value, got=%i'%(ready))
 
   def ToggleFan(self, tool_index, state):
     """
