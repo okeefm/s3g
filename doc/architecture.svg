@@ -93,7 +93,10 @@
      id="layer1">
     <g
        id="g3027"
-       transform="translate(38.744743,39.285714)">
+       transform="translate(38.744743,39.285714)"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658">
       <rect
          y="16.924137"
          x="27.087082"
@@ -116,7 +119,10 @@
     </g>
     <g
        id="g3022"
-       transform="translate(19.628353,25.139352)">
+       transform="translate(19.628353,25.139352)"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658">
       <rect
          style="fill:#000000;fill-opacity:0;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
          id="rect3010"
@@ -139,7 +145,10 @@
     </g>
     <g
        id="g3049"
-       transform="translate(77.840383,80.000004)">
+       transform="translate(77.840383,80.000004)"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658">
       <rect
          y="244.79509"
          x="151.84634"
@@ -166,14 +175,20 @@
        height="65.65992"
        width="139.14003"
        id="rect3032"
-       style="fill:#000000;fill-opacity:0;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:3, 3;stroke-dashoffset:0" />
+       style="fill:#000000;fill-opacity:0;stroke:#000000;stroke-width:1;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:3, 3;stroke-dashoffset:0"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658" />
     <text
        sodipodi:linespacing="125%"
        id="text3034"
        y="369.55472"
        x="416.60385"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
-       xml:space="preserve"><tspan
+       xml:space="preserve"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658"><tspan
          style="font-size:32px"
          y="369.55472"
          x="416.60385"
@@ -181,7 +196,10 @@
          sodipodi:role="line">Tool N</tspan></text>
     <g
        id="g3044"
-       transform="translate(80.714283,77.142857)">
+       transform="translate(80.714283,77.142857)"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658">
       <rect
          y="247.65224"
          x="-14.88246"
@@ -206,57 +224,81 @@
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow2Lstart);marker-end:url(#Arrow2Lend)"
        d="m 136.42857,125.93361 0,40.71428"
        id="path3073"
-       inkscape:connector-curvature="0" />
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658" />
     <path
        inkscape:connector-curvature="0"
        id="path5029"
        d="m 136.42857,241.64044 0,77.10464"
-       style="fill:none;stroke:#000000;stroke-width:0.99999988px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow2Lstart);marker-end:url(#Arrow2Lend)" />
+       style="fill:none;stroke:#000000;stroke-width:0.99999988px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow2Lstart);marker-end:url(#Arrow2Lend)"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:none;marker-end:url(#Arrow2Lend)"
        d="m 300,294.50504 0,24.99999"
        id="path5031"
        inkscape:connector-curvature="0"
-       sodipodi:nodetypes="cc" />
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658" />
     <path
        sodipodi:nodetypes="cc"
        inkscape:connector-curvature="0"
        id="path5219"
        d="m 468.57143,294.50504 0,24.99999"
-       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:2, 2;stroke-dashoffset:0;marker-start:none;marker-end:url(#Arrow2Lend)" />
+       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:2, 2;stroke-dashoffset:0;marker-start:none;marker-end:url(#Arrow2Lend)"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 300.25247,294.50504 -163.8239,0"
        id="path5221"
-       inkscape:connector-curvature="0" />
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658" />
     <path
        inkscape:connector-curvature="0"
        id="path5223"
        d="m 465.96676,294.50504 -163.8239,0"
-       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:2, 4;stroke-dashoffset:0" />
+       style="fill:none;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:2, 4;stroke-dashoffset:0"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658" />
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
        x="150.71429"
        y="153.79077"
        id="text5244"
-       sodipodi:linespacing="125%"><tspan
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658"><tspan
          sodipodi:role="line"
          id="tspan5246"
          x="150.71429"
          y="153.79077"
-         style="font-size:24px;font-style:italic;-inkscape-font-specification:Sans Italic">host bus</tspan></text>
+         style="font-size:24px;font-style:italic;-inkscape-font-specification:Sans Italic">host network</tspan></text>
     <text
        sodipodi:linespacing="125%"
        id="text5248"
        y="275.21933"
        x="152.14285"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
-       xml:space="preserve"><tspan
+       xml:space="preserve"
+       inkscape:export-filename="/Users/mattmets/Desktop/py/doc/system_architecturepng.png"
+       inkscape:export-xdpi="96.108658"
+       inkscape:export-ydpi="96.108658"><tspan
          style="font-size:24px;font-style:italic;-inkscape-font-specification:Sans Italic"
          y="275.21933"
          x="152.14285"
          id="tspan5250"
-         sodipodi:role="line">tool bus</tspan></text>
+         sodipodi:role="line">tool network</tspan></text>
   </g>
 </svg>

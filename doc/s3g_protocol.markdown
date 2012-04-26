@@ -1,12 +1,16 @@
 # S3G protocol (formerly RepRap Generation 3 Protocol Specification)
 
-## Index
-
-(how to make?)
-
 ## Overview
 
-This document describes the s3g protocol, which is used to communicate with Makerbots and similar CNC machines. It is intended to help developers who wish to communicate with a machine directly, or create their own devices that speak over the protocol.
+This document describes the s3g protocol, which is used to communicate with Makerbots and similar CNC machines. It is intended to help developers who wish to communicate with a machine directly, or create their own devices that speak over the protocol. If all you want to do is control a machine, we recommend using the [s3g library](http://github.com/makerbot/s3g), which is a Python implementation of the protocol.
+
+The first part of the document covers some definitions that are used to describe this system. We recommend you at least skim through them, so we can be sure we are talking about the same things.
+
+The second part of the document talks about the architecture that the s3g protocol was designed for. It's useful for understanding how the different pieces of hardware are connected, and what each part does.
+
+The third part of the document talks about the fine details of how commands are routed through the system, and what happens if there is an error when sending one. It's useful for understanding how to make your own 
+
+The final portion of the document is a catalog of all of the commands that the Host and Tools can implement.
 
 ## Definitions
 
@@ -19,23 +23,23 @@ Here is some vocabulary, that should be used when talking about the protocol:
 </tr>
 <tr>
  <td>PC</td>
- <td>A computer, that is connected to the Host over the host bus.</td>
+ <td>A computer, that is connected to the Host over the host network.</td>
 </tr>
 <tr>
  <td>Host</td>
- <td>The motherboard on the machine. This communicates with the PC over the host bus, and with 0 or more tools over the tool bus. The host can control 3-5 stepper motors, read endstops, read and write to an SD card, and control an interface board.</td>
+ <td>The motherboard on the machine. This communicates with the PC over the host network, and with 0 or more tools over the tool network. The host can control 3-5 stepper motors, read endstops, read and write to an SD card, and control an interface board.</td>
 </tr>
 <tr>
  <td>Tool</td>
- <td>An auxiliary motherboard on the machine, This communicates with the Host over the tool bus, and controls one toolhead (extruder). The Tool can have a toolhead heater, platform heater, fan, extruder motor, and other things attached to it. On the Mightyboard, the Tool is simulated inside of the motherboard, and doesn't exist as a separate piece.</td>
+ <td>An auxiliary motherboard on the machine, This communicates with the Host over the tool network, and controls one toolhead (extruder). The Tool can have a toolhead heater, platform heater, fan, extruder motor, and other things attached to it. On the Mightyboard, the Tool is simulated inside of the motherboard, and doesn't exist as a separate piece.</td>
 </tr>
 <tr>
- <td>Host bus</td>
- <td>The host bus is the serial connection between the PC and the Host. The physical bus is RS232 (using a USB<->serial adaptor), running at 115200 baud (Gen4, MightyBoard) or 38400 baud (Gen3).</td>
+ <td>Host network</td>
+ <td>The host network is the serial connection between the PC and the Host. The physical bus is RS232 (using a USB<->serial adaptor), running at 115200 baud (Gen4, MightyBoard) or 38400 baud (Gen3).</td>
 </tr>
 <tr>
- <td>Tool bus</td>
- <td>The tool bus is the serial connection between the Host and 0 or more Tools. The physical bus is RS485, half-duplex, running at xxx baud (Gen3, Gen4), or virtual (MightyBoard).</td>
+ <td>Tool network</td>
+ <td>The tool network is the serial connection between the Host and 0 or more Tools. The physical bus is RS485, half-duplex, running at xxx baud (Gen3, Gen4), or virtual (MightyBoard).</td>
 </tr>
 <tr>
  <td>Tool ID</td>
@@ -49,36 +53,14 @@ An s3g system looks like this:
 
 ![block diagram of system architecture](SystemArchitecture.png)
 
-The RepRap Generation 3 electronics set consists of several hardware components:
 
-1 A single Host Controller which controls the 3-axis steppers, communicates with a host PC, supports a storage card and controls a set of toolheads.
-2 A set of Stepper Drivers which drive the steppers based on signals from the host controller.  The communications between the drivers and the host controller is outside of the scope of this document.
-3 A number of Tool Controllers which control extruders, cutters, frostruders, etc.
+Both networks (host, tool) have a single network master. On the host network, this is a PC, and on the tool network, this is the Host. All network communications are initiated by the network host; a tool node can never initiate a data transfer.
 
-The two communications channels covered by this document are:
+Data is sent over the network as a series of packets. Each network transaction consists of at least two packets: a command packet, followed by a response packet.  Every packet from a network master must be responded to.
 
-1.The Host Network, between a host computer and the host controller
-2.The Tool Network, between the host controller and one or more tool controllers.
+. All commands are query/response.  The host in each pair will always initiate communications, never the tool.  All packets are synchronous; they will wait for a response from the client before sending the next packet.  The firmware will continue rendering buffered commands while receiving new commands and replying to them.
 
-
-The host network is generally implemented over a standard TTL-level RS232 serial ion.  The tool network is implemented as an RS485 serial bus driven by SN75176A transceivers.
-
-Packet Protocol
- Protocol Overview
-
-Each network has a single host: in the case of the host network, this is the host computer, and in the case of the tool network, this is the host controller.  All network communications are initiated by the network host; a tool node can never initiate a data transfer.
-
-Data is sent over the network as a series of simple packets.  Packets are variable-length, with a maximum payload size of 32 bytes.
-
-Each network transaction consists of at least two packets: a host packet, followed by a response packet.  Every packet from a host must be responded to.
-
-Commands will be sent in packets. All commands are query/response.  The host in each pair will always initiate communications, never the tool.  All packets are synchronous; they will wait for a response from the client before sending the next packet.  The firmware will continue rendering buffered commands while receiving new commands and replying to them.
-
-Timeouts
-
-Packets must be responded to promptly.  No command should ever block. If a query would require more than the timeout period to respond to, it must be recast as a poll-driven operation.
-
-
+Packets must be responded to promptly.  No command should ever block.
 
 
 All communications, both host-mb and mb-toolboard, are at 38400bps.  It should take approximately 1/3rd ms. to transmit one byte at those speeds. The maximum packet size of 32+3 bytes should take no more than 12ms to transmit.  We establish a 20ms. window from the reception of a start byte until packet completion.  If a packet is not completed within this window, it is considered to have timed out.
@@ -95,6 +77,7 @@ If a packet has timed out, the host or board should treat the entir
 Command Buffering
 To ensure smooth motion, as well as to support print queueing, we'll want certain commands to be queued in a buffer.  This means we won't get immediate feedback from any queued command.  To this end we will break commands down into two categories: action commands that are put in the command buffer, and query commands that require an immediate response.  In order to make it simple to differentiate the commands on the firmware side, we will break them up into two sets: commands numbered 0-127 will be query commands, and commands numbered 128-255 will be action commands to be put into the buffer.  The firmware can then simply look at the highest bit to determine which type of packet it is. 
 
+
 # Implementations
 
 Firmware repositories:
@@ -106,48 +89,6 @@ Host software:
 
 * [ReplicatorG](http://github.com/makerbot/ReplicatorG)
 * [pyS3g](http://github.com/makerbot/s3g)
-
-# Data formats
-
-TODO:
-
-uint8, uint16, int16, uint32, int32, axes bitfield
-
-## SD Response codes
-<table>
-<tr>
- <th>Response Code</th>
- <th>Details</th>
-</tr>
-<tr>
- <td>0x00</td>
- <td>Operation successful</td>
-</tr>
-<tr>
- <td>0x01</td>
- <td>SD Card not present</td>
-</tr>
-<tr>
- <td>0x02</td>
- <td>SD Card initialization failed</td>
-</tr>
-<tr>
- <td>0x03</td>
- <td>Partition table could not be read</td>
-</tr>
-<tr>
- <td>0x04</td>
- <td>Filesystem could not be opened</td>
-</tr>
-<tr>
- <td>0x05</td>
- <td>Root directory could not be opened</td>
-</tr>
-</table>
-<tr>
- <td>0x06</td>
- <td>SD Card is locked</td>
-</tr>
 
 
 # Packet formats
@@ -183,8 +124,8 @@ All packets have the following structure:
 </tr>
 </table>
 
-## Host Bus Payload Structure
-The payload of a packet sent over the master bus contains one command. Each command consists of a command code, and 0 or more arguments:
+## Host Network Payload Structure
+The payload of a packet sent over the master network contains one command. Each command consists of a command code, and 0 or more arguments:
 
 <table>
 <tr>
@@ -204,8 +145,8 @@ The payload of a packet sent over the master bus contains one command. Each comm
 </tr>
 </table>
 
-## Tool Bus Payload Structure
-The payload of a packet sent over the tool bus contains one command. Each command consists of a Tool ID, a command code, and 0 or more arguments:
+## Tool Network Payload Structure
+The payload of a packet sent over the tool network contains one command. Each command consists of a Tool ID, a command code, and 0 or more arguments:
 
 <table>
 <tr>
@@ -236,7 +177,7 @@ The tool ID is the ID number of a toolhead. A toolhead may only respond to comma
 
 The exception to this is the tool ID 127. This represents any listening device. The address 127 should only be used when setting the ID of a tool. _Note: Before firmware version 2.92, the broadcast address was 255._
 
-## Response Packet Structure (both Host and Tool Busses)
+## Response Packet Structure (both Host and Tool Networks)
 The response payload contains the response to a single command:
 
 <table>
@@ -304,6 +245,48 @@ Response code values can be as follows:
  <td>0x87</td>
  <td>Downstream timeout</td>
  <td>Yes</td>
+</tr>
+</table>
+
+# Data formats
+
+TODO:
+
+uint8, uint16, int16, uint32, int32, axes bitfield
+
+## SD Response codes
+<table>
+<tr>
+ <th>Response Code</th>
+ <th>Details</th>
+</tr>
+<tr>
+ <td>0x00</td>
+ <td>Operation successful</td>
+</tr>
+<tr>
+ <td>0x01</td>
+ <td>SD Card not present</td>
+</tr>
+<tr>
+ <td>0x02</td>
+ <td>SD Card initialization failed</td>
+</tr>
+<tr>
+ <td>0x03</td>
+ <td>Partition table could not be read</td>
+</tr>
+<tr>
+ <td>0x04</td>
+ <td>Filesystem could not be opened</td>
+</tr>
+<tr>
+ <td>0x05</td>
+ <td>Root directory could not be opened</td>
+</tr>
+<tr>
+ <td>0x06</td>
+ <td>SD Card is locked</td>
 </tr>
 </table>
 
@@ -583,22 +566,24 @@ Payload (0 bytes)
 Response (0 bytes)
 
 ## 26 - Get communication statistics
-Gathers statistics about communication over the tool bus. This was intended for use while troubleshooting Gen3/4 machines.
+Gathers statistics about communication over the tool network. This was intended for use while troubleshooting Gen3/4 machines.
 
 Payload (0 bytes)
 
 Response
 
-    uint32: Packets received from the host bus
-    uint32: Packets sent over the tool bus
-    uint32: Number of packets sent over the tool bus that were not repsonded to
-    uint32: Number of packet retries on the tool bus 
-    uint32: Number of bytes received over the tool bus that were discarded as noise
+    uint32: Packets received from the host network
+    uint32: Packets sent over the tool network
+    uint32: Number of packets sent over the tool network that were not repsonded to
+    uint32: Number of packet retries on the tool network 
+    uint32: Number of bytes received over the tool network that were discarded as noise
 
 # Host Buffered Commands
 
 ## 129 - Queue point
-This queues an absolute point to move to. _Historical note: This implementation is much more wordy than an incremental solution, which likely impacts processing time and buffer sizes on the resource-constrained firmware_
+This queues an absolute point to move to.
+
+_Historical note: This implementation is much more wordy than an incremental solution, which likely impacts processing time and buffer sizes on the resource-constrained firmware_
 
 Payload
 
@@ -620,6 +605,7 @@ Payload
 This function will find the minimum position that the hardware can travel to, then stop. Note that all axes are moved syncronously. If one of the axes (Z, for example) should be moved separately, then a seperate command should be sent to move that axis. Note that a minimum endstop is required for each axis that is to be moved.
 
 Payload
+
     uint8: Axes bitfield. Axes whose bits are set will be moved.
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
     uint16: Timeout, in seconds.
@@ -628,6 +614,7 @@ Payload
 This function will find the maximum position that the hardware can travel to, then stop. Note that all axes are moved syncronously. If one of the axes (Z, for example) should be moved separately, then a seperate command should be sent to move that axis. Note that a maximum endstop is required for each axis that is to be moved.
 
 Payload
+
     uint8: Axes bitfield. Axes whose bits are set will be moved.
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
     uint16: Timeout, in seconds.
@@ -705,7 +692,9 @@ Payload
 </table>
 
 ## 139 - Queue extended point
-This queues an absolute point to move to. _Historical note: This implementation is much more wordy than an incremental solution, which likely impacts processing time and buffer sizes on the resource-constrained firmware_
+This queues an absolute point to move to.
+
+_Historical note: This implementation is much more wordy than an incremental solution, which likely impacts processing time and buffer sizes on the resource-constrained firmware_
 
 Payload
 
@@ -997,6 +986,7 @@ Retrieve the state variables of the PID controller. This is intended for tuning 
 Payload (0 bytes)
 
 Response
+
     int16: Extruder heater error term
     int16: Extruder heater delta term
     int16: Extruder heater last output
