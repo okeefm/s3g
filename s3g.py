@@ -67,7 +67,7 @@ slave_query_command_dict = {
 
 slave_action_command_dict = {
 #  'INIT'                       : 1,
-#  'SET_TOOLHEAD_TARGET_TEMP'   : 3,
+  'SET_TOOLHEAD_TARGET_TEMP'   : 3,
 #  'SET_MOTOR_1_SPEED_RPM'      : 6,
 #  'SET_MOTOR_1_DIRECTION'      : 8,
 #  'TOGGLE_MOTOR_1'             : 10,
@@ -77,7 +77,7 @@ slave_action_command_dict = {
 #  'SET_SERVO_2_POSITION'       : 15,
 #  'PAUSE'                      : 23,
 #  'ABORT'                      : 24,
-#  'SET_PLATFORM_TEMP'          : 31,
+  'SET_PLATFORM_TEMP'          : 31,
 #  'SET_MOTOR_1_SPEED_DDA'      : 38,
 #  'LIGHT_INDICATOR_LED'        : 40,
 }
@@ -855,4 +855,22 @@ class s3g:
       payload = [0x00]
 
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_VALVE'], payload)
+
+  def SetToolheadTemperature(self, tool_index, temp):
+    """
+    Set a certain toolhead's temperature to temp
+    @param tool_index Toolhead Index
+    @param temp Temperature to heat up to
+    """
+		
+    self.ToolActionCommand(tool_index, slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP'], [temp])
+
+  def SetPlatformTemperature(self, tool_index, temp):
+    """
+    Set the platform's temperature to temp
+    @param tool_index Platform Index
+    @param temp Temperature to heat up to 
+    """
+
+    self.ToolActionCommand(tool_index, slave_action_command_dict['SET_PLATFORM_TEMP'], [temp])
 
