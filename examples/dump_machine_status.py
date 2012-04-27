@@ -45,6 +45,9 @@ except s3g.SDCardError:
 
 print "Available buffer size=%i"%(r.GetAvailableBufferSize())
 
+print "get_position:", r.GetPosition()
+print "get_extended_position:", r.GetExtendedPosition()
+
 for tool_index in range(0, options.toolheads):
   print "Tool %i"%(tool_index)
   print "  Version=%i"%(r.GetToolheadVersion(tool_index))

@@ -18,11 +18,11 @@ host_query_command_dict = {
   'WRITE_TO_EEPROM'           : 13,
 #  'CAPTURE_TO_FILE'           : 14,
 #  'END_CAPTURE'               : 15,
-#  'PLAYBACK_CAPTURE'          : 16,
+  'PLAYBACK_CAPTURE'          : 16,
 #  'RESET'                     : 17,
   'GET_NEXT_FILENAME'         : 18,
   'GET_BUILD_NAME'            : 20,
-#  'GET_EXTENDED_POSITION'     : 21,
+  'GET_EXTENDED_POSITION'     : 21,
 #  'EXTENDED_STOP'             : 22,
 #  'GET_MOTHERBOARD_STATUS'    : 23,
 #  'BUILD_START_NOTIFICATION'  : 24,
@@ -604,7 +604,7 @@ class s3g:
   def GetPosition(self):
     """
     Gets the current machine position
-    @return position 3D position the machine is currently located at
+    @return tuple containing the 3D position the machine is currently located at, and the endstop states.
     """
     payload = bytearray()
     payload.append(host_query_command_dict['GET_POSITION'])
@@ -614,8 +614,22 @@ class s3g:
     response = self.SendCommand(payload)
     [response_code, position[0], position[1], position[2], axes_bits] = self.UnpackResponse('<BiiiB', response)
 
-    return position
+    return position, axes_bits
 
+  def PlaybackCapture(self, filename):
+    """
+    Instruct the machine to play back (build) a file from it's SD card.
+    @param filename Name of the file to print. Should have been retrieved by 
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['PLAYBACK_CAPTURE'])
+    payload.extend(filename)
+   
+    response = self.SendCommand(payload)
+    [response_code, sd_response_code] = self.UnpackResponse('<BB', response)
+
+    if sd_response_code != sd_error_dict['SUCCESS']:
+      raise SDCardError(sd_response_code)
 
   def GetNextFilename(self, reset):
     """
@@ -648,6 +662,24 @@ class s3g:
     [response_code, filename] = self.UnpackResponseWithString('<B', response)
 
     return filename
+
+  def GetExtendedPosition(self):
+    """
+    Gets the current machine position
+    @return tuple containing the 5D position the machine is currently located at, and the endstop states.
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['GET_EXTENDED_POSITION'])
+  
+    position = [0,0,0,0,0]
+ 
+    response = self.SendCommand(payload)
+    [response_code,
+     position[0], position[1], position[2], position[3], position[4],
+     endstop_states] = self.UnpackResponse('<BiiiiiH', response)
+
+    # TODO: fix the endstop bit encoding, it doesn't make sense.
+    return position, endstop_states
 
   def QueuePoint(self, position, rate):
     """
@@ -792,9 +824,9 @@ class s3g:
     [response_code, ready] = self.UnpackResponse('<BB', response)
 
     if ready == 1:
-      return 1
+      return True
     elif ready == 0:
-      return 0
+      return False
     else:
       raise ProtocolError('Expected 0 or 1 for ready value, got=%i'%(ready))
 
@@ -879,9 +911,9 @@ class s3g:
     [response_code, ready] = self.UnpackResponse('<BB', response)
 
     if ready == 1:
-      return 1
+      return True
     elif ready == 0:
-      return 0
+      return False
     else:
       raise ProtocolError('Expected 0 or 1 for ready value, got=%i'%(ready))
 
