@@ -292,7 +292,7 @@ uint8, uint16, int16, uint32, int32, axes bitfield
 
 # Host Query Commands
 
-## 00 - Get Version: Query firmware for version information
+## 00 - Get version: Query firmware for version information
 This command allows the host and firmware to exchange version numbers. It also allows for automated discovery of the firmware. Version numbers will always be stored as a single number, Arduino / Processing style.
 
 Payload
@@ -313,7 +313,7 @@ Payload (0 bytes)
 
 Response (0 bytes)
 
-## 02 - Get Available Buffer Size: Determine how much free memory is available for buffering commands
+## 02 - Get available buffer size: Determine how much free memory is available for buffering commands
 This command will let us know how much buffer space we have available for action commands. It can be used to determine if and when the buffer is available for writing. If we are writing to the SD card, it will generally always report the maximum number of bytes available.
 
 Payload (0 bytes)
@@ -322,14 +322,14 @@ Response
 
     uint32: Number of bytes availabe in the command buffer
 
-## 03 - Clear Buffer: Empty the command buffer
+## 03 - Clear buffer: Empty the command buffer
 This command will empty our buffer, and reset all pointers, etc to the beginning of the buffer. If writing to an SD card, it will reset the file pointer back to the beginning of the currently open file. Obviously, it should halt all execution of action commands as well.
 
 Payload (0 bytes)
 
 Response (0 bytes)
 
-## 04 - Get Position: Get the current position of the toolhead
+## 04 - Get position: Get the current position of the toolhead
 Retrieve the curent position of the XYZ axes
 
 Payload (0 bytes)
@@ -341,14 +341,14 @@ Response
     int32: Z position, in steps
     uint8: Axes bitfield corresponding to the endstop status
 
-## 07 - Abort Immediately: Stop machine, shut down job permanently
+## 07 - Abort immediately: Stop machine, shut down job permanently
 This function is intended to be used to terminate a print during printing. Disables steppers, heaters, and any toolheads, and clears all command buffers.
 
 Payload (0 bytes)
 
 Response (0 bytes)
 
-## 08 - Pause/Resume: Halt Execution Temporarily
+## 08 - Pause/resume: Halt execution temporarily
 This function is inteded to be called infrequently by the end user in order to make build-time adjustments during a print. It differes from 'Abort Immediately', in that the command buffers and heaters are not disabled.
 
 On Pause, it stops all stepper movement and halts extrusion.
@@ -358,7 +358,7 @@ Payload (0 bytes)
 
 Response (0 bytes)
 
-## 10 - Tool Query: Query a tool for information
+## 10 - Tool query: Query a tool for information
 This command is for sending a query command to the tool. The host firmware will then pass the query along to the appropriate tool, wait for a response from the tool, and pass the response back to the host. TODO: Does the master handle retries?
 
 Payload
@@ -370,7 +370,7 @@ Response
 
     0-N bytes: Response payload from the tool query command, if any.
 
-## 11 - Is Finished: See if the machine is currently busy
+## 11 - Is finished: See if the machine is currently busy
 This command queries the machine to determine if it currently executing commands from a command queue.
 
 Payload (0 bytes)
@@ -464,7 +464,7 @@ Response
 
     1+N bytes: A null terminated string representing the filename of the current build.
 
-## 21 - Get Extended position: Get the current 
+## 21 - Get extended position: Get the current 
 Retrieve the curent position of all axes that the machine supports. Unsupported axes will return 0 (TODO: is this true?)
 
 Payload (0 bytes)
@@ -476,7 +476,78 @@ Response
     int32: Z position, in steps
     int32: A position, in steps
     int32: B position, in steps
-    uint16: Axes bitfield corresponding to the endstop status
+    uint16: bitfield corresponding to the endstop status:
+
+<table>
+<tr>
+ <th>Bit</th>
+ <th>Name</th>
+</tr>
+<tr>
+ <td>15</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>14</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>13</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>12</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>11</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>10</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>9</td>
+ <td>B min switch pressed</td>
+</tr>
+<tr>
+ <td>8</td>
+ <td>B max switch pressed</td>
+</tr>
+<tr>
+ <td>7</td>
+ <td>A max switch pressed</td>
+</tr>
+<tr>
+ <td>6</td>
+ <td>A min switch pressed</td>
+</tr>
+<tr>
+ <td>5</td>
+ <td>Z max switch pressed</td>
+</tr>
+<tr>
+ <td>4</td>
+ <td>Z min switch pressed</td>
+</tr>
+<tr>
+ <td>3</td>
+ <td>Y max switch pressed</td>
+</tr>
+<tr>
+ <td>2</td>
+ <td>Y min switch pressed</td>
+</tr>
+<tr>
+ <td>1</td>
+ <td>X max switch pressed</td>
+</tr>
+<tr>
+ <td>0</td>
+ <td>X min switch pressed</td>
+</tr>
+</table>
 
 ## 22 - Extended stop: Stop a subset of systems
 TODO: This command conflicts with other commands (Abort, Pause/Resume). Why do we have it?
@@ -645,7 +716,7 @@ Payload
     uint8: Length of the tool command payload (N)
     N bytes: Tool command payload, 0-? bytes.
 
-## 137 - Enable/disable Axes: Explicitly enable or disable stepper motor controllers
+## 137 - Enable/disable axes: Explicitly enable or disable stepper motor controllers
 This command is used to explicitly power steppers on or off. Generally, it is used to shut down the steppers after a build to save power and avoid generating excessive heat.
 
 Payload
@@ -705,7 +776,7 @@ Payload
     int32: B coordinate, in steps
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
 
-## 140 - Set Extended Position
+## 140 - Set extended position
 Reset the current position of the axes to the given values.
 
 Payload
@@ -716,7 +787,7 @@ Payload
     int32: A position, in steps
     int32: B position, in steps
 
-## 141 - Wait for Platform Ready: Wait until a build platform is ready before proceeding
+## 141 - Wait for platform ready: Wait until a build platform is ready before proceeding
 This command halts machine motion until the specified tool device reaches a ready state. A build platform is ready when it's temperature is within range of the setpoint.
 
 Payload
@@ -800,7 +871,7 @@ Payload
 </table>
 
 
-## 149 - Display Message to LCD
+## 149 - Display message to LCD
 This command will display a message to the LCD for a specified number of seconds, then revert to previous GUI if there is a running display.
 
 Text will auto-wrap at end of line. \n is recognized as new line start. \r is ignored. Note: words do not wrap automatically. You will need to insert newlines manually.
@@ -814,7 +885,7 @@ Payload
 
 # Tool Query Commands
 
-## 00 - Get Version: Query firmware for version information
+## 00 - Get version: Query firmware for version information
 This command allows the host and firmware to exchange version numbers. It also allows for automated discovery of the firmware. Version numbers will always be stored as a single number, Arduino / Processing style.
 
 Payload
@@ -827,7 +898,7 @@ Response
 
 Payload
 
-## 02 - Get Toolhead Temperature
+## 02 - Get toolhead temperature
 This returns the last recorded temperature of the toolhead. It's important for speed purposes that it does not actually trigger a temperature reading, but rather returns the last reading. The tool firmware should be constantly monitoring its temperature and keeping track of the latest readings.
 
 Payload (0 bytes)
@@ -1110,7 +1181,7 @@ Payload
 
 Response (0 bytes)
 
-## 23 - Pause/Resume: Halt Execution Temporarily
+## 23 - Pause/resume: Halt execution temporarily
 This function is inteded to be called infrequently by the end user in order to make build-time adjustments during a print.
 
 Payload (0 bytes)

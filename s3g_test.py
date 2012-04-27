@@ -504,11 +504,72 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    assert self.r.GetPosition() == position
+    [returned_position, returned_endstop_states] = self.r.GetPosition()
+    assert returned_position == position
+    assert returned_endstop_states == endstop_states
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_query_command_dict['GET_POSITION']
+
+  def test_playback_capture_error_codes(self):
+    filename = 'abcdefghijkl'
+    error_codes = [
+      'NO_CARD_PRESENT',
+      'INITIALIZATION_FAILED',
+      'PARTITION_TABLE_ERROR',
+      'FILESYSTEM_ERROR',
+      'DIRECTORY_ERROR',
+    ]
+
+    for error_code in error_codes:
+      self.outputstream.seek(0)
+      self.outputstream.truncate(0)
+
+      response_payload = bytearray()
+      response_payload.append(s3g.response_code_dict['SUCCESS'])
+      response_payload.append(s3g.sd_error_dict[error_code])
+      self.outputstream.write(s3g.EncodePayload(response_payload))
+      self.outputstream.seek(0)
+
+      self.assertRaises(s3g.SDCardError,self.r.PlaybackCapture,filename)
+
+  def test_playback_capture(self):
+    filename = 'abcdefghijkl'
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.append(s3g.sd_error_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.PlaybackCapture(filename)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['PLAYBACK_CAPTURE']
+    assert payload[1:] == filename
+
+  def test_get_next_filename_error_codes(self):
+    error_codes = [
+      'NO_CARD_PRESENT',
+      'INITIALIZATION_FAILED',
+      'PARTITION_TABLE_ERROR',
+      'FILESYSTEM_ERROR',
+      'DIRECTORY_ERROR',
+    ]
+    for error_code in error_codes:
+      self.outputstream.seek(0)
+      self.outputstream.truncate(0)
+
+      response_payload = bytearray()
+      response_payload.append(s3g.response_code_dict['SUCCESS'])
+      response_payload.append(s3g.sd_error_dict[error_code])
+      response_payload.append('\x00')
+      self.outputstream.write(s3g.EncodePayload(response_payload))
+      self.outputstream.seek(0)
+
+      self.assertRaises(s3g.SDCardError,self.r.GetNextFilename,False)
 
   def test_get_next_filename_reset(self):
     filename = 'abcdefghijkl'
@@ -544,27 +605,6 @@ class S3gTests(unittest.TestCase):
     assert payload[0] == s3g.host_query_command_dict['GET_NEXT_FILENAME']
     assert payload[1] == 0
 
-  def test_get_next_filename_error_codes(self):
-    error_codes = [
-      'NO_CARD_PRESENT',
-      'INITIALIZATION_FAILED',
-      'PARTITION_TABLE_ERROR',
-      'FILESYSTEM_ERROR',
-      'DIRECTORY_ERROR',
-    ]
-    for error_code in error_codes:
-      self.outputstream.seek(0)
-      self.outputstream.truncate(0)
-
-      response_payload = bytearray()
-      response_payload.append(s3g.response_code_dict['SUCCESS'])
-      response_payload.append(s3g.sd_error_dict[error_code])
-      response_payload.append('\x00')
-      self.outputstream.write(s3g.EncodePayload(response_payload))
-      self.outputstream.seek(0)
-
-      self.assertRaises(s3g.SDCardError,self.r.GetNextFilename,False)
-
   def test_get_build_name(self):
     build_name = 'abcdefghijklmnop'
 
@@ -579,6 +619,29 @@ class S3gTests(unittest.TestCase):
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_query_command_dict['GET_BUILD_NAME']
+
+  def test_get_extended_position(self):
+    position = [1, -2, 3, -4 , 5]
+    endstop_states = 0x1234
+    
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend(s3g.EncodeInt32(position[0]))
+    response_payload.extend(s3g.EncodeInt32(position[1]))
+    response_payload.extend(s3g.EncodeInt32(position[2]))
+    response_payload.extend(s3g.EncodeInt32(position[3]))
+    response_payload.extend(s3g.EncodeInt32(position[4]))
+    response_payload.extend(s3g.EncodeUint16(endstop_states))
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    [returned_position, returned_endstop_states] = self.r.GetExtendedPosition()
+    assert returned_position == position
+    assert returned_endstop_states == endstop_states
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['GET_EXTENDED_POSITION']
 
   def test_queue_point(self):
     target = [1,-2,3]
