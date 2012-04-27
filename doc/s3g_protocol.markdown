@@ -237,11 +237,6 @@ Response code values can be as follows:
  <td>No</td>
 </tr>
 <tr>
- <td>0x86</td>
- <td>Success, expect more packets (TODO: Is this in use?)</td>
- <td>No</td>
-</tr>
-<tr>
  <td>0x87</td>
  <td>Downstream timeout</td>
  <td>Yes</td>
@@ -619,23 +614,6 @@ Response
 </tr>
 </table>
 
-## 24 - Build start notification
-Tells the motherboard that a build is about to begin, and provides the name of the job for status reporting. This allows the motherboard to display an appropriate build screen on the interface board.
-
-Payload
-
-    uint32: Number of steps (commands?) in the build
-    1+N bytes: Name of the build, in ASCII, null terminated (TODO: verify null termination)
-
-Response (0 bytes)
-
-## 25 - Build end notification
-Tells the motherboard that a build has been completed or aborted.
-
-Payload (0 bytes)
-
-Response (0 bytes)
-
 ## 26 - Get communication statistics
 Gathers statistics about communication over the tool network. This was intended for use while troubleshooting Gen3/4 machines.
 
@@ -872,16 +850,38 @@ Payload
 
 
 ## 149 - Display message to LCD
-This command will display a message to the LCD for a specified number of seconds, then revert to previous GUI if there is a running display.
+This command is used to display a message to the LCD board.
+If the continuation field is set to 0, then the machine should clear the interface board LCD, move the display cursor to the specified position, write the message to the display, then revert the display to it's previous state after the specified timeout.
+If the continuation field is set to 1, then the machine should ignore the specified horizontal and vertical positions, write the message to the display, then revert the display to its previous state after the specified timeout.
+
+_Note: If a command with a continuation is received while a previous display command has a timeout couter active, it should replace the running timer with the timer specified in the continuation command.
 
 Text will auto-wrap at end of line. \n is recognized as new line start. \r is ignored. Note: words do not wrap automatically. You will need to insert newlines manually.
 
 Payload
-    uint8: Options bitmap (see below)
-    uint8: Vertical position to display the message at (0-3)
-    uint8: Horizontal position to display the message at (0-19)
+    uint8: Continuation: If 1, this message should be treated as an extension to the previous message.
+    uint8: Horizontal position to display the message at (commonly 0-19)
+    uint8: Vertical position to display the message at (commonly 0-3)
     uint8: Timeout, in seconds. If 0, this message will left on the screen
     1+N bytes: Message to write to the screen, in ASCII, terminated with a null character.
+
+## 153 - Build start notification
+Tells the motherboard that a build is about to begin, and provides the name of the job for status reporting. This allows the motherboard to display an appropriate build screen on the interface board.
+
+Payload
+
+    uint32: Number of steps (commands?) in the build
+    1+N bytes: Name of the build, in ASCII, null terminated
+
+Response (0 bytes)
+
+## 154 - Build end notification
+Tells the motherboard that a build has been completed or aborted.
+
+Payload (0 bytes)
+
+Response (0 bytes)
+
 
 # Tool Query Commands
 

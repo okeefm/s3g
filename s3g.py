@@ -4,11 +4,11 @@ import time
 
 host_query_command_dict = {
   'GET_VERSION'               : 0,
-#  'INIT'                      : 1,
+  'INIT'                      : 1,
   'GET_AVAILABLE_BUFFER_SIZE' : 2,
 #  'CLEAR_BUFFER'              : 3,
   'GET_POSITION'              : 4,
-#  'ABORT_IMMEDIATELY'         : 7,
+  'ABORT_IMMEDIATELY'         : 7,
 #  'PAUSE'                     : 8,
 #  'PROBE'                     : 9,
   'TOOL_QUERY'                : 10,
@@ -24,8 +24,6 @@ host_query_command_dict = {
   'GET_EXTENDED_POSITION'     : 21,
 #  'EXTENDED_STOP'             : 22,
 #  'GET_MOTHERBOARD_STATUS'    : 23,
-  'BUILD_START_NOTIFICATION'  : 24,
-  'BUILD_END_NOTIFICATION'    : 25,
 #  'GET_COMMUNICATION_STATS'   : 26
 }
 
@@ -46,7 +44,9 @@ host_action_command_dict = {
 #  'STORE_HOME_POSITIONS'      : 143,
 #  'RECALL_HOME_POSITIONS'     : 144,
 #  'PAUSE_FOR_INTERACTION'     : 145,
-#  'DISPLAY_MESSAGE'           : 146,
+  'DISPLAY_MESSAGE'           : 149,
+  'BUILD_START_NOTIFICATION'  : 153,
+  'BUILD_END_NOTIFICATION'    : 154,
 }
 
 slave_query_command_dict = {
@@ -472,6 +472,15 @@ class s3g:
 
     return version
 
+  def Init(self):
+    """
+    Initialize the machine to a default state
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['INIT'])
+   
+    self.SendCommand(payload)
+
   def ToolQuery(self, tool_index, command, tool_payload = None):
     """
     Query a toolhead for some information
@@ -561,6 +570,16 @@ class s3g:
 
     return position, axes_bits
 
+  def AbortImmediately(self):
+    """
+    Stop the machine by disabling steppers, clearing the command buffers, and instructing the toolheads
+    to shut down
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['ABORT_IMMEDIATELY'])
+ 
+    self.SendCommand(payload)
+
   def PlaybackCapture(self, filename):
     """
     Instruct the machine to play back (build) a file from it's SD card.
@@ -569,6 +588,7 @@ class s3g:
     payload = bytearray()
     payload.append(host_query_command_dict['PLAYBACK_CAPTURE'])
     payload.extend(filename)
+    payload.append(0x00)
    
     response = self.SendCommand(payload)
     [response_code, sd_response_code] = self.UnpackResponse('<BB', response)
@@ -625,28 +645,6 @@ class s3g:
 
     # TODO: fix the endstop bit encoding, it doesn't make sense.
     return position, endstop_states
-
-  def BuildStartNotification(self, command_count, build_name):
-    """
-    Notify the machine that a build has been started
-    @param command_count Number of host commands in the build
-    @param build_name Name of the build
-    """
-    payload = bytearray()
-    payload.append(host_query_command_dict['BUILD_START_NOTIFICATION'])
-    payload.extend(EncodeUint32(command_count))
-    payload.extend(build_name)
-
-    self.SendCommand(payload)
-
-  def BuildEndNotification(self):
-    """
-    Notify the machine that a build has been stopped.
-    """
-    payload = bytearray()
-    payload.append(host_query_command_dict['BUILD_END_NOTIFICATION'])
-
-    self.SendCommand(payload)
 
   def QueuePoint(self, position, rate):
     """
@@ -756,6 +754,54 @@ class s3g:
     payload.extend(EncodeInt32(position[4]))
     
     self.SendCommand(payload)
+
+  def DisplayMessage(self, row, col, message, timeout, continuation):
+    """
+    Display a message to the screen
+    @param row Row to draw the message at
+    @param col Column to draw the message at
+    @param message Message to write to the screen
+    @param timeout Amount of time to display the message for, in seconds. 
+                   If 0, leave the message up indefinately.
+    @param continue_last
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['DISPLAY_MESSAGE'])
+    if continuation == True:
+      payload.append(0x01)
+    else:
+      payload.append(0x00)
+    payload.append(col)
+    payload.append(row)
+    payload.append(timeout)
+    payload.extend(message)
+    payload.append(0x00)
+
+    self.SendCommand(payload)
+
+  def BuildStartNotification(self, command_count, build_name):
+    """
+    Notify the machine that a build has been started
+    @param command_count Number of host commands in the build
+    @param build_name Name of the build
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['BUILD_START_NOTIFICATION'])
+    payload.extend(EncodeUint32(command_count))
+    payload.extend(build_name)
+    payload.append(0x00)
+
+    self.SendCommand(payload)
+
+  def BuildEndNotification(self):
+    """
+    Notify the machine that a build has been stopped.
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['BUILD_END_NOTIFICATION'])
+
+    self.SendCommand(payload)
+
 
   def GetToolheadVersion(self, tool_index):
     """
@@ -890,10 +936,12 @@ class s3g:
     @param tool_index Toolhead Index
     @param state If True, turn the fan on, otherwise off.
     """
+
+    payload = bytearray()
     if state == True:
-      payload = [0x01]
+      payload.append(0x01)
     else:
-      payload = [0x00]
+      payload.append(0x00)
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_FAN'], payload)
 
   def ToggleValve(self, tool_index, state):
@@ -902,10 +950,12 @@ class s3g:
     @param tool_index Toolhead Index
     @param state If True, turn the valvue on, otherwise off.
     """
+
+    payload = bytearray()
     if state == True:
-      payload = [0x01]
+      payload.append(0x01)
     else:
-      payload = [0x00]
+      payload.append(0x00)
 
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_VALVE'], payload)
 
@@ -915,7 +965,7 @@ class s3g:
     @param tool_index Toolhead Index
     @param temp Temperature to heat up to
     """
-		
+
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP'], [temp])
 
   def SetPlatformTemperature(self, tool_index, temp):
