@@ -1,6 +1,7 @@
 # Some utilities for speaking s3g
 import struct
 import time
+from array import array
 
 host_query_command_dict = {
   'GET_VERSION'               : 0,
@@ -249,7 +250,11 @@ def DecodeUint16(data):
   @param data byte array of size 2 that represents the integer
   @return decoded integer
   """
+  #Byte arrays need to be converted into arrays to be unpackable by struct
+  if isinstance(data, bytearray):
+    data = array('B', data)
   return struct.unpack('<H', data)[0]
+    
 
 def EncodeAxes(axes):
   """
@@ -375,6 +380,56 @@ class PacketStreamDecoder:
 class s3g:
   def __init__(self):
     self.file = None
+
+  def _SendPacket(self, packet):
+    """
+    Test function that sends a packet to the file
+    Attempt to send a command to the machine, retrying up to 5 times if an error
+    occurs.
+    @param payload Command to send to the machine
+    @return Response payload, if successful. 
+    """
+    retry_count = 0
+
+    while True:
+      decoder = PacketStreamDecoder(True)
+      self.file.write(packet)
+      self.file.flush()
+
+      # Timeout if a response is not received within 1 second.
+      start_time = time.time()
+
+      try:
+        while (decoder.state != 'PAYLOAD_READY'):
+          # Try to read a byte
+          data = ''
+          while data == '':
+            if (time.time() > start_time + timeout_length):
+              raise IOError("timeout")
+
+            # pySerial streams handle blocking read. Be sure to set up a timeout when
+            # initializing them, or this could hang forever
+            data = self.file.read(1)
+
+          data = ord(data)
+          decoder.ParseByte(data)
+        
+        # TODO: Should we chop the response code?
+        return decoder.payload
+
+       # TODO: Implement retries for response codes that can handle them, errors for response codes that can't, and free retries for
+       #       ones that don't count
+#      except (PacketResponseCodeError) as e:
+#        pass
+
+      except (PacketError, IOError) as e:
+        """ PacketError: header, length, crc error """
+        """ IOError: pyserial timeout error, etc """
+        #print "packet error: " + str(e)
+        retry_count = retry_count + 1
+        if retry_count >= max_retry_count:
+          raise TransmissionError("Failed to send packet")
+
 
   def SendCommand(self, payload):
     """
@@ -509,9 +564,8 @@ class s3g:
     payload.append(host_query_command_dict['READ_FROM_EEPROM'])
     payload.extend(EncodeUint16(offset))
     payload.append(length)
-
+		
     response = self.SendCommand(payload)
-
     return response[1:]
 
   def WriteToEEPROM(self, offset, data):
@@ -856,21 +910,26 @@ class s3g:
 
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_VALVE'], payload)
 
-  def SetToolheadTemperature(self, tool_index, temp):
+  def SetToolheadTemperature(self, tool_index, temperature):
     """
-    Set a certain toolhead's temperature to temp
-    @param tool_index Toolhead Index
-    @param temp Temperature to heat up to
+    Set a certain toolhead's temperature
+    @param tool_index: Toolhead Index
+    @param Temperature: Temperature to heat up to in Celcius
     """
-		
-    self.ToolActionCommand(tool_index, slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP'], [temp])
+    if not isinstance(temperature, int):
+      raise ProtocolError('Expected a temperature of type int, got %i'%(temp))
+    payload = bytearray()
+    payload.extend(EncodeUint16(temperature))
+    self.ToolActionCommand(tool_index, slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP'], payload)
 
-  def SetPlatformTemperature(self, tool_index, temp):
+  def SetPlatformTemperature(self, tool_index, temperature):
     """
-    Set the platform's temperature to temp
-    @param tool_index Platform Index
-    @param temp Temperature to heat up to 
+    Set the platform's temperature
+    @param tool_index: Platform Index
+    @param Temperature: Temperature to heat up to in Celcius
     """
-
-    self.ToolActionCommand(tool_index, slave_action_command_dict['SET_PLATFORM_TEMP'], [temp])
-
+    if not isinstance(temperature, int):
+      raise ProtocolError('Expected a temperature of type int, got %i'%(temperature))
+    payload = bytearray()
+    payload.extend(EncodeUint16(temperature))
+    self.ToolActionCommand(tool_index, slave_action_command_dict['SET_PLATFORM_TEMP'], payload)

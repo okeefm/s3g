@@ -52,6 +52,21 @@ class EncodeTests(unittest.TestCase):
     for case in cases:
       assert s3g.DecodeUint16(case[1]) == case[0]
 
+    byteArrayCases = [
+      [0,       bytearray('\x00\x00')],
+      [32767,   bytearray('\xff\x7f')],
+      [65535,   bytearray('\xff\xff')],
+    ]
+    for case in byteArrayCases:
+      assert s3g.DecodeUint16(case[1]) == case[0]
+
+    #This case should fail, since we are passing it a byte array of size 3 and we can only decode ints of size 16
+    failCase = [0, bytearray('\x00\x00\x00')]
+    try:
+      s3g.DecodeUint16(case[1]) == case[0]
+    except struct.error:
+      assert True
+
   def test_encode_axes(self):
     cases = [
       [['x','y','z','a','b'], 0x1F],
@@ -1006,52 +1021,52 @@ class S3gTests(unittest.TestCase):
 
   def test_set_toolhead_temp(self):
     tool_index = 2
-    temperatures = [0, 50, 200, 100]
+    temp = 100
 
-    for temp in temperatures:
-      self.outputstream.seek(0)
-      self.outputstream.truncate(0)
+    self.outputstream.seek(0)
+    self.outputstream.truncate(0)
 
-      self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
-      self.outputstream.seek(0)
-      self.inputstream.seek(0)
+    self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
+    self.outputstream.seek(0)
+    self.inputstream.seek(0)
 
-      self.r.SetToolheadTemperature(tool_index, temp)
+    self.r.SetToolheadTemperature(tool_index, temp)
 
-      packet = bytearray(self.inputstream.getvalue())
-      payload = s3g.DecodePacket(packet)
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
 
-      assert payload[0] == s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
-      assert payload[1] == tool_index
-      assert payload[2] == s3g.slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP']
-      assert payload[3] == 1
-      assert payload[4] == temp
+    assert payload[0] == s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
+    assert payload[1] == tool_index
+    assert payload[2] == s3g.slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP']
+    assert payload[3] == 1
+    assert payload[4] == temp
 	
 
   def test_set_platform_temp(self):
     tool_index = 0
-    temperatures = [0, 50, 200, 100]
+    temp = 100
 
-    for temp in temperatures:
-      self.outputstream.seek(0)
-      self.outputstream.truncate(0)
+    self.outputstream.seek(0)
+    self.outputstream.truncate(0)
 
-      self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
-      self.outputstream.seek(0)
-      self.inputstream.seek(0)
+    self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
+    self.outputstream.seek(0)
+    self.inputstream.seek(0)
 
-      self.r.SetPlatformTemperature(tool_index, temp)
+    self.r.SetPlatformTemperature(tool_index, temp)
 
-      packet = bytearray(self.inputstream.getvalue())
-      payload = s3g.DecodePacket(packet)
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
 
-      assert payload[0] == s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
-      assert payload[1] == tool_index
-      assert payload[2] == s3g.slave_action_command_dict['SET_PLATFORM_TEMP']
-      assert payload[3] == 1
-      assert payload[4] == temp
+    assert payload[0] == s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
+    assert payload[1] == tool_index
+    assert payload[2] == s3g.slave_action_command_dict['SET_PLATFORM_TEMP']
+    assert payload[3] == 1
+    assert payload[4] == temp
 
-
+  def test_empty_payload(self):
+    payload = bytearray()
+    self.assertRaises(s3g.PacketResponseCodeError, self.r.SendCommand, payload)
 
 if __name__ == "__main__":
   unittest.main()
