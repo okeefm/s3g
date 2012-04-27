@@ -30,7 +30,7 @@ $(function () {
         function onDataReceived(series) {
             // we get all the data in one go, if we only got partial
             // data, we could merge it with what we already got
-            data = [ series['tool_0_temp'], series['tool_1_temp'] ];
+            data = [ series['tool_0_temp'], series['tool_1_temp'], series['platform_temp'] ];
             $.plot($("#placeholder"), data, options);
         }
                     
