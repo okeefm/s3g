@@ -2,56 +2,65 @@
 
 ## Overview
 
-This document describes the protocol by which 3rd and 4th generation RepRap electronics communicate with their host machine, as well as the protocol by which the RepRap host communicates with its subsystems. The same simple packet protocol is used for both purposes.
+This document describes the s3g protocol, which is used to communicate with Makerbots and similar CNC machines. It is intended to help developers who wish to communicate with a machine directly, or create their own devices that speak over the protocol. If all you want to do is control a machine, we recommend using the [s3g library](http://github.com/makerbot/s3g), which is a Python implementation of the protocol.
 
-## Index
+The first part of the document covers some definitions that are used to describe this system. We recommend you at least skim through them, so we can be sure we are talking about the same things.
 
-(how to make?)
+The second part of the document talks about the architecture that the s3g protocol was designed for. It's useful for understanding how the different pieces of hardware are connected, and what each part does.
 
-# Implementations
+The third part of the document talks about the fine details of how commands are routed through the system, and what happens if there is an error when sending one. It's useful for understanding how to make your own 
 
-Firmware repositories:
+The final portion of the document is a catalog of all of the commands that the Host and Tools can implement.
 
-* For Gen3 and Gen4 electronics (Cupcake, Thing-O-Matic, Reprap): [G3Firmware](http://github.com/makerbot/G3Firmware)
-* For Mightyboard (Replicator): [MightyBoardFirmware](http://github.com/makerbot/MightyBoardFirmware)
+## Definitions
 
-Host software:
+Here is some vocabulary, that should be used when talking about the protocol:
 
-* [ReplicatorG](http://github.com/makerbot/ReplicatorG)
-* [pyS3g](http://github.com/makerbot/s3g)
+<table>
+<tr>
+ <th>Name</th>
+ <th>Definition</th>
+</tr>
+<tr>
+ <td>PC</td>
+ <td>A computer, that is connected to the Host over the host network.</td>
+</tr>
+<tr>
+ <td>Host</td>
+ <td>The motherboard on the machine. This communicates with the PC over the host network, and with 0 or more tools over the tool network. The host can control 3-5 stepper motors, read endstops, read and write to an SD card, and control an interface board.</td>
+</tr>
+<tr>
+ <td>Tool</td>
+ <td>An auxiliary motherboard on the machine, This communicates with the Host over the tool network, and controls one toolhead (extruder). The Tool can have a toolhead heater, platform heater, fan, extruder motor, and other things attached to it. On the Mightyboard, the Tool is simulated inside of the motherboard, and doesn't exist as a separate piece.</td>
+</tr>
+<tr>
+ <td>Host network</td>
+ <td>The host network is the serial connection between the PC and the Host. The physical bus is RS232 (using a USB<->serial adaptor), running at 115200 baud (Gen4, MightyBoard) or 38400 baud (Gen3).</td>
+</tr>
+<tr>
+ <td>Tool network</td>
+ <td>The tool network is the serial connection between the Host and 0 or more Tools. The physical bus is RS485, half-duplex, running at xxx baud (Gen3, Gen4), or virtual (MightyBoard).</td>
+</tr>
+<tr>
+ <td>Tool ID</td>
+ <td>A unique address that is assigned to each Tool, that allows it to be addressed individually by the Host. Valid Tool IDs are 0-126. It is recommended to use 0 for the first Tool, and 1 for the second Tool.</td>
+</tr>
+</table>
 
-# Device Architecture
+## Architecture
 
-The RepRap Generation 3 electronics set consists of several hardware components:
+An s3g system looks like this:
 
-1 A single Host Controller which controls the 3-axis steppers, communicates with a host PC, supports a storage card and controls a set of toolheads.
-2 A set of Stepper Drivers which drive the steppers based on signals from the host controller.  The communications between the drivers and the host controller is outside of the scope of this document.
-3 A number of Tool Controllers which control extruders, cutters, frostruders, etc.
-
-The two communications channels covered by this document are:
-
-1.The Host Network, between a host computer and the host controller
-2.The Slave Network, between the host controller and one or more tool controllers.
+![block diagram of system architecture](SystemArchitecture.png)
 
 
-The host network is generally implemented over a standard TTL-level RS232 serial ion.  The slave network is implemented as an RS485 serial bus driven by SN75176A transceivers.
+Both networks (host, tool) have a single network master. On the host network, this is a PC, and on the tool network, this is the Host. All network communications are initiated by the network host; a tool node can never initiate a data transfer.
 
-Packet Protocol
- Protocol Overview
+Data is sent over the network as a series of packets. Each network transaction consists of at least two packets: a command packet, followed by a response packet.  Every packet from a network master must be responded to.
 
-Each network has a single host: in the case of the host network, this is the host computer, and in the case of the slave network, this is the host controller.  All network communications are initiated by the network host; a slave node can never initiate a data transfer.
+. All commands are query/response.  The host in each pair will always initiate communications, never the tool.  All packets are synchronous; they will wait for a response from the client before sending the next packet.  The firmware will continue rendering buffered commands while receiving new commands and replying to them.
 
-Data is sent over the network as a series of simple packets.  Packets are variable-length, with a maximum payload size of 32 bytes.
-
-Each network transaction consists of at least two packets: a host packet, followed by a response packet.  Every packet from a host must be responded to.
-
-Commands will be sent in packets. All commands are query/response.  The host in each pair will always initiate communications, never the slave.  All packets are synchronous; they will wait for a response from the client before sending the next packet.  The firmware will continue rendering buffered commands while receiving new commands and replying to them.
-
-Timeouts
-
-Packets must be responded to promptly.  No command should ever block. If a query would require more than the timeout period to respond to, it must be recast as a poll-driven operation.
-
-
+Packets must be responded to promptly.  No command should ever block.
 
 
 All communications, both host-mb and mb-toolboard, are at 38400bps.  It should take approximately 1/3rd ms. to transmit one byte at those speeds. The maximum packet size of 32+3 bytes should take no more than 12ms to transmit.  We establish a 20ms. window from the reception of a start byte until packet completion.  If a packet is not completed within this window, it is considered to have timed out.
@@ -69,8 +78,22 @@ Command Buffering
 To ensure smooth motion, as well as to support print queueing, we'll want certain commands to be queued in a buffer.  This means we won't get immediate feedback from any queued command.  To this end we will break commands down into two categories: action commands that are put in the command buffer, and query commands that require an immediate response.  In order to make it simple to differentiate the commands on the firmware side, we will break them up into two sets: commands numbered 0-127 will be query commands, and commands numbered 128-255 will be action commands to be put into the buffer.  The firmware can then simply look at the highest bit to determine which type of packet it is. 
 
 
-# Commands
-# Packet Structure
+# Implementations
+
+Firmware repositories:
+
+* For Gen3 and Gen4 electronics (Cupcake, Thing-O-Matic, Reprap): [G3Firmware](http://github.com/makerbot/G3Firmware)
+* For Mightyboard (Replicator): [MightyBoardFirmware](http://github.com/makerbot/MightyBoardFirmware)
+
+Host software:
+
+* [ReplicatorG](http://github.com/makerbot/ReplicatorG)
+* [pyS3g](http://github.com/makerbot/s3g)
+
+
+# Packet formats
+
+## Packet Structure
 All packets have the following structure:
 
 <table>
@@ -101,8 +124,8 @@ All packets have the following structure:
 </tr>
 </table>
 
-## Host Bus Payload Structure
-The payload of a packet sent over the master bus contains one command. Each command consists of a command code, and 0 or more arguments:
+## Host Network Payload Structure
+The payload of a packet sent over the master network contains one command. Each command consists of a command code, and 0 or more arguments:
 
 <table>
 <tr>
@@ -122,8 +145,8 @@ The payload of a packet sent over the master bus contains one command. Each comm
 </tr>
 </table>
 
-## Slave Bus Payload Structure
-The payload of a packet sent over the slave bus contains one command. Each command consists of a Slave ID, a command code, and 0 or more arguments:
+## Tool Network Payload Structure
+The payload of a packet sent over the tool network contains one command. Each command consists of a Tool ID, a command code, and 0 or more arguments:
 
 <table>
 <tr>
@@ -133,13 +156,13 @@ The payload of a packet sent over the slave bus contains one command. Each comma
 </tr>
 <tr>
  <td>0</td>
- <td>Slave ID</td>
- <td>The ID of the slave device being addressed (see below)</td>
+ <td>Tool ID</td>
+ <td>The ID of the tool device being addressed (see below)</td>
 </tr>
 <tr>
  <td>1</td>
  <td>Command Code</td>
- <td>A byte representing the command to be executed. Unlike host commands, slave command values have no special meaning.</td>
+ <td>A byte representing the command to be executed. Unlike host commands, tool command values have no special meaning.</td>
 </tr>
 <tr>
  <td>2..(2+N)</td>
@@ -148,13 +171,13 @@ The payload of a packet sent over the slave bus contains one command. Each comma
 </tr>
 </table>
 
-A note about Slave IDs:
+A note about Tool IDs:
 
-The slave ID is the ID number of a toolhead. A toolhead may only respond to commands that are directed at its ID. If the packet is corrupt, the slave should *not* respond with an error message to avoid collisions.
+The tool ID is the ID number of a toolhead. A toolhead may only respond to commands that are directed at its ID. If the packet is corrupt, the tool should *not* respond with an error message to avoid collisions.
 
-The exception to this is the slave ID 127. This represents any listening device. The address 127 should only be used when setting the ID of a slave. _Note: Before firmware version 2.92, the broadcast address was 255._
+The exception to this is the tool ID 127. This represents any listening device. The address 127 should only be used when setting the ID of a tool. _Note: Before firmware version 2.92, the broadcast address was 255._
 
-## Response Packet Structure (both Host and Slave Busses)
+## Response Packet Structure (both Host and Tool Networks)
 The response payload contains the response to a single command:
 
 <table>
@@ -261,16 +284,11 @@ uint8, uint16, int16, uint32, int32, axes bitfield
  <td>0x05</td>
  <td>Root directory could not be opened</td>
 </tr>
-</table>
 <tr>
  <td>0x06</td>
  <td>SD Card is locked</td>
 </tr>
-
-
-# Test Commands
-
-Test commands existed from 0x70-0x78, and 0xF0. They are considered legacy.
+</table>
 
 # Host Query Commands
 
@@ -345,12 +363,12 @@ This command is for sending a query command to the tool. The host firmware will 
 
 Payload
 
-    uint8: Slave index 
-    0-N bytes: Payload containing the query command to send to the slave.
+    uint8: Tool index 
+    0-N bytes: Payload containing the query command to send to the tool.
 
 Response
 
-    0-N bytes: Response payload from the slave query command, if any.
+    0-N bytes: Response payload from the tool query command, if any.
 
 ## 11 - Is Finished: See if the machine is currently busy
 This command queries the machine to determine if it currently executing commands from a command queue.
@@ -548,22 +566,24 @@ Payload (0 bytes)
 Response (0 bytes)
 
 ## 26 - Get communication statistics
-Gathers statistics about communication over the slave bus. This was intended for use while troubleshooting Gen3/4 machines.
+Gathers statistics about communication over the tool network. This was intended for use while troubleshooting Gen3/4 machines.
 
 Payload (0 bytes)
 
 Response
 
-    uint32: Packets received from the host interface
-    uint32: Packets sent over the slave interface
-    uint32: Number of packets sent over the slave interface that were not repsonded to
-    uint32: Number of packet retries on the slave interface
-    uint32: Number of bytes received over the slave interface that were discarded as noise
+    uint32: Packets received from the host network
+    uint32: Packets sent over the tool network
+    uint32: Number of packets sent over the tool network that were not repsonded to
+    uint32: Number of packet retries on the tool network 
+    uint32: Number of bytes received over the tool network that were discarded as noise
 
 # Host Buffered Commands
 
 ## 129 - Queue point
-This queues an absolute point to move to. _Historical note: This implementation is much more wordy than an incremental solution, which likely impacts processing time and buffer sizes on the resource-constrained firmware_
+This queues an absolute point to move to.
+
+_Historical note: This implementation is much more wordy than an incremental solution, which likely impacts processing time and buffer sizes on the resource-constrained firmware_
 
 Payload
 
@@ -585,6 +605,7 @@ Payload
 This function will find the minimum position that the hardware can travel to, then stop. Note that all axes are moved syncronously. If one of the axes (Z, for example) should be moved separately, then a seperate command should be sent to move that axis. Note that a minimum endstop is required for each axis that is to be moved.
 
 Payload
+
     uint8: Axes bitfield. Axes whose bits are set will be moved.
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
     uint16: Timeout, in seconds.
@@ -593,6 +614,7 @@ Payload
 This function will find the maximum position that the hardware can travel to, then stop. Note that all axes are moved syncronously. If one of the axes (Z, for example) should be moved separately, then a seperate command should be sent to move that axis. Note that a maximum endstop is required for each axis that is to be moved.
 
 Payload
+
     uint8: Axes bitfield. Axes whose bits are set will be moved.
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
     uint16: Timeout, in seconds.
@@ -609,8 +631,8 @@ This command halts machine motion until the specified toolhead reaches a ready s
 
 Payload
 
-    uint8: Slave ID of the tool to wait for
-    uint16: Delay between query packets sent to the slave, in ms (nominally 100 ms)
+    uint8: Tool ID of the tool to wait for
+    uint16: Delay between query packets sent to the tool, in ms (nominally 100 ms)
     uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
 
 ## 136 - Tool action command: Send an action command to a tool for execution
@@ -618,7 +640,7 @@ This command is for sending an action command to the tool. The host firmware wil
 
 Payload
 
-    uint8: Slave ID of the tool to query
+    uint8: Tool ID of the tool to query
     uint8: Action command to send to the tool
     uint8: Length of the tool command payload (N)
     N bytes: Tool command payload, 0-? bytes.
@@ -670,7 +692,9 @@ Payload
 </table>
 
 ## 139 - Queue extended point
-This queues an absolute point to move to. _Historical note: This implementation is much more wordy than an incremental solution, which likely impacts processing time and buffer sizes on the resource-constrained firmware_
+This queues an absolute point to move to.
+
+_Historical note: This implementation is much more wordy than an incremental solution, which likely impacts processing time and buffer sizes on the resource-constrained firmware_
 
 Payload
 
@@ -693,12 +717,12 @@ Payload
     int32: B position, in steps
 
 ## 141 - Wait for Platform Ready: Wait until a build platform is ready before proceeding
-This command halts machine motion until the specified slave device reaches a ready state. A build platform is ready when it's temperature is within range of the setpoint.
+This command halts machine motion until the specified tool device reaches a ready state. A build platform is ready when it's temperature is within range of the setpoint.
 
 Payload
 
-    uint8: Slave ID of the build platform to wait for
-    uint16: Delay between query packets sent to the slave, in ms (nominally 100 ms)
+    uint8: Tool ID of the build platform to wait for
+    uint16: Delay between query packets sent to the tool, in ms (nominally 100 ms)
     uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
 
 ## 142 - Queue extended point, new style
@@ -788,7 +812,7 @@ Payload
     uint8: Timeout, in seconds. If 0, this message will left on the screen
     1+N bytes: Message to write to the screen, in ASCII, terminated with a null character.
 
-# Slave Query Commands
+# Tool Query Commands
 
 ## 00 - Get Version: Query firmware for version information
 This command allows the host and firmware to exchange version numbers. It also allows for automated discovery of the firmware. Version numbers will always be stored as a single number, Arduino / Processing style.
@@ -804,7 +828,7 @@ Response
 Payload
 
 ## 02 - Get Toolhead Temperature
-This returns the last recorded temperature of the toolhead. It's important for speed purposes that it does not actually trigger a temperature reading, but rather returns the last reading. The slave firmware should be constantly monitoring its temperature and keeping track of the latest readings.
+This returns the last recorded temperature of the toolhead. It's important for speed purposes that it does not actually trigger a temperature reading, but rather returns the last reading. The tool firmware should be constantly monitoring its temperature and keeping track of the latest readings.
 
 Payload (0 bytes)
 
@@ -855,7 +879,7 @@ Response
     uint8: Number of bytes successfully written to the EEPROM
 
 ## 30 - Get build platform temperature
-This returns the last recorded temperature of the build platform. It's important for speed purposes that it does not actually trigger a temperature reading, but rather returns the last reading. The slave firmware should be constantly monitoring its temperature and keeping track of the latest readings.
+This returns the last recorded temperature of the build platform. It's important for speed purposes that it does not actually trigger a temperature reading, but rather returns the last reading. The tool firmware should be constantly monitoring its temperature and keeping track of the latest readings.
 
 Payload (0 bytes)
 
@@ -962,6 +986,7 @@ Retrieve the state variables of the PID controller. This is intended for tuning 
 Payload (0 bytes)
 
 Response
+
     int16: Extruder heater error term
     int16: Extruder heater delta term
     int16: Extruder heater last output
@@ -969,7 +994,7 @@ Response
     int16: Platform heater delta term
     int16: Platform heater last output
 
-# Slave Action Commands
+# Tool Action Commands
 
 ## 01 - Init: Initialize firmware to boot state
 Initialization consists of:
@@ -984,7 +1009,7 @@ Payload (0 bytes)
 Response (0 bytes)
 
 ## 03 - Set toolhead target temperature
-This sets the desired temperature for the heating element. The slave firmware will then attempt to maintain this temperature as closely as possible.
+This sets the desired temperature for the heating element. The tool firmware will then attempt to maintain this temperature as closely as possible.
 
 Payload
 
@@ -1100,7 +1125,7 @@ Payload (0 bytes)
 Response (0 bytes)
 
 ## 31 - Set build platform target temperature
-This sets the desired temperature for the build platform. The slave firmware will then attempt to maintain this temperature as closely as possible.
+This sets the desired temperature for the build platform. The tool firmware will then attempt to maintain this temperature as closely as possible.
 
 Payload
 
