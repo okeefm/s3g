@@ -620,7 +620,7 @@ Response
 </table>
 
 ## 24 - Build start notification
-Tells the motherboard that a build is about to begin, and provides the name of the job for status reporting. 
+Tells the motherboard that a build is about to begin, and provides the name of the job for status reporting. This allows the motherboard to display an appropriate build screen on the interface board.
 
 Payload
 

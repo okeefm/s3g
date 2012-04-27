@@ -643,6 +643,35 @@ class S3gTests(unittest.TestCase):
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_query_command_dict['GET_EXTENDED_POSITION']
 
+  def test_build_start_notification(self):
+    command_count = 1234
+    build_name = 'abcdefghijkl'
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.BuildStartNotification(command_count, build_name)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['BUILD_START_NOTIFICATION']
+    assert payload[1:5] == s3g.EncodeUint32(command_count)
+    assert payload[5:] == build_name
+
+  def test_build_end_notification(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.BuildEndNotification()
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['BUILD_END_NOTIFICATION']
+
   def test_queue_point(self):
     target = [1,-2,3]
     velocity = 6

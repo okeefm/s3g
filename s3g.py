@@ -24,8 +24,8 @@ host_query_command_dict = {
   'GET_EXTENDED_POSITION'     : 21,
 #  'EXTENDED_STOP'             : 22,
 #  'GET_MOTHERBOARD_STATUS'    : 23,
-#  'BUILD_START_NOTIFICATION'  : 24,
-#  'BUILD_END_NOTIFICATION'    : 25,
+  'BUILD_START_NOTIFICATION'  : 24,
+  'BUILD_END_NOTIFICATION'    : 25,
 #  'GET_COMMUNICATION_STATS'   : 26
 }
 
@@ -89,7 +89,6 @@ response_code_dict = {
   'CRC_MISMATCH'               : 0x83,
 #  'QUERY_TOO_BIG'              : 0x84,
 #  'COMMAND_NOT_SUPPORTED'      : 0x85,
-#  'SUCCESS_MORE_DATA'          : 0x86,
   'DOWNSTREAM_TIMEOUT'         : 0x87,
 }
 
@@ -414,8 +413,8 @@ class s3g:
 
        # TODO: Implement retries for response codes that can handle them, errors for response codes that can't, and free retries for
        #       ones that don't count
-      except (PacketResponseCodeError) as e:
-        pass
+#      except (PacketResponseCodeError) as e:
+#        pass
 
       except (PacketError, IOError) as e:
         """ PacketError: header, length, crc error """
@@ -626,6 +625,28 @@ class s3g:
 
     # TODO: fix the endstop bit encoding, it doesn't make sense.
     return position, endstop_states
+
+  def BuildStartNotification(self, command_count, build_name):
+    """
+    Notify the machine that a build has been started
+    @param command_count Number of host commands in the build
+    @param build_name Name of the build
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['BUILD_START_NOTIFICATION'])
+    payload.extend(EncodeUint32(command_count))
+    payload.extend(build_name)
+
+    self.SendCommand(payload)
+
+  def BuildEndNotification(self):
+    """
+    Notify the machine that a build has been stopped.
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['BUILD_END_NOTIFICATION'])
+
+    self.SendCommand(payload)
 
   def QueuePoint(self, position, rate):
     """
