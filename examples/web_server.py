@@ -38,6 +38,7 @@ if __name__ == '__main__':
  
     tool_0_temp_data = []
     tool_1_temp_data = []
+    platform_temp_data = []
 
     def update_temp_thread():
         t = threading.Timer(2.0, update_temp_thread)
@@ -45,6 +46,7 @@ if __name__ == '__main__':
 
         tool_0_temp_data.append([len(tool_0_temp_data), r.GetToolheadTemperature(0)])
         tool_1_temp_data.append([len(tool_1_temp_data), r.GetToolheadTemperature(1)])
+        platform_temp_data.append([len(platform_temp_data), r.GetPlatformTemperature(0)])
 
 #        if (tool_0_temp_data != None):
 #            if (len(tool_0_temp_data) > 200):
@@ -70,7 +72,8 @@ if __name__ == '__main__':
                 #        tool_1_temp_data = tool_1_temp_data[-200:]
              
                 response = {"tool_0_temp" : {"label" : "Toolhead 0 Temperature", "data" : tool_0_temp_data},
-                            "tool_1_temp" : {"label" : "Toolhead 1 Temperature", "data" : tool_1_temp_data}}
+                            "tool_1_temp" : {"label" : "Toolhead 1 Temperature", "data" : tool_1_temp_data},
+                            "platform_temp" : {"label" : "Platform Temperature", "data" : platform_temp_data}}
                 content = json.dumps(response)
              
                 s.send_response(200)

@@ -237,11 +237,6 @@ Response code values can be as follows:
  <td>No</td>
 </tr>
 <tr>
- <td>0x86</td>
- <td>Success, expect more packets (TODO: Is this in use?)</td>
- <td>No</td>
-</tr>
-<tr>
  <td>0x87</td>
  <td>Downstream timeout</td>
  <td>Yes</td>
@@ -436,7 +431,7 @@ Response
     uint8: SD response code
 
 ## 17 - Reset
-Reset the microcontroller. This could be used, for example, to reprogram the microcontroller. TODO: Does this work?
+Call a soft reset.  This calls all reset functions on the bot. Same as abort.
 
 Payload (0 bytes)
 
@@ -456,7 +451,7 @@ Response
     1+N bytes: Name of the next file, in ASCII, terminated with a null character. If the operation was unsuccessful, this will be a null character.
 
 ## 20 - Get build name
-Retrieve the name of the file currently being built. If the machine is not currently printing, ?? (TODO)
+Retrieve the name of the file currently being built. If the machine is not currently printing, a null terminated string of length 0 is returned.  If the bot has finished a print and has not been reset (hard or soft), it will return the name of the last file built.
 
 Payload (0 bytes)
 
@@ -465,7 +460,7 @@ Response
     1+N bytes: A null terminated string representing the filename of the current build.
 
 ## 21 - Get extended position: Get the current 
-Retrieve the curent position of all axes that the machine supports. Unsupported axes will return 0 (TODO: is this true?)
+Retrieve the curent position of all axes that the machine supports. Unsupported axes will return 0
 
 Payload (0 bytes)
 
@@ -550,9 +545,7 @@ Response
 </table>
 
 ## 22 - Extended stop: Stop a subset of systems
-TODO: This command conflicts with other commands (Abort, Pause/Resume). Why do we have it?
-
-Stop the stepper motor motion or other subsystems.
+Stop the stepper motor motion and/or reset the command buffer.  This differs from the reset and abort commands in that a soft reset of all functions is not called
 
 Payload
 
@@ -618,23 +611,6 @@ Response
  <td></td>
 </tr>
 </table>
-
-## 24 - Build start notification
-Tells the motherboard that a build is about to begin, and provides the name of the job for status reporting. 
-
-Payload
-
-    uint32: Number of steps (commands?) in the build
-    1+N bytes: Name of the build, in ASCII, null terminated (TODO: verify null termination)
-
-Response (0 bytes)
-
-## 25 - Build end notification
-Tells the motherboard that a build has been completed or aborted.
-
-Payload (0 bytes)
-
-Response (0 bytes)
 
 ## 26 - Get communication statistics
 Gathers statistics about communication over the tool network. This was intended for use while troubleshooting Gen3/4 machines.
@@ -823,13 +799,141 @@ Recall the positions of the selected axes from device EEPROM
 Payload
     uint8: Axes bitfield to specify which axes' positions to recall. Any axes with a bit set should have it's position recalled.
 
+## 145 - Set digital potentiometer value
+Set the value of the digital potentiometers that control the voltage reference for the botsteps
+
+Payload
+    uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
+    uint8: value (valid range 0-127), values over max will be capped at max
+
+## 146 - Set RGB LED value
+Set Brightness levels for RGB led strip
+
+Payload
+    uint8:  red value (all pix are 0-255)
+    uint8:  green 
+    uint8:  blue
+    uint8:  blink rate (0-255 valid)
+    uint8:  effect (currently unused)
+    
+## 147 - Set Beep
+Set a buzzer frequency and buzz time
+
+Payload
+    uint16: frequency
+    uint16: buzz length in ms
+    uint8:  effect  (currently unused)
+
 ## 148 - Wait for button
 Wait until either a user presses a button on the interface board, or a timeout occurs.
 
 Payload
-    uint8: Bit field of buttons to wait for (TODO: define these)
+    uint8: Bit field of buttons to wait for (see below)
     uint16: Timeout, in seconds. A value of 0 indicates that the command should not time out.
     uint8: Options bitfield (see below)
+
+Button field
+<table>
+<tr>
+ <th>Bit</th>
+ <th>Name</th>
+</tr>
+<tr>
+ <td>7</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>6</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>5</td>
+ <td>RESET</td>
+</tr>
+<tr>
+ <td>4</td>
+ <td>UP</td>
+</tr>
+<tr>
+ <td>3</td>
+ <td>DOWN</td>
+</tr>
+<tr>
+<td>2</td>
+ <td>LEFT</td>
+</tr>
+<tr>
+ <td>1</td>
+ <td>RIGHT</td>
+</tr>
+<tr>
+ <td>0</td>
+ <td>CENTER</td>
+</tr>
+</table>
+
+Options Field
+<table>
+<tr>
+ <th>Bit</th>
+ <th>Name</th>
+</tr>
+<tr>
+ <td>7</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>6</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>5</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>4</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>3</td>
+ <td>N/A</td>
+</tr>
+<tr>
+<td>2</td>
+ <td>clear screen on button press</td>
+</tr>
+<tr>
+ <td>1</td>
+ <td>reset bot on timeout</td>
+</tr>
+<tr>
+ <td>0</td>
+ <td>change to ready state on timeout</td>
+</tr>
+</table>
+
+
+## 149 - Display message to LCD
+This command is used to display a message to the LCD board.
+The maximum buffer size is limited by the maximum package size.  Thus a full screen cannot be written with one command.
+Messages are stored in a buffer and the full buffer is displayed when the "last message in group" flag is 1.
+The buffer is also displayed when the clear message flag is 1.  If multiple packets are received before the screen update is called, they will all be displayed.  After screen update is called, the screen will wait until the "last message in group" is received to display the full buffer.  TODO: clean this
+The "last message in group" flag must be used for display of multi-packet messages.
+Normal popping of the message screen, such as when a print is over, is ignored if the "last message in group" flag has not been received.  This is because the bot thinks it is still waiting for the remainder of a message.
+
+if the "clear message" flag is 1, the message buffer will be cleared and any existing timeout out will be cleared.
+
+If the "wait on button" flag is 1, the message screen will clear after a user button press is received.  The timeout field is still relevant if the button press is never received.  
+
+Text will auto-wrap at end of line. \n is recognized as new line start. \r is ignored.
+
+Payload
+    uint8: Options bitfield (see below)
+    uint8: Horizontal position to display the message at (commonly 0-19)
+    uint8: Vertical position to display the message at (commonly 0-3)
+    uint8: Timeout, in seconds. If 0, this message will left on the screen
+    1+N bytes: Message to write to the screen, in ASCII, terminated with a null character.
+
 
 <table>
 <tr>
@@ -858,30 +962,59 @@ Payload
 </tr>
 <tr>
 <td>2</td>
- <td>N/A</td>
+ <td>wait for button press</td>
 </tr>
 <tr>
  <td>1</td>
- <td>Clear message on button press</td>
+ <td>last message in group</td>
 </tr>
 <tr>
  <td>0</td>
- <td>Reset machine on timeout</td>
+ <td>clear existing message</td>
 </tr>
 </table>
 
-
-## 149 - Display message to LCD
-This command will display a message to the LCD for a specified number of seconds, then revert to previous GUI if there is a running display.
-
-Text will auto-wrap at end of line. \n is recognized as new line start. \r is ignored. Note: words do not wrap automatically. You will need to insert newlines manually.
+## 150 - Set Build Percentage
+Set the percent done for the current build.  This value will be displayed on the Monitor screen
 
 Payload
-    uint8: Options bitmap (see below)
-    uint8: Vertical position to display the message at (0-3)
-    uint8: Horizontal position to display the message at (0-19)
-    uint8: Timeout, in seconds. If 0, this message will left on the screen
-    1+N bytes: Message to write to the screen, in ASCII, terminated with a null character.
+  
+    uint8: percent (0-100)
+    uint8: ignore (currently unused
+
+## 151 - Queue Song
+Play predefined songs on the piezo buzzer
+
+Payload
+  
+    uint8: songID  - select from a predefined list of songs
+
+
+## 152 - Reset to Factory
+Calls a factory reset on the eeprom.  Resets all values to their "factory" settings.  A soft reset of the board is also called.
+
+Payload
+
+    uint8: options (Currently unused)
+
+
+## 153 - Build start notification
+Tells the motherboard that a build is about to begin, and provides the name of the job for status reporting. This allows the motherboard to display an appropriate build screen on the interface board.
+
+Payload
+
+    uint32: Number of steps (commands?) in the build
+    1+N bytes: Name of the build, in ASCII, null terminated
+
+Response (0 bytes)
+
+## 154 - Build end notification
+Tells the motherboard that a build has been completed or aborted.
+
+Payload (0 bytes)
+
+Response (0 bytes)
+
 
 # Tool Query Commands
 
@@ -975,15 +1108,6 @@ Payload (0 bytes)
 Response
 
     int16: Target temperature, in Celsius
-
-## 34 - Get firmware build name
-Retrieve the firmware build name, which is a human-readable string describing the build. Names should be chosen with an eye towards disambiguating builds targeted for different tools.
-
-Payload (0 bytes)
-
-Response
-
-    1+N bytes: A null terminated string representing the filename of the current build.
 
 ## 35 - Is build platform ready?
 Query the build platform to determine if it has reached target temperature. Note that this only queries the toolhead, not the build platform.

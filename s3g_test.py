@@ -527,6 +527,18 @@ class S3gTests(unittest.TestCase):
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_query_command_dict['GET_POSITION']
 
+  def test_abort_immediately(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.AbortImmediately()
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['ABORT_IMMEDIATELY']
+
   def test_playback_capture_error_codes(self):
     filename = 'abcdefghijkl'
     error_codes = [
@@ -563,7 +575,8 @@ class S3gTests(unittest.TestCase):
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_query_command_dict['PLAYBACK_CAPTURE']
-    assert payload[1:] == filename
+    assert payload[1:-1] == filename
+    assert payload[-1] == 0x00
 
   def test_get_next_filename_error_codes(self):
     error_codes = [
@@ -657,6 +670,60 @@ class S3gTests(unittest.TestCase):
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_query_command_dict['GET_EXTENDED_POSITION']
+
+  def test_display_message(self):
+    continuation = True
+    row = 0x12
+    col = 0x34
+    timeout = 0x56
+    message = 'abcdefghij'
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.DisplayMessage(row, col, message, timeout, continuation)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_action_command_dict['DISPLAY_MESSAGE']
+    assert payload[1] == 1 # continuation == True
+    assert payload[2] == col
+    assert payload[3] == row
+    assert payload[4] == timeout
+    assert payload[5:-1] == message
+    assert payload[-1] == 0x00
+
+  def test_build_start_notification(self):
+    command_count = 1234
+    build_name = 'abcdefghijkl'
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.BuildStartNotification(command_count, build_name)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_action_command_dict['BUILD_START_NOTIFICATION']
+    assert payload[1:5] == s3g.EncodeUint32(command_count)
+    assert payload[5:-1] == build_name
+    assert payload[-1] == 0x00
+
+  def test_build_end_notification(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.BuildEndNotification()
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_action_command_dict['BUILD_END_NOTIFICATION']
 
   def test_queue_point(self):
     target = [1,-2,3]
@@ -805,6 +872,18 @@ class S3gTests(unittest.TestCase):
     assert payload[1] == tool_index
     assert payload[2] == s3g.slave_query_command_dict['GET_VERSION']
     assert payload[3:5] == s3g.EncodeUint16(s3g.s3g_version)
+
+  def test_init(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.Init()
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    assert payload[0] == s3g.host_query_command_dict['INIT']
 
   def test_get_toolhead_temperature(self):
     tool_index = 2
