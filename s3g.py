@@ -380,7 +380,7 @@ class s3g:
   def __init__(self):
     self.file = None
 
-def SendCommand(self, payload):
+  def SendCommand(self, payload):
     """
     Attempt to send a command to the machine, retrying up to 5 times if an error
     occurs.
