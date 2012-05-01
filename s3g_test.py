@@ -2,6 +2,7 @@ import unittest
 import sys
 import io
 import s3g
+import struct
 
 class CRCTests(unittest.TestCase):
   def test_cases(self):
@@ -50,22 +51,20 @@ class EncodeTests(unittest.TestCase):
       [65535,   '\xFF\xFF'],
     ]
     for case in cases:
-      assert s3g.DecodeUint16(case[1]) == case[0]
+      self.assertEqual(s3g.DecodeUint16(case[1]), case[0])
 
+  def test_decode_uint16_bytearray(self):
     byteArrayCases = [
       [0,       bytearray('\x00\x00')],
       [32767,   bytearray('\xff\x7f')],
       [65535,   bytearray('\xff\xff')],
     ]
     for case in byteArrayCases:
-      assert s3g.DecodeUint16(case[1]) == case[0]
+      self.assertEqual(s3g.DecodeUint16(case[1]), case[0])
 
-    #This case should fail, since we are passing it a byte array of size 3 and we can only decode ints of size 16
+  def test_decode_uint16_pathological_fail(self):
     failCase = [0, bytearray('\x00\x00\x00')]
-    try:
-      s3g.DecodeUint16(case[1]) == case[0]
-    except struct.error:
-      assert True
+    self.assertRaises(struct.error, s3g.DecodeUint16, failCase[1])
 
   def test_encode_axes(self):
     cases = [
@@ -1180,7 +1179,7 @@ class S3gTests(unittest.TestCase):
     assert payload[0] == s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
     assert payload[1] == tool_index
     assert payload[2] == s3g.slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP']
-    assert payload[3] == 1
+    assert payload[3] == 2 #Temp is a byte of len 2
     assert payload[4] == temp
 	
 
@@ -1203,12 +1202,8 @@ class S3gTests(unittest.TestCase):
     assert payload[0] == s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
     assert payload[1] == tool_index
     assert payload[2] == s3g.slave_action_command_dict['SET_PLATFORM_TEMP']
-    assert payload[3] == 1
+    assert payload[3] == 2 #Temp is a byte of len 2
     assert payload[4] == temp
-
-  def test_empty_payload(self):
-    payload = bytearray()
-    self.assertRaises(s3g.PacketResponseCodeError, self.r.SendCommand, payload)
 
 if __name__ == "__main__":
   unittest.main()

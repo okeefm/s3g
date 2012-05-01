@@ -5,7 +5,7 @@ import serial
 import io
 import struct
 from array import array
-from time import sleep
+import time
 
 import os, sys
 lib_path = os.path.abspath('../')
@@ -14,7 +14,9 @@ sys.path.append(lib_path)
 import s3g
 
 
-heaterTests = True
+extensive = True
+port = ''
+hasInterface = True
 
 class SendPacketTests(unittest.TestCase):
   
@@ -108,9 +110,11 @@ class s3gPacketTests(unittest.TestCase):
     payload.extend(s3g.EncodeUint16(s3g.s3g_version))
     return s3g.EncodePayload(payload)
 
-  """def test_emptyPayload(self):
-    payload = bytearray()
-    self.assertRaises(s3g.TransmissionError, self.s3g.SendCommand, payload)"""
+
+  def test_GetVersionPacket(self):
+    packet = self.getVersionPacket()
+    self.s3g._SendPacket(packet)
+    self.assertTrue(True)
 
   def test_emptyPacket(self):
     packet = bytearray()
@@ -157,8 +161,159 @@ class s3gPacketTests(unittest.TestCase):
     packet[0] = 0x00
     self.assertRaises(s3g.TransmissionError, self.s3g._SendPacket, packet)
 
-class ToolheadActionCommands(unittest.TestCase):
+class s3gCanSendCommands(unittest.TestCase):
+  def setUp(self):
+    self.s3g = s3g.s3g()
+    self.s3g.file = serial.Serial('/dev/tty.usbmodemfa131', '115200', timeout=1)
 
+  def tearDown(self):
+    self.s3g.file.close()
+
+  def test_InitReply(self):
+    self.s3g.Init()
+    self.assertTrue(True)
+
+  def test_ToggleValveReply(self):
+    self.s3g.ToggleFan(0, False)
+    self.assertTrue(True)
+
+  def test_ToggleFanReply(self):
+    self.s3g.ToggleFan(0, False)
+    self.assertTrue(True)
+
+  def test_IsPlatformReadyReply(self):
+    self.s3g.IsPlatformReady(0)
+    self.assertTrue(True)
+
+  def test_GetPlatformTargetTemperature(self):
+    self.s3g.GetPlatformTargetTemperature(0)
+    self.assertTrue(True)
+
+  def test_GetToolheadTargetTemperatureReply(self):
+    self.s3g.GetToolheadTargetTemperature(0)
+    self.assertTrue(True)
+
+  def test_ReadFromToolheadEEPROM(self):
+    self.s3g.ReadFromToolheadEEPROM(0, 0x00, 0)
+    self.assertTrue(True)
+
+  def test_IsToolReadyReply(self):
+    self.s3g.IsToolReady(0)
+    self.assertTrue(True)
+
+  def test_GetToolheadTemperatureReply(self):
+    self.s3g.GetToolheadTemperature(0)
+    self.assertTrue(True)
+
+  def test_GetToollheadVersionReply(self):
+    self.s3g.GetToolheadVersion(0)
+    self.assertTrue(True)
+
+  def test_BuildEndNotificationReply(self):
+    self.s3g.BuildEndNotification()
+    self.assertTrue(True)
+
+  def test_BuildStartNotificationReply(self):
+    self.s3g.BuildStartNotification(0, 'aTest')
+    self.assertTrue(True)
+
+  def test_DisplayMessageReply(self):
+    self.s3g.DisplayMessage(0, 0, "TESTING", .1, False)
+    self.assertTrue(True)
+
+  def test_FindAxesMaximumsReply(self):
+    self.s3g.FindAxesMaximums(['x', 'y', 'z'], 1, 0)
+    self.assertTrue(True)
+
+  def test_FindAxesMinimumsReply(self):
+    self.s3g.FindAxesMinimums(['x', 'y', 'z'], 1, 0)
+    self.assertTrue(True)
+
+  def test_GetBuildNameReply(self):
+    self.s3g.GetBuildName()
+    self.assertTrue(True)
+
+  def test_GetNextFilenameReply(self):
+    self.s3g.GetNextFilename(False)
+    self.assertTrue(True)
+
+  def test_PlaybackCaptureReply(self):
+    self.assertRaises(s3g.SDCardError, self.s3g.PlaybackCapture, 'aTest')
+
+  def test_AbortImmediatelyReply(self):
+    self.s3g.AbortImmediately()
+    self.assertTrue(True)
+
+  def test_GetAvailableBufferSizeReply(self):
+    self.s3g.GetAvailableBufferSize()
+    self.assertTrue(True)
+
+  def test_ReadFromEEPROMReply(self):
+    self.s3g.ReadFromEEPROM(0x00, 0)
+    self.assertTrue(True)
+
+  def test_GetVersionReply(self):
+    self.s3g.GetVersion()
+    self.assertTrue(True)
+
+  def test_SetPlatformTemperatureReply(self):
+    temperature = 100
+    toolhead = 0
+    self.s3g.SetPlatformTemperature(toolhead, temperature)
+    self.s3g.SetPlatformTemperature(toolhead, 0)
+    self.assertTrue(True)
+
+  def test_SetToolheadTemperatureReply(self):
+    temperature = 100
+    toolhead = 0
+    self.s3g.SetToolheadTemperature(toolhead, temperature)
+    self.s3g.SetToolheadTemperature(toolhead, 0)
+    self.assertTrue(True)
+
+  def test_ToggleValveReply(self):
+    toolhead = 0
+    self.s3g.ToggleValve(toolhead, True)
+    self.s3g.ToggleValve(toolhead, False)
+    self.assertTrue(True)
+
+  def test_ToggleFanReply(self):
+    toolhead = 0
+    self.s3g.ToggleFan(toolhead, True)
+    self.s3g.ToggleFan(toolhead, False)
+    self.assertTrue(True)
+
+  def test_GetPositionReply(self):
+    self.s3g.GetPosition()[0]
+    self.assertTrue(True)
+
+  def test_GetExtendedPositionReply(self):
+    self.s3g.GetExtendedPosition()[0]
+    self.assertTrue(True)
+
+  def test_QueuePointReply(self):
+    position = [0, 0, 0]
+    rate = 500
+    self.s3g.QueuePoint(position, rate)
+    self.assertTrue(True)
+
+  def test_SetPositionReply(self):
+    position = [0, 0, 0]
+    self.s3g.SetPosition(position)
+    self.assertTrue(True)
+
+  def test_QueueExtendedPointReply(self):
+    position = [0, 0, 0, 0, 0]
+    rate = 500
+    self.s3g.QueueExtendedPoint(position, rate)
+    self.assertTrue(True)
+
+  def test_SetExtendedPositionReply(self):
+    position = [0, 0, 0, 0, 0]
+    self.s3g.SetExtendedPosition(position)
+    self.assertTrue(True)
+
+
+class s3gFunctionTesting(unittest.TestCase):
   def setUp(self):
     self.s3g = s3g.s3g()
     self.s3g.file = serial.Serial('/dev/tty.usbmodemfa131', '115200', timeout=1)
@@ -175,7 +330,6 @@ class ToolheadActionCommands(unittest.TestCase):
     payload.extend(tool_payload)
     return payload
   
-
   def test_badHeader(self):
     temperature = 100
     toolIndex = 0
@@ -202,56 +356,37 @@ class ToolheadActionCommands(unittest.TestCase):
     payload[3] = 99
     self.assertRaises(s3g.TransmissionError, self.s3g.SendCommand, payload)
 
-  def test_setPlatformTemperature(self):
-    temperature = 100
-    toolIndex = 0
-    self.assertEqual(self.s3g.SetPlatformTemperature(toolIndex, temperature)[0], s3g.response_code_dict['SUCCESS'])
-
-  def test_setToolheadTemperature(self):
-    temperature = 100
-    toolhead = 0
-    self.assertEqual(self.s3g.SetToolheadTemperature(toolhead, temperature)[0], s3g.response_code_dict['SUCCESS'])
-
-  def test_ToggleValve(self):
-    toolhead = 0
-    self.assertEqual(self.s3g.ToggleValve(toolhead, True)[0], s3g.response_code_dict['SUCCESS'])
-
-  def test_ToggleFan(self):
-    toolhead = 0
-    self.assertEqual(self.s3g.ToggleFan(toolhead, True)[0], s3g.response_code_dict['SUCCESS'])
-
   def test_GetPlatformTemperature(self):
-    if heaterTests:
+    if extensive:
       obsvTemperature = raw_input("\nWhat is the current platform temperature? ")
       self.assertEqual(str(self.s3g.GetPlatformTemperature(0)), str(obsvTemperature))
 
   def test_GetToolheadTemperature(self):
-    if heaterTests:
+    if extensive:
       obsvTemperature = raw_input("\nWhat is the right extruder's current temperature? ")
       self.assertEqual(str(self.s3g.GetToolheadTemperature(0)), str(obsvTemperature))
 
   def test_SetPlatformTargetTemperature(self):
-    if heaterTests:
+    if extensive:
       tolerance = 2
       target = 50
       self.s3g.SetPlatformTemperature(0, target)
       minutes = 3
       print "\nWaiting %i mintues to heat the Platform up"%(minutes)
-      sleep(60*minutes)
+      time.sleep(60*minutes)
       self.assertTrue(abs(self.s3g.GetPlatformTemperature(0)-target) <= tolerance)
       self.s3g.SetPlatformTemperature(0, 0)
 
   def test_SetToolheadTemperature(self):
-    if heaterTests:
+    if extensive:
       tolerance = 2
       target = 50
       self.s3g.SetToolheadTemperature(0, target)
       minutes = 3
       print "\nWaiting %i minutes to heat the Toolhead up"%(minutes)
-      sleep(60*minutes)
+      time.sleep(60*minutes)
       self.assertTrue(abs(self.s3g.GetToolheadTemperature(0) - target) <= tolerance)
       self.s3g.SetToolheadTemperature(0, 0)
-    
 
   def test_ReadFromEEPROMMighty(self):
     """
@@ -276,7 +411,7 @@ class ToolheadActionCommands(unittest.TestCase):
     """
     t0Database = 0x0100
     bftOffset = 0x0006
-    readBFT = self.s3g.ReadFromToolheadEEPROM(0, bftOffset, 0)
+    readBFT = self.s3g.ReadFromToolheadEEPROM(0, bftOffset, 2)
     readBFT = s3g.DecodeUint16(readBFT)
     mightyBFT = 500
     self.assertEqual(mightyBFT, readBFT)
@@ -301,15 +436,79 @@ class ToolheadActionCommands(unittest.TestCase):
     self.assertEqual(self.s3g.IsToolReady(toolhead), False)
     self.s3g.SetToolheadTemperature(toolhead, 0)
 
+  def test_DisplayMessage(self):
+    message = str(time.clock())
+    self.s3g.DisplayMessage(0, 0, message, 10, False)
+    readMessage = raw_input("\nWhat is the message on the replicator's display? ")
+    self.assertEqual(message, readMessage)
+
+  def test_GetPosition(self):
+    position = self.s3g.GetPosition()[0]
+    self.assertEqual(position, [0, 0, 0])
+
+  def test_GetExtendedPosition(self):
+    position = self.s3g.GetExtendedPosition()[0]
+    self.assertEqual(position, [0, 0, 0, 0, 0])
+
+  def test_SetPositionCheck(self):
+    position = [1, 2, 3]
+    self.s3g.SetPosition(position)
+    self.assertEqual(position, self.s3g.GetPosition()[0])
+    self.s3g.SetPosition([0, 0, 0])
+
+  def test_SetExtendedPositionCheck(self):
+    position = [1, 2, 3, 4, 5]
+    self.s3g.SetExtendedPosition(position)
+    self.assertEqual(position, self.s3g.GetExtendedPosition()[0])
+    self.s3g.SetExtendedPosition([0, 0, 0, 0, 0])
+
+  def test_QueuePointCheck(self):
+    startPosition = [0, 0, 0]
+    newPosition = [1, 2, 3]
+    rate = 500
+    self.s3g.SetPosition(startPosition)
+    self.s3g.QueuePoint(newPosition, rate)
+    self.assertEqual(newPosition, self.s3g.GetPosition()[0])
+    self.s3g.SetPosition(startPosition)
+
+  def test_QueueExtendedPositionCheck(self):
+    startPosition = [0, 0, 0, 0, 0]
+    newPosition = [1, 2, 3, 4, 5]
+    rate = 500
+    self.s3g.SetExtendedPosition(startPosition)
+    self.s3g.QueueExtendedPoint(newPosition, rate)
+    self.assertEqual(newPosition, self.s3g.GetExtendedPosition()[0])
+    self.s3g.SetExtendedPosition(startPosition())
+
+  def test_FindAxesMin(self):
+    axes = ['x', 'y', 'z']
+    rate = 500
+    timeout = 2
+    self.s3g.FindAxesMinimums(axes, rate, timeout)
+    self.assertTrue(True)
+
+  def test_FindAxesMax(self):
+    axes = ['x', 'y', 'z']
+    rate = 500
+    timeout = 2
+    self.s3g.FindAxesMaximums(axes, rate, timeout)
+    self.assertTrue(True)
 
 if __name__ == '__main__':
   parser = OptionParser()
-  parser.add_option("-t", "--temperature", dest="heatUp", default="True")
+  parser.add_option("-e", "--extensive", dest="extensive", default="True")
+  parser.add_option("-m", "--mightyboard", dest="isMightyBoard", default="True")
+  parser.add_option("-t", "--tom", dest="isTOM", default="False")
+  parser.add_option("-i", "--interface", dest="hasInterface", default="True")
   (options, args) = parser.parse_args()
-  if options.heatUp.lower() == "false":
-    heaterTests = False
-  else:
-    print "heatUp flag unrecognized, using default value"
-    heaterTests = True
+  if options.extensive.lower() == "false":
+    print "Forgoing Heater Tests"
+    extensive= False
+  if options.hasInterface.lower() == "false":
+    print "Forgoing Tests requiring Interface Boards"
+    hasInterface = False
+    
   del sys.argv[1:]
+  print "*****To do many of these tests, your printer must be reset immediately prior to execution.  If you haven't, please reset your robot and run these tests again!!!*****"
+  print "*****Because We are going to be moving the axes around, you should probably move the gantry to the middle of the build area and the Z platform to about halfway!!!*****"
   unittest.main()
