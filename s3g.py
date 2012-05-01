@@ -91,6 +91,8 @@ response_code_dict = {
 #  'QUERY_TOO_BIG'              : 0x84,
 #  'COMMAND_NOT_SUPPORTED'      : 0x85,
   'DOWNSTREAM_TIMEOUT'         : 0x87,
+  'TOOL_LOCK_TIMEOUT'          : 0x88,
+  'CANCEL_BUILD'               : 0x89,
 }
 
 sd_error_dict = {
@@ -110,7 +112,7 @@ timeout_length = .5
 s3g_version = 100
 max_tool_index = 127
 
-class PacketError(Exception):
+class PacketDecodeError(Exception):
   """
   Error that occured when evaluating a packet. These errors are caused by problems that
   are potentially recoverable.
@@ -120,33 +122,42 @@ class PacketError(Exception):
   def __str__(self):
     return repr(self.value)
 
-class PacketLengthError(PacketError):
+class PacketLengthError(PacketDecodeError):
   def __init__(self, length, expected_length):
     self.value='Invalid length. Got=%i, Expected=%i'%(length, expected_length)
 
-class PacketLengthFieldError(PacketError):
+class PacketLengthFieldError(PacketDecodeError):
   def __init__(self, length, expected_length):
     self.value='Invalid length field. Got=%i, Expected=%i'%(length, expected_length)
 
-class PacketHeaderError(PacketError):
+class PacketHeaderError(PacketDecodeError):
   def __init__(self, header, expected_header):
     self.value='Invalid header. Got=%x, Expected=%x'%(header, expected_header)
 
-class PacketCRCError(PacketError):
+class PacketCRCError(PacketDecodeError):
   def __init__(self, crc, expected_crc):
     self.value='Invalid crc. Got=%x, Expected=%x'%(crc, expected_crc)
 
-class PacketResponseCodeError(PacketError):
-  def __init__(self, response_code):
-    try:
-      # TODO: this appears to be broken.
-      response_code_string = (key for key,value in response_code_dict.items() if value==response_code).next()
-    except StopIteration:
-      response_code_string = ''
-
-    self.value='Packet response code error. Got=%x (%s)'%(response_code,response_code_string)
+class ResponseCodeError(Exception):
+  """
+  Errors that represent failures returned by the machine
+  """
+  def __init__(self, value):
+     self.value = value
   def __str__(self):
     return repr(self.value)
+
+class BufferOverflowError(ResponseCodeError):
+  def __init__(self):
+    self.value='Host buffer full, try packet again later'
+
+class RetryError(ResponseCodeError):
+  def __init__(self, value):
+    self.value=value
+
+class BuildCancelledError(ResponseCodeError):
+  def __init__(self):
+    self.value='Build cancelled message received from host, abort'
 
 class TransmissionError(IOError):
   """
@@ -177,8 +188,7 @@ class ProtocolError(Exception):
   """
   A protocol error is caused when a machine provides a valid response packet with an invalid
   response (for example, too many or two few resposne variables). It means that the machine is not
-  implementing the protocol correctly. A protocol error may also be thrown if invalid data is
-  provided to a machine.
+  implementing the protocol correctly.
   """
   def __init__(self, value):
      self.value = value
@@ -319,22 +329,46 @@ def DecodePacket(packet):
   return packet[2:(len(packet)-1)]
 
 
+def CheckResponseCode(response_code):
+  """
+  Check the response code, and return if succesful, or raise an appropriate exception
+  """
+
+  if response_code == response_code_dict['SUCCESS']:
+    return
+
+  elif response_code == response_code_dict['GENERIC_ERROR']:
+    raise RetryError('Generic error reported by toolhead, try sending packet again')
+
+  elif response_code == response_code_dict['ACTION_BUFFER_OVERFLOW']:
+    raise BufferOverflowError()
+
+  elif response_code == response_code_dict['CRC_MISMATCH']:
+    raise RetryError('CRC mismatch error reported by toolhead, try sending packet again')
+
+  elif response_code == response_code_dict['DOWNSTREAM_TIMEOUT']:
+    raise TransmissionError('Downstream (tool network) timout, cannot communicate with tool')
+
+  elif response_code == response_code_dict['TOOL_LOCK_TIMEOUT']:
+    raise TransmissionError('Tool lock timeout, cannot communicate with tool.')
+
+  elif response_code == response_code_dict['CANCEL_BUILD']:
+    raise BuildCancelledError()
+
+  raise ProtocolError('Response code 0x%02X not understood'%(response_code))
+
 class PacketStreamDecoder:
   """
   A state machine that accepts bytes from an s3g packet stream, checks the validity of
   each packet, then extracts and returns the payload.
   """
-  def __init__(self, expect_response_code = True):
+  def __init__(self):
     """
     Initialize the packet decoder
-    @param expect_response_code If true, treat the first byte of the payload as a return
-           response code, and verify that it is correct. This should be set to true when
-           decoding response packets, and to false when decoding response packets.
     """
     self.state = 'WAIT_FOR_HEADER'
     self.payload = bytearray()
     self.expected_length = 0
-    self.expect_response_code = expect_response_code
 
   def ParseByte(self, byte):
     """
@@ -364,17 +398,10 @@ class PacketStreamDecoder:
       if CalculateCRC(self.payload) != byte:
         raise PacketCRCError(byte, CalculateCRC(self.payload))
 
-      if self.expect_response_code:
-        if self.payload[0] == response_code_dict['SUCCESS']:
-          self.state = 'PAYLOAD_READY'
-        else:
-          raise PacketResponseCodeError(self.payload[0])
-
-      else:
-        self.state = 'PAYLOAD_READY'
+      self.state = 'PAYLOAD_READY'
 
     else:
-      raise ProtocolError('Parser in bad state: too much data provided?')
+      raise Exception('Parser in bad state: too much data provided?')
 
 class s3g:
   def __init__(self):
@@ -389,9 +416,10 @@ class s3g:
     """
     packet = EncodePayload(payload)
     retry_count = 0
+    overflow_count = 0
 
     while True:
-      decoder = PacketStreamDecoder(True)
+      decoder = PacketStreamDecoder()
       self.file.write(packet)
       self.file.flush()
 
@@ -412,22 +440,32 @@ class s3g:
 
           data = ord(data)
           decoder.ParseByte(data)
-        
+       
+        CheckResponseCode(decoder.payload[0])        
+ 
         # TODO: Should we chop the response code?
         return decoder.payload
 
-       # TODO: Implement retries for response codes that can handle them, errors for response codes that can't, and free retries for
-       #       ones that don't count
-#      except (PacketResponseCodeError) as e:
-#        pass
+      except (BufferOverflowError) as e:
+        """
+        Buffer overflow error- wait a while for the buffer to clear, then try again.
+        """
+        print 'buffer overflow, overflow_count=%i, retry_count=%i'%(overflow_count,retry_count)
+        overflow_count = overflow_count + 1
 
-      except (PacketError, IOError) as e:
-        """ PacketError: header, length, crc error """
-        """ IOError: pyserial timeout error, etc """
-        #print "packet error: " + str(e)
+        time.sleep(.05)
+
+      except (PacketDecodeError, RetryError, IOError) as e:
+        """
+        Attempted to send a packet, but got a malformed response or timeout.
+        Retry immediately.
+        """
         retry_count = retry_count + 1
-        if retry_count >= max_retry_count:
-          raise TransmissionError("Failed to send packet")
+
+        print 'transmission error', e
+
+      if retry_count >= max_retry_count:
+        raise TransmissionError("Failed to send packet")
 
   def UnpackResponse(self, format, data):
     """
@@ -442,7 +480,8 @@ class s3g:
     try:
       return struct.unpack(format, buffer(data))
     except struct.error as e:
-      raise ProtocolError("Unexpected data returned from machine: " + str(e))
+      raise ProtocolError("Unexpected data returned from machine. Expected length=%i, got=%i, error=%s"%
+        (struct.calcsize(format),len(data),str(e)))
 
   def UnpackResponseWithString(self, format, data):
     """

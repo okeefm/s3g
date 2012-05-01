@@ -239,6 +239,16 @@ Response code values can be as follows:
 <tr>
  <td>0x87</td>
  <td>Downstream timeout</td>
+ <td>No</td>
+</tr>
+<tr>
+ <td>0x88</td>
+ <td>Tool lock timeout</td>
+ <td>Yes</td>
+</tr>
+<tr>
+ <td>0x89</td>
+ <td>Cancel build</td>
  <td>Yes</td>
 </tr>
 </table>

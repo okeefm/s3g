@@ -146,6 +146,27 @@ class PacketDecodeTests(unittest.TestCase):
     assert payload == expected_payload
 
 
+class CheckResponseCodeTests(unittest.TestCase):
+  def test_bad_code(self):
+    self.assertRaises(s3g.ProtocolError, s3g.CheckResponseCode, 0x00)
+
+  def test_retry_error(self):
+    cases = [
+      ['GENERIC_ERROR',          s3g.RetryError],
+      ['ACTION_BUFFER_OVERFLOW', s3g.BufferOverflowError],
+      ['CRC_MISMATCH',           s3g.RetryError],
+      ['DOWNSTREAM_TIMEOUT',     s3g.TransmissionError],
+      ['TOOL_LOCK_TIMEOUT',      s3g.TransmissionError],
+      ['CANCEL_BUILD',           s3g.BuildCancelledError],
+    ]
+
+    for case in cases:
+      self.assertRaises(case[1], s3g.CheckResponseCode, s3g.response_code_dict[case[0]])
+
+  def test_success(self):
+    s3g.CheckResponseCode(s3g.response_code_dict['SUCCESS'])
+
+
 class PacketStreamDecoderTests(unittest.TestCase):
   def setUp(self):
     self.s = s3g.PacketStreamDecoder()
@@ -194,49 +215,8 @@ class PacketStreamDecoderTests(unittest.TestCase):
       self.s.ParseByte(payload[i])
     self.assertRaises(s3g.PacketCRCError,self.s.ParseByte,s3g.CalculateCRC(payload)+1)
 
-  def test_reject_response_generic_error(self):
-    payload = bytearray()
-    payload.append(s3g.response_code_dict['GENERIC_ERROR'])
-
-    self.s.ParseByte(s3g.header)
-    self.s.ParseByte(len(payload))
-    for i in range (0, len(payload)):
-      self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.PacketResponseCodeError,self.s.ParseByte,s3g.CalculateCRC(payload))
-
-  def test_reject_response_action_buffer_overflow(self):
-    payload = bytearray()
-    payload.append(s3g.response_code_dict['ACTION_BUFFER_OVERFLOW'])
-
-    self.s.ParseByte(s3g.header)
-    self.s.ParseByte(len(payload))
-    for i in range (0, len(payload)):
-      self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.PacketResponseCodeError,self.s.ParseByte,s3g.CalculateCRC(payload))
-
-  def test_reject_response_crc_mismatch(self):
-    payload = bytearray()
-    payload.append(s3g.response_code_dict['CRC_MISMATCH'])
-
-    self.s.ParseByte(s3g.header)
-    self.s.ParseByte(len(payload))
-    for i in range (0, len(payload)):
-      self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.PacketResponseCodeError,self.s.ParseByte,s3g.CalculateCRC(payload))
-
-  def test_reject_response_downstream_timeout(self):
-    payload = bytearray()
-    payload.append(s3g.response_code_dict['DOWNSTREAM_TIMEOUT'])
-
-    self.s.ParseByte(s3g.header)
-    self.s.ParseByte(len(payload))
-    for i in range (0, len(payload)):
-      self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.PacketResponseCodeError,self.s.ParseByte,s3g.CalculateCRC(payload))
-
   def test_accept_packet(self):
     payload = bytearray()
-    payload.append(s3g.response_code_dict['SUCCESS'])
     payload.extend('abcde')
     self.s.ParseByte(s3g.header)
     self.s.ParseByte(len(payload))
@@ -246,9 +226,7 @@ class PacketStreamDecoderTests(unittest.TestCase):
     assert(self.s.state == 'PAYLOAD_READY')
     assert(self.s.payload == payload)
 
-  def test_accept_packet_ignore_response_code(self):
-    self.s = s3g.PacketStreamDecoder(False)
-
+  def test_reject_too_much_data(self):
     payload = bytearray()
     payload.extend('abcde')
     self.s.ParseByte(s3g.header)
@@ -256,9 +234,7 @@ class PacketStreamDecoderTests(unittest.TestCase):
     for i in range (0, len(payload)):
       self.s.ParseByte(payload[i])
     self.s.ParseByte(s3g.CalculateCRC(payload))
-    assert(self.s.state == 'PAYLOAD_READY')
-    assert(self.s.payload == payload)
-
+    self.assertRaises(Exception,self.s.ParseByte,'a')
 
 class S3gTests(unittest.TestCase):
   """
@@ -292,10 +268,10 @@ class S3gTests(unittest.TestCase):
       for byte in expected_packet:
         assert byte == ord(self.inputstream.read(1))
 
-  def test_send_command_many_bad_responses(self):
+  def test_send_command_many_bad_crcs(self):
     """
     Passing case: test that the transmission can recover from one less than the alloted
-    number of errors.
+    number of errors, caused by bad CRCs.
     """
     payload = 'abcde'
     expected_packet = s3g.EncodePayload(payload)
@@ -303,8 +279,8 @@ class S3gTests(unittest.TestCase):
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
     response_payload.extend('12345')
-
     for i in range (0, s3g.max_retry_count - 1):
+      self.outputstream.write(s3g.EncodePayload(response_payload)[:-1])
       self.outputstream.write('a')
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
@@ -315,6 +291,19 @@ class S3gTests(unittest.TestCase):
     for i in range (0, s3g.max_retry_count - 1):
       for byte in expected_packet:
         assert byte == ord(self.inputstream.read(1))
+
+  def test_send_command_build_cancelled_error(self):
+    """
+    Passing case: Preload the buffer with a build cancelled error, and verify that it throws.
+    """
+    payload = 'abcde'
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['CANCEL_BUILD'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.assertRaises(s3g.BuildCancelledError,self.r.SendCommand,payload)
 
   def test_send_command(self):
     """
@@ -1169,7 +1158,6 @@ class S3gTests(unittest.TestCase):
 
     self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
     self.outputstream.seek(0)
-    self.inputstream.seek(0)
 
     self.r.SetToolheadTemperature(tool_index, temp)
 
@@ -1179,7 +1167,7 @@ class S3gTests(unittest.TestCase):
     assert payload[0] == s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
     assert payload[1] == tool_index
     assert payload[2] == s3g.slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP']
-    assert payload[3] == 2 #Temp is a byte of len 2
+    assert payload[3] == 2 # Temperature is stored as a uint16, so it is 2 bytes long.
     assert payload[4] == temp
 	
 
@@ -1192,7 +1180,6 @@ class S3gTests(unittest.TestCase):
 
     self.outputstream.write(s3g.EncodePayload([s3g.response_code_dict['SUCCESS']]))
     self.outputstream.seek(0)
-    self.inputstream.seek(0)
 
     self.r.SetPlatformTemperature(tool_index, temp)
 
@@ -1202,7 +1189,7 @@ class S3gTests(unittest.TestCase):
     assert payload[0] == s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
     assert payload[1] == tool_index
     assert payload[2] == s3g.slave_action_command_dict['SET_PLATFORM_TEMP']
-    assert payload[3] == 2 #Temp is a byte of len 2
+    assert payload[3] == 2 # Temperature is stored as a uint16, so it is 2 bytes long.
     assert payload[4] == temp
 
 if __name__ == "__main__":

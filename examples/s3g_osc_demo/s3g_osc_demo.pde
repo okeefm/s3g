@@ -15,7 +15,7 @@ void setup() {
   frameRate(30);
   
   /* start oscP5, listening for incoming messages at port 12000 */
-  oscP5 = new OscP5(this,12000);
+  oscP5 = new OscP5(this,10001);
   
   /* myRemoteLocation is a NetAddress. a NetAddress takes 2 parameters,
    * an ip address and a port number. myRemoteLocation is used as parameter in
@@ -26,22 +26,22 @@ void setup() {
    */
   myRemoteLocation = new NetAddress("127.0.0.1",10000);
 
-  ChangeVelocity(400);
-  ToggleLed(true);
+  ChangeVelocity(450);
+//  ToggleLed(true);
 }
 
 
 void draw() {
   background(0);  
   
-  println("down");
-  TogglePen(true);
-  ToggleLed(true);
-  delay(10);
-  println("up");
-  TogglePen(false);
-  ToggleLed(false);
-  delay(10);
+//  println("down");
+//  TogglePen(true);
+//  ToggleLed(true);
+//  delay(10);
+//  println("up");
+//  TogglePen(false);
+//  ToggleLed(false);
+//  delay(10);
 }
 
 

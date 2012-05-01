@@ -29,6 +29,8 @@ parser.add_option("-o", "--oscport", dest="oscport",
 
 
 r = s3g.s3g()
+rLock = threading.Lock()
+
 r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 
 r.velocity = 1600
@@ -38,11 +40,12 @@ def velocity_handler(addr, tags, stuff, source):
     Allow an external program to modify the movement rate
     """
     print stuff[0]
-    r.velocity = stuff[0]
+    with rLock:
+        r.velocity = stuff[0]
 
 def move_handler(addr, tags, stuff, source):
     #print addr, tags, stuff, source
-    print r.velocity
+#    print r.velocity
 
     #target = [stuff[0], stuff[1], stuff[2], stuff[3], stuff[4]]
     #velocity = stuff[5]
@@ -50,17 +53,24 @@ def move_handler(addr, tags, stuff, source):
     y = stuff[1] * 3000
 
     target = [x, y, 0, 0, 0]
-    r.QueueExtendedPoint(target, int(r.velocity))
+
+    try:
+        with rLock:
+            r.QueueExtendedPoint(target, int(r.velocity))
+    except s3g.TransmissionError as e:
+        print 'error moving:', e
 
 def led_handler(addr, tags, stuff, source):
     print addr, tags, stuff, source
 
-    r.ToggleValve(0, stuff[0] == 1)
+    with rLock:
+        r.ToggleValve(0, stuff[0] == 1)
 
 def pen_handler(addr, tags, stuff, source):
     print addr, tags, stuff, source
 
-    r.ToggleFan(0, stuff[0] == 1)
+    with rLock:
+        r.ToggleFan(0, stuff[0] == 1)
 
 print "starting client"
 t = OSC.OSCMultiClient()
@@ -80,12 +90,16 @@ st.start()
 
 try:
     while True:
-        time.sleep(1)
-        msg = OSC.OSCMessage("/temps")
-        msg.append(r.GetToolheadTemperature(0))
-        msg.append(r.GetToolheadTemperature(1))
-        msg.append(r.GetPlatformTemperature(0))
-        t.send(msg)
+        try:
+            time.sleep(1)
+            msg = OSC.OSCMessage("/temps")
+            with rLock:
+                msg.append(r.GetToolheadTemperature(0))
+                msg.append(r.GetToolheadTemperature(1))
+                msg.append(r.GetPlatformTemperature(0))
+                t.send(msg)
+        except s3g.TransmissionError as e:
+            print 'error getting temperature: ', e
 
 except KeyboardInterrupt:
     exit(1)
