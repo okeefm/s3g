@@ -239,7 +239,6 @@ class ToolheadActionCommands(unittest.TestCase):
       print "\nWaiting %i mintues to heat the Platform up"%(minutes)
       sleep(60*minutes)
       self.assertTrue(abs(self.s3g.GetPlatformTemperature(0)-target) <= tolerance)
-      #self.assertEqual(self.s3g.GetPlatformTemperature(0), target)
       self.s3g.SetPlatformTemperature(0, 0)
 
   def test_SetToolheadTemperature(self):
@@ -251,7 +250,6 @@ class ToolheadActionCommands(unittest.TestCase):
       print "\nWaiting %i minutes to heat the Toolhead up"%(minutes)
       sleep(60*minutes)
       self.assertTrue(abs(self.s3g.GetToolheadTemperature(0) - target) <= tolerance)
-      #self.assertEqual(self.s3g.GetToolheadTemperature(0), target)
       self.s3g.SetToolheadTemperature(0, 0)
     
 
@@ -278,7 +276,7 @@ class ToolheadActionCommands(unittest.TestCase):
     """
     t0Database = 0x0100
     bftOffset = 0x0006
-    readBFT = self.s3g.ReadFromToolheadEEPROM(0, bftOffset, 2)
+    readBFT = self.s3g.ReadFromToolheadEEPROM(0, bftOffset, 0)
     readBFT = s3g.DecodeUint16(readBFT)
     mightyBFT = 500
     self.assertEqual(mightyBFT, readBFT)
@@ -287,6 +285,22 @@ class ToolheadActionCommands(unittest.TestCase):
     """
     Determine if the platform is ready by setting the temperature to its current reading and asking if its ready (should return true, then setting the temperature to double what it is now then querying it agian, expecting a false answer
     """
+    curTemp = self.s3g.GetPlatformTemperature(0)
+    self.s3g.SetPlatformTemperature(0, curTemp)
+    self.assertTrue(self.s3g.IsPlatformReady(0))
+    self.s3g.SetPlatformTemperature(0, curTemp+50)
+    self.assertEqual(self.s3g.IsPlatformReady(0), False)
+    self.s3g.SetPlatformTemperature(0, 0)
+
+  def test_IsToolheadReady(self):
+    toolhead = 0
+    curTemp = self.s3g.GetToolheadTemperature(toolhead)
+    self.s3g.SetToolheadTemperature(toolhead, curTemp)
+    self.assertTrue(self.s3g.IsToolReady(toolhead))
+    self.s3g.SetToolheadTemperature(toolhead, curTemp + 50)
+    self.assertEqual(self.s3g.IsToolReady(toolhead), False)
+    self.s3g.SetToolheadTemperature(toolhead, 0)
+
 
 if __name__ == '__main__':
   parser = OptionParser()
