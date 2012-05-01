@@ -1,6 +1,6 @@
 import Makerbot
 import unittest
-from optparse import OptionParser
+import optparse
 import serial
 import io
 import struct
@@ -94,7 +94,7 @@ class SendPacketTests(unittest.TestCase):
 class s3gPacketTests(unittest.TestCase):
   def setUp(self):
     self.s3g = s3g.s3g()
-    self.s3g.file = serial.Serial('/dev/tty.usbmodemfa131', '115200', timeout=1)
+    self.s3g.file = serial.Serial(options.serialPort,'115200', timeout=1)
 
   def tearDown(self):
     self.s3g.file.close()
@@ -161,7 +161,7 @@ class ToolheadActionCommands(unittest.TestCase):
 
   def setUp(self):
     self.s3g = s3g.s3g()
-    self.s3g.file = serial.Serial('/dev/tty.usbmodemfa131', '115200', timeout=1)
+    self.s3g.file = serial.Serial(options.serialPort, '115200', timeout=1)
 
   def tearDown(self):
     self.s3g.file.close()
@@ -303,8 +303,9 @@ class ToolheadActionCommands(unittest.TestCase):
 
 
 if __name__ == '__main__':
-  parser = OptionParser()
+  parser = optparse.OptionParser()
   parser.add_option("-t", "--temperature", dest="heatUp", default="True")
+  parser.add_option("-p", "--port", dest="serialPort", default="")
   (options, args) = parser.parse_args()
   if options.heatUp.lower() == "false":
     heaterTests = False
