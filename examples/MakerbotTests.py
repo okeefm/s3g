@@ -3,6 +3,9 @@ import unittest
 from optparse import OptionParser
 import serial
 import io
+import struct
+from array import array
+from time import sleep
 
 import os, sys
 lib_path = os.path.abspath('../')
@@ -10,6 +13,8 @@ sys.path.append(lib_path)
 
 import s3g
 
+
+heaterTests = True
 
 class SendPacketTests(unittest.TestCase):
   
@@ -161,7 +166,7 @@ class ToolheadActionCommands(unittest.TestCase):
   def tearDown(self):
     self.s3g.file.close()
 
-  def getToolheadPacket(self, tool_index, command, tool_payload):
+  def getToolheadActionPacket(self, tool_index, command, tool_payload):
     payload = bytearray()
     payload.append(s3g.host_action_command_dict['TOOL_ACTION_COMMAND'])
     payload.append(tool_index)
@@ -176,7 +181,7 @@ class ToolheadActionCommands(unittest.TestCase):
     toolIndex = 0
     tempPayload = bytearray()
     tempPayload.extend(s3g.EncodeUint16(temperature))
-    payload = self.getToolheadPacket(toolIndex, s3g.slave_action_command_dict['SET_PLATFORM_TEMP'], tempPayload)
+    payload = self.getToolheadActionPacket(toolIndex, s3g.slave_action_command_dict['SET_PLATFORM_TEMP'], tempPayload)
     payload[0] = 255
     self.assertRaises(s3g.TransmissionError, self.s3g.SendCommand, payload)
 
@@ -185,7 +190,7 @@ class ToolheadActionCommands(unittest.TestCase):
     toolIndex = 2
     tempPayload = bytearray()
     tempPayload.extend(s3g.EncodeUint16(temperature))
-    payload = self.getToolheadPacket(toolIndex, s3g.slave_action_command_dict['SET_PLATFORM_TEMP'], tempPayload)
+    payload = self.getToolheadActionPacket(toolIndex, s3g.slave_action_command_dict['SET_PLATFORM_TEMP'], tempPayload)
     self.assertRaises(s3g.TransmissionError, self.s3g.SendCommand, payload)
 
   def test_badLength(self):
@@ -193,24 +198,104 @@ class ToolheadActionCommands(unittest.TestCase):
     toolIndex = 2
     tempPayload = bytearray()
     tempPayload.extend(s3g.EncodeUint16(temperature))
-    payload = self.getToolheadPacket(toolIndex, s3g.slave_action_command_dict['SET_PLATFORM_TEMP'], tempPayload)
+    payload = self.getToolheadActionPacket(toolIndex, s3g.slave_action_command_dict['SET_PLATFORM_TEMP'], tempPayload)
     payload[3] = 99
     self.assertRaises(s3g.TransmissionError, self.s3g.SendCommand, payload)
 
-  def test_setPlatformTemp(self):
+  def test_setPlatformTemperature(self):
     temperature = 100
     toolIndex = 0
     self.assertEqual(self.s3g.SetPlatformTemperature(toolIndex, temperature)[0], s3g.response_code_dict['SUCCESS'])
 
   def test_setToolheadTemperature(self):
     temperature = 100
-    for toolhead in [0, 1]:
-      self.assertEqual(self.s3g.SetToolheadTemperature(toolhead, temperature)[0], s3g.response_code_dict['SUCCESS'])
+    toolhead = 0
+    self.assertEqual(self.s3g.SetToolheadTemperature(toolhead, temperature)[0], s3g.response_code_dict['SUCCESS'])
 
   def test_ToggleValve(self):
     toolhead = 0
     self.assertEqual(self.s3g.ToggleValve(toolhead, True)[0], s3g.response_code_dict['SUCCESS'])
 
+  def test_ToggleFan(self):
+    toolhead = 0
+    self.assertEqual(self.s3g.ToggleFan(toolhead, True)[0], s3g.response_code_dict['SUCCESS'])
+
+  def test_GetPlatformTemperature(self):
+    if heaterTests:
+      obsvTemperature = raw_input("\nWhat is the current platform temperature? ")
+      self.assertEqual(str(self.s3g.GetPlatformTemperature(0)), str(obsvTemperature))
+
+  def test_GetToolheadTemperature(self):
+    if heaterTests:
+      obsvTemperature = raw_input("\nWhat is the right extruder's current temperature? ")
+      self.assertEqual(str(self.s3g.GetToolheadTemperature(0)), str(obsvTemperature))
+
+  def test_SetPlatformTargetTemperature(self):
+    if heaterTests:
+      tolerance = 2
+      target = 50
+      self.s3g.SetPlatformTemperature(0, target)
+      minutes = 3
+      print "\nWaiting %i mintues to heat the Platform up"%(minutes)
+      sleep(60*minutes)
+      self.assertTrue(abs(self.s3g.GetPlatformTemperature(0)-target) <= tolerance)
+      #self.assertEqual(self.s3g.GetPlatformTemperature(0), target)
+      self.s3g.SetPlatformTemperature(0, 0)
+
+  def test_SetToolheadTemperature(self):
+    if heaterTests:
+      tolerance = 2
+      target = 50
+      self.s3g.SetToolheadTemperature(0, target)
+      minutes = 3
+      print "\nWaiting %i minutes to heat the Toolhead up"%(minutes)
+      sleep(60*minutes)
+      self.assertTrue(abs(self.s3g.GetToolheadTemperature(0) - target) <= tolerance)
+      #self.assertEqual(self.s3g.GetToolheadTemperature(0), target)
+      self.s3g.SetToolheadTemperature(0, 0)
+    
+
+  def test_ReadFromEEPROMMighty(self):
+    """
+    Read the VID/PID settings from the MB and compare against s3g's read from eeprom
+    """
+    vidPID = self.s3g.ReadFromEEPROM(0x0044, 2)
+    vidPID = s3g.DecodeUint16(vidPID)
+    mightyVIDPID = [0x23C1, 0xB404]
+    self.assertEqual(vidPID, mightyVIDPID[0])
+
+  def test_WriteToEEPROMMighty(self):
+    nameOffset = 0x0022
+    nameSize = 16
+    name = 'ILOVETESTINGALOT'
+    self.s3g.WriteToEEPROM(nameOffset, name)
+    readName = self.s3g.ReadFromEEPROM(nameOffset, 16)
+    self.assertEqual(name, readName)
+
+  def test_ReadFromToolEEPROMMighty(self):
+    """
+    Read the backoff forward time from the mighty board tool eeprom
+    """
+    t0Database = 0x0100
+    bftOffset = 0x0006
+    readBFT = self.s3g.ReadFromToolheadEEPROM(0, bftOffset, 2)
+    readBFT = s3g.DecodeUint16(readBFT)
+    mightyBFT = 500
+    self.assertEqual(mightyBFT, readBFT)
+
+  def test_IsPlatformReady(self):
+    """
+    Determine if the platform is ready by setting the temperature to its current reading and asking if its ready (should return true, then setting the temperature to double what it is now then querying it agian, expecting a false answer
+    """
 
 if __name__ == '__main__':
+  parser = OptionParser()
+  parser.add_option("-t", "--temperature", dest="heatUp", default="True")
+  (options, args) = parser.parse_args()
+  if options.heatUp.lower() == "false":
+    heaterTests = False
+  else:
+    print "heatUp flag unrecognized, using default value"
+    heaterTests = True
+  del sys.argv[1:]
   unittest.main()
