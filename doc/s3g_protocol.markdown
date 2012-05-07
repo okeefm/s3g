@@ -51,7 +51,7 @@ Here is some vocabulary, that should be used when talking about the protocol:
 
 An s3g system looks like this:
 
-![block diagram of system architecture](SystemArchitecture.png)
+![block diagram of system architecture](https://github.com/makerbot/s3g/raw/master/doc/SystemArchitecture.png)
 
 
 Both networks (host, tool) have a single network master. On the host network, this is a PC, and on the tool network, this is the Host. All network communications are initiated by the network host; a tool node can never initiate a data transfer.
