@@ -47,11 +47,11 @@ Here is some vocabulary, that should be used when talking about the protocol:
 </tr>
 <tr>
  <td>Query Command</td>
- <td>A query command is a command that should be evaluated and acknowledged immediately. They are used for things such as setting or restoring </td>
+ <td>A query command is a command that should be evaluated and acknowledged immediately. They are used for things such as setting or reading temperatures.</td>
 </tr>
 <tr>
  <td>Buffered Command</td>
- <td>A buffered command is one that should be acknowledged immediately, but that will be buffered for w </td>
+ <td>A buffered command should be acknowledge immediately, but the Host or Tool may choose to store in a buffer for later execution. These should be used for commands that could take a long time to execute, such as motion commands.
 </tr>
 </table>
 
@@ -65,24 +65,27 @@ There are two networks, the host network and the tool network. Both networks (ho
 
 _Note: On the MightyBoard, the tool bus is emulated in software in order to be backwards compatible._
 
-All communication is initiated by the network master sending a single packet over the network, which contains either a query command or buffered command. If the slave device successfully receives the packet, it must respond with a single packet, containing a response to the command. 
+## Normal communication over a network
 
-## Communication over the host network
+All communication is initiated by the network master sending a single packet over the network, which contains either a query command or buffered command. If the slave device receives the packet, it must respond with a single packet, containing a response code and any response data.
 
 This is what a normal communication over the host network looks like:
 
+![host command success](https://github.com/makerbot/s3g/raw/master/doc/HostCommandSuccess.png)
 
-There are two types of commands that can be sent over the host network: Query commands, and buffered commands. Query commands 
-
-. All commands are query/response.  The host in each pair will always initiate communications, never the tool.  All packets are synchronous; they will wait for a response from the client before sending the next packet.  The firmware will continue rendering buffered commands while receiving new commands and replying to them.
 
 It is expected that there will be a lag between the completion of a command packet and the beginning of a response packet.  This may include a round-trip request to a toolhead, for example.  This window is expected to be 36ms. at the most.  Again, if the first byte of the response packet is not received by the time 36ms. has passed, the packet is presumed to have timed out.
 
+## Error Handling
+
+If 
+
 Handling Packet Failures
 If a packet has timed out, the host or board should treat the entire packet transaction as void.  It should:
-●Return its packet reception state machine to a ready state.
-●Presume that no action has been taken on the transaction
-●Attempt to resend the packet, if it was a host packet.
+
+* Return its packet reception state machine to a ready state.
+* Presume that no action has been taken on the transaction
+* Attempt to resend the packet, if it was a host packet.
 
 
 Command Buffering

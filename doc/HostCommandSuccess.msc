@@ -1,0 +1,9 @@
+msc {
+  width = "800";
+
+  PC,Host,Tool;
+
+  PC->Host [ label="Get Position" ];
+  Host->Host [ label="retrieve position" ];
+  Host->PC [ label="SUCCESS [1,2,3]" ];
+}
