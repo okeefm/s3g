@@ -45,6 +45,14 @@ Here is some vocabulary, that should be used when talking about the protocol:
  <td>Tool ID</td>
  <td>A unique address that is assigned to each Tool, that allows it to be addressed individually by the Host. Valid Tool IDs are 0-126. It is recommended to use 0 for the first Tool, and 1 for the second Tool.</td>
 </tr>
+<tr>
+ <td>Query Command</td>
+ <td>A query command is a command that should be evaluated and acknowledged immediately. They are used for things such as setting or restoring </td>
+</tr>
+<tr>
+ <td>Buffered Command</td>
+ <td>A buffered command is one that should be acknowledged immediately, but that will be buffered for w </td>
+</tr>
 </table>
 
 ## Architecture
@@ -53,17 +61,20 @@ An s3g system looks like this:
 
 ![block diagram of system architecture](https://github.com/makerbot/s3g/raw/master/doc/SystemArchitecture.png)
 
+There are two networks, the host network and the tool network. Both networks (host, tool) have a single network master. On the host network, this is a PC, and on the tool network, this is the Host. The host network must have one slave device (the Host), and the tool network can have one or more slave devices (Tool N).
 
-Both networks (host, tool) have a single network master. On the host network, this is a PC, and on the tool network, this is the Host. All network communications are initiated by the network host; a tool node can never initiate a data transfer.
+_Note: On the MightyBoard, the tool bus is emulated in software in order to be backwards compatible._
 
-Data is sent over the network as a series of packets. Each network transaction consists of at least two packets: a command packet, followed by a response packet.  Every packet from a network master must be responded to.
+All communication is initiated by the network master sending a single packet over the network, which contains either a query command or buffered command. If the slave device successfully receives the packet, it must respond with a single packet, containing a response to the command. 
+
+## Communication over the host network
+
+This is what a normal communication over the host network looks like:
+
+
+There are two types of commands that can be sent over the host network: Query commands, and buffered commands. Query commands 
 
 . All commands are query/response.  The host in each pair will always initiate communications, never the tool.  All packets are synchronous; they will wait for a response from the client before sending the next packet.  The firmware will continue rendering buffered commands while receiving new commands and replying to them.
-
-Packets must be responded to promptly.  No command should ever block.
-
-
-All communications, both host-mb and mb-toolboard, are at 38400bps.  It should take approximately 1/3rd ms. to transmit one byte at those speeds. The maximum packet size of 32+3 bytes should take no more than 12ms to transmit.  We establish a 20ms. window from the reception of a start byte until packet completion.  If a packet is not completed within this window, it is considered to have timed out.
 
 It is expected that there will be a lag between the completion of a command packet and the beginning of a response packet.  This may include a round-trip request to a toolhead, for example.  This window is expected to be 36ms. at the most.  Again, if the first byte of the response packet is not received by the time 36ms. has passed, the packet is presumed to have timed out.
 
@@ -715,36 +726,36 @@ Payload
  <th>Details</th>
 </tr>
 <tr>
- <th>7</th>
- <th>If set to 1, enable all selected axes. Otherwise, disable all selected axes.</th>
+ <td>7</td>
+ <td>If set to 1, enable all selected axes. Otherwise, disable all selected axes.</td>
 </tr>
 <tr>
- <th>6</th>
- <th>N/A</th>
+ <td>6</td>
+ <td>N/A</td>
 </tr>
 <tr>
- <th>5</th>
- <th>N/A</th>
+ <td>5</td>
+ <td>N/A</td>
 </tr>
 <tr>
- <th>4</th>
- <th>B axis select</th>
+ <td>4</td>
+ <td>B axis select</td>
 </tr>
 <tr>
- <th>3</th>
- <th>A axis select</th>
+ <td>3</td>
+ <td>A axis select</td>
 </tr>
 <tr>
- <th>2</th>
- <th>Z axis select</th>
+ <td>2</td>
+ <td>Z axis select</td>
 </tr>
 <tr>
- <th>1</th>
- <th>Y axis select</th>
+ <td>1</td>
+ <td>Y axis select</td>
 </tr>
 <tr>
- <th>0</th>
- <th>X axis select</th>
+ <td>0</td>
+ <td>X axis select</td>
 </tr>
 </table>
 
@@ -1144,14 +1155,14 @@ Response
  <th>Details</th>
 </tr>
 <tr>
- <th>7</th>
- <th>EXTRUDER_ERROR</th>
- <th>An error was detected with the extruder heater (if the tool supports one). The extruder heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.</th>
+ <td>7</td>
+ <td>EXTRUDER_ERROR</td>
+ <td>An error was detected with the extruder heater (if the tool supports one). The extruder heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.</td>
 </tr>
 <tr>
- <th>6</th>
- <th>PLATFORM_ERROR</th>
- <th>An error was detected with the platform heater (if the tool supports one). The platform heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.</th>
+ <td>6</td>
+ <td>PLATFORM_ERROR</td>
+ <td>An error was detected with the platform heater (if the tool supports one). The platform heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.</td>
 </tr>
 <tr>
  <td>5</td>
@@ -1247,44 +1258,44 @@ Response (0 bytes)
  <th>Details</th>
 </tr>
 <tr>
- <th>7</th>
- <th>N/A</th>
- <th></th>
+ <td>7</td>
+ <td>N/A</td>
+ <td></td>
 </tr>
 <tr>
- <th>6</th>
- <th>N/A</th>
- <th></th>
+ <td>6</td>
+ <td>N/A</td>
+ <td></td>
 </tr>
 <tr>
- <th>5</th>
- <th>N/A</th>
- <th></th>
+ <td>5</td>
+ <td>N/A</td>
+ <td></td>
 </tr>
 <tr>
- <th>4</th>
- <th>N/A</th>
- <th></th>
+ <td>4</td>
+ <td>N/A</td>
+ <td></td>
 </tr>
 <tr>
- <th>3</th>
- <th>N/A</th>
- <th></th>
+ <td>3</td>
+ <td>N/A</td>
+ <td></td>
 </tr>
 <tr>
- <th>2</th>
- <th>N/A</th>
- <th></th>
+ <td>2</td>
+ <td>N/A</td>
+ <td></td>
 </tr>
 <tr>
- <th>1</th>
- <th>DIR</th>
- <th>If set, motor should be turned in a clockwise direciton. Otherwise, it should be turned in a counterclockwise direction</th>
+ <td>1</td>
+ <td>DIR</td>
+ <td>If set, motor should be turned in a clockwise direciton. Otherwise, it should be turned in a counterclockwise direction</td>
 </tr>
 <tr>
- <th>0</th>
- <th>ENABLE</th>
- <th>If set, enable the motor. If unset, disable the motor</th>
+ <td>0</td>
+ <td>ENABLE</td>
+ <td>If set, enable the motor. If unset, disable the motor</td>
 </tr>
 </table>
 
