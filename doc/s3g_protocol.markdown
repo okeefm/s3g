@@ -55,7 +55,7 @@ Here is some vocabulary, that should be used when talking about the protocol:
 </tr>
 </table>
 
-## Architecture
+# Architecture
 
 An s3g system looks like this:
 
@@ -65,7 +65,7 @@ There are two networks, the host network and the tool network. Both networks (ho
 
 _Note: On the MightyBoard, the tool bus is emulated in software in order to be backwards compatible._
 
-## Normal communication over a network
+## Normal communication
 
 All communication is initiated by the network master sending a single packet over the network, which contains either a query command or buffered command. If the slave device receives the packet, it must respond with a single packet, containing a response code and any response data.
 
@@ -73,24 +73,25 @@ This is what a normal communication over the host network looks like:
 
 ![host command success](https://github.com/makerbot/s3g/raw/master/doc/HostCommandSuccess.png)
 
+Communication over the tool network works similarly:
 
-It is expected that there will be a lag between the completion of a command packet and the beginning of a response packet.  This may include a round-trip request to a toolhead, for example.  This window is expected to be 36ms. at the most.  Again, if the first byte of the response packet is not received by the time 36ms. has passed, the packet is presumed to have timed out.
+![tool command success](https://github.com/makerbot/s3g/raw/master/doc/ToolCommandSuccess.png)
 
-## Error Handling
+Finally, a PC may communicate with a Tool by forwarding a packet through the Host:
 
-If 
+![host tool command success](https://github.com/makerbot/s3g/raw/master/doc/HostToolCommandSuccess.png)
 
-Handling Packet Failures
+The slave device is expected to begin responding to a master command within 40ms of receiving it. This is currently broken for a number of commands in actual systems. If a slave takes too long to respond to a command, then the trasmission is to be considered a timeout. _Note: Many commands in the current implementation break this requirement, and no known PC implementation enforces it._
+
+## Handling Errors
+
+Of course, communication is not always so rosy. There are a number of things that could prevent a successful transmission, such as electrical noise or busy firmware.
+
 If a packet has timed out, the host or board should treat the entire packet transaction as void.  It should:
 
 * Return its packet reception state machine to a ready state.
 * Presume that no action has been taken on the transaction
 * Attempt to resend the packet, if it was a host packet.
-
-
-Command Buffering
-To ensure smooth motion, as well as to support print queueing, we'll want certain commands to be queued in a buffer.  This means we won't get immediate feedback from any queued command.  To this end we will break commands down into two categories: action commands that are put in the command buffer, and query commands that require an immediate response.  In order to make it simple to differentiate the commands on the firmware side, we will break them up into two sets: commands numbered 0-127 will be query commands, and commands numbered 128-255 will be action commands to be put into the buffer.  The firmware can then simply look at the highest bit to determine which type of packet it is. 
-
 
 # Implementations
 
@@ -103,7 +104,6 @@ Host software:
 
 * [ReplicatorG](http://github.com/makerbot/ReplicatorG)
 * [pyS3g](http://github.com/makerbot/s3g)
-
 
 # Packet formats
 
@@ -189,7 +189,9 @@ A note about Tool IDs:
 
 The tool ID is the ID number of a toolhead. A toolhead may only respond to commands that are directed at its ID. If the packet is corrupt, the tool should *not* respond with an error message to avoid collisions.
 
-The exception to this is the tool ID 127. This represents any listening device. The address 127 should only be used when setting the ID of a tool. _Note: Before firmware version 2.92, the broadcast address was 255._
+The exception to this is the tool ID 127. This represents any listening device. The address 127 should only be used when setting the ID of a tool.
+
+_Note: Before firmware version 2.92, the broadcast address was 255._
 
 ## Response Packet Structure (both Host and Tool Networks)
 The response payload contains the response to a single command:
@@ -269,9 +271,83 @@ Response code values can be as follows:
 
 # Data formats
 
-TODO:
+## Integer
+Integers represent numbers. All integers are in little endian format.
 
-uint8, uint16, int16, uint32, int32, axes bitfield
+<table>
+<tr>
+ <th>Type</th>
+ <th>Size</th>
+ <th>Range</th>
+</tr>
+<tr>
+ <td>uint8</td>
+ <td>1 byte</td>
+ <td>0 to 255</td>
+</tr>
+<tr>
+ <td>uint16</td>
+ <td>2 bytes</td>
+ <td>0 to 65535</td>
+</tr>
+<tr>
+ <td>int16</td>
+ <td>2 bytes</td>
+ <td>-32768 to 32767</td>
+</tr>
+<tr>
+ <td>uint32</td>
+ <td>4 bytes</td>
+ <td>0 to 4294967296</td>
+</tr>
+<tr>
+ <td>int32</td>
+ <td>4 bytes</td>
+ <td>-−2147483648 to 2147483647</td>
+</tr>
+</table>
+
+## Axes bitfield
+An axes bitfield structure is used to represent a selection of axes.
+
+<table>
+<tr>
+ <th>Bit</th>
+ <th>Name</th>
+</tr>
+<tr>
+ <td>7</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>6</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>5</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>4</td>
+ <td>B axis</td>
+</tr>
+<tr>
+ <td>3</td>
+ <td>A axis</td>
+</tr>
+<tr>
+ <td>2</td>
+ <td>Z axis</td>
+</tr>
+<tr>
+ <td>1</td>
+ <td>Y axis</td>
+</tr>
+<tr>
+ <td>0</td>
+ <td>X axis</td>
+</tr>
+</table>
 
 ## SD Response codes
 <table>
@@ -455,7 +531,7 @@ Response
     uint8: SD response code
 
 ## 17 - Reset
-Call a soft reset.  This calls all reset functions on the bot. Same as abort.
+Call a soft reset. This calls all reset functions on the bot. Same as abort.
 
 Payload (0 bytes)
 
@@ -475,7 +551,7 @@ Response
     1+N bytes: Name of the next file, in ASCII, terminated with a null character. If the operation was unsuccessful, this will be a null character.
 
 ## 20 - Get build name
-Retrieve the name of the file currently being built. If the machine is not currently printing, a null terminated string of length 0 is returned.  If the bot has finished a print and has not been reset (hard or soft), it will return the name of the last file built.
+Retrieve the name of the file currently being built. If the machine is not currently printing, a null terminated string of length 0 is returned. If the bot has finished a print and has not been reset (hard or soft), it will return the name of the last file built.
 
 Payload (0 bytes)
 
@@ -569,7 +645,7 @@ Response
 </table>
 
 ## 22 - Extended stop: Stop a subset of systems
-Stop the stepper motor motion and/or reset the command buffer.  This differs from the reset and abort commands in that a soft reset of all functions is not called
+Stop the stepper motor motion and/or reset the command buffer. This differs from the reset and abort commands in that a soft reset of all functions is not called
 
 Payload
 
@@ -637,7 +713,7 @@ Response
 </table>
 
 ## 26 - Get communication statistics
-Gathers statistics about communication over the tool network. This was intended for use while troubleshooting Gen3/4 machines.
+Gathers statistics about communication over the tool network. This wass intended for use while troubleshooting Gen3/4 machines.
 
 Payload (0 bytes)
 
@@ -834,19 +910,19 @@ Payload
 Set Brightness levels for RGB led strip
 
 Payload
-    uint8:  red value (all pix are 0-255)
-    uint8:  green 
-    uint8:  blue
-    uint8:  blink rate (0-255 valid)
-    uint8:  effect (currently unused)
-    
+    uint8: red value (all pix are 0-255)
+    uint8: green 
+    uint8: blue
+    uint8: blink rate (0-255 valid)
+    uint8: effect (currently unused)
+
 ## 147 - Set Beep
 Set a buzzer frequency and buzz time
 
 Payload
     uint16: frequency
     uint16: buzz length in ms
-    uint8:  effect  (currently unused)
+    uint8: effect (currently unused)
 
 ## 148 - Wait for button
 Wait until either a user presses a button on the interface board, or a timeout occurs.
@@ -939,15 +1015,15 @@ Options Field
 
 ## 149 - Display message to LCD
 This command is used to display a message to the LCD board.
-The maximum buffer size is limited by the maximum package size.  Thus a full screen cannot be written with one command.
+The maximum buffer size is limited by the maximum package size. Thus a full screen cannot be written with one command.
 Messages are stored in a buffer and the full buffer is displayed when the "last message in group" flag is 1.
-The buffer is also displayed when the clear message flag is 1.  If multiple packets are received before the screen update is called, they will all be displayed.  After screen update is called, the screen will wait until the "last message in group" is received to display the full buffer.  TODO: clean this
+The buffer is also displayed when the clear message flag is 1. If multiple packets are received before the screen update is called, they will all be displayed. After screen update is called, the screen will wait until the "last message in group" is received to display the full buffer. TODO: clean this
 The "last message in group" flag must be used for display of multi-packet messages.
-Normal popping of the message screen, such as when a print is over, is ignored if the "last message in group" flag has not been received.  This is because the bot thinks it is still waiting for the remainder of a message.
+Normal popping of the message screen, such as when a print is over, is ignored if the "last message in group" flag has not been received. This is because the bot thinks it is still waiting for the remainder of a message.
 
 if the "clear message" flag is 1, the message buffer will be cleared and any existing timeout out will be cleared.
 
-If the "wait on button" flag is 1, the message screen will clear after a user button press is received.  The timeout field is still relevant if the button press is never received.  
+If the "wait on button" flag is 1, the message screen will clear after a user button press is received. The timeout field is still relevant if the button press is never received.
 
 Text will auto-wrap at end of line. \n is recognized as new line start. \r is ignored.
 
@@ -999,10 +1075,10 @@ Payload
 </table>
 
 ## 150 - Set Build Percentage
-Set the percent done for the current build.  This value will be displayed on the Monitor screen
+Set the percent done for the current build. This value will be displayed on the Monitor screen
 
 Payload
-  
+ 
     uint8: percent (0-100)
     uint8: ignore (currently unused
 
@@ -1010,12 +1086,13 @@ Payload
 Play predefined songs on the piezo buzzer
 
 Payload
-  
-    uint8: songID  - select from a predefined list of songs
 
+    uint8: songID: select from a predefined list of songs
+
+TODO: List of available songs?
 
 ## 152 - Reset to Factory
-Calls a factory reset on the eeprom.  Resets all values to their "factory" settings.  A soft reset of the board is also called.
+Calls a factory reset on the eeprom. Resets all values to their "factory" settings. A soft reset of the board is also called.
 
 Payload
 
