@@ -138,7 +138,7 @@ class PacketCRCError(PacketDecodeError):
   def __init__(self, crc, expected_crc):
     self.value='Invalid crc. Got=%x, Expected=%x'%(crc, expected_crc)
 
-class ResponseCodeError(Exception):
+class ResponseError(Exception):
   """
   Errors that represent failures returned by the machine
   """
@@ -147,17 +147,23 @@ class ResponseCodeError(Exception):
   def __str__(self):
     return repr(self.value)
 
-class BufferOverflowError(ResponseCodeError):
+class BufferOverflowError(ResponseError):
   def __init__(self):
     self.value='Host buffer full, try packet again later'
 
-class RetryError(ResponseCodeError):
+class RetryError(ResponseError):
   def __init__(self, value):
     self.value=value
 
-class BuildCancelledError(ResponseCodeError):
+class BuildCancelledError(ResponseError):
   def __init__(self):
     self.value='Build cancelled message received from host, abort'
+
+class TimeoutError(ResponseError):
+  def __init__(self, data_length, decoder_state):
+    self.value='Timed out before receiving complete packet from host. Received bytes=%i, Decoder state=%s"'%(
+      data_length, decoder_state
+    )
 
 class TransmissionError(IOError):
   """
@@ -406,6 +412,7 @@ class PacketStreamDecoder:
 class s3g:
   def __init__(self):
     self.file = None
+#    self.logfile = open('output_stats','w')
 
   def SendCommand(self, payload):
     """
@@ -432,7 +439,7 @@ class s3g:
           data = ''
           while data == '':
             if (time.time() > start_time + timeout_length):
-              raise IOError("timeout")
+              raise TimeoutError(len(data), decoder.state)
 
             # pySerial streams handle blocking read. Be sure to set up a timeout when
             # initializing them, or this could hang forever
@@ -449,23 +456,36 @@ class s3g:
       except (BufferOverflowError) as e:
         """
         Buffer overflow error- wait a while for the buffer to clear, then try again.
+        TODO: This could hang forever if the machine gets stuck; is that what we want?
         """
-        print 'buffer overflow, overflow_count=%i, retry_count=%i'%(overflow_count,retry_count)
+#        self.logfile.write('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}\n'%(overflow_count,retry_count))
         overflow_count = overflow_count + 1
 
-        time.sleep(.05)
+#        time.sleep(.2)
 
-      except (PacketDecodeError, RetryError, IOError) as e:
+      except (PacketDecodeError, RetryError, TimeoutError) as e:
         """
-        Attempted to send a packet, but got a malformed response or timeout.
+        Sent a packet to the host, but got a malformed response or timed out waiting for a reply.
         Retry immediately.
         """
+#        self.logfile.write('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%
+#          (type(e),e.__str__(),retry_count)
+#        )
+
         retry_count = retry_count + 1
 
-        print 'transmission error', e
+      except Exception as e:
+        """
+        Other exceptions are propigated upwards.
+        """
+#        self.logfile.write('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%
+#          (type(e),e.__str__(),retry_count)
+#        )
+        raise e
 
       if retry_count >= max_retry_count:
-        raise TransmissionError("Failed to send packet")
+#        self.logfile.write('{"event":"transmission_error"}\n')
+        raise TransmissionError("Failed to send packet, maximum retries exceeded")
 
   def UnpackResponse(self, format, data):
     """

@@ -6,23 +6,43 @@ digraph
   "SET RETRY_COUNT=0" -> "INIT DECODER";
   "INIT DECODER" -> "SET START_TIME=NOW";
   "SET START_TIME=NOW" -> "DECODER_STATE=PAYLOAD_READY?";
+
   "DECODER_STATE=PAYLOAD_READY?" [shape=diamond];
   "DECODER_STATE=PAYLOAD_READY?" -> "TIME>START_TIME+TIMEOUT_LENGTH?" [label="no"];
-  "DECODER_STATE=PAYLOAD_READY?" -> "FINISHED" [label="yes"];
+  "DECODER_STATE=PAYLOAD_READY?" -> "EVALUATE RESPONSE_CODE" [label="yes"];
+
   "TIME>START_TIME+TIMEOUT_LENGTH?" [shape=diamond];
   "TIME>START_TIME+TIMEOUT_LENGTH?" -> "READ BYTE" [label="no"];
   "TIME>START_TIME+TIMEOUT_LENGTH?" -> "ERROR" [label="yes"];
+
   "READ BYTE" -> "RECEIVED BYTE?";
   "RECEIVED BYTE?" [shape=diamond];
   "RECEIVED BYTE?" -> "TIME>START_TIME+TIMEOUT_LENGTH?" [label="no"];
   "RECEIVED BYTE?" -> "UPDATE DECODER_STATE" [label="yes"];
+
   "UPDATE DECODER_STATE" -> "DECODER ERROR?";
   "DECODER ERROR?" [shape=diamond];
   "DECODER ERROR?" -> "ERROR" [label="yes"];
   "DECODER ERROR?" -> "DECODER_STATE=PAYLOAD_READY?" [label="no"];
+
+  "EVALUATE RESPONSE_CODE" -> "RESPONSE=SUCCESS?";
+  "RESPONSE=SUCCESS?" [shape=diamond];
+  "RESPONSE=SUCCESS?" -> "SUCCESS" [label="yes"];
+  "RESPONSE=SUCCESS?" -> "RESPONSE=BUFFER_OVERFLOW?" [label="no"];
+  
+  "RESPONSE=BUFFER_OVERFLOW?" [shape=diamond];
+  "RESPONSE=BUFFER_OVERFLOW?" -> "INIT DECODER" [label="yes"];
+  "RESPONSE=BUFFER_OVERFLOW?" -> "RESPONSE=RETRY_ERROR?" [label="no"];
+
+  "RESPONSE=RETRY_ERROR?" [shape=diamond];
+  "RESPONSE=RETRY_ERROR?" -> "INCREMENT RETRY_COUNT" [label="yes"];
+  "RESPONSE=RETRY_ERROR?" -> "FAILURE" [label="no"];
+
   "ERROR" -> "INCREMENT RETRY_COUNT";
+
   "INCREMENT RETRY_COUNT" -> "RETRY_COUNT<5?";
   "RETRY_COUNT<5?" [shape=diamond];
   "RETRY_COUNT<5?" -> "FAILURE" [label="no"];
   "RETRY_COUNT<5?" -> "INIT DECODER" [label="yes"];
+
 }
