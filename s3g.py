@@ -45,6 +45,7 @@ host_action_command_dict = {
   'STORE_HOME_POSITIONS'      : 143,
   'RECALL_HOME_POSITIONS'     : 144,
   'PAUSE_FOR_INTERACTION'     : 145,
+  'WAIT_FOR_BUTTON'           : 148,
   'DISPLAY_MESSAGE'           : 149,
   'BUILD_START_NOTIFICATION'  : 153,
   'BUILD_END_NOTIFICATION'    : 154,

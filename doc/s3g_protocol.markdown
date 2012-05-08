@@ -904,6 +904,7 @@ Payload
 Set the value of the digital potentiometers that control the voltage reference for the botsteps
 
 Payload
+
     uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
     uint8: value (valid range 0-127), values over max will be capped at max
 
@@ -911,6 +912,7 @@ Payload
 Set Brightness levels for RGB led strip
 
 Payload
+
     uint8: red value (all pix are 0-255)
     uint8: green 
     uint8: blue
@@ -921,6 +923,7 @@ Payload
 Set a buzzer frequency and buzz time
 
 Payload
+
     uint16: frequency
     uint16: buzz length in ms
     uint8: effect (currently unused)
@@ -929,6 +932,7 @@ Payload
 Wait until either a user presses a button on the interface board, or a timeout occurs.
 
 Payload
+
     uint8: Bit field of buttons to wait for (see below)
     uint16: Timeout, in seconds. A value of 0 indicates that the command should not time out.
     uint8: Options bitfield (see below)
@@ -1029,6 +1033,7 @@ If the "wait on button" flag is 1, the message screen will clear after a user bu
 Text will auto-wrap at end of line. \n is recognized as new line start. \r is ignored.
 
 Payload
+
     uint8: Options bitfield (see below)
     uint8: Horizontal position to display the message at (commonly 0-19)
     uint8: Vertical position to display the message at (commonly 0-3)
