@@ -244,7 +244,7 @@ class PacketStreamDecoderTests(unittest.TestCase):
     self.s.ParseByte(len(payload))
     for i in range (0, len(payload)):
       self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.PacketResponseCodeError,self.s.ParseByte,s3g.CalculateCRC(payload))
+    self.assertRaises(s3g.RetryError, s3g.CheckResponseCode, payload[0])
 
   def test_reject_response_action_buffer_overflow(self):
     payload = bytearray()
@@ -254,7 +254,7 @@ class PacketStreamDecoderTests(unittest.TestCase):
     self.s.ParseByte(len(payload))
     for i in range (0, len(payload)):
       self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.PacketResponseCodeError,self.s.ParseByte,s3g.CalculateCRC(payload))
+    self.assertRaises(s3g.BufferOverflowError, s3g.CheckResponseCode, payload[0])
 
   def test_reject_response_crc_mismatch(self):
     payload = bytearray()
@@ -264,7 +264,7 @@ class PacketStreamDecoderTests(unittest.TestCase):
     self.s.ParseByte(len(payload))
     for i in range (0, len(payload)):
       self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.PacketResponseCodeError,self.s.ParseByte,s3g.CalculateCRC(payload))
+    self.assertRaises(s3g.RetryError, s3g.CheckResponseCode, payload[0])
 
   def test_reject_response_downstream_timeout(self):
     payload = bytearray()
@@ -274,7 +274,7 @@ class PacketStreamDecoderTests(unittest.TestCase):
     self.s.ParseByte(len(payload))
     for i in range (0, len(payload)):
       self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.PacketResponseCodeError,self.s.ParseByte,s3g.CalculateCRC(payload))
+    self.assertRaises(s3g.TransmissionError, s3g.CheckResponseCode, payload[0])
 
   def test_accept_packet(self):
     payload = bytearray()
@@ -289,7 +289,7 @@ class PacketStreamDecoderTests(unittest.TestCase):
     assert(self.s.payload == payload)
 
   def test_accept_packet_ignore_response_code(self):
-    self.s = s3g.PacketStreamDecoder(False)
+    self.s = s3g.PacketStreamDecoder()
 
     payload = bytearray()
     payload.extend('abcde')
