@@ -12,6 +12,18 @@ The third part of the document talks about the fine details of how commands are 
 
 The final portion of the document is a catalog of all of the commands that the Host and Tools can implement.
 
+## Implementations of this protocol
+
+Firmware repositories:
+
+* For Gen3 and Gen4 electronics (Cupcake, Thing-O-Matic, Reprap): [G3Firmware](http://github.com/makerbot/G3Firmware)
+* For Mightyboard (Replicator): [MightyBoardFirmware](http://github.com/makerbot/MightyBoardFirmware)
+
+Host software:
+
+* [ReplicatorG](http://github.com/makerbot/ReplicatorG)
+* [pyS3g](http://github.com/makerbot/s3g)
+
 ## Definitions
 
 Here is some vocabulary, that should be used when talking about the protocol:
@@ -85,25 +97,14 @@ The slave device is expected to begin responding to a master command within 40ms
 
 ## Handling Errors
 
-Of course, communication is not always so rosy. There are a number of things that could prevent a successful transmission, such as electrical noise or busy firmware.
+Of course, communication is not always so rosy. There are a number of things that could prevent a successful transmission, such as electrical noise or busy firmware. The protocol uses two methods to protect against this: a CRC check at the end of every packet, and a timeout counter while receiving data.
 
-If a packet has timed out, the host or board should treat the entire packet transaction as void.  It should:
+If the master sends a packet over the network and does not receive a response, then the transmission is considered a timeout and can be re-tried up to 5 times. If the master does receive a response packet but it is damaged (either due to an invalid header, length, or CRC check), then it is considered a decoder error, and can be retried. Finally, if the master receives a valid response packet, but the packets response code indicates that the slave encountered a buffer overflow or retry error, then the master should attempt retransmission of the packet.
 
-* Return its packet reception state machine to a ready state.
-* Presume that no action has been taken on the transaction
-* Attempt to resend the packet, if it was a host packet.
+Here is a reference implementation of a packet send state machine:
 
-# Implementations
+![SendCommand state machine diagram](https://github.com/makerbot/s3g/raw/master/doc/SendCommand.png)
 
-Firmware repositories:
-
-* For Gen3 and Gen4 electronics (Cupcake, Thing-O-Matic, Reprap): [G3Firmware](http://github.com/makerbot/G3Firmware)
-* For Mightyboard (Replicator): [MightyBoardFirmware](http://github.com/makerbot/MightyBoardFirmware)
-
-Host software:
-
-* [ReplicatorG](http://github.com/makerbot/ReplicatorG)
-* [pyS3g](http://github.com/makerbot/s3g)
 
 # Packet formats
 
@@ -134,7 +135,7 @@ All packets have the following structure:
 <tr>
  <td>2+N</td>
  <td>CRC</td>
- <td>The [8-bit iButton/Maxim CRC](http://www.maxim-ic.com/app-notes/index.mvp/id/27) of the payload</td>
+ <td>The <a href="http://www.maxim-ic.com/app-notes/index.mvp/id/27">8-bit iButton/Maxim CRC</a> of the payload</td>
 </tr>
 </table>
 
@@ -903,6 +904,7 @@ Payload
 Set the value of the digital potentiometers that control the voltage reference for the botsteps
 
 Payload
+
     uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
     uint8: value (valid range 0-127), values over max will be capped at max
 
@@ -910,6 +912,7 @@ Payload
 Set Brightness levels for RGB led strip
 
 Payload
+
     uint8: red value (all pix are 0-255)
     uint8: green 
     uint8: blue
@@ -920,6 +923,7 @@ Payload
 Set a buzzer frequency and buzz time
 
 Payload
+
     uint16: frequency
     uint16: buzz length in ms
     uint8: effect (currently unused)
@@ -928,6 +932,7 @@ Payload
 Wait until either a user presses a button on the interface board, or a timeout occurs.
 
 Payload
+
     uint8: Bit field of buttons to wait for (see below)
     uint16: Timeout, in seconds. A value of 0 indicates that the command should not time out.
     uint8: Options bitfield (see below)
@@ -1028,6 +1033,7 @@ If the "wait on button" flag is 1, the message screen will clear after a user bu
 Text will auto-wrap at end of line. \n is recognized as new line start. \r is ignored.
 
 Payload
+
     uint8: Options bitfield (see below)
     uint8: Horizontal position to display the message at (commonly 0-19)
     uint8: Vertical position to display the message at (commonly 0-3)
