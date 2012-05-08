@@ -7,25 +7,25 @@ host_query_command_dict = {
   'GET_VERSION'               : 0,
   'INIT'                      : 1,
   'GET_AVAILABLE_BUFFER_SIZE' : 2,
-#  'CLEAR_BUFFER'              : 3,
+  'CLEAR_BUFFER'              : 3,
   'GET_POSITION'              : 4,
   'ABORT_IMMEDIATELY'         : 7,
-#  'PAUSE'                     : 8,
+  'PAUSE'                     : 8,
 #  'PROBE'                     : 9,
   'TOOL_QUERY'                : 10,
-#  'IS_FINISHED'               : 11,
+  'IS_FINISHED'               : 11,
   'READ_FROM_EEPROM'          : 12,
   'WRITE_TO_EEPROM'           : 13,
-#  'CAPTURE_TO_FILE'           : 14,
-#  'END_CAPTURE'               : 15,
+  'CAPTURE_TO_FILE'           : 14,
+  'END_CAPTURE'               : 15,
   'PLAYBACK_CAPTURE'          : 16,
-#  'RESET'                     : 17,
+  'RESET'                     : 17,
   'GET_NEXT_FILENAME'         : 18,
   'GET_BUILD_NAME'            : 20,
   'GET_EXTENDED_POSITION'     : 21,
-#  'EXTENDED_STOP'             : 22,
-#  'GET_MOTHERBOARD_STATUS'    : 23,
-#  'GET_COMMUNICATION_STATS'   : 26
+  'EXTENDED_STOP'             : 22,
+  'GET_MOTHERBOARD_STATUS'    : 23,
+  'GET_COMMUNICATION_STATS'   : 26
 }
 
 host_action_command_dict = {
@@ -33,18 +33,18 @@ host_action_command_dict = {
   'SET_POSITION'              : 130,
   'FIND_AXES_MINIMUMS'        : 131,
   'FIND_AXES_MAXIMUMS'        : 132,
-#  'DELAY'                     : 133,
-#  'WAIT_FOR_TOOL_READY'       : 135,
+  'DELAY'                     : 133,
+  'WAIT_FOR_TOOL_READY'       : 135,
   'TOOL_ACTION_COMMAND'       : 136,
-#  'ENABLE_AXES'               : 137,
+  'ENABLE_AXES'               : 137,
 #  'USER_BLOCK'                : 138,
   'QUEUE_EXTENDED_POINT'      : 139,
   'SET_EXTENDED_POSITION'     : 140,
-#  'WAIT_FOR_PLATFORM_READY'   : 141,
-#  'QUEUE_EXTENDED_POINT_NEW'  : 142,
-#  'STORE_HOME_POSITIONS'      : 143,
-#  'RECALL_HOME_POSITIONS'     : 144,
-#  'PAUSE_FOR_INTERACTION'     : 145,
+  'WAIT_FOR_PLATFORM_READY'   : 141,
+  'QUEUE_EXTENDED_POINT_NEW'  : 142,
+  'STORE_HOME_POSITIONS'      : 143,
+  'RECALL_HOME_POSITIONS'     : 144,
+  'PAUSE_FOR_INTERACTION'     : 145,
   'DISPLAY_MESSAGE'           : 149,
   'BUILD_START_NOTIFICATION'  : 153,
   'BUILD_END_NOTIFICATION'    : 154,
@@ -53,34 +53,32 @@ host_action_command_dict = {
 slave_query_command_dict = {
   'GET_VERSION'                : 0,
   'GET_TOOLHEAD_TEMP'          : 2,
-#  'GET_MOTOR_1_SPEED_RPM'      : 17,
+  'GET_MOTOR_1_SPEED_RPM'      : 17,
   'IS_TOOL_READY'              : 22,
   'READ_FROM_EEPROM'           : 25,
   'WRITE_TO_EEPROM'            : 26,
   'GET_PLATFORM_TEMP'          : 30,
   'GET_TOOLHEAD_TARGET_TEMP'   : 32,
   'GET_PLATFORM_TARGET_TEMP'   : 33,
-#  'GET_BUILD_NAME'             : 34,
+  'GET_BUILD_NAME'             : 34,
   'IS_PLATFORM_READY'          : 35,
-#  'GET_TOOL_STATUS'            : 36,
-#  'GET_PID_STATE'              : 37,
+  'GET_TOOL_STATUS'            : 36,
+  'GET_PID_STATE'              : 37,
 }
 
 slave_action_command_dict = {
-#  'INIT'                       : 1,
+  'INIT'                       : 1,
   'SET_TOOLHEAD_TARGET_TEMP'   : 3,
-#  'SET_MOTOR_1_SPEED_RPM'      : 6,
-#  'SET_MOTOR_1_DIRECTION'      : 8,
-#  'TOGGLE_MOTOR_1'             : 10,
+  'SET_MOTOR_1_SPEED_RPM'      : 6,
+  'SET_MOTOR_1_DIRECTION'      : 8,
+  'TOGGLE_MOTOR_1'             : 10,
   'TOGGLE_FAN'                 : 12,
   'TOGGLE_VALVE'               : 13,
-#  'SET_SERVO_1_POSITION'       : 14,
-#  'SET_SERVO_2_POSITION'       : 15,
+  'SET_SERVO_1_POSITION'       : 14,
 #  'PAUSE'                      : 23,
 #  'ABORT'                      : 24,
   'SET_PLATFORM_TEMP'          : 31,
-#  'SET_MOTOR_1_SPEED_DDA'      : 38,
-#  'LIGHT_INDICATOR_LED'        : 40,
+#  'SET_MOTOR_1_SPEED_DDA'      : 38, We are considering this deprecated, but some people use it in the wild so we are keeping it in here as a reminder
 }
 
 response_code_dict = {
@@ -175,6 +173,15 @@ class TransmissionError(IOError):
   def __str__(self):
     return repr(self.value)
 
+class ExtendedStopError(Exception):
+  """
+  An extended stop error is thrown if there was a problem executing an extended stop on the machinea.
+  """
+  def __init__(self):
+    self.value = "Extended Stop Error"
+  def __str__(self):
+    return self.value
+
 class SDCardError(Exception):
   """
   An SD card error is thrown if there was a problem accessing the SD card. This should be recoverable,
@@ -251,6 +258,16 @@ def EncodeUint32(number):
   """
   return struct.pack('<I', number)
 
+def DecodeInt32(data):
+  """
+  Decode a 4-byte string into a 32-bit signed integer
+  @param data: byte array of size 4 that represents the integer
+  @param return: decoded integer
+  """
+  if isinstance(data, bytearray):
+    data = array('B', data)
+  return struct.unpack('<i', data)[0]
+
 def EncodeUint16(number):
   """
   Encode a 16-bit unsigned integer as a 2-byte string
@@ -270,6 +287,20 @@ def DecodeUint16(data):
     data = array('B', data)
   return struct.unpack('<H', data)[0]
     
+def DecodeBitfield8(bitfield):
+  """
+  Given a bitfield that is no greater than 8 bits, decodes it into a list of bits
+  @param bitfield: The bitfield to decode
+  @return list representation of the bitfield
+  """
+  bitString = bin(bitfield)[2:]
+  if len(bitString) > 8:
+    raise TypeError("Expecting bitfield of size no greater than 8, got bitfield of size %i"%(len(bitString)))
+  bitList = list(bitString)
+  bitList.reverse()
+  for i in range(8-len(bitList)):
+    bitList.append(0)
+  return bitList
 
 def EncodeAxes(axes):
   """
@@ -416,12 +447,20 @@ class s3g:
 
   def SendCommand(self, payload):
     """
-    Attempt to send a command to the machine, retrying up to 5 times if an error
-    occurs.
+    Wraps a payload in a packet with a header, length, payload and proper CRC to send to the machine
     @param payload Command to send to the machine
     @return Response payload, if successful. 
     """
     packet = EncodePayload(payload)
+    return self.SendPacket(packet)
+
+  def SendPacket(self, packet):
+    """
+    Attempt to send a packet to the machine, retrying up to 5 times if an error
+    occurs.
+    @param packet Packet to send to the machine
+    @return Response payload, if successful. 
+    """
     retry_count = 0
     overflow_count = 0
 
@@ -535,6 +574,283 @@ class s3g:
     [response_code, version] = self.UnpackResponse('<BH', response)
 
     return version
+
+  def CaptureToFile(self, filename):
+    """
+    Capture all subsequent commands up to the 'end capture' command to a file with the given filename on an SD card.
+    @param filename: The name of the file to write to on the SD card
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['CAPTURE_TO_FILE'])
+    payload.extend(filename)
+    payload.append(0x00)
+    response = self.SendCommand(payload)
+    [response, sd_response_code] = self.UnpackResponse('<BB', response)
+    if sd_response_code != sd_error_dict['SUCCESS']:
+      raise SDCardError(sd_response_code)
+
+  def EndCaptureToFile(self):
+    """
+    Send the end capture signal to the bot, so it stops capturing data and writes all commands out to a file on the SD card
+    @return The number of bytes written to file
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['END_CAPTURE'])
+    
+    response = self.SendCommand(payload)
+    [response, sdResponse] = self.UnpackResponse('<BI', response)
+    return sdResponse
+
+  def Reset(self):
+    """
+    Reset the bot, unless the bot is waiting to tell us a build is cancelled.
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['RESET'])
+
+    self.SendCommand(payload)
+
+  def IsFinished(self):
+    """
+    Checks if the steppers are still executing a command
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['IS_FINISHED'])
+    
+    response = self.SendCommand(payload)
+    [response_code, isFinished] = self.UnpackResponse('<B?', response)
+    return isFinished
+
+  def ClearBuffer(self):
+    """
+    Clears the buffer of all commands
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['CLEAR_BUFFER'])
+    
+    self.SendCommand(payload)
+
+  def Pause(self):
+    """
+    Pause the machine
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['PAUSE'])
+    self.SendCommand(payload)
+
+  def GetCommunicationStats(self):
+    payload = bytearray()
+    payload.append(host_query_command_dict['GET_COMMUNICATION_STATS'])
+    response = self.SendCommand(payload)
+
+    [response, packetsReceived, packetsSent, nonResponsivePacketsSent, packetRetries, noiseBytes] = self.UnpackResponse('<BLLLLL', response)
+    info = {
+    'PacketsReceived' : packetsReceived,
+    'PacketsSent' : packetsSent,
+    'NonResponsivePacketsSent' : nonResponsivePacketsSent,
+    'PacketRetries' : packetRetries,
+    'NoiseBytes' : noiseBytes,
+    }
+    return info
+
+  def GetMotherboardStatus(self):
+    """
+    Retrieve bits of information about the motherboard
+    @return: A python dictionary of various flags and whether theywere set or not at reset
+    PORF : Power-on reset flag
+    EXTRF : External reset flag
+    BORF : Brownout reset flag
+    WDRF : Watchdog reset flag
+    POWER_ERRPR : An error was detected with the system power.
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['GET_MOTHERBOARD_STATUS'])
+    
+    response = self.SendCommand(payload)
+
+    [response, bitfield] = self.UnpackResponse('<BB', response)
+
+    bitfield = DecodeBitfield8(bitfield)      
+
+    flags = {
+    'PORF' : int(bitfield[2]),
+    'EXTRF' : int(bitfield[3]),
+    'BORF' : int(bitfield[4]),
+    'WDRF' : int(bitfield[5]),
+    'POWER_ERROR' : int(bitfield[7]),
+    }
+    return flags
+
+  def ExtendedStop(self, stepperFlag, bufferFlag):
+    """
+    Stop the stepper motor motion and/or reset the command buffer.  This differs from the reset and abort commands in that a soft reset of all functions isnt called.
+    @param stepperFlag: A boolean flag that if true will stop the steppers
+    @param buuferFlag: A boolean flag that, if true, will clear the buffer
+    """
+    payload = bytearray()
+    payload.append(host_query_command_dict['EXTENDED_STOP'])
+    bitfield = 0
+    if stepperFlag:
+      bitfield |= 0x01
+    if bufferFlag:
+      bitfield |= 0x02
+    payload.append(bitfield)
+
+    response = self.SendCommand(payload)
+    [response, extended_stop_response] = self.UnpackResponse('<BB', response)
+    if extended_stop_response == 1:
+      raise ExtendedStopError
+
+  def WaitForPlatformReady(self, tool_index, delay=100, timeout=60):
+    """
+    Halts the machine until the specified toolhead reaches a ready state, or if the timeout is reached.  Toolhead is ready if its temperature is within a specified point
+    @param tool_index: Tool to wait for
+    @param delay: Time in ms between packets to query the toolhead
+    @param timeout: Time to wait for the toolhead to heat up before moving on
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['WAIT_FOR_PLATFORM_READY'])
+    payload.append(tool_index)
+    payload.extend(EncodeUint16(delay))
+    payload.extend(EncodeUint16(timeout))
+    self.SendCommand(payload)
+    
+  def WaitForToolReady(self, tool_index, delay=100, timeout=60):
+    """
+    Halts the machine until the specified toolhead reaches a ready state, or if the timeout is reached.  Toolhead is ready if its temperature is within a specified point
+    @param tool_index: Tool to wait for
+    @param delay: Time in ms between packets to query the toolhead
+    @param timeout: Time to wait for the toolhead to heat up before moving on
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['WAIT_FOR_TOOL_READY'])
+    payload.append(tool_index)
+    payload.extend(EncodeUint16(delay))
+    payload.extend(EncodeUint16(timeout))
+    self.SendCommand(payload)
+
+  def Delay(self, mS):
+    """
+    Halts all motion for the specified amount of time
+    @param mS: Delay time, in microseconds
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['DELAY'])
+    payload.extend(EncodeUint32(mS))
+
+    self.SendCommand(payload)
+
+  def ToggleEnableAxes(self, xAxis, yAxis, zAxis, aAxis, bAxis, toggle):
+    """
+    Used to explicitly power steppers on or off.
+    @param xAxis: Flag to select the xAxis
+    @param yAxis: Flag to select the yAxis
+    @param zAxis: Flag to select the zAxis
+    @param aAxis: Flag to select the aAxis
+    @param bAxis: Flag to select the bAxis
+    @param toggle: Flag to enable or disable axes.  If true, axes will be enabled. If false, axes will be disabled
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['ENABLE_AXES'])
+    bitField = 0
+    if xAxis: 
+      bitField |= 0x01
+    if yAxis:
+      bitField |= 0x02
+    if zAxis: 
+      bitField |= 0x04
+    if aAxis:
+      bitField |= 0x08
+    if bAxis:
+      bitField |= 0x10
+    bitField |= 0x20
+    bitField |= 0x40
+    if toggle:
+      bitField |= 0x80
+
+    payload.append(bitField)
+    self.SendCommand(payload)
+
+
+  def QueueExtendedPointNew(self, point, duration, xRelative, yRelative, zRelative, aRelative, bRelative):
+    """
+    Queue a point with the new style!  Moves to a certain point over a given duration with either relative or absolute positioning.  Relative vs. Absolute positioning is done on an axis to axis basis.
+    @param point: A 5 dimentional point in steps specifying where each axis should move to
+    @param duration: The total duration of the move in miliseconds
+    @param xRelative: Relative movement flag.  If high, the xAxis moves relatively
+    @param yRelative: Relative movement flag.  If high, the yAxis moves relatively
+    @param zRelative: Relative movement flag.  If high, the zAxis moves relatively
+    @param aRelative: Relative movement flag.  If high, the aAxis moves relatively
+    @param bRelative: Relative movement flag.  If high, the bAxis moves relatively
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'])
+    for cor in point:
+      payload.extend(EncodeInt32(cor))
+    payload.extend(EncodeUint32(duration))
+    axes = []
+    if xRelative:
+      axes.append('x')
+    if yRelative:
+      axes.append('y')
+    if zRelative:
+      axes.append('z')
+    if aRelative:
+      axes.append('a')
+    if bRelative:
+      axes.append('b')
+    payload.append(EncodeAxes(axes))
+    self.SendCommand(payload)
+  
+  def StoreHomePositions(self, xStore, yStore, zStore, aStore, bStore):
+    """
+    Write the current axes locations to the EEPROM as the home position
+    @param xStore: Flag whether or not to store the x position
+    @param yStore: Flag whether or not to store the y position
+    @param zStore: Flag whether or not to store the z position
+    @param aStore: Flag whether or not to store the a position
+    @param bStore: Flag whether or not to store the b position
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['STORE_HOME_POSITIONS'])
+    axes = []
+    if xStore:
+      axes.append('x')
+    if yStore:
+      axes.append('y')
+    if zStore:
+      axes.append('z')
+    if aStore:
+      axes.append('a')
+    if bStore:
+      axes.append('b')
+    payload.append(EncodeAxes(axes))
+    self.SendCommand(payload)
+
+  def RecallHomePositions(self, xRecall, yRecall, zRecall, aRecall, bRecall):
+    """
+    Recall and move to the home positions written to the EEPROM
+    @param xRecall: Flag whether or not to recall the x home cor
+    @param yRecall: Flag whether or not to recall the y home cor
+    @param zRecall: Flag whether or not to recall the z home cor
+    @param aRecall: Flag whether or not to recall the a home cor
+    @param bRecall: Flag whether or not to recall the b home cor
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['RECALL_HOME_POSITIONS'])
+    axes = []
+    if xRecall:
+      axes.append('x')
+    if yRecall:
+      axes.append('y')
+    if zRecall:
+      axes.append('z')
+    if aRecall:
+      axes.append('a')
+    if bRecall:
+      axes.append('b')
+    payload.append(EncodeAxes(axes))
+    self.SendCommand(payload)
 
   def Init(self):
     """
@@ -818,6 +1134,43 @@ class s3g:
     
     self.SendCommand(payload)
 
+  def WaitForButton(self, button, timeout, timeoutReadyState, timeoutReset, clearScreen):
+    """
+    Wait until a user either presses a button on the interface board, or a timeout occurs
+    @param button: A button, must be one of the following: up, down, left, right center.
+    @param timeout: Duration, in seconds, the bot will wait for a response.  A timeout of 0 indicated no timeout.  TimeoutReadyState, timeoutReset determine what action is taken after timeout
+    @param timeoutReadyState: Bot changes to the ready state after tiemout
+    @param timeoutReset: Resets teh bot on timeout
+    @param clearScreen: Clears the screen on buttonPress
+    """
+    buttons = ['up', 'down', 'left', 'right', 'center']
+    button = button.lower()
+    if button.lower() not in buttons:
+      raise TypeError("Unknown button: %i"%(button.lower()))
+    payload = bytearray()
+    payload.append(host_action_command_dict['WAIT_FOR_BUTTON'])
+    if button == 'center':
+      button = 0x01
+    elif button == 'right':
+      button = 0x02
+    elif button == 'left':
+      button = 0x04
+    elif button == 'down':
+      button = 0x08
+    elif button == 'up':
+      button = 0x10
+    payload.append(button)
+    payload.extend(EncodeUint16(timeout))
+    optionsField = 0
+    if timeoutReadyState:
+      optionsField |= 0x01
+    if timeoutReset:
+      optionsField |= 0x02
+    if clearScreen:
+      optionsField |= 0x04
+    payload.append(optionsField)
+    self.SendCommand(payload)
+
   def DisplayMessage(self, row, col, message, timeout, continuation):
     """
     Display a message to the screen
@@ -878,6 +1231,99 @@ class s3g:
     [response_code, version] = self.UnpackResponse('<BH', response)
 
     return version
+
+  def GetPIDState(self, tool_index):
+    """
+    Retrieve the state variables of the PID controller.  This is intended for tuning the PID Constants
+    @param tool_index: Which tool index to query for information
+    @return The terms associated with the tool_index'sError Term, Delta Term, Last Output and the platform's Error Term, Delta Term and Last Output
+    """
+    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PID_STATE'])
+    [response_code, exError, exDelta, exLast, plError, plDelta, plLast] = self.UnpackResponse('<Bhhhhhh', response)
+    PIDVals = {
+    "ExtruderError"          : exError,
+    "ExtruderDelta"          : exDelta,
+    "ExtruderLastTerm"       : exLast,
+    "PlatformError"          : plError,
+    "PlatformDelta"          : plDelta,
+    "PlatformLastTerm"       : plLast,
+    }
+    return PIDVals
+
+  def GetToolStatus(self, tool_index):
+    """
+    Retrieve some information about the tool
+    @param tool_index: The tool we would like to query for information
+    @return A dictionary containing status information about the tool_index
+      EXTRUDER_READY : The extruder has reached target temp
+      PORF: Power on reset flag was set at restart
+      EXTRF: External reset flag was set at restart
+      BORF: Brownout reset flag was set at restart
+      WDRF: Watchdog reset flag was set at restart
+      PLATFORM ERROR: an error was detected with the platform heater (if the tool supports one).  The platform heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.
+      EXTRUDER ERROR: An error was detected with the extruder heater (if the tool supports one).  The extruder heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable
+    """
+    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOL_STATUS'])
+    [resonse_code, bitfield] = self.UnpackResponse('<BB', response)
+
+    bitfield = DecodeBitfield8(bitfield)
+
+    returnDict = {
+    "EXTRUDER_READY" : bool(bitfield[0]),
+    "PORF" : bool(bitfield[2]),
+    "EXTRF" : bool(bitfield[3]),
+    "BORF" : bool(bitfield[4]),
+    "WDRF" : bool(bitfield[5]),
+    "PLATFORM_ERROR" : bool(bitfield[6]),
+    "EXTRUDER_ERROR" : bool(bitfield[7]),
+    }
+    return returnDict
+  
+  def SetServo1Position(self, tool_index, theta):
+    """
+    Sets the tool_index's servo as position 1 to a certain angle 
+    @param tool_index: The tool that will be set
+    @param theta: angle to set the servo to
+    """
+    payload = bytearray()
+    payload.append(theta)
+    self.ToolActionCommand(tool_index, slave_action_command_dict['SET_SERVO_1_POSITION'], payload)
+
+  def ToggleMotor1(self, tool_index, toggle, direction):
+    """
+    Toggles the motor of a certain toolhead to be either on or off.  Can also set direction.
+    @param tool_index: the tool's motor that will be set
+    @param toggle: The enable/disable flag.  If true, will turn the motor on.  If false, disables the motor.
+    @param direction: If true, sets the motor to turn clockwise.  If false, sets the motor to turn counter-clockwise
+    """
+    payload = bytearray()
+    bitfield = 0
+    if toggle:
+      bitfield |= 0x01
+    if direction:
+      bitfield |= 0x02
+    payload.append(bitfield)
+    self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_MOTOR_1'], payload)
+
+  def SetMotor1SpeedRPM(self, tool_index, duration):
+    """
+    This sets the motor speed as an RPM value
+    @param tool_index : The tool's motor that will be set
+    @param duration : Durtation of each rotation, in microseconds
+    """
+    payload = bytearray()
+    payload.extend(EncodeUint32(duration))
+    self.ToolActionCommand(tool_index, slave_action_command_dict['SET_MOTOR_1_SPEED_RPM'], payload)
+
+  def GetMotor1Speed(self, tool_index):
+    """
+    Gets the toohead's motor speed in Rotations per Minute (RPM)
+    @param tool_index: The tool index that will be queried for Motor speed
+    @return Duration of each rotation, in miliseconds
+    """
+    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_MOTOR_1_SPEED_RPM'])
+    [response_code, speed] = self.UnpackResponse('<BI', response)
+    return speed
 
   def GetToolheadTemperature(self, tool_index):
     """
@@ -1021,6 +1467,18 @@ class s3g:
       payload.append(0x00)
 
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_VALVE'], payload)
+
+  def ToolheadInit(self, tool_index):
+    """
+    Resets a certain tool_index to its initialized boot state, which consists of:
+      resetting target temp to 0
+      turn off all outputs
+      detaching all servo devices
+      sesetting motor speed to 0
+    @param tool_index: The tool to re-initialize
+    """
+    payload = bytearray()
+    self.ToolActionCommand(tool_index, slave_action_command_dict['INIT'], payload)
 
   def SetToolheadTemperature(self, tool_index, temperature):
     """
