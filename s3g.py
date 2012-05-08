@@ -11,7 +11,6 @@ host_query_command_dict = {
   'GET_POSITION'              : 4,
   'ABORT_IMMEDIATELY'         : 7,
   'PAUSE'                     : 8,
-#  'PROBE'                     : 9,
   'TOOL_QUERY'                : 10,
   'IS_FINISHED'               : 11,
   'READ_FROM_EEPROM'          : 12,
@@ -37,15 +36,20 @@ host_action_command_dict = {
   'WAIT_FOR_TOOL_READY'       : 135,
   'TOOL_ACTION_COMMAND'       : 136,
   'ENABLE_AXES'               : 137,
-#  'USER_BLOCK'                : 138,
   'QUEUE_EXTENDED_POINT'      : 139,
   'SET_EXTENDED_POSITION'     : 140,
   'WAIT_FOR_PLATFORM_READY'   : 141,
   'QUEUE_EXTENDED_POINT_NEW'  : 142,
   'STORE_HOME_POSITIONS'      : 143,
   'RECALL_HOME_POSITIONS'     : 144,
-  'PAUSE_FOR_INTERACTION'     : 145,
+  'SET_POT_VALUE'             : 145,
+  'SET_RGB_LED'               : 146,
+  'SET_BEEP'                  : 147,
+  'WAIT_FOR_BUTTON'           : 148,
   'DISPLAY_MESSAGE'           : 149,
+  'SET_BUILD_PERCENT'         : 150,
+  'QUEUE_SONG'                : 151,
+  'RESET_TO_FACTORY'          : 152,
   'BUILD_START_NOTIFICATION'  : 153,
   'BUILD_END_NOTIFICATION'    : 154,
 }
@@ -60,7 +64,6 @@ slave_query_command_dict = {
   'GET_PLATFORM_TEMP'          : 30,
   'GET_TOOLHEAD_TARGET_TEMP'   : 32,
   'GET_PLATFORM_TARGET_TEMP'   : 33,
-  'GET_BUILD_NAME'             : 34,
   'IS_PLATFORM_READY'          : 35,
   'GET_TOOL_STATUS'            : 36,
   'GET_PID_STATE'              : 37,
@@ -70,7 +73,6 @@ slave_action_command_dict = {
   'INIT'                       : 1,
   'SET_TOOLHEAD_TARGET_TEMP'   : 3,
   'SET_MOTOR_1_SPEED_RPM'      : 6,
-  'SET_MOTOR_1_DIRECTION'      : 8,
   'TOGGLE_MOTOR_1'             : 10,
   'TOGGLE_FAN'                 : 12,
   'TOGGLE_VALVE'               : 13,
@@ -370,7 +372,6 @@ def CheckResponseCode(response_code):
   """
   Check the response code, and return if succesful, or raise an appropriate exception
   """
-
   if response_code == response_code_dict['SUCCESS']:
     return
 
@@ -771,7 +772,6 @@ class s3g:
     payload.append(bitField)
     self.SendCommand(payload)
 
-
   def QueueExtendedPointNew(self, point, duration, xRelative, yRelative, zRelative, aRelative, bRelative):
     """
     Queue a point with the new style!  Moves to a certain point over a given duration with either relative or absolute positioning.  Relative vs. Absolute positioning is done on an axis to axis basis.
@@ -826,6 +826,65 @@ class s3g:
       axes.append('b')
     payload.append(EncodeAxes(axes))
     self.SendCommand(payload)
+
+  def SetPotentiometerValue(self, xFlag, yFlag, zFlag, aFlag, bFlag, value):
+    """
+    Sets the value of the digital potentiometers that control the voltage references for the botsteps
+    @param xFlag: If true, will set this axis' bot step to value
+    @param yFlag: If true, will set this axis' bot step to value
+    @param zFlag: If true, will set this axis' bot step to value
+    @param aFlag: If true, will set this axis' bot step to value
+    @param bFlag: If true, will set this axis' bot step to value
+    @param value: The value to set the digital potentiometer to.  This value is clamped to [0, 127]
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['SET_POT_VALUE'])
+    axes = []
+    if xFlag:
+      axes.append('x')
+    if yFlag:
+      axes.append('y')
+    if zFlag:
+      axes.append('z')
+    if aFlag:
+      axes.append('a')
+    if bFlag:
+      axes.append('b')
+    payload.append(EncodeAxes(axes))
+    payload.append(value)
+    self.SendCommand(payload)
+    
+
+  def SetBeep(self, frequency, length, effect):
+    """
+    Sets a buzzer frequency and a buzzer time!
+    @param frequency: The frequency in hz of the of the sound
+    @param length: The buzz length in ms
+    @param effect: Currently unused, do some super duper effect
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['SET_BEEP'])
+    payload.extend(EncodeUint16(frequency))
+    payload.extend(EncodeUint16(length))
+    payload.append(effect)
+    self.SendCommand(payload)
+
+  def SetRGBLED(self, r, g, b, blink, effect):
+    """
+    Set the brightness, blink rate and effects (currently unused) for RBG LEDs
+    @param r: The r value (0-255) for the LEDs
+    @param g: The g value (0-255) for the LEDs
+    @param b: The b value (0-255) for the LEDs
+    @param blink: The blink rate (0-255) for the LEDs
+    @param effect: Currently unused, designates a ceratin effect that shall be used
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['SET_RGB_LED'])
+    args = [r, g, b, blink, effect]
+    for arg in args:
+      payload.append(arg)
+    self.SendCommand(payload)
+    
 
   def RecallHomePositions(self, xRecall, yRecall, zRecall, aRecall, bRecall):
     """
@@ -1171,6 +1230,38 @@ class s3g:
     payload.append(optionsField)
     self.SendCommand(payload)
 
+  def ResetToFactory(self, options):
+    """
+    Calls factory reset on the EEPROM.  Resets all values to their factory settings.  Also soft resets the board
+    @param options: Currently unused
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['RESET_TO_FACTORY'])
+    payload.append(options)
+    self.SendCommand(payload)
+
+  def QueueSong(self, songId):
+    """
+    Play predefined sogns on the piezo buzzer
+    @param songId: The id of the song to play.
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['QUEUE_SONG'])
+    payload.append(songId)
+    self.SendCommand(payload)
+
+  def SetBuildPercent(self, percent, ignore):
+    """
+    Sets the percentage done for the current build.  This value is displayed on the interface board's screen.
+    @param percent: Percent of the build done (0-100)
+    @param ignore: Currently unused
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['SET_BUILD_PERCENT'])
+    payload.append(percent)
+    payload.append(ignore)
+    self.SendCommand(payload)
+
   def DisplayMessage(self, row, col, message, timeout, continuation):
     """
     Display a message to the screen
@@ -1256,10 +1347,6 @@ class s3g:
     @param tool_index: The tool we would like to query for information
     @return A dictionary containing status information about the tool_index
       EXTRUDER_READY : The extruder has reached target temp
-      PORF: Power on reset flag was set at restart
-      EXTRF: External reset flag was set at restart
-      BORF: Brownout reset flag was set at restart
-      WDRF: Watchdog reset flag was set at restart
       PLATFORM ERROR: an error was detected with the platform heater (if the tool supports one).  The platform heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.
       EXTRUDER ERROR: An error was detected with the extruder heater (if the tool supports one).  The extruder heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable
     """
@@ -1270,10 +1357,6 @@ class s3g:
 
     returnDict = {
     "EXTRUDER_READY" : bool(bitfield[0]),
-    "PORF" : bool(bitfield[2]),
-    "EXTRF" : bool(bitfield[3]),
-    "BORF" : bool(bitfield[4]),
-    "WDRF" : bool(bitfield[5]),
     "PLATFORM_ERROR" : bool(bitfield[6]),
     "EXTRUDER_ERROR" : bool(bitfield[7]),
     }

@@ -801,6 +801,53 @@ class S3gTests(unittest.TestCase):
     self.assertEqual(payload[2:4], s3g.EncodeUint16(timeout))
     self.assertEqual(payload[4], options)
 
+  def test_queue_song(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    songId = 1
+    self.r.QueueSong(songId)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+
+    self.assertEqual(payload[0], s3g.host_action_command_dict['QUEUE_SONG'])
+    self.assertEqual(payload[1], songId)
+
+  def test_reset_to_factory(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    options = 0
+    self.r.ResetToFactory(options)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+
+    self.assertEqual(payload[0], s3g.host_action_command_dict['RESET_TO_FACTORY'])
+    self.assertEqual(payload[1], options)
+
+  def test_set_build_percent(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    percent = 42
+    ignore = 0
+    self.r.SetBuildPercent(percent, ignore)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+
+    self.assertEqual(payload[0], s3g.host_action_command_dict['SET_BUILD_PERCENT'])
+    self.assertEqual(payload[1], percent)
+    self.assertEqual(payload[2], ignore)
+
   def test_display_message(self):
     continuation = True
     row = 0x12
@@ -1061,6 +1108,67 @@ class S3gTests(unittest.TestCase):
 
     self.assertEqual(payload[0], s3g.host_action_command_dict['STORE_HOME_POSITIONS'])
     self.assertEqual(payload[1], bitfield)
+
+  def test_set_beep(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    frequency = 1
+    length = 2
+    effect = 3
+    self.r.SetBeep(frequency, length, effect)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+
+    self.assertEqual(payload[0], s3g.host_action_command_dict['SET_BEEP'])
+    self.assertEqual(payload[1:3], s3g.EncodeUint16(frequency))
+    self.assertEqual(payload[3:5], s3g.EncodeUint16(length))
+    self.assertEqual(payload[5], effect)
+
+  def test_set_rgb_led(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    r = 255
+    g = 254
+    b = 253
+    blink = 252
+    effect = 0
+
+    self.r.SetRGBLED(r, g, b, blink, effect)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+
+    self.assertTrue(payload[0], s3g.host_action_command_dict['SET_POT_VALUE'])
+    self.assertEqual(payload[1], r)
+    self.assertEqual(payload[2], g)
+    self.assertEqual(payload[3], b)
+    self.assertEqual(payload[4], blink)
+    self.assertEqual(payload[5], effect)
+
+  def test_set_potentiometer_value(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    axesField = 0
+    axesField |= 0x01 + 0x02 + 0x04 + 0x08 + 0x10
+    value = 0
+    self.r.SetPotentiometerValue(True, True, True, True, True, value)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+
+    self.assertEqual(payload[0], s3g.host_action_command_dict['SET_POT_VALUE'])
+    self.assertEqual(payload[1], axesField)
+    self.assertEqual(payload[2], value)
 
   def test_recall_home_positions(self):
     response_payload = bytearray()
@@ -1369,12 +1477,9 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
+
     expectedDict = {
     "EXTRUDER_READY" : True,
-    "PORF" : True,
-    "EXTRF" : True,
-    "BORF" : True,
-    "WDRF" : True,
     "PLATFORM_ERROR" : True,
     "EXTRUDER_ERROR" : True,
     }

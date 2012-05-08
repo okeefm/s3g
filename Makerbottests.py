@@ -13,6 +13,7 @@ extensive = True
 port = ''
 hasInterface = True
 isTOM = False
+preGen6 = False
 
 
 def ConvertFromNUL(b):
@@ -21,7 +22,6 @@ def ConvertFromNUL(b):
   if len(b) == 1:
     return ''
   return str(b[:-1])
-
 
 class commonFunctionTests(unittest.TestCase):
  
@@ -100,7 +100,7 @@ class s3gPacketTests(unittest.TestCase):
   def test_ShortLength(self):
     packet = self.GetVersionPacket()
     packet[1] = '\x00'
-    self.assertRaises(s3g.TransmissionError, self.s3g.SendPacket, packet)
+    self.assertRaises(s3g.ProtocolError, self.s3g.SendPacket, packet)
 
   def test_LongPayload(self):
     packet = self.GetVersionPacket()
@@ -122,244 +122,202 @@ class s3gSendReceiveTests(unittest.TestCase):
   def tearDown(self):
     self.s3g.file.close()
 
+  def test_ResetToFactoryReply(self):
+    self.s3g.ResetToFactory(0)
+
+  def test_QueueSongReply(self):
+    self.s3g.QueueSong(1)
+
+  def test_SetBuildPercentReply(self):
+    self.s3g.SetBuildPercent(100, 0)
+
+  def test_SetBeepReply(self):
+    self.s3g.SetBeep(1000, 3, 0)
+
+  def test_SetPotentiometerValueReply(self):
+    self.s3g.SetPotentiometerValue(False, False, False, False, False, 0)
+
+  def test_SetRGBLEDReply(self):
+    self.s3g.SetRGBLED(0, 255, 0, 0, 0)
+
   def test_WaitForButtonReply(self):
     self.s3g.WaitForButton('up', 0, True, False, False)
     self.assertTrue(True)
 
   def test_SetServo1PositionReply(self):
     self.s3g.SetServo1Position(0, 90)
-    self.assertTrue(True)
 
   def test_SetMotor1SpeedRPMReply(self):
     self.s3g.SetMotor1SpeedRPM(0, 5)
-    self.assertTrue(True)
 
   def test_ToggleMotor1Reply(self):
     self.s3g.ToggleMotor1(0, False, False)
-    self.assertTrue(True)
 
   def test_ToolheadInitReply(self):
     self.s3g.ToolheadInit(0)
-    self.assertTrue(True)
 
   def test_GetPIDStateReply(self):
     self.s3g.GetPIDState(0)
-    self.assertTrue(True)
 
   def testGetToolStatusReply(self):
     self.s3g.GetToolStatus(0)
-    self.assertTrue(True)
 
   def test_GetMotor1SpeedReply(self):
     self.s3g.GetMotor1Speed(0)
-    self.assertTrue(True)
 
   def test_StoreHomePositionsReply(self):
     self.s3g.StoreHomePositions(True, True, True, True, True)
-    self.assertTrue(True)
 
   def test_RecallHomePositionsReply(self):
     self.s3g.RecallHomePositions(True, True, True, True, True)
-    self.assertTrue(True)
 
   def test_QueueExtendedPointNewReply(self):
     self.s3g.QueueExtendedPointNew([0, 0, 0, 0, 0], 1, True, True, True, True, True)
-    self.assertTrue(True)
 
   def test_ToggleEnableAxesReply(self):
     self.s3g.ToggleEnableAxes(True, True, True, True, True, True)
-    self.assertTrue(True)
 
   def test_WaitForPlatformReply(self):
     self.s3g.WaitForPlatformReady(0)
-    self.assertTrue(True)
 
   def test_WaitForToolReadyReply(self):
     self.s3g.WaitForToolReady(0)
-    self.assertTrue(True)
 
   def test_DelayReply(self):
     self.s3g.Delay(10)
-    self.assertTrue(True)
 
   def test_GetCommunicationStatsReply(self):
     self.s3g.GetCommunicationStats()
-    self.assertTrue(True)
 
   def test_GetMotherboardStatusReply(self):
     self.s3g.GetMotherboardStatus()
-    self.assertTrue(True)
 
   def test_ExtendedStopReply(self):
     self.s3g.ExtendedStop(True, True)
-    self.assertTrue(True)
 
   def test_CaptureToFileReply(self):
     self.s3g.CaptureToFile('test')
-    self.assertTrue(True)
 
   def test_EndCaptureToFileReply(self):
     self.s3g.EndCaptureToFile()
-    self.assertTrue(True)
 
   def test_ResetReply(self):
     self.s3g.Reset()
-    self.assertTrue(True)
 
   def test_IsFinishedReply(self):
     self.s3g.IsFinished()
-    self.assertTrue(True)
 
   def test_PauseReply(self):
     self.s3g.Pause()
-    self.assertTrue(True)
 
   def test_ClearBufferReply(self):
     self.s3g.ClearBuffer()
-    self.assertTrue(True)
 
   def test_InitReply(self):
     self.s3g.Init()
-    self.assertTrue(True)
 
   def test_ToggleValveReply(self):
-    self.s3g.ToggleFan(0, False)
-    self.assertTrue(True)
+    self.s3g.ToggleValve(0, False)
 
   def test_ToggleFanReply(self):
     self.s3g.ToggleFan(0, False)
-    self.assertTrue(True)
 
   def test_IsPlatformReadyReply(self):
     self.s3g.IsPlatformReady(0)
-    self.assertTrue(True)
 
   def test_GetPlatformTargetTemperatureReply(self):
     self.s3g.GetPlatformTargetTemperature(0)
-    self.assertTrue(True)
 
   def test_GetToolheadTargetTemperatureReply(self):
     self.s3g.GetToolheadTargetTemperature(0)
-    self.assertTrue(True)
 
   def test_ReadFromToolheadEEPROMReply(self):
-    if isTOM:
-      self.s3g.ReadFromToolheadEEPROM(0, 0x00, 0)
-      self.assertTrue(True)
+    self.s3g.ReadFromToolheadEEPROM(0, 0x00, 0)
 
   def test_IsToolReadyReply(self):
     self.s3g.IsToolReady(0)
-    self.assertTrue(True)
 
   def test_GetToolheadTemperatureReply(self):
     self.s3g.GetToolheadTemperature(0)
-    self.assertTrue(True)
 
   def test_GetPlatformTemperatureReply(self):
     self.s3g.GetPlatformTemperature(0)
-    self.assertTrue(True)
 
   def test_GetToollheadVersionReply(self):
-    if isTOM:
-      self.s3g.GetToolheadVersion(0)
-      self.assertTrue(True)
+    self.s3g.GetToolheadVersion(0)
 
   def test_BuildEndNotificationReply(self):
     self.s3g.BuildEndNotification()
-    self.assertTrue(True)
 
   def test_BuildStartNotificationReply(self):
     self.s3g.BuildStartNotification(0, 'aTest')
-    self.assertTrue(True)
 
   def test_DisplayMessageReply(self):
     if hasInterface:
       self.s3g.DisplayMessage(0, 0, "TESTING", 1, False)
-      self.assertTrue(True)
 
   def test_FindAxesMaximumsReply(self):
     self.s3g.FindAxesMaximums(['x', 'y', 'z'], 1, 0)
-    self.assertTrue(True)
 
   def test_FindAxesMinimumsReply(self):
     self.s3g.FindAxesMinimums(['x', 'y', 'z'], 1, 0)
-    self.assertTrue(True)
 
   def test_GetBuildNameReply(self):
     self.s3g.GetBuildName()
-    self.assertTrue(True)
 
   def test_GetNextFilenameReply(self):
     self.s3g.GetNextFilename(False)
-    self.assertTrue(True)
 
   def test_PlaybackCaptureReply(self):
     self.assertRaises(s3g.SDCardError, self.s3g.PlaybackCapture, 'aTest')
 
   def test_AbortImmediatelyReply(self):
     self.s3g.AbortImmediately()
-    self.assertTrue(True)
 
   def test_GetAvailableBufferSizeReply(self):
     self.s3g.GetAvailableBufferSize()
-    self.assertTrue(True)
 
   def test_ReadFromEEPROMReply(self):
     self.s3g.ReadFromEEPROM(0x00, 0)
-    self.assertTrue(True)
 
   def test_GetVersionReply(self):
     self.s3g.GetVersion()
-    self.assertTrue(True)
-
-  def test_GetToolheadVersionReply(self):
-    if isTOM:
-      self.s3g.GetToolheadVerison(0)
-      self.assertTrue(True)
 
   def test_SetPlatformTemperatureReply(self):
     temperature = 100
     toolhead = 0
     self.s3g.SetPlatformTemperature(toolhead, temperature)
     self.s3g.SetPlatformTemperature(toolhead, 0)
-    self.assertTrue(True)
 
   def test_SetToolheadTemperatureReply(self):
     temperature = 100
     toolhead = 0
     self.s3g.SetToolheadTemperature(toolhead, temperature)
     self.s3g.SetToolheadTemperature(toolhead, 0)
-    self.assertTrue(True)
 
   def test_GetPositionReply(self):
     self.s3g.GetPosition()
-    self.assertTrue(True)
 
   def test_GetExtendedPositionReply(self):
     self.s3g.GetExtendedPosition()
-    self.assertTrue(True)
 
   def test_QueuePointReply(self):
     position = [0, 0, 0]
     rate = 500
     self.s3g.QueuePoint(position, rate)
-    self.assertTrue(True)
 
   def test_SetPositionReply(self):
     position = [0, 0, 0]
     self.s3g.SetPosition(position)
-    self.assertTrue(True)
 
   def test_QueueExtendedPointReply(self):
     position = [0, 0, 0, 0, 0]
     rate = 500
     self.s3g.QueueExtendedPoint(position, rate)
-    self.assertTrue(True)
 
   def test_SetExtendedPositionReply(self):
     position = [0, 0, 0, 0, 0]
     self.s3g.SetExtendedPosition(position)
-    self.assertTrue(True)
 
 class s3gFunctionTests(unittest.TestCase):
 
@@ -372,10 +330,19 @@ class s3gFunctionTests(unittest.TestCase):
   def tearDown(self):
     self.s3g.file.close()
 
+  def test_ToggleValve(self):
+    if preGen6:
+      toolhead = 0
+      self.s3g.ToggleValve(toolhead, True)
+      obs = raw_input("\nIs toolhead %i's valve on? (y/n) "%(toolhead))
+      self.assertEqual(obs, 'y')
+
   def test_ToggleFan(self):
-    self.s3g.ToggleFan(0, True)
-    obs = raw_input("\nIs the right extruder's fan on? (y/n) ")
-    self.assertEqual(obs, 'y')
+    if preGen6:
+      toolhead = 0
+      self.s3g.ToggleFan(toolhead, True)
+      obs = raw_input("\nIs toolhead %i's fan on? (y/n) "%toolhead)
+      self.assertEqual(obs, 'y')
 
   def test_GetVersion(self):
     expectedVersion = raw_input("\nWhat is the version number of your bot? ")
@@ -383,7 +350,7 @@ class s3gFunctionTests(unittest.TestCase):
     self.assertEqual(expectedVersion, self.s3g.GetVersion())
 
   def test_GetToolheadVersion(self):
-    if isTOM:
+    if preGen6:
       expectedVersion = raw_inoput("\nWhat is the version number of toolhead 0 on your bot? ")
       expectedVersion = int(expectedVersion.replace('.', '0'))
       self.assertEqual(expectedVersion, self.s3g.GetToolheadVersion(0))
@@ -455,7 +422,7 @@ class s3gFunctionTests(unittest.TestCase):
     """
     Read the backoff forward time from the mighty board tool eeprom
     """
-    if isTOM:
+    if preGen6:
       t0Database = 0x0100
       bftOffset = 0x0006
       readBFT = self.s3g.ReadFromToolheadEEPROM(0, bftOffset, 2)
@@ -771,7 +738,7 @@ class s3gFunctionTests(unittest.TestCase):
     self.assertEqual(self.s3g.GetToolheadTargetTemperature(toolhead), 0)
 
   def test_QueueExtendedPointNew(self):
-    firstPoint = [10, 10, 10, 10, 10]
+    firstPoint = [5, 6, 7, 8, 9]
     self.s3g.SetExtendedPosition(firstPoint)
     newPoint = [1, 2, 3, 4, 5]
     mSConst = 1000
@@ -825,19 +792,19 @@ class s3gFunctionTests(unittest.TestCase):
     time.sleep(5)
     returnDic = self.s3g.GetToolStatus(toolhead)
     self.assertEqual(returnDic["EXTRUDER_READY"], self.s3g.IsToolReady(toolhead))
-    raw_input("Please unplug the platform!!")
+    raw_input("\nPlease unplug the platform!!  Press enter to continue.")
     self.s3g.file = serial.Serial(options.serialPort, '115200', timeout=1)
     self.s3g.SetPlatformTemperature(toolhead, 100)
     time.sleep(5)
     returnDic = self.s3g.GetToolStatus(toolhead)
     self.assertTrue(returnDic["PLATFORM_ERROR"])
-    raw_input("Please turn the bot off, plug in the platform and unplug extruder 0's thermocouple!!")
+    raw_input("\nPlease turn the bot off, plug in the platform and unplug extruder 0's thermocouple!! Press enter to continue.")
     self.s3g.file = serial.Serial(options.serialPort, '115200', timeout=1)
     self.s3g.SetToolheadTemperature(toolhead, 100)
     time.sleep(5)
     returnDic = self.s3g.GetToolStatus(toolhead)
     self.assertTrue(returnDic["EXTRUDER_ERROR"])
-    raw_input("Please turn the bot off and plug in the platform and Extruder 0's thermocouple!!")
+    raw_input("\nPlease turn the bot off and plug in the platform and Extruder 0's thermocouple!! Press enter to continue.")
  
   def test_GetPIDState(self):
     toolhead = 0
@@ -847,62 +814,92 @@ class s3gFunctionTests(unittest.TestCase):
 
   def test_ToolheadInit(self):
     toolhead = 0
-    self.s3g.ToggleFan(toolhead, true)
-    time.sleep(5)
-    obs = raw_input("\nIs Extruder " + str(toolhead) + "'s fan on? (y/n) ")
-    self.assertEqual('y', obs)
-    self.s3g.ToolheadInit(toolhead)
-    obs = raw_input("\nDid Extruder " + str(toolhead) + "'s fan turn off? (y/s) ")
-    self.assertEqual('y', obs)
     self.s3g.SetToolheadTemperature(toolhead, 100)
-    self.s3g.QueueExtendedPoint([0, 0, 0, 100, 0], 2)
-    questions = ["\nIs Extruder " + str(toolhead) + "'s motor turning? (y/n) "]
-    for question in questions:
-      obs = raw_input(question)
-      self.assertEqual(obs, 'y')
     self.s3g.ToolheadInit(toolhead)
-    self.assertEqual(0, self.s3g.GetToolheadTargetTemperature(toolhead))
-    questions = ["\nDid Extruder " + str(toolhead) + "'s motor stop turning? (y/n) "]
-    for question in questions:
-      obs = raw_input(obs, 'y')
+    self.assertEqual(self.s3g.GetToolheadTargetTemperature(toolhead), 0)
+    if preGen6:
+      self.s3g.ToggleFan(toolhead, true)
+      time.sleep(5)
+      self.s3g.ToolheadInit(toolhead)
+      obs = raw_input("\nDid Extruder " + str(toolhead) + "'s fan turn off? (y/s) ")
+      self.assertEqual('y', obs)
+      raw_input("\nStarting Motor %i.  Press enter to continue"%(toolhead))
+      self.s3g.ToggleMotor1(toolhead, True, True)
+      self.s3g.ToolheadInit(toolhead)
+      obs = raw_input = ("\nDid Extruder " + str(toolhead) + "'s motor stop turning? (y/n) ")
       self.assertEqual(obs, 'y')
 
-  @unittest.skip("Toggle Motor doesnt work as intended")
+  def test_SetServo1Position(self):
+    if preGen6:
+      toolhead = 1
+      raw_input("\nSweeping Servo.  Watch to verify. Press enter to continue")
+      self.s3g.SetServo1(toolhead, 0)
+      self.s3g.SetServo1(toolhead, 180)
+      self.s3g.SetServo1(toolhead, 0)
+      obs = raw_input("\nDid toolhead %i's servo just sweep back and forth? (y/n) "%(toolhead))
+      self.assertEqual('y', obs)
+
   def test_ToggleMotor1(self):
-    toolhead = 1
-    raw_input("Please disassemble the extruder and peer into the stepper motor of extruder " + str(toolhead))
-    self.s3g.ToggleMotor1(toolhead, True, True)
-    obs = raw_input("Did extruder " + str(toolhead) + " start turning clockwise? (y/n) ")
-    self.assertEqual(obs, 'y')
+    if preGen6:
+      toolhead = 1
+      self.s3g.ToggleMotor1(toolhead, True, True)
+      obs = raw_input("\nDid extruder %i start turning clockwise? (y/n) " %(toolhead))
+      self.assertEqual(obs, 'y')
 
   @unittest.skip("Theres really no way to test this without ToggleMotor1 working")
   def test_SetMotor1SpeedRPM(self):
     """
     FUTURE DAVE, DO THIS TEST!
     """
-    pass
+    if preGen6:
+      pass
 
   def test_WaitForButton(self):
     self.s3g.WaitForButton('up', 0, False, False, False)
-    obs = raw_input("Is the center button flashing? (y/n) ")
+    obs = raw_input("\nIs the center button flashing? (y/n) ")
     self.assertEqual(obs, 'y')
-    obs = raw_input("Press all the buttons EXCEPT the 'up' button.  Is the center button still flashing? (y/n) ")
+    obs = raw_input("\nPress all the buttons EXCEPT the 'up' button.  Is the center button still flashing? (y/n) ")
     self.assertEqual(obs, 'y')
-    obs = raw_input("Press the 'up' button.  Did the center button stop flashing? (y/n) ")
+    obs = raw_input("\nPress the 'up' button.  Did the center button stop flashing? (y/n) ")
     self.assertEqual(obs, 'y')
-    raw_input("Testing WaitForButton timeout.  Please watch the interface board and note the time!")
+    raw_input("\nTesting WaitForButton timeout.  Please watch the interface board and note the time! Press enter to continue")
     self.s3g.WaitForButton('up', 5, True, False, False)
-    obs = raw_input("Did the center button flash for about 5 seconds and stop? (y/n) ")
+    obs = raw_input("\nDid the center button flash for about 5 seconds and stop? (y/n) ")
     self.assertEqual(obs, 'y')
     self.s3g.WaitForButton('up', 1, False, True, False)
     time.sleep(1)
-    obs = raw_input("Did the bot just reset? (y/n) ")
+    obs = raw_input("\nDid the bot just reset? (y/n) ")
     self.assertEqual(obs, 'y')
     self.s3g.WaitForButton('up', 0, False, False, True)
-    obs = raw_input("Please press the up button and note if the LCD screen resest or not.  Did the screen reset? (y/n) ")
+    obs = raw_input("\nPlease press the up button and note if the LCD screen resest or not.  Did the screen reset? (y/n) ")
     self.assertEqual(obs, 'y')
 
+  def test_SetRGBLED(self):
+    self.s3g.SetRGBLED(0, 255, 0, 0, 0)
+    obs = raw_input("\nAre the LEDs in the bot green? (y/n) ")
+    self.assertEqual(obs, 'y')
+    self.s3g.SetRGBLED(0, 255, 0, 128, 0)
+    obs = raw_input("\nAre the LEDs blinking? (y/n) ")
+    self.assertEqual('y', obs)
+ 
+  def test_SetBeep(self):
+    raw_input("\nAbout to start playing some music.  Start listening! Press enter to continue")
+    self.s3g.SetBeep(261.626, 5, 0)
+    obs = raw_input("\nDid you hear a C note? (y/n) ")
+    self.assertEqual('y', obs)
 
+  def test_SetBuildPercent(self):
+    percent = 42
+    self.s3g.BuildStartNotification(1, "percentTest")
+    self.s3g.SetBuildPercent(percent, 0)
+    obs = raw_input("\nLook at the interface board for your bot.  Does the build percent say that it is %1% of the way done? (y/n) "%(percent))
+    self.assertEqual('y', obs)
+
+  def test_QueueSong(self):
+    raw_input("\nGetting ready to play a song.  Make sure you are listening!  Press enter to continue.")
+    self.s3g.QueueSong(1)
+    obs = raw_input("\nDid you hear the song play? (y/n) ")
+    self.assertEqual(obs, 'y')
 
 class test(unittest.TestCase):
   def setUp(self):
@@ -912,7 +909,6 @@ class test(unittest.TestCase):
 
   def tearDown(self):
     self.s3g.file.close()
- 
 
 class s3gSDCardTests(unittest.TestCase):
 
@@ -937,7 +933,7 @@ class s3gSDCardTests(unittest.TestCase):
     Copy the contents of the testFiles directory onto an sd card to do this test
     """
     filename = 'box_1.s3g'
-    volumeName = raw_input("Please type the VOLUME NAME of the replicator's SD card exactly! ")
+    volumeName = raw_input("\nPlease type the VOLUME NAME of the replicator's SD card exactly! Press enter to continue")
     readVolumeName = self.s3g.GetNextFilename(True)
     self.assertEqual(volumeName, ConvertFromNUL(readVolumeName))
     readFilename = self.s3g.GetNextFilename(False)
@@ -956,7 +952,7 @@ if __name__ == '__main__':
   parser = optparse.OptionParser()
   parser.add_option("-e", "--extensive", dest="extensive", default="True")
   parser.add_option("-m", "--mightyboard", dest="isMightyBoard", default="True")
-  parser.add_option("-t", "--tom", dest="isTOM", default="False")
+  parser.add_option("-g", "--gen", dest="preGen6", default="False")
   parser.add_option("-i", "--interface", dest="hasInterface", default="True")
   parser.add_option("-p", "--port", dest="serialPort", default="/dev/tty.usbmodemfa131")
   (options, args) = parser.parse_args()
@@ -966,8 +962,8 @@ if __name__ == '__main__':
   if options.hasInterface.lower() == "false":
     print "Forgoing Tests requiring Interface Boards"
     hasInterface = False
-  if options.isTOM.lower() == "true":
-    isTOM = True    
+  if options.preGen6.lower() == "true":
+    preGen6 = True    
 
 
   del sys.argv[1:]
@@ -980,5 +976,5 @@ if __name__ == '__main__':
   sdTests = unittest.TestLoader().loadTestsFromTestCase(s3gSDCardTests)
   smallTest = unittest.TestLoader().loadTestsFromTestCase(test)
   suites = [commonTests, packetTests, sendReceiveTests, functionTests, sdTests, smallTest]
-  for suite in suites[-1]:
+  for suite in suites[3]:
     unittest.TextTestRunner(verbosity=2).run(suite)
