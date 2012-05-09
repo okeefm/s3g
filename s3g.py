@@ -77,7 +77,7 @@ slave_action_command_dict = {
   'TOGGLE_FAN'                 : 12,
   'TOGGLE_VALVE'               : 13,
   'SET_SERVO_1_POSITION'       : 14,
-#  'PAUSE'                      : 23,
+  'PAUSE'                      : 23,
 #  'ABORT'                      : 24,
   'SET_PLATFORM_TEMP'          : 31,
 #  'SET_MOTOR_1_SPEED_DDA'      : 38, We are considering this deprecated, but some people use it in the wild so we are keeping it in here as a reminder
@@ -181,6 +181,15 @@ class ExtendedStopError(Exception):
   """
   def __init__(self):
     self.value = "Extended Stop Error"
+  def __str__(self):
+    return self.value
+
+class UnknownButtonError(TypeError):
+  """
+  An UnknownButtonError is thrown if the button to be waited on is not an instance of up, down, left, right or center
+  """
+  def __init__(self, button):
+    self.value = "Button Error.  Expected up, down, left, right, center.  Got %s."%(button)
   def __str__(self):
     return self.value
 
@@ -444,7 +453,7 @@ class PacketStreamDecoder:
 class s3g:
   def __init__(self):
     self.file = None
-#    self.logfile = open('output_stats','w')
+    self.logfile = open('output_stats','w')
 
   def SendCommand(self, payload):
     """
@@ -498,19 +507,19 @@ class s3g:
         Buffer overflow error- wait a while for the buffer to clear, then try again.
         TODO: This could hang forever if the machine gets stuck; is that what we want?
         """
-#        self.logfile.write('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}\n'%(overflow_count,retry_count))
+        self.logfile.write('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}\n'%(overflow_count,retry_count))
         overflow_count = overflow_count + 1
 
-#        time.sleep(.2)
+        time.sleep(.2)
 
       except (PacketDecodeError, RetryError, TimeoutError) as e:
         """
         Sent a packet to the host, but got a malformed response or timed out waiting for a reply.
         Retry immediately.
         """
-#        self.logfile.write('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%
-#          (type(e),e.__str__(),retry_count)
-#        )
+        self.logfile.write('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%
+          (type(e),e.__str__(),retry_count)
+        )
 
         retry_count = retry_count + 1
 
@@ -518,13 +527,13 @@ class s3g:
         """
         Other exceptions are propigated upwards.
         """
-#        self.logfile.write('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%
-#          (type(e),e.__str__(),retry_count)
-#        )
+        self.logfile.write('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%
+          (type(e),e.__str__(),retry_count)
+        )
         raise e
 
       if retry_count >= max_retry_count:
-#        self.logfile.write('{"event":"transmission_error"}\n')
+        self.logfile.write('{"event":"transmission_error"}\n')
         raise TransmissionError("Failed to send packet, maximum retries exceeded")
 
   def UnpackResponse(self, format, data):
@@ -658,10 +667,6 @@ class s3g:
     """
     Retrieve bits of information about the motherboard
     @return: A python dictionary of various flags and whether theywere set or not at reset
-    PORF : Power-on reset flag
-    EXTRF : External reset flag
-    BORF : Brownout reset flag
-    WDRF : Watchdog reset flag
     POWER_ERRPR : An error was detected with the system power.
     """
     payload = bytearray()
@@ -674,10 +679,6 @@ class s3g:
     bitfield = DecodeBitfield8(bitfield)      
 
     flags = {
-    'PORF' : int(bitfield[2]),
-    'EXTRF' : int(bitfield[3]),
-    'BORF' : int(bitfield[4]),
-    'WDRF' : int(bitfield[5]),
     'POWER_ERROR' : int(bitfield[7]),
     }
     return flags
@@ -702,12 +703,12 @@ class s3g:
     if extended_stop_response == 1:
       raise ExtendedStopError
 
-  def WaitForPlatformReady(self, tool_index, delay=100, timeout=60):
+  def WaitForPlatformReady(self, tool_index, delay, timeout):
     """
     Halts the machine until the specified toolhead reaches a ready state, or if the timeout is reached.  Toolhead is ready if its temperature is within a specified point
     @param tool_index: Tool to wait for
     @param delay: Time in ms between packets to query the toolhead
-    @param timeout: Time to wait for the toolhead to heat up before moving on
+    @param timeout: Time to wait in seconds for the toolhead to heat up before moving on
     """
     payload = bytearray()
     payload.append(host_action_command_dict['WAIT_FOR_PLATFORM_READY'])
@@ -716,12 +717,12 @@ class s3g:
     payload.extend(EncodeUint16(timeout))
     self.SendCommand(payload)
     
-  def WaitForToolReady(self, tool_index, delay=100, timeout=60):
+  def WaitForToolReady(self, tool_index, delay, timeout):
     """
     Halts the machine until the specified toolhead reaches a ready state, or if the timeout is reached.  Toolhead is ready if its temperature is within a specified point
     @param tool_index: Tool to wait for
     @param delay: Time in ms between packets to query the toolhead
-    @param timeout: Time to wait for the toolhead to heat up before moving on
+    @param timeout: Time to wait in seconds for the toolhead to heat up before moving on
     """
     payload = bytearray()
     payload.append(host_action_command_dict['WAIT_FOR_TOOL_READY'])
@@ -730,14 +731,14 @@ class s3g:
     payload.extend(EncodeUint16(timeout))
     self.SendCommand(payload)
 
-  def Delay(self, mS):
+  def Delay(self, uS):
     """
     Halts all motion for the specified amount of time
     @param mS: Delay time, in microseconds
     """
     payload = bytearray()
     payload.append(host_action_command_dict['DELAY'])
-    payload.extend(EncodeUint32(mS))
+    payload.extend(EncodeUint32(uS))
 
     self.SendCommand(payload)
 
@@ -1001,12 +1002,11 @@ class s3g:
     payload = bytearray()
     payload.append(host_query_command_dict['GET_POSITION'])
   
-    position = [0,0,0]
  
     response = self.SendCommand(payload)
-    [response_code, position[0], position[1], position[2], axes_bits] = self.UnpackResponse('<BiiiB', response)
+    [response_code, x, y, z, axes_bits] = self.UnpackResponse('<BiiiB', response)
 
-    return position, axes_bits
+    return [x, y, z], axes_bits
 
   def AbortImmediately(self):
     """
@@ -1092,9 +1092,8 @@ class s3g:
     """
     payload = bytearray()
     payload.append(host_action_command_dict['QUEUE_POINT'])
-    payload.extend(EncodeInt32(position[0]))
-    payload.extend(EncodeInt32(position[1]))
-    payload.extend(EncodeInt32(position[2]))
+    for cor in position:
+      payload.extend(EncodeInt32(cor))
     payload.extend(EncodeUint32(rate))
     
     self.SendCommand(payload)
@@ -1106,9 +1105,8 @@ class s3g:
     """
     payload = bytearray()
     payload.append(host_action_command_dict['SET_POSITION'])
-    payload.extend(EncodeInt32(position[0]))
-    payload.extend(EncodeInt32(position[1]))
-    payload.extend(EncodeInt32(position[2]))
+    for cor in position:
+      payload.extend(EncodeInt32(cor))
     
     self.SendCommand(payload)
 
@@ -1169,27 +1167,21 @@ class s3g:
     """
     payload = bytearray()
     payload.append(host_action_command_dict['QUEUE_EXTENDED_POINT'])
-    payload.extend(EncodeInt32(position[0]))
-    payload.extend(EncodeInt32(position[1]))
-    payload.extend(EncodeInt32(position[2]))
-    payload.extend(EncodeInt32(position[3]))
-    payload.extend(EncodeInt32(position[4]))
+    for cor in position:
+      payload.extend(EncodeInt32(cor))
     payload.extend(EncodeUint32(rate))
     
     self.SendCommand(payload)
 
   def SetExtendedPosition(self, position):
     """
-    Inform the machine that it should consider this p
+    Inform the machine that it should consider this point its current point
     @param position 5D position to set the machine to, in steps.
     """
     payload = bytearray()
     payload.append(host_action_command_dict['SET_EXTENDED_POSITION'])
-    payload.extend(EncodeInt32(position[0]))
-    payload.extend(EncodeInt32(position[1]))
-    payload.extend(EncodeInt32(position[2]))
-    payload.extend(EncodeInt32(position[3]))
-    payload.extend(EncodeInt32(position[4]))
+    for cor in position:
+      payload.extend(EncodeInt32(cor))
     
     self.SendCommand(payload)
 
@@ -1205,7 +1197,7 @@ class s3g:
     buttons = ['up', 'down', 'left', 'right', 'center']
     button = button.lower()
     if button.lower() not in buttons:
-      raise TypeError("Unknown button: %i"%(button.lower()))
+      raise UnknownButtonError(button)
     payload = bytearray()
     payload.append(host_action_command_dict['WAIT_FOR_BUTTON'])
     if button == 'center':
@@ -1371,6 +1363,13 @@ class s3g:
     payload = bytearray()
     payload.append(theta)
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_SERVO_1_POSITION'], payload)
+
+  def ToolheadPause(self, tool_index):
+    """
+    This function is intended to be called infrequently by the end user to pause the toolhead and make various adjustments during a print
+    @param tool_index: The tool which is to be paused
+    """
+    self.ToolActionCommand(tool_index, slave_action_command_dict['PAUSE'], bytearray())
 
   def ToggleMotor1(self, tool_index, toggle, direction):
     """

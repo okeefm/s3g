@@ -783,6 +783,10 @@ class S3gTests(unittest.TestCase):
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_query_command_dict['GET_EXTENDED_POSITION']
 
+  def test_wait_for_button_bad_button(self):
+    button = 'bad'
+    self.assertRaises(s3g.UnknownButtonError, self.r.WaitForButton, button, 0, False, False, False)
+
   def test_wait_for_button(self):
     button = 0x10
     options = 0x02 + 0x04
@@ -1218,15 +1222,19 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.r.WaitForPlatformReady(0)
+    toolhead = 0
+    delay = 100
+    timeout = 60
+
+    self.r.WaitForPlatformReady(toolhead, delay, timeout)
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
 
     self.assertEqual(payload[0], s3g.host_action_command_dict['WAIT_FOR_PLATFORM_READY'])
-    self.assertEqual(payload[1], 0)
-    self.assertEqual(payload[2:4], s3g.EncodeUint16(100))
-    self.assertEqual(payload[4:], s3g.EncodeUint16(60))
+    self.assertEqual(payload[1], toolhead)
+    self.assertEqual(payload[2:4], s3g.EncodeUint16(delay))
+    self.assertEqual(payload[4:], s3g.EncodeUint16(timeout))
 
   def test_wait_for_tool_ready(self):
     response_payload = bytearray()
@@ -1234,14 +1242,18 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.r.WaitForToolReady(0)
+    toolhead = 0
+    delay = 100
+    timeout = 60
+
+    self.r.WaitForToolReady(toolhead, delay, timeout)
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
     self.assertEqual(payload[0], s3g.host_action_command_dict['WAIT_FOR_TOOL_READY'])
-    self.assertEqual(payload[1], 0)
-    self.assertEqual(payload[2:4], s3g.EncodeUint16(100))
-    self.assertEqual(payload[4:], s3g.EncodeUint16(60))
+    self.assertEqual(payload[1], toolhead)
+    self.assertEqual(payload[2:4], s3g.EncodeUint16(delay))
+    self.assertEqual(payload[4:], s3g.EncodeUint16(timeout))
     
   def test_toggle_enable_axes(self):
     response_payload = bytearray()
@@ -1312,10 +1324,6 @@ class S3gTests(unittest.TestCase):
     responseFlags = self.r.GetMotherboardStatus()
 
     flags = {
-    'PORF' : 1,
-    'EXTRF' : 1,
-    'BORF' : 1,
-    'WDRF' : 1,
     'POWER_ERROR' : 1
     }
 
@@ -1399,6 +1407,24 @@ class S3gTests(unittest.TestCase):
     self.assertEqual(payload[2], s3g.slave_action_command_dict['INIT'])
     self.assertEqual(payload[3], len(expectedPayload))
     self.assertEqual(payload[4:], expectedPayload)
+
+  def test_toolhead_pause(self):
+    toolIndex = 0
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.ToolheadPause(toolIndex)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+
+    self.assertEqual(payload[0], s3g.host_action_command_dict['TOOL_ACTION_COMMAND'])
+    self.assertEqual(payload[1], toolIndex)
+    self.assertEqual(payload[2], s3g.slave_action_command_dict['PAUSE'])
+    self.assertEqual(payload[3], 0)
+    self.assertEqual(payload[4:], bytearray())
 
   def test_set_servo_1_position(self):
     toolIndex = 0

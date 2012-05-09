@@ -173,7 +173,7 @@ class s3gSendReceiveTests(unittest.TestCase):
     self.s3g.GetToolStatus(0)
 
   def test_GetMotor1SpeedReply(self):
-    self.s3g.GetMotor1Speed(0)
+    self.assertRaises(s3g.TransmissionError, self.s3g.GetMotor1Speed, 0)
 
   def test_StoreHomePositionsReply(self):
     self.s3g.StoreHomePositions(True, True, True, True, True)
@@ -831,12 +831,12 @@ class s3gFunctionTests(unittest.TestCase):
     percent = 42
     self.s3g.BuildStartNotification(1, "percentTest")
     self.s3g.SetBuildPercent(percent, 0)
-    obs = raw_input("\nLook at the interface board for your bot.  Does the build percent say that it is %1% of the way done? (y/n) "%(percent))
+    obs = raw_input("\nLook at the interface board for your bot.  Does the build percent say that it is %i percent of the way done? (y/n) "%(percent))
     self.assertEqual('y', obs)
 
   def test_QueueSong(self):
     raw_input("\nGetting ready to play a song.  Make sure you are listening!  Press enter to continue.")
-    self.s3g.QueueSong(1)
+    self.s3g.QueueSong(0)
     obs = raw_input("\nDid you hear the song play? (y/n) ")
     self.assertEqual(obs, 'y')
 
@@ -848,23 +848,6 @@ class test(unittest.TestCase):
 
   def tearDown(self):
     self.s3g.file.close()
-
-
-  """
-  def test_MaxLength(self):
-    commandCount = 0
-    maxSize = s3g.maximum_payload_length
-    maxSize -= 1 #For the payload header
-    maxSize -= len(s3g.EncodeUint32(commandCount))
-    maxSize -= 1 #For the null sign for the nullTerminated string
-    buildName = ''
-    for i in range(maxSize):
-      buildName += 'a'
-    self.s3g.BuildStartNotification(commandCount, buildName)
-  def test_MaxLength(self):
-    b = bytearray(s3g.maximum_payload_length)
-    self.s3g.SendCommand(b)"""
-
 
 
 class s3gSDCardTests(unittest.TestCase):
