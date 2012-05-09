@@ -683,22 +683,22 @@ Response
 </tr>
 <tr>
  <td>5</td>
- <td>WDRF</td>
+ <td>WDRF (Deprecated)</td>
  <td>Watchdog reset flag was set at restart</td>
 </tr>
 <tr>
  <td>4</td>
- <td>BORF</td>
+ <td>BORF (Deprecated)</td>
  <td>Brownout reset flag was set at restart</td>
 </tr>
 <tr>
  <td>3</td>
- <td>EXTRF</td>
+ <td>EXTRF (Deprecated)</td>
  <td>External reset flag was set at restart</td>
 </tr>
 <tr>
  <td>2</td>
- <td>PORF</td>
+ <td>PORF (Deprecated)</td>
  <td>Power-on reset flag was set at restart</td>
 </tr>
 <tr>
@@ -740,6 +740,8 @@ Payload
     int32: Z coordinate, in steps
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
 
+Response (0 bytes)
+
 ## 130 - Set position
 Reset the current position of the axes to the given values.
 
@@ -748,6 +750,8 @@ Payload
     int32: X position, in steps
     int32: Y position, in steps
     int32: Z position, in steps
+
+Response (0 bytes)
 
 ## 131 - Find axes minimums: Move specified axes in the negative direction until their limit switch is triggered.
 This function will find the minimum position that the hardware can travel to, then stop. Note that all axes are moved syncronously. If one of the axes (Z, for example) should be moved separately, then a seperate command should be sent to move that axis. Note that a minimum endstop is required for each axis that is to be moved.
@@ -758,6 +762,8 @@ Payload
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
     uint16: Timeout, in seconds.
 
+Response (0 bytes)
+
 ## 132 - Find axes maximums: Move specified axes in the positive direction until their limit switch is triggered.
 This function will find the maximum position that the hardware can travel to, then stop. Note that all axes are moved syncronously. If one of the axes (Z, for example) should be moved separately, then a seperate command should be sent to move that axis. Note that a maximum endstop is required for each axis that is to be moved.
 
@@ -767,12 +773,16 @@ Payload
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
     uint16: Timeout, in seconds.
 
+Response (0 bytes)
+
 ## 133 - Delay: Pause all motion for the specified time
 Halt all motion for the specified amount of time.
 
 Payload
 
     uint32: Delay, in microseconds
+
+Response (0 bytes)
 
 ## 135 - Wait for tool ready: Wait until a tool is ready before proceeding
 This command halts machine motion until the specified toolhead reaches a ready state. A tool is ready when it's temperature is within range of the setpoint.
@@ -782,6 +792,8 @@ Payload
     uint8: Tool ID of the tool to wait for
     uint16: Delay between query packets sent to the tool, in ms (nominally 100 ms)
     uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
+
+Response (0 bytes)
 
 ## 136 - Tool action command: Send an action command to a tool for execution
 This command is for sending an action command to the tool. The host firmware will then pass the query along to the appropriate tool, wait for a response from the tool, and pass the response back to the host. TODO: Does the master handle retries?
@@ -793,12 +805,16 @@ Payload
     uint8: Length of the tool command payload (N)
     N bytes: Tool command payload, 0-? bytes.
 
+Response (0 bytes)
+
 ## 137 - Enable/disable axes: Explicitly enable or disable stepper motor controllers
 This command is used to explicitly power steppers on or off. Generally, it is used to shut down the steppers after a build to save power and avoid generating excessive heat.
 
 Payload
 
     uint8: Bitfield codifying the command (see below)
+
+Response (0 bytes)
 
 <table>
 <tr>
@@ -853,6 +869,8 @@ Payload
     int32: B coordinate, in steps
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
 
+Response (0 bytes)
+
 ## 140 - Set extended position
 Reset the current position of the axes to the given values.
 
@@ -864,6 +882,8 @@ Payload
     int32: A position, in steps
     int32: B position, in steps
 
+Response (0 bytes)
+
 ## 141 - Wait for platform ready: Wait until a build platform is ready before proceeding
 This command halts machine motion until the specified tool device reaches a ready state. A build platform is ready when it's temperature is within range of the setpoint.
 
@@ -872,6 +892,8 @@ Payload
     uint8: Tool ID of the build platform to wait for
     uint16: Delay between query packets sent to the tool, in ms (nominally 100 ms)
     uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
+
+Response (0 bytes)
 
 ## 142 - Queue extended point, new style
 This queues a point to move to.
@@ -888,17 +910,23 @@ Payload
     uint32: Duration of the movement, in microseconds
     uint8: Axes bitfield to specify which axes are relative. Any axis with a bit set should make a relative movement.
 
+Response (0 bytes)
+
 ## 143 - Store home positions
 Record the positions of the selected axes to device EEPROM
 
 Payload
     uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
 
+Response (0 bytes)
+
 ## 144 - Recall home positions
 Recall the positions of the selected axes from device EEPROM
 
 Payload
     uint8: Axes bitfield to specify which axes' positions to recall. Any axes with a bit set should have it's position recalled.
+
+Response (0 bytes)
 
 ## 145 - Set digital potentiometer value
 Set the value of the digital potentiometers that control the voltage reference for the botsteps
@@ -907,6 +935,8 @@ Payload
 
     uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
     uint8: value (valid range 0-127), values over max will be capped at max
+
+Response (0 bytes)
 
 ## 146 - Set RGB LED value
 Set Brightness levels for RGB led strip
@@ -919,6 +949,8 @@ Payload
     uint8: blink rate (0-255 valid)
     uint8: effect (currently unused)
 
+Response (0 bytes)
+
 ## 147 - Set Beep
 Set a buzzer frequency and buzz time
 
@@ -928,6 +960,8 @@ Payload
     uint16: buzz length in ms
     uint8: effect (currently unused)
 
+Response (0 bytes)
+
 ## 148 - Wait for button
 Wait until either a user presses a button on the interface board, or a timeout occurs.
 
@@ -936,6 +970,8 @@ Payload
     uint8: Bit field of buttons to wait for (see below)
     uint16: Timeout, in seconds. A value of 0 indicates that the command should not time out.
     uint8: Options bitfield (see below)
+
+Response (0 bytes)
 
 Button field
 <table>
@@ -1017,7 +1053,6 @@ Options Field
 </tr>
 </table>
 
-
 ## 149 - Display message to LCD
 This command is used to display a message to the LCD board.
 The maximum buffer size is limited by the maximum package size. Thus a full screen cannot be written with one command.
@@ -1040,6 +1075,7 @@ Payload
     uint8: Timeout, in seconds. If 0, this message will left on the screen
     1+N bytes: Message to write to the screen, in ASCII, terminated with a null character.
 
+Response (0 bytes)
 
 <table>
 <tr>
@@ -1088,12 +1124,16 @@ Payload
     uint8: percent (0-100)
     uint8: ignore (currently unused
 
+Response (0 bytes)
+
 ## 151 - Queue Song
 Play predefined songs on the piezo buzzer
 
 Payload
 
     uint8: songID: select from a predefined list of songs
+
+Response (0 bytes)
 
 TODO: List of available songs?
 
@@ -1104,6 +1144,7 @@ Payload
 
     uint8: options (Currently unused)
 
+Response (0 bytes)
 
 ## 153 - Build start notification
 Tells the motherboard that a build is about to begin, and provides the name of the job for status reporting. This allows the motherboard to display an appropriate build screen on the interface board.
@@ -1252,22 +1293,22 @@ Response
 </tr>
 <tr>
  <td>5</td>
- <td>WDRF</td>
+ <td>WDRF (DEPRECATED)</td>
  <td>Watchdog reset flag was set at restart</td>
 </tr>
 <tr>
  <td>4</td>
- <td>BORF</td>
+ <td>BORF (DEPRECATED)</td>
  <td>Brownout reset flag was set at restart</td>
 </tr>
 <tr>
  <td>3</td>
- <td>EXTRF</td>
+ <td>EXTRF (DEPRECATED)</td>
  <td>External reset flag was set at restart</td>
 </tr>
 <tr>
  <td>2</td>
- <td>PORF</td>
+ <td>PORF (DEPRECATED)</td>
  <td>Power-on reset flag was set at restart</td>
 </tr>
 <tr>
@@ -1435,7 +1476,7 @@ Payload
 
 Response (0 bytes)
 
-## 38 - Set motor speed (DDA)
+## 38 - Set motor speed (DDA) Deprecated
 This sets the motor speed as a DDA value, in microseconds between step. It should not actually enable the motor until the motor enable command is given. For future implementation of 5D (vs 4D) two DDA codes are sent - the DDA to start with and the DDA to end with. The third uint32 is the number of steps to take. The direction to go is set by code 8, 'Set motor direction'
 
 Payload
@@ -1446,7 +1487,7 @@ Payload
 
 Response (0 bytes)
 
-## 40 - Light indicator LED
+## 40 - Light indicator LED Deprecated
 This command turns on an indicator light (for gen 4, the motor direction LED). This command is intended to serve as visual feedback to an operator that the electronics are communicating properly. Note that it should not be used during regular operation, because it interferes with h-bridge operation.
 
 Payload (0 bytes)
