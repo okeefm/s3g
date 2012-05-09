@@ -76,14 +76,12 @@ class s3gPacketTests(unittest.TestCase):
     addition = bytearray('\xff\xff')
     packet.extend(addition)
     self.s3g.SendPacket(packet)
-    self.assertTrue(True)
 
   def test_PreceedingPacket(self):
     packet = self.GetVersionPacket()
     addition = bytearray('\xa4\x5f')
     addition.extend(packet)
     self.s3g.SendPacket(addition)
-    self.assertTrue(True)
 
   def test_BadCRC(self):
     packet = self.GetVersionPacket()
@@ -262,7 +260,7 @@ class s3gSendReceiveTests(unittest.TestCase):
 
   def test_DisplayMessageReply(self):
     if hasInterface:
-      self.s3g.DisplayMessage(0, 0, "TESTING", 1, False)
+      self.s3g.DisplayMessage(0, 0, "TESTING", 1, False, False, False)
 
   def test_FindAxesMaximumsReply(self):
     self.s3g.FindAxesMaximums(['x', 'y', 'z'], 1, 0)
@@ -426,11 +424,15 @@ class s3gFunctionTests(unittest.TestCase):
     self.s3g.SetToolheadTemperature(toolhead, 0)
 
   def test_DisplayMessage(self):
-    if hasInterface:
-      message = str(time.clock())
-      self.s3g.DisplayMessage(0, 0, message, 10, False)
-      readMessage = raw_input("\nWhat is the message on the replicator's display? ")
-      self.assertEqual(message, readMessage)
+if hasInterface:
+  message = str(time.clock())
+  secondMsg = 'success'
+  self.s3g.DisplayMessage(0, 0, message, 0, False, False, True)
+  self.s3g.DisplayMessage(0, 0, secondMsg, 0, False, True, True)
+  readMessage = raw_input("\nWhat is the message on the replicator's display? ")
+  self.assertEqual(message, readMessage)
+  obs = raw_input("\nPlease go to the interface board, press the middle button, and type the new message. ")
+  self.assertEqual(obs, secondMsg)
 
   def test_GetPosition(self):
     position = self.s3g.GetPosition()
@@ -846,6 +848,19 @@ class test(unittest.TestCase):
 
   def tearDown(self):
     self.s3g.file.close()
+
+
+  def test_MaxLength(self):
+    payload = self.GetVersionPayload()
+    for i in range(s3g.maximum_payload_length - len(payload)):
+      payload.append(0x00)
+    self.s3g.SendCommand(payload)
+
+  def GetVersionPayload(self):
+    payload = bytearray()
+    payload.append(s3g.host_query_command_dict['GET_VERSION'])
+    payload.extend(s3g.EncodeUint16(s3g.s3g_version))
+    return payload
 
 class s3gSDCardTests(unittest.TestCase):
 

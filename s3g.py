@@ -517,9 +517,7 @@ class s3g:
         Sent a packet to the host, but got a malformed response or timed out waiting for a reply.
         Retry immediately.
         """
-        #self.logfile.write('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%
-          (type(e),e.__str__(),retry_count)
-        )
+        #self.logfile.write('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'(type(e),e.__str__(),retry_count)) 
 
         retry_count = retry_count + 1
 
@@ -527,9 +525,7 @@ class s3g:
         """
         Other exceptions are propigated upwards.
         """
-        #self.logfile.write('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%
-          (type(e),e.__str__(),retry_count)
-        )
+        #self.logfile.write('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%(type(e),e.__str__(),retry_count))
         raise e
 
       if retry_count >= max_retry_count:
@@ -1254,7 +1250,7 @@ class s3g:
     payload.append(ignore)
     self.SendCommand(payload)
 
-  def DisplayMessage(self, row, col, message, timeout, continuation):
+  def DisplayMessage(self, row, col, message, timeout, clearExisting, lastInGroup, waitForButton):
     """
     Display a message to the screen
     @param row Row to draw the message at
@@ -1262,14 +1258,20 @@ class s3g:
     @param message Message to write to the screen
     @param timeout Amount of time to display the message for, in seconds. 
                    If 0, leave the message up indefinately.
-    @param continue_last
+    @param clearExisting: Boolean flag.  If True, This will clear the existing message buffer and timeout
+    @param lastInGroup: Boolean flag.  If true, signifies that this message is the last in a group of messages
+    @param waitForButton: Boolean flag.  If true, waits for a button to be pressed before clearing the screen
     """
     payload = bytearray()
     payload.append(host_action_command_dict['DISPLAY_MESSAGE'])
-    if continuation == True:
-      payload.append(0x01)
-    else:
-      payload.append(0x00)
+    bitField = 0
+    if clearExisting:
+      bitField |= 0x01
+    if lastInGroup:
+      bitField |= 0x02
+    if waitForButton:
+      bitField |= 0x04
+    payload.append(bitField)
     payload.append(col)
     payload.append(row)
     payload.append(timeout)
