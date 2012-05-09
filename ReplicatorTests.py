@@ -12,7 +12,6 @@ import s3g
 extensive = True
 port = ''
 hasInterface = True
-isTOM = False
 
 
 def ConvertFromNUL(b):
@@ -126,7 +125,7 @@ class s3gPacketTests(unittest.TestCase):
 class s3gSendReceiveTests(unittest.TestCase):
   def setUp(self):
     self.s3g = s3g.s3g()
-    self.s3g.file = serial.Serial('/dev/tty.usbmodemfa131', '115200', timeout=1)
+    self.s3g.file = serial.Serial(options.serial, '115200', timeout=1)
     self.s3g.AbortImmediately()
 
   def tearDown(self):
@@ -152,7 +151,6 @@ class s3gSendReceiveTests(unittest.TestCase):
 
   def test_WaitForButtonReply(self):
     self.s3g.WaitForButton('up', 0, True, False, False)
-    self.assertTrue(True)
 
   def test_SetServo1PositionReply(self):
     self.assertRaises(s3g.TransmissionError, self.s3g.SetServo1Position, 0, 90)
@@ -848,7 +846,6 @@ class test(unittest.TestCase):
 
   def tearDown(self):
     self.s3g.file.close()
-
 
 class s3gSDCardTests(unittest.TestCase):
 

@@ -78,7 +78,7 @@ slave_action_command_dict = {
   'TOGGLE_VALVE'               : 13,
   'SET_SERVO_1_POSITION'       : 14,
   'PAUSE'                      : 23,
-#  'ABORT'                      : 24,
+  'ABORT'                      : 24,
   'SET_PLATFORM_TEMP'          : 31,
 #  'SET_MOTOR_1_SPEED_DDA'      : 38, We are considering this deprecated, but some people use it in the wild so we are keeping it in here as a reminder
 }
@@ -1363,6 +1363,13 @@ class s3g:
     payload = bytearray()
     payload.append(theta)
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_SERVO_1_POSITION'], payload)
+
+  def ToolheadAbort(self, tool_index):
+    """
+    Used to terminate a build during printing.  Disables any engaged heaters and motors
+    @param tool_index: the tool which is to be aborted
+    """
+    self.ToolActionCommand(tool_index, slave_action_command_dict['ABORT'], bytearray())
 
   def ToolheadPause(self, tool_index):
     """

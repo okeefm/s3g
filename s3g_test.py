@@ -1408,6 +1408,24 @@ class S3gTests(unittest.TestCase):
     self.assertEqual(payload[3], len(expectedPayload))
     self.assertEqual(payload[4:], expectedPayload)
 
+  def test_toolhead_abort(self):
+    toolIndex = 0
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.ToolheadAbort(toolIndex)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+
+    self.assertEqual(payload[0], s3g.host_action_command_dict['TOOL_ACTION_COMMAND'])
+    self.assertEqual(payload[1], toolIndex)
+    self.assertEqual(payload[2], s3g.slave_action_command_dict['ABORT'])
+    self.assertEqual(payload[3], len(bytearray()))
+    self.assertEqual(payload[4:], bytearray())
+
   def test_toolhead_pause(self):
     toolIndex = 0
     response_payload = bytearray()
@@ -1423,7 +1441,7 @@ class S3gTests(unittest.TestCase):
     self.assertEqual(payload[0], s3g.host_action_command_dict['TOOL_ACTION_COMMAND'])
     self.assertEqual(payload[1], toolIndex)
     self.assertEqual(payload[2], s3g.slave_action_command_dict['PAUSE'])
-    self.assertEqual(payload[3], 0)
+    self.assertEqual(payload[3], len(bytearray()))
     self.assertEqual(payload[4:], bytearray())
 
   def test_set_servo_1_position(self):

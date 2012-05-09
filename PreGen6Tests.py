@@ -12,7 +12,6 @@ import s3g
 extensive = True
 port = ''
 hasInterface = True
-isTOM = False
 
 
 def ConvertFromNUL(b):
@@ -126,11 +125,17 @@ class s3gPacketTests(unittest.TestCase):
 class s3gSendReceiveTests(unittest.TestCase):
   def setUp(self):
     self.s3g = s3g.s3g()
-    self.s3g.file = serial.Serial('/dev/tty.usbmodemfa131', '115200', timeout=1)
+    self.s3g.file = serial.Serial(options.serialPort, '115200', timeout=1)
     self.s3g.AbortImmediately()
 
   def tearDown(self):
     self.s3g.file.close()
+
+  def test_ToolheadPause(self):
+    self.s3g.ToolheadPause(0)
+
+  def test_ToolheadAbort(self):
+    self.s3g.ToolheadAbort(0)
 
   def test_ResetToFactoryReply(self):
     self.s3g.ResetToFactory(0)
@@ -152,7 +157,6 @@ class s3gSendReceiveTests(unittest.TestCase):
 
   def test_WaitForButtonReply(self):
     self.s3g.WaitForButton('up', 0, True, False, False)
-    self.assertTrue(True)
 
   def test_SetServo1PositionReply(self):
     self.s3g.SetServo1Position(0, 90)
@@ -991,5 +995,5 @@ if __name__ == '__main__':
   sdTests = unittest.TestLoader().loadTestsFromTestCase(s3gSDCardTests)
   smallTest = unittest.TestLoader().loadTestsFromTestCase(test)
   suites = [commonTests, packetTests, sendReceiveTests, functionTests, sdTests, smallTest]
-  for suite in suites[-1]:
+  for suite in suites[3]:
     unittest.TextTestRunner(verbosity=2).run(suite)
