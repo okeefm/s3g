@@ -683,22 +683,22 @@ Response
 </tr>
 <tr>
  <td>5</td>
- <td>WDRF (Deprecated)</td>
+ <td>WDRF *Deprecated*</td>
  <td>Watchdog reset flag was set at restart</td>
 </tr>
 <tr>
  <td>4</td>
- <td>BORF (Deprecated)</td>
+ <td>BORF *Deprecated*</td>
  <td>Brownout reset flag was set at restart</td>
 </tr>
 <tr>
  <td>3</td>
- <td>EXTRF (Deprecated)</td>
+ <td>EXTRF *Deprecated*</td>
  <td>External reset flag was set at restart</td>
 </tr>
 <tr>
  <td>2</td>
- <td>PORF (Deprecated)</td>
+ <td>PORF *Deprecated*</td>
  <td>Power-on reset flag was set at restart</td>
 </tr>
 <tr>
@@ -916,6 +916,7 @@ Response (0 bytes)
 Record the positions of the selected axes to device EEPROM
 
 Payload
+
     uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
 
 Response (0 bytes)
@@ -924,6 +925,7 @@ Response (0 bytes)
 Recall the positions of the selected axes from device EEPROM
 
 Payload
+
     uint8: Axes bitfield to specify which axes' positions to recall. Any axes with a bit set should have it's position recalled.
 
 Response (0 bytes)
@@ -1293,22 +1295,22 @@ Response
 </tr>
 <tr>
  <td>5</td>
- <td>WDRF (DEPRECATED)</td>
+ <td>WDRF *Deprecated*</td>
  <td>Watchdog reset flag was set at restart</td>
 </tr>
 <tr>
  <td>4</td>
- <td>BORF (DEPRECATED)</td>
+ <td>BORF *Deprecated*</td>
  <td>Brownout reset flag was set at restart</td>
 </tr>
 <tr>
  <td>3</td>
- <td>EXTRF (DEPRECATED)</td>
+ <td>EXTRF *Deprecated*</td>
  <td>External reset flag was set at restart</td>
 </tr>
 <tr>
  <td>2</td>
- <td>PORF (DEPRECATED)</td>
+ <td>PORF *Deprecated*</td>
  <td>Power-on reset flag was set at restart</td>
 </tr>
 <tr>
@@ -1340,7 +1342,7 @@ Response
 # Tool Action Commands
 
 ## 01 - Init: Initialize firmware to boot state
-Initialization consists of:
+Initialization resets the toolhead and all processes it controls to the boot state.  some examples of processes that will be reset are:
 
     * Resetting target temperatures to 0
     * Turning off all outputs (fan, motor, etc)
@@ -1476,7 +1478,7 @@ Payload
 
 Response (0 bytes)
 
-## 38 - Set motor speed (DDA) Deprecated
+## 38 - Set motor speed (DDA) *Deprecated*
 This sets the motor speed as a DDA value, in microseconds between step. It should not actually enable the motor until the motor enable command is given. For future implementation of 5D (vs 4D) two DDA codes are sent - the DDA to start with and the DDA to end with. The third uint32 is the number of steps to take. The direction to go is set by code 8, 'Set motor direction'
 
 Payload
@@ -1487,7 +1489,7 @@ Payload
 
 Response (0 bytes)
 
-## 40 - Light indicator LED Deprecated
+## 40 - Light indicator LED *Deprecated*
 This command turns on an indicator light (for gen 4, the motor direction LED). This command is intended to serve as visual feedback to an operator that the electronics are communicating properly. Note that it should not be used during regular operation, because it interferes with h-bridge operation.
 
 Payload (0 bytes)
