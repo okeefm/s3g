@@ -514,18 +514,15 @@ class s3gFunctionTests(unittest.TestCase):
 
   def test_Init(self):
     bufferSize = 512
-    position = [1, 2, 3, 4, 5]
     expectedPosition = [0, 0, 0, 0, 0]
+    position = [10, 9, 8, 7, 6]
     self.s3g.SetExtendedPosition(position)
     #Find the maximum so that if we fail, it wont try to move outside its bounds
-    self.s3g.FindAxesMaximums(['y'], 500, 5)
     for i in range(5):
-      self.s3g.FindAxesMinimums(['y'], 800, 1)
+      self.s3g.Delay(1)
     self.s3g.Init()
-    readPosition = self.s3g.GetExtendedPosition()[0]
-    self.assertEqual(expectedPosition, readPosition)
+    self.assertEqual(expectedPosition, self.s3g.GetExtendedPosition()[0])
     self.assertEqual(self.GetAvailableBufferSize(), bufferSize)
-    self.assertTrue(self.s3g.IsFinished())
 
   def test_GetAvailableBufferSize(self):
     bufferSize = 512
@@ -558,7 +555,6 @@ class s3gFunctionTests(unittest.TestCase):
     noBuild = bytearray('\x00')
     self.s3g.BuildStartNotification(10, "test")
     self.s3g.BuildEndNotification()
-    time.sleep(5) #Give the machine time ot response
     self.assertEqual(self.s3g.GetBuildName(), noBuild)
 
   def test_ClearBuffer(self):
@@ -687,7 +683,7 @@ class s3gFunctionTests(unittest.TestCase):
     self.s3g.FindAxesMaximums(axes, feedrate, timeout)
     while testStart + timeout*3  > time.time(): #XY endstops should be low while moving/delaying.  If not, delay didnt delay for the correct time
       self.assertTrue(self.s3g.GetPosition()[1] == 0 or self.s3g.GetPosition()[1] == zEndStop)
-    time.sleep(.5)
+    time.sleep(.5) #Wait about half a second for the machine to finish its movements
     self.assertTrue(self.s3g.GetPosition()[1] == allEndStops or self.s3g.GetPosition()[1] == xyEndStops)
 
   def test_ToggleEnableAxes(self):
@@ -789,7 +785,6 @@ class s3gFunctionTests(unittest.TestCase):
     self.assertFalse(returnDic["PLATFORM_ERROR"])
     self.assertFalse(returnDic["EXTRUDER_ERROR"])
     self.s3g.SetToolheadTemperature(toolhead, 100)
-    time.sleep(5)
     returnDic = self.s3g.GetToolStatus(toolhead)
     self.assertEqual(returnDic["EXTRUDER_READY"], self.s3g.IsToolReady(toolhead))
     raw_input("\nPlease unplug the platform!!  Press enter to continue.")
@@ -866,6 +861,7 @@ class s3gFunctionTests(unittest.TestCase):
     self.s3g.WaitForButton('up', 5, True, False, False)
     obs = raw_input("\nDid the center button flash for about 5 seconds and stop? (y/n) ")
     self.assertEqual(obs, 'y')
+    raw_inpit("\nTesting bot reset after tiemout.  Please watch/listen to verify if the replicator is resetting. Press enter to continue."
     self.s3g.WaitForButton('up', 1, False, True, False)
     time.sleep(1)
     obs = raw_input("\nDid the bot just reset? (y/n) ")
@@ -932,13 +928,14 @@ class s3gSDCardTests(unittest.TestCase):
     """
     Copy the contents of the testFiles directory onto an sd card to do this test
     """
+    raw_input("\nPlease make sure the only files on the SD card plugged into the bot are the files inside the testFiles directory!! Press enter to continue")
     filename = 'box_1.s3g'
     volumeName = raw_input("\nPlease type the VOLUME NAME of the replicator's SD card exactly! Press enter to continue")
     readVolumeName = self.s3g.GetNextFilename(True)
     self.assertEqual(volumeName, ConvertFromNUL(readVolumeName))
     readFilename = self.s3g.GetNextFilename(False)
     self.assertEqual(filename, ConvertFromNUL(readFilename))
-
+  
   def test_PlaybackCapture(self):
     filename = 'box_1.s3g'
     self.s3g.PlaybackCapture(filename)
@@ -976,5 +973,5 @@ if __name__ == '__main__':
   sdTests = unittest.TestLoader().loadTestsFromTestCase(s3gSDCardTests)
   smallTest = unittest.TestLoader().loadTestsFromTestCase(test)
   suites = [commonTests, packetTests, sendReceiveTests, functionTests, sdTests, smallTest]
-  for suite in suites[3]:
+  for suite in suites[-1]:
     unittest.TextTestRunner(verbosity=2).run(suite)
