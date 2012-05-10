@@ -1,6 +1,8 @@
 import struct
 import array
 
+from errors import *
+
 def EncodeInt32(number):
   """
   Encode a 32-bit signed integer as a 4-byte string
@@ -83,3 +85,39 @@ def EncodeAxes(axes):
     bitfield |= axes_map[axis]
 
   return bitfield
+
+
+def UnpackResponse(format, data):
+  """
+  Attempt to unpack the given data using the specified format. Throws a protocol
+  error if the unpacking fails.
+  
+  @param format Format string to use for unpacking
+  @param data Data to unpack, including a string if specified
+  @return list of values unpacked, if successful.
+  """
+
+  try:
+    return struct.unpack(format, buffer(data))
+  except struct.error as e:
+    raise ProtocolError("Unexpected data returned from machine. Expected length=%i, got=%i, error=%s"%
+      (struct.calcsize(format),len(data),str(e)))
+
+def UnpackResponseWithString(format, data):
+  """
+  Attempt to unpack the given data using the specified format, and with a trailing,
+  null-terminated string. Throws a protocol error if the unpacking fails.
+  
+  @param format Format string to use for unpacking
+  @param data Data to unpack, including a string if specified
+  @return list of values unpacked, if successful.
+  """
+  if (len(data) < struct.calcsize(format) + 1):
+    raise ProtocolError("Not enough data received from machine, expected=%i, got=%i"%
+      (struct.calcsize(format)+1,len(data))
+    )
+
+  output = UnpackResponse(format, data[0:struct.calcsize(format)])
+  output += data[struct.calcsize(format):],
+
+  return output

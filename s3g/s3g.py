@@ -7,121 +7,7 @@ from constants import *
 from errors import *
 from crc import *
 from coding import *
-
-
-def EncodePayload(payload):
-  """
-  Encode a packet that contains the given payload
-  @param payload Command payload, 1 - n bytes describing the command to send
-  @return bytearray containing the packet
-  """
-  if len(payload) > maximum_payload_length:
-    raise PacketLengthError(len(payload), maximum_payload_length) 
-
-  packet = bytearray()
-  packet.append(header)
-  packet.append(len(payload))
-  packet.extend(payload)
-  packet.append(CalculateCRC(payload))
-
-  return packet
-
-def DecodePacket(packet):
-  """
-  Non-streaming packet decoder. Accepts a byte array containing a single
-  packet, and attempts to parse the packet and return the payload.
-  @param packet byte array containing the input packet
-  @return payload of the packet
-  """
-  assert type(packet) is bytearray
-
-  if len(packet) < 4:
-    raise PacketLengthError(len(packet), 4)
-
-  if packet[0] != header:
-    raise PacketHeaderError(packet[0], header)
-
-  if packet[1] != len(packet) - 3:
-    raise PacketLengthFieldError(packet[1], len(packet) - 3)
-
-  if packet[len(packet)-1] != CalculateCRC(packet[2:(len(packet)-1)]):
-    raise PacketCRCError(packet[len(packet)-1], CalculateCRC(packet[2:(len(packet)-1)]))
-
-  return packet[2:(len(packet)-1)]
-
-
-def CheckResponseCode(response_code):
-  """
-  Check the response code, and return if succesful, or raise an appropriate exception
-  """
-  if response_code == response_code_dict['SUCCESS']:
-    return
-
-  elif response_code == response_code_dict['GENERIC_ERROR']:
-    raise RetryError('Generic error reported by toolhead, try sending packet again')
-
-  elif response_code == response_code_dict['ACTION_BUFFER_OVERFLOW']:
-    raise BufferOverflowError()
-
-  elif response_code == response_code_dict['CRC_MISMATCH']:
-    raise RetryError('CRC mismatch error reported by toolhead, try sending packet again')
-
-  elif response_code == response_code_dict['DOWNSTREAM_TIMEOUT']:
-    raise TransmissionError('Downstream (tool network) timout, cannot communicate with tool')
-
-  elif response_code == response_code_dict['TOOL_LOCK_TIMEOUT']:
-    raise TransmissionError('Tool lock timeout, cannot communicate with tool.')
-
-  elif response_code == response_code_dict['CANCEL_BUILD']:
-    raise BuildCancelledError()
-
-  raise ProtocolError('Response code 0x%02X not understood'%(response_code))
-
-class PacketStreamDecoder:
-  """
-  A state machine that accepts bytes from an s3g packet stream, checks the validity of
-  each packet, then extracts and returns the payload.
-  """
-  def __init__(self):
-    """
-    Initialize the packet decoder
-    """
-    self.state = 'WAIT_FOR_HEADER'
-    self.payload = bytearray()
-    self.expected_length = 0
-
-  def ParseByte(self, byte):
-    """
-    Entry point, call for each byte added to the stream.
-    @param byte Byte to add to the stream
-    """
-
-    if self.state == 'WAIT_FOR_HEADER':
-      if byte != header:
-        raise PacketHeaderError(byte, header)
-
-      self.state = 'WAIT_FOR_LENGTH'
-
-    elif self.state == 'WAIT_FOR_LENGTH':
-      if byte > maximum_payload_length:
-        raise PacketLengthFieldError(byte, maximum_payload_length)
-
-      self.expected_length = byte
-      self.state = 'WAIT_FOR_DATA'
-
-    elif self.state == 'WAIT_FOR_DATA':
-      self.payload.append(byte)
-      if len(self.payload) == self.expected_length:
-        self.state = 'WAIT_FOR_CRC'
-
-    elif self.state == 'WAIT_FOR_CRC':
-      if CalculateCRC(self.payload) != byte:
-        raise PacketCRCError(byte, CalculateCRC(self.payload))
-
-      self.state = 'PAYLOAD_READY'
-
-    else:
-      raise Exception('Parser in bad state: too much data provided?')
+from packet import *
 
 class s3g:
   def __init__(self):
@@ -178,28 +64,25 @@ class s3g:
         return decoder.payload
 
       except (BufferOverflowError) as e:
-        """
-        Buffer overflow error- wait a while for the buffer to clear, then try again.
-        TODO: This could hang forever if the machine gets stuck; is that what we want?
-        """
+        # Buffer overflow error- wait a while for the buffer to clear, then try again.
+        # TODO: This could hang forever if the machine gets stuck; is that what we want?
+
         #self.logfile.write('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}\n'%(overflow_count,retry_count))
         overflow_count = overflow_count + 1
 
         time.sleep(.2)
 
       except (PacketDecodeError, RetryError, TimeoutError) as e:
-        """
-        Sent a packet to the host, but got a malformed response or timed out waiting for a reply.
-        Retry immediately.
-        """
+        # Sent a packet to the host, but got a malformed response or timed out waiting
+        # for a reply. Retry immediately.
+
         #self.logfile.write('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'(type(e),e.__str__(),retry_count)) 
 
         retry_count = retry_count + 1
 
       except Exception as e:
-        """
-        Other exceptions are propigated upwards.
-        """
+        # Other exceptions are propigated upwards.
+
         #self.logfile.write('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%(type(e),e.__str__(),retry_count))
         raise e
 
@@ -207,40 +90,6 @@ class s3g:
         #self.logfile.write('{"event":"transmission_error"}\n')
         raise TransmissionError("Failed to send packet, maximum retries exceeded")
 
-  def UnpackResponse(self, format, data):
-    """
-    Attempt to unpack the given data using the specified format. Throws a protocol
-    error if the unpacking fails.
-    
-    @param format Format string to use for unpacking
-    @param data Data to unpack, including a string if specified
-    @return list of values unpacked, if successful.
-    """
-
-    try:
-      return struct.unpack(format, buffer(data))
-    except struct.error as e:
-      raise ProtocolError("Unexpected data returned from machine. Expected length=%i, got=%i, error=%s"%
-        (struct.calcsize(format),len(data),str(e)))
-
-  def UnpackResponseWithString(self, format, data):
-    """
-    Attempt to unpack the given data using the specified format, and with a trailing,
-    null-terminated string. Throws a protocol error if the unpacking fails.
-    
-    @param format Format string to use for unpacking
-    @param data Data to unpack, including a string if specified
-    @return list of values unpacked, if successful.
-    """
-    if (len(data) < struct.calcsize(format) + 1):
-      raise ProtocolError("Not enough data received from machine, expected=%i, got=%i"%
-        (struct.calcsize(format)+1,len(data))
-      )
-
-    output = self.UnpackResponse(format, data[0:struct.calcsize(format)])
-    output += data[struct.calcsize(format):],
-
-    return output
 
   def GetVersion(self):
     """
@@ -252,7 +101,7 @@ class s3g:
     payload.extend(EncodeUint16(s3g_version))
    
     response = self.SendCommand(payload)
-    [response_code, version] = self.UnpackResponse('<BH', response)
+    [response_code, version] = UnpackResponse('<BH', response)
 
     return version
 
@@ -266,7 +115,7 @@ class s3g:
     payload.extend(filename)
     payload.append(0x00)
     response = self.SendCommand(payload)
-    [response, sd_response_code] = self.UnpackResponse('<BB', response)
+    [response_code, sd_response_code] = UnpackResponse('<BB', response)
     if sd_response_code != sd_error_dict['SUCCESS']:
       raise SDCardError(sd_response_code)
 
@@ -279,7 +128,7 @@ class s3g:
     payload.append(host_query_command_dict['END_CAPTURE'])
     
     response = self.SendCommand(payload)
-    [response, sdResponse] = self.UnpackResponse('<BI', response)
+    [response_code, sdResponse] = UnpackResponse('<BI', response)
     return sdResponse
 
   def Reset(self):
@@ -299,7 +148,7 @@ class s3g:
     payload.append(host_query_command_dict['IS_FINISHED'])
     
     response = self.SendCommand(payload)
-    [response_code, isFinished] = self.UnpackResponse('<B?', response)
+    [response_code, isFinished] = UnpackResponse('<B?', response)
     return isFinished
 
   def ClearBuffer(self):
@@ -324,7 +173,13 @@ class s3g:
     payload.append(host_query_command_dict['GET_COMMUNICATION_STATS'])
     response = self.SendCommand(payload)
 
-    [response, packetsReceived, packetsSent, nonResponsivePacketsSent, packetRetries, noiseBytes] = self.UnpackResponse('<BLLLLL', response)
+    [response_code,
+     packetsReceived,
+     packetsSent,
+     nonResponsivePacketsSent,
+     packetRetries,
+     noiseBytes] = UnpackResponse('<BLLLLL', response)
+
     info = {
     'PacketsReceived' : packetsReceived,
     'PacketsSent' : packetsSent,
@@ -345,7 +200,7 @@ class s3g:
     
     response = self.SendCommand(payload)
 
-    [response, bitfield] = self.UnpackResponse('<BB', response)
+    [response_code, bitfield] = UnpackResponse('<BB', response)
 
     bitfield = DecodeBitfield8(bitfield)      
 
@@ -354,30 +209,33 @@ class s3g:
     }
     return flags
 
-  def ExtendedStop(self, stepperFlag, bufferFlag):
+  def ExtendedStop(self, halt_steppers, clear_buffer):
     """
     Stop the stepper motor motion and/or reset the command buffer.  This differs from the reset and abort commands in that a soft reset of all functions isnt called.
-    @param stepperFlag: A boolean flag that if true will stop the steppers
-    @param buuferFlag: A boolean flag that, if true, will clear the buffer
+    @param halt_steppers: A boolean flag that if true will stop the steppers
+    @param clear_buffer: A boolean flag that, if true, will clear the buffer
     """
     payload = bytearray()
     payload.append(host_query_command_dict['EXTENDED_STOP'])
     bitfield = 0
-    if stepperFlag:
+    if halt_steppers:
       bitfield |= 0x01
-    if bufferFlag:
+    if clear_buffer:
       bitfield |= 0x02
     payload.append(bitfield)
 
     response = self.SendCommand(payload)
-    [response, extended_stop_response] = self.UnpackResponse('<BB', response)
+    [response_code, extended_stop_response] = UnpackResponse('<BB', response)
+    # TODO: can this be anything besides 1?
     if extended_stop_response == 1:
       raise ExtendedStopError
 
   def WaitForPlatformReady(self, tool_index, delay, timeout):
     """
-    Halts the machine until the specified toolhead reaches a ready state, or if the timeout is reached.  Toolhead is ready if its temperature is within a specified point
-    @param tool_index: Tool to wait for
+    Halts the machine until the specified toolhead reaches a ready state, or if the
+    timeout is reached.  Toolhead is ready if its temperature is within a specified
+    range.
+    @param tool_index toolhead index
     @param delay: Time in ms between packets to query the toolhead
     @param timeout: Time to wait in seconds for the toolhead to heat up before moving on
     """
@@ -390,8 +248,10 @@ class s3g:
     
   def WaitForToolReady(self, tool_index, delay, timeout):
     """
-    Halts the machine until the specified toolhead reaches a ready state, or if the timeout is reached.  Toolhead is ready if its temperature is within a specified point
-    @param tool_index: Tool to wait for
+    Halts the machine until the specified toolhead reaches a ready state, or if the
+    timeout is reached.  Toolhead is ready if its temperature is within a specified
+    range.
+    @param tool_index toolhead index
     @param delay: Time in ms between packets to query the toolhead
     @param timeout: Time to wait in seconds for the toolhead to heat up before moving on
     """
@@ -402,186 +262,117 @@ class s3g:
     payload.extend(EncodeUint16(timeout))
     self.SendCommand(payload)
 
-  def Delay(self, uS):
+  def Delay(self, delay):
     """
     Halts all motion for the specified amount of time
-    @param mS: Delay time, in microseconds
+    @param delay: Delay time, in microseconds
     """
     payload = bytearray()
     payload.append(host_action_command_dict['DELAY'])
-    payload.extend(EncodeUint32(uS))
+    payload.extend(EncodeUint32(delay))
 
     self.SendCommand(payload)
 
-  def ToggleEnableAxes(self, xAxis, yAxis, zAxis, aAxis, bAxis, toggle):
+  def ToggleAxes(self, axes, enable):
     """
     Used to explicitly power steppers on or off.
-    @param xAxis: Flag to select the xAxis
-    @param yAxis: Flag to select the yAxis
-    @param zAxis: Flag to select the zAxis
-    @param aAxis: Flag to select the aAxis
-    @param bAxis: Flag to select the bAxis
-    @param toggle: Flag to enable or disable axes.  If true, axes will be enabled. If false, axes will be disabled
+    @param axes Array of axis names ['x', 'y', ...] to configure
+    @param enable If true, enable all selected axes. Otherwise, disable the selected
+           axes.
     """
+    axes_bitfield = EncodeAxes(axes)
+    if enable:
+      axes_bitfield |= 0x80
+
     payload = bytearray()
     payload.append(host_action_command_dict['ENABLE_AXES'])
-    bitField = 0
-    if xAxis: 
-      bitField |= 0x01
-    if yAxis:
-      bitField |= 0x02
-    if zAxis: 
-      bitField |= 0x04
-    if aAxis:
-      bitField |= 0x08
-    if bAxis:
-      bitField |= 0x10
-    bitField |= 0x20
-    bitField |= 0x40
-    if toggle:
-      bitField |= 0x80
+    payload.append(axes_bitfield)
 
-    payload.append(bitField)
     self.SendCommand(payload)
 
-  def QueueExtendedPointNew(self, point, duration, xRelative, yRelative, zRelative, aRelative, bRelative):
+  def QueueExtendedPointNew(self, point, duration, relative_axes):
     """
-    Queue a point with the new style!  Moves to a certain point over a given duration with either relative or absolute positioning.  Relative vs. Absolute positioning is done on an axis to axis basis.
+    Queue a point with the new style!  Moves to a certain point over a given duration
+    with either relative or absolute positioning.  Relative vs. Absolute positioning
+    is done on an axis to axis basis.
+
     @param point: A 5 dimentional point in steps specifying where each axis should move to
     @param duration: The total duration of the move in miliseconds
-    @param xRelative: Relative movement flag.  If high, the xAxis moves relatively
-    @param yRelative: Relative movement flag.  If high, the yAxis moves relatively
-    @param zRelative: Relative movement flag.  If high, the zAxis moves relatively
-    @param aRelative: Relative movement flag.  If high, the aAxis moves relatively
-    @param bRelative: Relative movement flag.  If high, the bAxis moves relatively
+    @param relative_axes: Array of axes whose coordinates should be considered relative
     """
     if len(point) != self.ExtendedPointLength:
       raise ValueError("Expected point of size %i, got %i"%(self.ExtendedPointLength, len(point)))
+
     payload = bytearray()
     payload.append(host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'])
-    for cor in point:
-      payload.extend(EncodeInt32(cor))
+    for coordinate in point:
+      payload.extend(EncodeInt32(coordinate))
     payload.extend(EncodeUint32(duration))
-    axes = []
-    if xRelative:
-      axes.append('x')
-    if yRelative:
-      axes.append('y')
-    if zRelative:
-      axes.append('z')
-    if aRelative:
-      axes.append('a')
-    if bRelative:
-      axes.append('b')
-    payload.append(EncodeAxes(axes))
+    payload.append(EncodeAxes(relative_axes))
+
     self.SendCommand(payload)
   
-  def StoreHomePositions(self, xStore, yStore, zStore, aStore, bStore):
+  def StoreHomePositions(self, axes):
     """
     Write the current axes locations to the EEPROM as the home position
-    @param xStore: Flag whether or not to store the x position
-    @param yStore: Flag whether or not to store the y position
-    @param zStore: Flag whether or not to store the z position
-    @param aStore: Flag whether or not to store the a position
-    @param bStore: Flag whether or not to store the b position
+    @param axes: Array of axis names ['x', 'y', ...] whose position should be saved
     """
     payload = bytearray()
     payload.append(host_action_command_dict['STORE_HOME_POSITIONS'])
-    axes = []
-    if xStore:
-      axes.append('x')
-    if yStore:
-      axes.append('y')
-    if zStore:
-      axes.append('z')
-    if aStore:
-      axes.append('a')
-    if bStore:
-      axes.append('b')
     payload.append(EncodeAxes(axes))
     self.SendCommand(payload)
 
-  def SetPotentiometerValue(self, xFlag, yFlag, zFlag, aFlag, bFlag, value):
+  def SetPotentiometerValue(self, axes, value):
     """
     Sets the value of the digital potentiometers that control the voltage references for the botsteps
-    @param xFlag: If true, will set this axis' bot step to value
-    @param yFlag: If true, will set this axis' bot step to value
-    @param zFlag: If true, will set this axis' bot step to value
-    @param aFlag: If true, will set this axis' bot step to value
-    @param bFlag: If true, will set this axis' bot step to value
-    @param value: The value to set the digital potentiometer to.  This value is clamped to [0, 127]
+    @param axes: Array of axis names ['x', 'y', ...] whose potentiometers should be set
+    @param value: The value to set the digital potentiometer to.
     """
     payload = bytearray()
     payload.append(host_action_command_dict['SET_POT_VALUE'])
-    axes = []
-    if xFlag:
-      axes.append('x')
-    if yFlag:
-      axes.append('y')
-    if zFlag:
-      axes.append('z')
-    if aFlag:
-      axes.append('a')
-    if bFlag:
-      axes.append('b')
     payload.append(EncodeAxes(axes))
     payload.append(value)
     self.SendCommand(payload)
     
 
-  def SetBeep(self, frequency, length, effect):
+  def SetBeep(self, frequency, duration):
     """
-    Sets a buzzer frequency and a buzzer time!
-    @param frequency: The frequency in hz of the of the sound
-    @param length: The buzz length in ms
-    @param effect: Currently unused, do some super duper effect
+    Play a tone of the specified frequency for the specified duration.
+    @param frequency: Frequency of the tone, in hz
+    @param duration: Duration of the tone, in ms
     """
     payload = bytearray()
     payload.append(host_action_command_dict['SET_BEEP'])
     payload.extend(EncodeUint16(frequency))
-    payload.extend(EncodeUint16(length))
-    payload.append(effect)
+    payload.extend(EncodeUint16(duration))
+    payload.append(0x00) # reserved byte
     self.SendCommand(payload)
 
-  def SetRGBLED(self, r, g, b, blink, effect):
+  def SetRGBLED(self, r, g, b, blink):
     """
-    Set the brightness, blink rate and effects (currently unused) for RBG LEDs
+    Set the brightness and blink rate for RBG LEDs
     @param r: The r value (0-255) for the LEDs
     @param g: The g value (0-255) for the LEDs
     @param b: The b value (0-255) for the LEDs
     @param blink: The blink rate (0-255) for the LEDs
-    @param effect: Currently unused, designates a ceratin effect that shall be used
     """
     payload = bytearray()
     payload.append(host_action_command_dict['SET_RGB_LED'])
-    args = [r, g, b, blink, effect]
-    for arg in args:
-      payload.append(arg)
+    payload.append(r)
+    payload.append(g)
+    payload.append(b)
+    payload.append(blink)
+    payload.append(0x00) # reserved byte
     self.SendCommand(payload)
     
 
-  def RecallHomePositions(self, xRecall, yRecall, zRecall, aRecall, bRecall):
+  def RecallHomePositions(self, axes):
     """
     Recall and move to the home positions written to the EEPROM
-    @param xRecall: Flag whether or not to recall the x home cor
-    @param yRecall: Flag whether or not to recall the y home cor
-    @param zRecall: Flag whether or not to recall the z home cor
-    @param aRecall: Flag whether or not to recall the a home cor
-    @param bRecall: Flag whether or not to recall the b home cor
+    @param axes: Array of axis names ['x', 'y', ...] whose position should be saved
     """
     payload = bytearray()
     payload.append(host_action_command_dict['RECALL_HOME_POSITIONS'])
-    axes = []
-    if xRecall:
-      axes.append('x')
-    if yRecall:
-      axes.append('y')
-    if zRecall:
-      axes.append('z')
-    if aRecall:
-      axes.append('a')
-    if bRecall:
-      axes.append('b')
     payload.append(EncodeAxes(axes))
     self.SendCommand(payload)
 
@@ -663,7 +454,7 @@ class s3g:
     payload.append(host_query_command_dict['GET_AVAILABLE_BUFFER_SIZE'])
    
     response = self.SendCommand(payload)
-    [response_code, buffer_size] = self.UnpackResponse('<BI', response)
+    [response_code, buffer_size] = UnpackResponse('<BI', response)
 
     return buffer_size
 
@@ -677,7 +468,7 @@ class s3g:
   
  
     response = self.SendCommand(payload)
-    [response_code, x, y, z, axes_bits] = self.UnpackResponse('<BiiiB', response)
+    [response_code, x, y, z, axes_bits] = UnpackResponse('<BiiiB', response)
 
     return [x, y, z], axes_bits
 
@@ -702,7 +493,7 @@ class s3g:
     payload.append(0x00)
    
     response = self.SendCommand(payload)
-    [response_code, sd_response_code] = self.UnpackResponse('<BB', response)
+    [response_code, sd_response_code] = UnpackResponse('<BB', response)
 
     if sd_response_code != sd_error_dict['SUCCESS']:
       raise SDCardError(sd_response_code)
@@ -720,7 +511,7 @@ class s3g:
       payload.append(0)
    
     response = self.SendCommand(payload)
-    [response_code, sd_response_code, filename] = self.UnpackResponseWithString('<BB', response)
+    [response_code, sd_response_code, filename] = UnpackResponseWithString('<BB', response)
 
     if sd_response_code != sd_error_dict['SUCCESS']:
       raise SDCardError(sd_response_code)
@@ -735,7 +526,7 @@ class s3g:
     payload.append(host_query_command_dict['GET_BUILD_NAME'])
    
     response = self.SendCommand(payload)
-    [response_code, filename] = self.UnpackResponseWithString('<B', response)
+    [response_code, filename] = UnpackResponseWithString('<B', response)
 
     return filename
 
@@ -752,7 +543,7 @@ class s3g:
     response = self.SendCommand(payload)
     [response_code,
      position[0], position[1], position[2], position[3], position[4],
-     endstop_states] = self.UnpackResponse('<BiiiiiH', response)
+     endstop_states] = UnpackResponse('<BiiiiiH', response)
 
     # TODO: fix the endstop bit encoding, it doesn't make sense.
     return position, endstop_states
@@ -793,6 +584,7 @@ class s3g:
     until an endstop is reached or a timeout occurs.
     @param axes Array of axis names ['x', 'y', ...] to move
     @param rate Movement rate, in steps/??
+    @param timeout Amount of time to move (TODO: units?) before halting the command
     """
     payload = bytearray()
     payload.append(host_action_command_dict['FIND_AXES_MINIMUMS'])
@@ -808,6 +600,7 @@ class s3g:
     until an endstop is reached or a timeout occurs.
     @param axes Array of axis names ['x', 'y', ...] to move
     @param rate Movement rate, in steps/??
+    @param timeout Amount of time to move (TODO: units?) before halting the command
     """
     payload = bytearray()
     payload.append(host_action_command_dict['FIND_AXES_MAXIMUMS'])
@@ -866,21 +659,15 @@ class s3g:
     
     self.SendCommand(payload)
 
-  def WaitForButton(self, button, timeout, timeoutReadyState, timeoutReset, clearScreen):
+  def WaitForButton(self, button, timeout, ready_on_timeout, reset_on_timeout, clear_screen):
     """
     Wait until a user either presses a button on the interface board, or a timeout occurs
     @param button: A button, must be one of the following: up, down, left, right center.
     @param timeout: Duration, in seconds, the bot will wait for a response.  A timeout of 0 indicated no timeout.  TimeoutReadyState, timeoutReset determine what action is taken after timeout
-    @param timeoutReadyState: Bot changes to the ready state after tiemout
-    @param timeoutReset: Resets teh bot on timeout
-    @param clearScreen: Clears the screen on buttonPress
+    @param ready_on_timeout: Bot changes to the ready state after tiemout
+    @param reset_on_timeout: Resets the bot on timeout
+    @param clear_screen: Clears the screen on buttonPress
     """
-    buttons = ['up', 'down', 'left', 'right', 'center']
-    button = button.lower()
-    if button.lower() not in buttons:
-      raise ValueError("Expected one of these button denominations: "+str(buttons)+ ".  Got " + str(button)+".")
-    payload = bytearray()
-    payload.append(host_action_command_dict['WAIT_FOR_BUTTON'])
     if button == 'center':
       button = 0x01
     elif button == 'right':
@@ -891,15 +678,21 @@ class s3g:
       button = 0x08
     elif button == 'up':
       button = 0x10
+    else:
+      raise ValueError("Invalid button received. Got " + str(button)+".")
+
+    optionsField = 0
+    if ready_on_timeout:
+      optionsField |= 0x01
+    if reset_on_timeout:
+      optionsField |= 0x02
+    if clear_screen:
+      optionsField |= 0x04
+
+    payload = bytearray()
+    payload.append(host_action_command_dict['WAIT_FOR_BUTTON'])
     payload.append(button)
     payload.extend(EncodeUint16(timeout))
-    optionsField = 0
-    if timeoutReadyState:
-      optionsField |= 0x01
-    if timeoutReset:
-      optionsField |= 0x02
-    if clearScreen:
-      optionsField |= 0x04
     payload.append(optionsField)
     self.SendCommand(payload)
 
@@ -913,26 +706,25 @@ class s3g:
     payload.append(options)
     self.SendCommand(payload)
 
-  def QueueSong(self, songId):
+  def QueueSong(self, song_id):
     """
     Play predefined sogns on the piezo buzzer
     @param songId: The id of the song to play.
     """
     payload = bytearray()
     payload.append(host_action_command_dict['QUEUE_SONG'])
-    payload.append(songId)
+    payload.append(song_id)
     self.SendCommand(payload)
 
-  def SetBuildPercent(self, percent, ignore):
+  def SetBuildPercent(self, percent):
     """
     Sets the percentage done for the current build.  This value is displayed on the interface board's screen.
     @param percent: Percent of the build done (0-100)
-    @param ignore: Currently unused
     """
     payload = bytearray()
     payload.append(host_action_command_dict['SET_BUILD_PERCENT'])
     payload.append(percent)
-    payload.append(ignore)
+    payload.append(0x00) # Reserved byte
     self.SendCommand(payload)
 
   def DisplayMessage(self, row, col, message, timeout, clearExisting, lastInGroup, waitForButton):
@@ -998,7 +790,7 @@ class s3g:
     payload.extend(EncodeUint16(s3g_version))
    
     response = self.ToolQuery(tool_index,slave_query_command_dict['GET_VERSION'], payload)
-    [response_code, version] = self.UnpackResponse('<BH', response)
+    [response_code, version] = UnpackResponse('<BH', response)
 
     return version
 
@@ -1009,14 +801,14 @@ class s3g:
     @return The terms associated with the tool_index'sError Term, Delta Term, Last Output and the platform's Error Term, Delta Term and Last Output
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PID_STATE'])
-    [response_code, exError, exDelta, exLast, plError, plDelta, plLast] = self.UnpackResponse('<Bhhhhhh', response)
+    [response_code, exError, exDelta, exLast, plError, plDelta, plLast] = UnpackResponse('<Bhhhhhh', response)
     PIDVals = {
-    "ExtruderError"          : exError,
-    "ExtruderDelta"          : exDelta,
-    "ExtruderLastTerm"       : exLast,
-    "PlatformError"          : plError,
-    "PlatformDelta"          : plDelta,
-    "PlatformLastTerm"       : plLast,
+      "ExtruderError"          : exError,
+      "ExtruderDelta"          : exDelta,
+      "ExtruderLastTerm"       : exLast,
+      "PlatformError"          : plError,
+      "PlatformDelta"          : plDelta,
+      "PlatformLastTerm"       : plLast,
     }
     return PIDVals
 
@@ -1025,19 +817,19 @@ class s3g:
     Retrieve some information about the tool
     @param tool_index: The tool we would like to query for information
     @return A dictionary containing status information about the tool_index
-      EXTRUDER_READY : The extruder has reached target temp
-      PLATFORM ERROR: an error was detected with the platform heater (if the tool supports one).  The platform heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.
-      EXTRUDER ERROR: An error was detected with the extruder heater (if the tool supports one).  The extruder heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable
+      ExtruderReady : The extruder has reached target temp
+      PlatformError: an error was detected with the platform heater (if the tool supports one).  The platform heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.
+      ExtruderError: An error was detected with the extruder heater (if the tool supports one).  The extruder heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOL_STATUS'])
-    [resonse_code, bitfield] = self.UnpackResponse('<BB', response)
+    [resonse_code, bitfield] = UnpackResponse('<BB', response)
 
     bitfield = DecodeBitfield8(bitfield)
 
     returnDict = {
-    "EXTRUDER_READY" : bool(bitfield[0]),
-    "PLATFORM_ERROR" : bool(bitfield[6]),
-    "EXTRUDER_ERROR" : bool(bitfield[7]),
+      "ExtruderReady" : bool(bitfield[0]),
+      "PlatformError" : bool(bitfield[6]),
+      "ExtruderError" : bool(bitfield[7]),
     }
     return returnDict
   
@@ -1098,7 +890,7 @@ class s3g:
     @return Duration of each rotation, in miliseconds
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_MOTOR_1_SPEED_RPM'])
-    [response_code, speed] = self.UnpackResponse('<BI', response)
+    [response_code, speed] = UnpackResponse('<BI', response)
     return speed
 
   def GetToolheadTemperature(self, tool_index):
@@ -1108,7 +900,7 @@ class s3g:
     @return temperature reported by the toolhead
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOLHEAD_TEMP'])
-    [response_code, temperature] = self.UnpackResponse('<BH', response)
+    [response_code, temperature] = UnpackResponse('<BH', response)
 
     return temperature
 
@@ -1119,7 +911,7 @@ class s3g:
     @return true if the toolhead is ready
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['IS_TOOL_READY'])
-    [response_code, ready] = self.UnpackResponse('<BB', response)
+    [response_code, ready] = UnpackResponse('<BB', response)
 
     if ready == 1:
       return True
@@ -1173,7 +965,7 @@ class s3g:
     @return temperature reported by the toolhead
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PLATFORM_TEMP'])
-    [response_code, temperature] = self.UnpackResponse('<BH', response)
+    [response_code, temperature] = UnpackResponse('<BH', response)
 
     return temperature
 
@@ -1184,7 +976,7 @@ class s3g:
     @return temperature that the toolhead is attempting to achieve
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOLHEAD_TARGET_TEMP'])
-    [response_code, temperature] = self.UnpackResponse('<BH', response)
+    [response_code, temperature] = UnpackResponse('<BH', response)
 
     return temperature
 
@@ -1195,7 +987,7 @@ class s3g:
     @return temperature that the build platform is attempting to achieve
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PLATFORM_TARGET_TEMP'])
-    [response_code, temperature] = self.UnpackResponse('<BH', response)
+    [response_code, temperature] = UnpackResponse('<BH', response)
 
     return temperature
 
@@ -1206,7 +998,7 @@ class s3g:
     @return true if the platform is ready
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['IS_PLATFORM_READY'])
-    [response_code, ready] = self.UnpackResponse('<BB', response)
+    [response_code, ready] = UnpackResponse('<BB', response)
 
     if ready == 1:
       return True

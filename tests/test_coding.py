@@ -112,5 +112,32 @@ class EncoderTests(unittest.TestCase):
     for case in cases:
       assert s3g.EncodeAxes(case[0]) == case[1]
 
+  def test_unpack_response_no_format(self):
+    self.assertRaises(s3g.ProtocolError,s3g.UnpackResponse,'','abcde')
+
+  def test_unpack_response_short_data(self):
+    self.assertRaises(s3g.ProtocolError,s3g.UnpackResponse,'<I','abc')
+
+  def test_unpack_response(self):
+    expected_data = [1,'a','b','c']
+    data = s3g.UnpackResponse('<Iccc','\x01\x00\x00\x00abc')
+    for i in range(0, len(expected_data)):
+      assert(data[i] == expected_data[i])
+
+  def test_unpack_response_with_string_no_format(self):
+    expected_string = 'abcde\x00'
+    data = s3g.UnpackResponseWithString('',expected_string)
+    assert(len(data) == 1)
+    assert data[0] == expected_string
+
+  def test_unpack_response_with_string_missing_string(self):
+    self.assertRaises(s3g.ProtocolError,s3g.UnpackResponseWithString,'<I','abcd')
+
+  def test_unpack_response_with_string(self):
+    expected_data = [1,'a','b','c','ABCDE\x00']
+    data = s3g.UnpackResponseWithString('<Iccc','\x01\x00\x00\x00abcABCDE\x00')
+    for i in range(0, len(expected_data)):
+      assert(data[i] == expected_data[i])
+
 if __name__ == "__main__":
   unittest.main()

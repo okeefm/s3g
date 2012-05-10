@@ -949,7 +949,7 @@ Payload
     uint8: green 
     uint8: blue
     uint8: blink rate (0-255 valid)
-    uint8: effect (currently unused)
+    uint8: N/A (reserved for future use)
 
 Response (0 bytes)
 
@@ -960,7 +960,7 @@ Payload
 
     uint16: frequency
     uint16: buzz length in ms
-    uint8: effect (currently unused)
+    uint8: N/A (reserved for future use)
 
 Response (0 bytes)
 
@@ -1124,7 +1124,7 @@ Set the percent done for the current build. This value will be displayed on the 
 Payload
  
     uint8: percent (0-100)
-    uint8: ignore (currently unused
+    uint8: N/A (reserved for future use)
 
 Response (0 bytes)
 
