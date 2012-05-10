@@ -1,8 +1,13 @@
-import unittest
+import os
 import sys
+lib_path = os.path.abspath('../')
+sys.path.append(lib_path)
+
+import unittest
 import io
-import s3g
 import struct
+
+import s3g
 
 class CRCTests(unittest.TestCase):
   def test_cases(self):
