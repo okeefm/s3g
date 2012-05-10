@@ -184,15 +184,6 @@ class ExtendedStopError(Exception):
   def __str__(self):
     return self.value
 
-class UnknownButtonError(TypeError):
-  """
-  An UnknownButtonError is thrown if the button to be waited on is not an instance of up, down, left, right or center
-  """
-  def __init__(self, button):
-    self.value = "Button Error.  Expected up, down, left, right, center.  Got %s."%(button)
-  def __str__(self):
-    return self.value
-
 class SDCardError(Exception):
   """
   An SD card error is thrown if there was a problem accessing the SD card. This should be recoverable,
@@ -780,6 +771,9 @@ class s3g:
     @param aRelative: Relative movement flag.  If high, the aAxis moves relatively
     @param bRelative: Relative movement flag.  If high, the bAxis moves relatively
     """
+    acceptedLength = 5
+    if len(point) != acceptedLength:
+      raise ValueError("Expected point of size %i, got %i"%(acceptedLength, len(point)))
     payload = bytearray()
     payload.append(host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'])
     for cor in point:
@@ -1080,15 +1074,18 @@ class s3g:
     # TODO: fix the endstop bit encoding, it doesn't make sense.
     return position, endstop_states
 
-  def QueuePoint(self, position, rate):
+  def QueuePoint(self, point, rate):
     """
     Move the toolhead to a new position at the given rate
     @param position array 3D position to move to. All dimension should be in steps.
     @param rate double Movement speed, in steps/??
     """
+    acceptedLength = 3
+    if len(point) != acceptedLength:
+      raise ValueError("Expected point of size %i, got %i"%(acceptedLength, len(point)))
     payload = bytearray()
     payload.append(host_action_command_dict['QUEUE_POINT'])
-    for cor in position:
+    for cor in point:
       payload.extend(EncodeInt32(cor))
     payload.extend(EncodeUint32(rate))
     
@@ -1099,6 +1096,9 @@ class s3g:
     Inform the machine that it should consider this p
     @param position 3D position to set the machine to, in steps.
     """
+    acceptedLength = 3
+    if len(position) != acceptedLength:
+      raise ValueError("Expected position of size %i, got %i"%(acceptedValue, len(position)))
     payload = bytearray()
     payload.append(host_action_command_dict['SET_POSITION'])
     for cor in position:
@@ -1155,15 +1155,18 @@ class s3g:
 
     self.SendCommand(payload)
 
-  def QueueExtendedPoint(self, position, rate):
+  def QueueExtendedPoint(self, point, rate):
     """
     Move the toolhead to a new position at the given rate
     @param position 5D position to move to. All dimension should be in steps.
     @param rate double Movement speed, in steps/??
     """
+    acceptedLength = 5
+    if len(point) != acceptedLength:
+      raise ValueError("Expected point of size %i, got %i"%(acceptedLength, len(point)))
     payload = bytearray()
     payload.append(host_action_command_dict['QUEUE_EXTENDED_POINT'])
-    for cor in position:
+    for cor in point:
       payload.extend(EncodeInt32(cor))
     payload.extend(EncodeUint32(rate))
     
@@ -1174,6 +1177,9 @@ class s3g:
     Inform the machine that it should consider this point its current point
     @param position 5D position to set the machine to, in steps.
     """
+    acceptedLength = 5
+    if len(position) != acceptedLength:
+      raise ValueError("Expected position of size %i, got %i"%(acceptedLength, len(position)))
     payload = bytearray()
     payload.append(host_action_command_dict['SET_EXTENDED_POSITION'])
     for cor in position:
@@ -1193,7 +1199,7 @@ class s3g:
     buttons = ['up', 'down', 'left', 'right', 'center']
     button = button.lower()
     if button.lower() not in buttons:
-      raise UnknownButtonError(button)
+      raise ValueError("Expected one of these button denominations: "+str(buttons)+ ".  Got " + str(button)+".")
     payload = bytearray()
     payload.append(host_action_command_dict['WAIT_FOR_BUTTON'])
     if button == 'center':

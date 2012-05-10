@@ -785,7 +785,7 @@ class S3gTests(unittest.TestCase):
 
   def test_wait_for_button_bad_button(self):
     button = 'bad'
-    self.assertRaises(s3g.UnknownButtonError, self.r.WaitForButton, button, 0, False, False, False)
+    self.assertRaises(ValueError, self.r.WaitForButton, button, 0, False, False, False)
 
   def test_wait_for_button(self):
     button = 0x10
@@ -910,6 +910,16 @@ class S3gTests(unittest.TestCase):
     payload = s3g.DecodePacket(packet)
     assert payload[0] == s3g.host_action_command_dict['BUILD_END_NOTIFICATION']
 
+  def test_queue_point_short_length(self):
+    point = [0,1]
+    rate = 500
+    self.assertRaises(ValueError, self.r.QueuePoint, point, rate)
+
+  def test_queue_point_long_length(self):
+    point = [0, 1, 2, 3]
+    rate = 500
+    self.assertRaises(ValueError, self.r.QueuePoint, point, rate)
+
   def test_queue_point(self):
     target = [1,-2,3]
     velocity = 6
@@ -1006,6 +1016,16 @@ class S3gTests(unittest.TestCase):
     assert payload[2] == command
     assert payload[3] == len(command_payload)
     assert payload[4:] == command_payload
+
+  def test_queue_extended_point_long_length(self):
+    point = [1, 2, 3, 4, 5, 6]
+    rate = 500
+    self.assertRaises(ValueError, self.r.QueueExtendedPoint, point, rate)
+
+  def test_queue_extended_point_short_length(self):
+    point = [1, 2, 3, 4]
+    rate = 500
+    self.assertRaises(ValueError, self.r.QueueExtendedPoint, point, rate)
 
   def test_queue_extended_point(self):
     target = [1,-2,3,-4,5]
@@ -1192,6 +1212,17 @@ class S3gTests(unittest.TestCase):
 
     self.assertEqual(payload[0], s3g.host_action_command_dict['RECALL_HOME_POSITIONS'])
     self.assertEqual(payload[1], bitfield)
+
+  def test_queue_extended_point_new_short_length(self):
+    point = [1, 2, 3, 4]
+    duration = 0
+    self.assertRaises(ValueError, self.r.QueueExtendedPointNew, point, duration, True, True, True, True, True)
+  
+  def test_queue_extended_point_new_long_length(self):
+    point = [1, 2, 3, 4, 5, 6]
+    duration = 0
+    self.assertRaises(ValueError, self.r.QueueExtendedPointNew, point, duration, True, True, True, True, True)
+    
 
   def test_queue_extended_point_new(self):
     response_payload = bytearray()
