@@ -171,7 +171,8 @@ class TransmissionError(IOError):
   This error is non-recoverable without resetting the state of the machine.
   """
   def __init__(self, value):
-     self.value = value
+    self.value = value
+
   def __str__(self):
     return repr(self.value)
 
@@ -445,6 +446,8 @@ class s3g:
   def __init__(self):
     self.file = None
     #self.logfile = open('output_stats','w')
+    self.ExtendedPointLength = 5
+    self.PointLength = 3
 
   def SendCommand(self, payload):
     """
@@ -771,9 +774,8 @@ class s3g:
     @param aRelative: Relative movement flag.  If high, the aAxis moves relatively
     @param bRelative: Relative movement flag.  If high, the bAxis moves relatively
     """
-    acceptedLength = 5
-    if len(point) != acceptedLength:
-      raise ValueError("Expected point of size %i, got %i"%(acceptedLength, len(point)))
+    if len(point) != self.ExtendedPointLength:
+      raise ValueError("Expected point of size %i, got %i"%(self.ExtendedPointLength, len(point)))
     payload = bytearray()
     payload.append(host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'])
     for cor in point:
@@ -1080,9 +1082,8 @@ class s3g:
     @param position array 3D position to move to. All dimension should be in steps.
     @param rate double Movement speed, in steps/??
     """
-    acceptedLength = 3
-    if len(point) != acceptedLength:
-      raise ValueError("Expected point of size %i, got %i"%(acceptedLength, len(point)))
+    if len(point) != self.PointLength:
+      raise ValueError("Expected point of size %i, got %i"%(self.PointLength, len(point)))
     payload = bytearray()
     payload.append(host_action_command_dict['QUEUE_POINT'])
     for cor in point:
@@ -1096,9 +1097,8 @@ class s3g:
     Inform the machine that it should consider this p
     @param position 3D position to set the machine to, in steps.
     """
-    acceptedLength = 3
-    if len(position) != acceptedLength:
-      raise ValueError("Expected position of size %i, got %i"%(acceptedValue, len(position)))
+    if len(position) != self.PointLength:
+      raise ValueError("Expected position of size %i, got %i"%(self.PointLength, len(position)))
     payload = bytearray()
     payload.append(host_action_command_dict['SET_POSITION'])
     for cor in position:
@@ -1161,9 +1161,8 @@ class s3g:
     @param position 5D position to move to. All dimension should be in steps.
     @param rate double Movement speed, in steps/??
     """
-    acceptedLength = 5
-    if len(point) != acceptedLength:
-      raise ValueError("Expected point of size %i, got %i"%(acceptedLength, len(point)))
+    if len(point) != self.ExtendedPointLength:
+      raise ValueError("Expected point of size %i, got %i"%(self.ExtendedPointLength, len(point)))
     payload = bytearray()
     payload.append(host_action_command_dict['QUEUE_EXTENDED_POINT'])
     for cor in point:
@@ -1177,9 +1176,8 @@ class s3g:
     Inform the machine that it should consider this point its current point
     @param position 5D position to set the machine to, in steps.
     """
-    acceptedLength = 5
-    if len(position) != acceptedLength:
-      raise ValueError("Expected position of size %i, got %i"%(acceptedLength, len(position)))
+    if len(position) != self.ExtendedPointLength:
+      raise ValueError("Expected position of size %i, got %i"%(self.ExtendedPointLength, len(position)))
     payload = bytearray()
     payload.append(host_action_command_dict['SET_EXTENDED_POSITION'])
     for cor in position:

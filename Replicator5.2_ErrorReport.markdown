@@ -30,6 +30,8 @@ There are several commands that should be deprecated and not understood by the r
 ##Errors found
 All errors listed below were discovered when connecting to a Replicator using version 5.2 of the MB firmware.
 
+###MaximumPayloadSize
+The test labeled testMaximumLength is designed to give the Replicator a packet of maximum length and ensure it accepts it.  This test is set up by writing a bytearray of length MaximumPayloadSize - 4 (we use the MaximumPayloadSize less 4 since the packet contains 4 bytes in addition to the payload: header [1], offset [2] and length [1]).  After sending, a transmission error is thrown, indicative of the replicator not accepting the packet.
 
 ### Init
 I set the replicator's position to [10, 9, 8, 7, 6].  I then gave it five delay commands of 1 second each.  After calling init, the buffer was successfully cleared, but the position was set to 10, 9, 8, 7, 6.

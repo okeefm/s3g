@@ -1,3 +1,13 @@
+"""
+A suite of tests to be run on a replicator with the s3g python module.  These tests are broken down into several categories:
+  CommonFunctionTests: Tests that ensure functions used by all test cases are valid
+  s3gPacketTests: Tests that build malformed packets (i.e. long length, no header, bad crc, etc) and send them off to the replicator to ensure she rejects them
+  s3gSendReceiveTest: Tests that make sure the replicator understands all the commands it needs to, and rejects the ones it doesnt understand
+  s3gFunctionTests: The meat of this test class; makes sure all commands understodd by the replicator are executed correctly.  Currently this requires some user feedback.  A test rig should be assembled to circumvent user interaction.
+  SDCardTests: Tests the ensure the replicator can communicate with its SD card port.  this is broken out into a separate test suite due to its dependence on a set of test files located in ./testFiles/
+"""
+
+
 import unittest
 import optparse
 import serial
@@ -111,10 +121,9 @@ class s3gPacketTests(unittest.TestCase):
     self.assertRaises(s3g.TransmissionError, self.s3g.SendPacket, packet)
 
   def test_MaxLength(self):
-    payload = self.GetVersionPayload()
-    for i in range(s3g.maximum_payload_length - len(payload)):
-      payload.append(0x00)
-    self.s3g.SendCommand(payload)
+    FreeEEPROMSpace = 0x01D1
+    b = bytearray(s3g.maximum_payload_length-4)
+    self.s3g.WriteToEEPROM(FreeEEPROMSpace, b)
 
   def test_OversizedLength(self):
     payload = bytearray(s3g.maximum_payload_length+1)
@@ -123,7 +132,7 @@ class s3gPacketTests(unittest.TestCase):
 class s3gSendReceiveTests(unittest.TestCase):
   def setUp(self):
     self.s3g = s3g.s3g()
-    self.s3g.file = serial.Serial(options.serial, '115200', timeout=1)
+    self.s3g.file = serial.Serial(options.serialPort, '115200', timeout=1)
     self.s3g.AbortImmediately()
 
   def tearDown(self):
@@ -424,15 +433,15 @@ class s3gFunctionTests(unittest.TestCase):
     self.s3g.SetToolheadTemperature(toolhead, 0)
 
   def test_DisplayMessage(self):
-if hasInterface:
-  message = str(time.clock())
-  secondMsg = 'success'
-  self.s3g.DisplayMessage(0, 0, message, 0, False, False, True)
-  self.s3g.DisplayMessage(0, 0, secondMsg, 0, False, True, True)
-  readMessage = raw_input("\nWhat is the message on the replicator's display? ")
-  self.assertEqual(message, readMessage)
-  obs = raw_input("\nPlease go to the interface board, press the middle button, and type the new message. ")
-  self.assertEqual(obs, secondMsg)
+    if hasInterface:
+      message = str(time.clock())
+      secondMsg = 'success'
+      self.s3g.DisplayMessage(0, 0, message, 0, False, False, True)
+      self.s3g.DisplayMessage(0, 0, secondMsg, 0, False, True, True)
+      readMessage = raw_input("\nWhat is the message on the replicator's display? ")
+      self.assertEqual(message, readMessage)
+      obs = raw_input("\nPlease go to the interface board, press the middle button, and type the new message. ")
+      self.assertEqual(obs, secondMsg)
 
   def test_GetPosition(self):
     position = self.s3g.GetPosition()
@@ -840,28 +849,6 @@ if hasInterface:
     obs = raw_input("\nDid you hear the song play? (y/n) ")
     self.assertEqual(obs, 'y')
 
-class test(unittest.TestCase):
-  def setUp(self):
-    self.s3g = s3g.s3g()
-    self.s3g.file = serial.Serial(options.serialPort,'115200', timeout=1)
-    self.s3g.AbortImmediately()
-
-  def tearDown(self):
-    self.s3g.file.close()
-
-
-  def test_MaxLength(self):
-    payload = self.GetVersionPayload()
-    for i in range(s3g.maximum_payload_length - len(payload)):
-      payload.append(0x00)
-    self.s3g.SendCommand(payload)
-
-  def GetVersionPayload(self):
-    payload = bytearray()
-    payload.append(s3g.host_query_command_dict['GET_VERSION'])
-    payload.extend(s3g.EncodeUint16(s3g.s3g_version))
-    return payload
-
 class s3gSDCardTests(unittest.TestCase):
 
   def setUp(self):
@@ -898,8 +885,6 @@ class s3gSDCardTests(unittest.TestCase):
     readName = self.s3g.GetBuildName()
     self.assertEqual(filename, ConvertFromNUL(readName))
 
-   
-    
 
 if __name__ == '__main__':
   parser = optparse.OptionParser()
