@@ -1,14 +1,13 @@
 # s3g
 
-S3g is an attempt at implementing the MakerBot serial protocol in python. The main goal is to control some plotter devices. If it proves useful, then certainly something else could be done with it.
+S3g is an attempt at implementing the MakerBot serial protocol in python.
 
 ## Usage
 
-For now, just some unit tests:
+To run the module unit tests (requires python 2.7+ or [unittest2](http://pypi.python.org/pypi/unittest2)):
 
-    python s3g_test.py
+    python unit_tests.py
 
-Once it can pass these, then some comms handler, etc. It's only going to support a blocking interface.
 
 ## Reference
 

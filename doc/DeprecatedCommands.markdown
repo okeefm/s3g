@@ -1,5 +1,5 @@
 #Deprecated Commands
-Here is a list of commands I've found that were in the googledoc specification for the firmware, bus has since been deprecated.
+Here is a list of commands I've found that were in the googledoc specification for the firmware, but have since been deprecated.
 
 ##34 - Get Firmware build Name
 Retrieve the firmware build name, which is a human-readable string describing the build.  Names should be chosen with an eye towards disambiguating builds targeted for different tools.
