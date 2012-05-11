@@ -26,6 +26,69 @@ class S3gTests(unittest.TestCase):
     self.inputstream = None
     self.file = None
 
+  def test_add_obj_to_payload(self):
+    toAdd = ['a', 'b', 'c', 'd']
+    nestedLoop = [1, 2, 3, 4, toAdd]
+    expected = bytearray()
+    for i in toAdd:
+      expected.append(i)
+    for j in nestedLoop[:-1]:
+      expected.append(j)
+    for k in nestedLoop[-1]:
+      expected.append(k)
+
+    payload = bytearray()
+    self.r.AddObjToPayload(payload, ['a', 'b', 'c', 'd', nestedLoop])
+    for i, j in zip(payload, expected):
+      self.assertEqual(i, j) 
+    
+
+  def test_build_and_send_payload_nested_iterators(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+    point = [0, 0, 0, 0, 0]
+    cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
+    duration = 0
+    axes = ['x', 'y']
+    expected = bytearray()
+    expected.append(cmd)
+    for cor in point:
+      expected.extend(s3g.EncodeInt32(cor))
+    expected.extend(s3g.EncodeUint32(duration))
+    expected.append(s3g.EncodeAxes(axes))
+      
+    self.r.BuildAndSendPayload(cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), s3g.EncodeAxes(axes))
+    
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+
+    for i, j in zip(expected, payload):
+      self.assertEqual(i, j)
+    
+
+  def test_build_and_send_payload(self):
+    """
+    Pass case: All parameters passed are added to the byte array and returned correctly
+    """
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+    header = 42
+    info = ['a', 'b', 'c', 'd']
+    footer = 0x01
+    expected = bytearray()
+    expected.append(header)
+    expected.extend(info)
+    expected.append(footer)
+    self.r.BuildAndSendPayload(header, info, footer)
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    for i, j in zip(expected, payload):
+      self.assertEqual(i, j)
+
   def test_send_packet_timeout(self):
     """
     Time out when no data is received. The input stream should have max_rety_count copies of the
