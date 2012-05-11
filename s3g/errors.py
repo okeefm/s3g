@@ -8,23 +8,27 @@ class PacketDecodeError(Exception):
   def __init__(self, value):
      self.value = value
   def __str__(self):
-    return repr(self.value)
+    return self.value
 
 class PacketLengthError(PacketDecodeError):
   def __init__(self, length, expected_length):
-    self.value='Invalid length. Got=%i, Expected=%i'%(length, expected_length)
+    self.length = length
+    self.expected_length = expected_length
 
 class PacketLengthFieldError(PacketDecodeError):
   def __init__(self, length, expected_length):
-    self.value='Invalid length field. Got=%i, Expected=%i'%(length, expected_length)
+    self.length = length
+    self.expected_length = expected_length
 
 class PacketHeaderError(PacketDecodeError):
   def __init__(self, header, expected_header):
-    self.value='Invalid header. Got=%x, Expected=%x'%(header, expected_header)
+    self.header = header
+    self.expected_header = expected_header
 
 class PacketCRCError(PacketDecodeError):
   def __init__(self, crc, expected_crc):
-    self.value='Invalid crc. Got=%x, Expected=%x'%(crc, expected_crc)
+    self.crc = crc
+    self.expected_crc = expected_crc
 
 class ResponseError(Exception):
   """
@@ -33,25 +37,24 @@ class ResponseError(Exception):
   def __init__(self, value):
      self.value = value
   def __str__(self):
-    return repr(self.value)
+    return self.value
 
 class BufferOverflowError(ResponseError):
   def __init__(self):
-    self.value='Host buffer full, try packet again later'
+    pass
 
 class RetryError(ResponseError):
   def __init__(self, value):
-    self.value=value
+    self.value = value 
 
 class BuildCancelledError(ResponseError):
   def __init__(self):
-    self.value='Build cancelled message received from host, abort'
+    pass
 
 class TimeoutError(ResponseError):
   def __init__(self, data_length, decoder_state):
-    self.value='Timed out before receiving complete packet from host. Received bytes=%i, Decoder state=%s"'%(
-      data_length, decoder_state
-    )
+    self.data_length = data_length
+    self.decoder_state = decoder_state
 
 class TransmissionError(IOError):
   """
@@ -62,16 +65,14 @@ class TransmissionError(IOError):
     self.value = value
 
   def __str__(self):
-    return repr(self.value)
+    return self.value
 
 class ExtendedStopError(Exception):
   """
   An extended stop error is thrown if there was a problem executing an extended stop on the machinea.
   """
   def __init__(self):
-    self.value = "Extended Stop Error"
-  def __str__(self):
-    return self.value
+    pass
 
 class SDCardError(Exception):
   """
@@ -79,14 +80,11 @@ class SDCardError(Exception):
   if the user replaces or reseats the SD card.
   """
   def __init__(self, response_code):
+    self.response_code = response_code
     try:
-      response_code_string = (key for key,value in sd_error_dict.items() if value==response_code).next()
+      self.response_code_string = (key for key,value in sd_error_dict.items() if value==response_code).next()
     except StopIteration:
-      response_code_string = ''
-
-    self.value='SD Card error %x (%s)'%(response_code,response_code_string)
-  def __str__(self):
-    return repr(self.value)
+      self.response_code_string = ''
 
 class ProtocolError(Exception):
   """
@@ -95,6 +93,4 @@ class ProtocolError(Exception):
   implementing the protocol correctly.
   """
   def __init__(self, value):
-     self.value = value
-  def __str__(self):
-    return repr(self.value)
+    self.value = value
