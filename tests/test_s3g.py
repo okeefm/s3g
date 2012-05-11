@@ -284,7 +284,7 @@ class S3gTests(unittest.TestCase):
     offset = 1234
     length = s3g.maximum_payload_length
 
-    self.assertRaises(s3g.ProtocolError,self.r.ReadFromEEPROM,offset, length)
+    self.assertRaises(s3g.EEPROMLengthError,self.r.ReadFromEEPROM,offset, length)
 
   def test_read_from_eeprom(self):
     offset = 1234
@@ -314,7 +314,7 @@ class S3gTests(unittest.TestCase):
     for i in range (0, length):
       data.append(i)
 
-    self.assertRaises(s3g.ProtocolError,self.r.WriteToEEPROM, offset, data)
+    self.assertRaises(s3g.EEPROMLengthError,self.r.WriteToEEPROM, offset, data)
 
   def test_write_to_eeprom_bad_response_length(self):
     offset = 1234
@@ -329,7 +329,7 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.assertRaises(s3g.ProtocolError, self.r.WriteToEEPROM,offset, data)
+    self.assertRaises(s3g.EEPROMMismatchError, self.r.WriteToEEPROM,offset, data)
 
   def test_write_to_eeprom(self):
     offset = 1234
@@ -523,7 +523,7 @@ class S3gTests(unittest.TestCase):
 
   def test_wait_for_button_bad_button(self):
     button = 'bad'
-    self.assertRaises(ValueError, self.r.WaitForButton, button, 0, False, False, False)
+    self.assertRaises(s3g.ButtonError, self.r.WaitForButton, button, 0, False, False, False)
 
   def test_wait_for_button(self):
     button = 0x10
@@ -654,12 +654,12 @@ class S3gTests(unittest.TestCase):
   def test_queue_point_short_length(self):
     point = [0,1]
     rate = 500
-    self.assertRaises(ValueError, self.r.QueuePoint, point, rate)
+    self.assertRaises(s3g.PointLengthError, self.r.QueuePoint, point, rate)
 
   def test_queue_point_long_length(self):
     point = [0, 1, 2, 3]
     rate = 500
-    self.assertRaises(ValueError, self.r.QueuePoint, point, rate)
+    self.assertRaises(s3g.PointLengthError, self.r.QueuePoint, point, rate)
 
   def test_queue_point(self):
     target = [1,-2,3]
@@ -735,7 +735,7 @@ class S3gTests(unittest.TestCase):
     command_payload = 'abcdefghij'
 
     for tool_index in tool_indices:
-      self.assertRaises(s3g.ProtocolError,
+      self.assertRaises(s3g.ToolIndexError,
                         self.r.ToolActionCommand,
                         tool_index, command, command_payload)
 
@@ -761,12 +761,12 @@ class S3gTests(unittest.TestCase):
   def test_queue_extended_point_long_length(self):
     point = [1, 2, 3, 4, 5, 6]
     rate = 500
-    self.assertRaises(ValueError, self.r.QueueExtendedPoint, point, rate)
+    self.assertRaises(s3g.PointLengthError, self.r.QueueExtendedPoint, point, rate)
 
   def test_queue_extended_point_short_length(self):
     point = [1, 2, 3, 4]
     rate = 500
-    self.assertRaises(ValueError, self.r.QueueExtendedPoint, point, rate)
+    self.assertRaises(s3g.PointLengthError, self.r.QueueExtendedPoint, point, rate)
 
   def test_queue_extended_point(self):
     target = [1,-2,3,-4,5]
@@ -961,14 +961,14 @@ class S3gTests(unittest.TestCase):
     duration = 0
     relative_axes = ['x']
 
-    self.assertRaises(ValueError, self.r.QueueExtendedPointNew, point, duration, relative_axes)
+    self.assertRaises(s3g.PointLengthError, self.r.QueueExtendedPointNew, point, duration, relative_axes)
   
   def test_queue_extended_point_new_long_length(self):
     point = [1, 2, 3, 4, 5, 6]
     duration = 0
     relative_axes = ['x']
 
-    self.assertRaises(ValueError, self.r.QueueExtendedPointNew, point, duration, relative_axes)
+    self.assertRaises(s3g.PointLengthError, self.r.QueueExtendedPointNew, point, duration, relative_axes)
     
 
   def test_queue_extended_point_new(self):
@@ -1200,8 +1200,6 @@ class S3gTests(unittest.TestCase):
     self.assertEqual(payload[0], s3g.host_action_command_dict['TOOL_ACTION_COMMAND'])
     self.assertEqual(payload[1], toolIndex)
     self.assertEqual(payload[2], s3g.slave_action_command_dict['INIT'])
-    self.assertEqual(payload[3], len(expectedPayload))
-    self.assertEqual(payload[4:], expectedPayload)
 
   def test_toolhead_abort(self):
     toolIndex = 0
@@ -1424,7 +1422,7 @@ class S3gTests(unittest.TestCase):
     offset = 1234
     length = s3g.maximum_payload_length
 
-    self.assertRaises(s3g.ProtocolError,self.r.ReadFromToolheadEEPROM, tool_index, offset, length)
+    self.assertRaises(s3g.EEPROMLengthError,self.r.ReadFromToolheadEEPROM, tool_index, offset, length)
 
   def test_read_from_toolhead_eeprom(self):
     tool_index = 2
@@ -1458,7 +1456,7 @@ class S3gTests(unittest.TestCase):
     for i in range (0, length):
       data.append(i)
 
-    self.assertRaises(s3g.ProtocolError,self.r.WriteToToolheadEEPROM, tool_index, offset, data)
+    self.assertRaises(s3g.EEPROMLengthError,self.r.WriteToToolheadEEPROM, tool_index, offset, data)
 
   def test_write_to_toolhead_eeprom_bad_response_length(self):
     tool_index = 2
@@ -1474,7 +1472,7 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.assertRaises(s3g.ProtocolError, self.r.WriteToToolheadEEPROM, tool_index, offset, data)
+    self.assertRaises(s3g.EEPROMMismatchError, self.r.WriteToToolheadEEPROM, tool_index, offset, data)
 
   def test_write_to_toolhead_eeprom(self):
     tool_index = 2

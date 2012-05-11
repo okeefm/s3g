@@ -119,7 +119,7 @@ class s3g:
 
       if retry_count >= max_retry_count:
         self.logger.warning('{"event":"transmission_error"}\n')
-        raise TransmissionError("Failed to send packet, maximum retries exceeded")
+        raise TransmissionError
 
 
   def GetVersion(self):
@@ -307,7 +307,7 @@ class s3g:
     @param relative_axes: Array of axes whose coordinates should be considered relative
     """
     if len(point) != self.ExtendedPointLength:
-      raise ValueError("Expected point of size %i, got %i"%(self.ExtendedPointLength, len(point)))
+      raise PointLengthError(len(point))
 
     self.BuildAndSendPayload(host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'], 
                              [EncodeInt32(cor) for cor in point], 
@@ -387,7 +387,7 @@ class s3g:
     @return payload received from the tool
     """
     if tool_index > max_tool_index or tool_index < 0:
-      raise ProtocolError('Tool index out of range, got=%i, max=%i'%(tool_index, max_tool_index))
+      raise ProtocolError(1)
 
     if tool_payload != None:
       return self.BuildAndSendPayload(host_query_command_dict['TOOL_QUERY'], 
@@ -409,7 +409,7 @@ class s3g:
     @return byte array of data read from EEPROM
     """
     if length > maximum_payload_length - 1:
-      raise ProtocolError('Length out of range, got=%i, max=%i'%(length, maximum_payload_length))
+      raise EEPROMLengthError(length)
 
     response = self.BuildAndSendPayload(host_query_command_dict['READ_FROM_EEPROM'], 
                                         EncodeUint16(offset), 
@@ -424,7 +424,7 @@ class s3g:
     @param data Data to write to the EEPROM
     """
     if len(data) > maximum_payload_length - 4:
-      raise ProtocolError('Length out of range, got=%i, max=%i'%(len(data), maximum_payload_length - 4))
+      raise EEPROMLengthError(len(data))
 
     response = self.BuildAndSendPayload(host_query_command_dict['WRITE_TO_EEPROM'], 
                                         EncodeUint16(offset), 
@@ -433,7 +433,7 @@ class s3g:
                                         )
 
     if response[1] != len(data):
-      raise ProtocolError('Write length mismatch, got=%i, expected=%i'%(response[1], len(data)))
+      raise EEPROMMismatchError(response[1])
 
   def GetAvailableBufferSize(self):
     """
@@ -527,7 +527,7 @@ class s3g:
     @param rate double Movement speed, in steps/??
     """
     if len(point) != self.PointLength:
-      raise ValueError("Expected point of size %i, got %i"%(self.PointLength, len(point)))
+      raise PointLengthError(len(point))
     self.BuildAndSendPayload(host_action_command_dict['QUEUE_POINT'], 
                              [EncodeInt32(cor) for cor in point], 
                              EncodeUint32(rate)
@@ -539,7 +539,7 @@ class s3g:
     @param position 3D position to set the machine to, in steps.
     """
     if len(position) != self.PointLength:
-      raise ValueError("Expected position of size %i, got %i"%(self.PointLength, len(position)))
+      raise PointLengthError(len(position))
     self.BuildAndSendPayload(host_action_command_dict['SET_POSITION'], 
                             [EncodeInt32(cor) for cor in position]
                             )
@@ -572,7 +572,7 @@ class s3g:
                             EncodeUint16(timeout)
                             )
 
-  def ToolActionCommand(self, tool_index, command, tool_payload):
+  def ToolActionCommand(self, tool_index, command, tool_payload = None):
     """
     Send a command to a toolhead
     @param tool_index toolhead index
@@ -580,13 +580,18 @@ class s3g:
     @param tool_payload payload that goes along with the command
     """
     if tool_index > max_tool_index or tool_index < 0:
-      raise ProtocolError('Tool index out of range, got=%i, max=%i'%(tool_index, max_tool_index))
+      raise ToolIndexError(tool_index)
 
-    self.BuildAndSendPayload(host_action_command_dict['TOOL_ACTION_COMMAND'], 
-                            tool_index, command, 
-                            len(tool_payload), 
-                            tool_payload
-                            )
+    if tool_payload != None:
+      self.BuildAndSendPayload(host_action_command_dict['TOOL_ACTION_COMMAND'], 
+                               tool_index, 
+                               command, 
+                               len(tool_payload), 
+                               tool_payload)
+    else:
+      self.BuildAndSendPayload(host_action_command_dict['TOOL_ACTION_COMMAND'],
+                              tool_index,
+                              command)
 
 
   def QueueExtendedPoint(self, point, rate):
@@ -596,7 +601,7 @@ class s3g:
     @param rate double Movement speed, in steps/??
     """
     if len(point) != self.ExtendedPointLength:
-      raise ValueError("Expected point of size %i, got %i"%(self.ExtendedPointLength, len(point)))
+      raise PointLengthError(len(point))
     self.BuildAndSendPayload(host_action_command_dict['QUEUE_EXTENDED_POINT'], 
                             [EncodeInt32(cor) for cor in point], 
                             EncodeUint32(rate)
@@ -608,7 +613,7 @@ class s3g:
     @param position 5D position to set the machine to, in steps.
     """
     if len(position) != self.ExtendedPointLength:
-      raise ValueError("Expected position of size %i, got %i"%(self.ExtendedPointLength, len(position)))
+      raise PointLengthError(len(position))
     self.BuildAndSendPayload(host_action_command_dict['SET_EXTENDED_POSITION'], 
                             [EncodeInt32(cor) for cor in position]
                             )
@@ -633,7 +638,7 @@ class s3g:
     elif button == 'up':
       button = 0x10
     else:
-      raise ValueError("Invalid button received. Got " + str(button)+".")
+      raise ButtonError(button)
 
     optionsField = 0
     if ready_on_timeout:
@@ -729,7 +734,7 @@ class s3g:
     @return Version number
     """
     payload = bytearray()
-    payload.extend(EncodeUint16(s3g_version))
+    self.AddObjToPayload(payload, EncodeUint16(s3g_version))
    
     response = self.ToolQuery(tool_index,slave_query_command_dict['GET_VERSION'], payload)
     [response_code, version] = UnpackResponse('<BH', response)
@@ -782,7 +787,7 @@ class s3g:
     @param theta: angle to set the servo to
     """
     payload = bytearray()
-    payload.append(theta)
+    self.AddObjToPayload(payload, theta)
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_SERVO_1_POSITION'], payload)
 
   def ToolheadAbort(self, tool_index):
@@ -812,7 +817,7 @@ class s3g:
       bitfield |= 0x01
     if direction:
       bitfield |= 0x02
-    payload.append(bitfield)
+    self.AddObjToPayload(payload, bitfield)
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_MOTOR_1'], payload)
 
   def SetMotor1SpeedRPM(self, tool_index, duration):
@@ -822,7 +827,7 @@ class s3g:
     @param duration : Durtation of each rotation, in microseconds
     """
     payload = bytearray()
-    payload.extend(EncodeUint32(duration))
+    self.AddObjToPayload(payload, EncodeUint32(duration))
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_MOTOR_1_SPEED_RPM'], payload)
 
   def GetMotor1Speed(self, tool_index):
@@ -860,7 +865,7 @@ class s3g:
     elif ready == 0:
       return False
     else:
-      raise ProtocolError('Expected 0 or 1 for ready value, got=%i'%(ready))
+      raise HeatElementReady(ready)
 
   def ReadFromToolheadEEPROM(self, tool_index, offset, length):
     """
@@ -870,11 +875,12 @@ class s3g:
     @return byte array of data read from EEPROM
     """
     if length > maximum_payload_length - 1:
-      raise ProtocolError('Length out of range, got=%i, max=%i'%(length, maximum_payload_length))
+      raise EEPROMLengthError(length)
 
     payload = bytearray()
-    payload.extend(EncodeUint16(offset))
-    payload.append(length)
+    self.AddObjToPayload(payload,
+                         [EncodeUint16(offset),
+                          length])
 
     response = self.ToolQuery(tool_index, slave_query_command_dict['READ_FROM_EEPROM'], payload)
 
@@ -888,17 +894,18 @@ class s3g:
     """
     # TODO: this length is bad
     if len(data) > maximum_payload_length - 6:
-      raise ProtocolError('Length out of range, got=%i, max=%i'%(len(data), maximum_payload_length - 6))
+      raise EEPROMLengthError(len(data))
 
     payload = bytearray()
-    payload.extend(EncodeUint16(offset))
-    payload.append(len(data))
-    payload.extend(data)
+    self.AddObjToPayload(payload, 
+                          [EncodeUint16(offset),
+                          len(data),
+                          data])
 
     response = self.ToolQuery(tool_index, slave_query_command_dict['WRITE_TO_EEPROM'], payload)
 
     if response[1] != len(data):
-      raise ProtocolError('Write length mismatch, got=%i, expected=%i'%(response[1], len(data)))
+      raise EEPROMMismatchError(response[1])
 
   def GetPlatformTemperature(self, tool_index):
     """
@@ -947,7 +954,7 @@ class s3g:
     elif ready == 0:
       return False
     else:
-      raise ProtocolError('Expected 0 or 1 for ready value, got=%i'%(ready))
+      raise HeatElementReady(ready)
 
   def ToggleFan(self, tool_index, state):
     """
@@ -958,9 +965,9 @@ class s3g:
 
     payload = bytearray()
     if state == True:
-      payload.append(0x01)
+      self.AddObjToPayload(payload, 0x01)
     else:
-      payload.append(0x00)
+      self.AddObjToPayload(payload, 0x00)
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_FAN'], payload)
 
   def ToggleValve(self, tool_index, state):
@@ -972,9 +979,9 @@ class s3g:
 
     payload = bytearray()
     if state == True:
-      payload.append(0x01)
+      self.AddObjToPayload(payload, 0x01)
     else:
-      payload.append(0x00)
+      self.AddObjToPayload(payload, 0x00)
 
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_VALVE'], payload)
 
@@ -987,8 +994,7 @@ class s3g:
       sesetting motor speed to 0
     @param tool_index: The tool to re-initialize
     """
-    payload = bytearray()
-    self.ToolActionCommand(tool_index, slave_action_command_dict['INIT'], payload)
+    self.ToolActionCommand(tool_index, slave_action_command_dict['INIT'])
 
   def SetToolheadTemperature(self, tool_index, temperature):
     """
@@ -997,7 +1003,7 @@ class s3g:
     @param Temperature: Temperature to heat up to in Celcius
     """
     payload = bytearray()
-    payload.extend(EncodeUint16(temperature))
+    self.AddObjToPayload(payload, EncodeUint16(temperature))
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP'], payload)
 
 
@@ -1008,5 +1014,5 @@ class s3g:
     @param Temperature: Temperature to heat up to in Celcius
     """
     payload = bytearray()
-    payload.extend(EncodeUint16(temperature))
+    self.AddObjToPayload(payload, EncodeUint16(temperature))
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_PLATFORM_TEMP'], payload)

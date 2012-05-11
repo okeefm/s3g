@@ -8,27 +8,31 @@ class PacketDecodeError(Exception):
   def __init__(self, value):
      self.value = value
   def __str__(self):
-    return self.__class__.__name__
+    return str(self.value)
 
 class PacketLengthError(PacketDecodeError):
   def __init__(self, length, expected_length):
     self.length = length
     self.expected_length = expected_length
+    self.value = {'LENGTH': self.length, 'EXPECTED LENGTH':self.expected_length}
 
 class PacketLengthFieldError(PacketDecodeError):
   def __init__(self, length, expected_length):
     self.length = length
     self.expected_length = expected_length
+    self.value = {'LENGTH':self.length, 'EXPECTED LENGTH':self.expected_length}
 
 class PacketHeaderError(PacketDecodeError):
   def __init__(self, header, expected_header):
     self.header = header
     self.expected_header = expected_header
+    self.value = {'HEADER':self.header, 'EXPECTED HEADER':self.expected_header}
 
 class PacketCRCError(PacketDecodeError):
   def __init__(self, crc, expected_crc):
     self.crc = crc
     self.expected_crc = expected_crc
+    self.value = {'CRC':self.crc, 'EXPECTED CRC':self.expected_crc}
 
 class ResponseError(Exception):
   """
@@ -37,48 +41,43 @@ class ResponseError(Exception):
   def __init__(self, value):
      self.value = value
   def __str__(self):
-    return self.__class__.__name__
+    return str(self.value)
 
 class BufferOverflowError(ResponseError):
   def __init__(self):
-    pass
+    self.value = 'BufferOverflow'
 
 class RetryError(ResponseError):
   def __init__(self, value):
-    self.value = value 
+    self.value = value
 
 class BuildCancelledError(ResponseError):
   def __init__(self):
-    pass
+    self.value = 'BuildCancelled'
 
 class TimeoutError(ResponseError):
   def __init__(self, data_length, decoder_state):
     self.data_length = data_length
     self.decoder_state = decoder_state
+    self.value = {'DATA LENGTH':self.data_length, 'DECODER STATE':self.decoder_state}
 
   def __str__(self):
-    return self.__class__.__name__
+    return str(self.value)
 
 class TransmissionError(IOError):
   """
   A transmission error is raised when the s3g driver encounters too many errors while communicating.
   This error is non-recoverable without resetting the state of the machine.
   """
-  def __init__(self, value):
-    self.value = value
-
   def __str__(self):
-    return self.__class__.__name__
+    return 'TransmissionError'
 
 class ExtendedStopError(Exception):
   """
   An extended stop error is thrown if there was a problem executing an extended stop on the machinea.
   """
-  def __init__(self):
-    pass
-
   def __str__(self):
-    return self.__class__.__name__
+    return 'ExtendedStop'
 
 class SDCardError(Exception):
   """
@@ -105,4 +104,47 @@ class ProtocolError(Exception):
     self.value = value
 
   def __str__(self):
-    return self.__class__.__name__
+    return str(self.value)
+
+class HeatElementReady(ProtocolError):
+  """
+  A heat element ready error is raised when a non 1 or 0 value is returned
+  """
+
+class s3gParameterError(ValueError):
+  """
+  An s3g Parameter Error is thrown when an incorrect parameter is passed into an s3g function (i.e. incorrect button name, etc)
+  """
+  def __init__(self, value):
+    self.value = value
+
+  def __str__(self):
+    return str(self.value)
+
+class ButtonError(s3gParameterError):
+  """
+  A Bad button error is raised when a button that is not of type up, down, left, right or center is passed into WaitForButton
+  """
+class EEPROMMismatchError(Exception):
+  """
+    An EEPROM mismatch error is raised when the length of the information written to the eeprom doesnt match the length of the information passed into WriteToEEPROM
+  """
+  def __init__(self, value):
+    self.value = value
+  def __str__(self):
+    return str(self.value)
+
+class EEPROMLengthError(s3gParameterError):
+  """
+  An EEPROM length error is raised when too much information is either read or written to the EEPROM
+  """
+
+class ToolIndexError(s3gParameterError):
+  """
+  A tool index error is called when a tool index is passed in that is either < 0 or > 127
+  """
+
+class PointLengthError(s3gParameterError):
+  """
+  A Point length error is caused when a point's length is either too long or too short.
+  """
