@@ -23,6 +23,9 @@ class s3g:
     self.ExtendedPointLength = 5
     self.PointLength = 3
 
+    self.total_retries = 0
+    self.total_overflows = 0
+
   def AddObjToPayload(self, payload, obj):
     """Adds an object to the payload
 
@@ -56,6 +59,7 @@ class s3g:
     packet = EncodePayload(payload)
     return self.SendPacket(packet)
 
+
   def SendPacket(self, packet):
     """
     Attempt to send a packet to the machine, retrying up to 5 times if an error
@@ -63,8 +67,8 @@ class s3g:
     @param packet Packet to send to the machine
     @return Response payload, if successful. 
     """
-    retry_count = 0
     overflow_count = 0
+    retry_count = 0
 
     while True:
       decoder = PacketStreamDecoder()
@@ -99,7 +103,9 @@ class s3g:
         # TODO: This could hang forever if the machine gets stuck; is that what we want?
 
         self.logger.warning('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}\n'%(overflow_count,retry_count))
-        overflow_count = overflow_count + 1
+
+        self.total_overflows += 1
+        overflow_count += 1
 
         time.sleep(.2)
 
@@ -109,7 +115,8 @@ class s3g:
 
         self.logger.warning('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%(type(e),e.__str__(),retry_count))
 
-        retry_count = retry_count + 1
+        self.total_retries += 1
+        retry_count += 1
 
       except Exception as e:
         # Other exceptions are propigated upwards.
@@ -653,13 +660,12 @@ class s3g:
                             optionsField
                             )
 
-  def ResetToFactory(self, options):
+  def ResetToFactory(self):
     """
     Calls factory reset on the EEPROM.  Resets all values to their factory settings.  Also soft resets the board
-    @param options: Currently unused
     """
     self.BuildAndSendPayload(host_action_command_dict['RESET_TO_FACTORY'], 
-                            options
+                            0x00
                             )
 
   def QueueSong(self, song_id):

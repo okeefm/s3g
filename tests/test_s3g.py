@@ -561,20 +561,18 @@ class S3gTests(unittest.TestCase):
     self.assertEqual(payload[1], song_id)
 
   def test_reset_to_factory(self):
-    options = 0
-
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.r.ResetToFactory(options)
+    self.r.ResetToFactory()
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
 
     self.assertEqual(payload[0], s3g.host_action_command_dict['RESET_TO_FACTORY'])
-    self.assertEqual(payload[1], options)
+    self.assertEqual(payload[1], 0x00) # Reserved byte
 
   def test_set_build_percent(self):
     percent = 42
