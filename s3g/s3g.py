@@ -8,11 +8,18 @@ from errors import *
 from crc import *
 from coding import *
 from packet import *
+import logging
 
 class s3g:
   def __init__(self):
     self.file = None
     #self.logfile = open('output_stats','w')
+    self.logger = logging.getLogger('output_stats')
+    hdlr = logging.FileHandler('./output_stats')
+    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+    hdlr.setFormatter(formatter)
+    self.logger.addHandler(hdlr)
+    self.logger.setLevel(logging.ERROR)
     self.ExtendedPointLength = 5
     self.PointLength = 3
 
@@ -91,7 +98,7 @@ class s3g:
         # Buffer overflow error- wait a while for the buffer to clear, then try again.
         # TODO: This could hang forever if the machine gets stuck; is that what we want?
 
-        #self.logfile.write('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}\n'%(overflow_count,retry_count))
+        self.logger.warning('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}\n'%(overflow_count,retry_count))
         overflow_count = overflow_count + 1
 
         time.sleep(.2)
@@ -100,18 +107,18 @@ class s3g:
         # Sent a packet to the host, but got a malformed response or timed out waiting
         # for a reply. Retry immediately.
 
-        #self.logfile.write('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'(type(e),e.__str__(),retry_count)) 
+        self.logger.warning('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%(type(e),e.__str__(),retry_count))
 
         retry_count = retry_count + 1
 
       except Exception as e:
         # Other exceptions are propigated upwards.
 
-        #self.logfile.write('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%(type(e),e.__str__(),retry_count))
+        self.logger.warning('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}\n'%(type(e),e.__str__(),retry_count))
         raise e
 
       if retry_count >= max_retry_count:
-        #self.logfile.write('{"event":"transmission_error"}\n')
+        self.logger.warning('{"event":"transmission_error"}\n')
         raise TransmissionError("Failed to send packet, maximum retries exceeded")
 
 

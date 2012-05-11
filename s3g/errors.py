@@ -8,7 +8,7 @@ class PacketDecodeError(Exception):
   def __init__(self, value):
      self.value = value
   def __str__(self):
-    return self.value
+    return self.__class__.__name__
 
 class PacketLengthError(PacketDecodeError):
   def __init__(self, length, expected_length):
@@ -37,7 +37,7 @@ class ResponseError(Exception):
   def __init__(self, value):
      self.value = value
   def __str__(self):
-    return self.value
+    return self.__class__.__name__
 
 class BufferOverflowError(ResponseError):
   def __init__(self):
@@ -56,6 +56,9 @@ class TimeoutError(ResponseError):
     self.data_length = data_length
     self.decoder_state = decoder_state
 
+  def __str__(self):
+    return self.__class__.__name__
+
 class TransmissionError(IOError):
   """
   A transmission error is raised when the s3g driver encounters too many errors while communicating.
@@ -65,7 +68,7 @@ class TransmissionError(IOError):
     self.value = value
 
   def __str__(self):
-    return self.value
+    return self.__class__.__name__
 
 class ExtendedStopError(Exception):
   """
@@ -73,6 +76,9 @@ class ExtendedStopError(Exception):
   """
   def __init__(self):
     pass
+
+  def __str__(self):
+    return self.__class__.__name__
 
 class SDCardError(Exception):
   """
@@ -86,6 +92,9 @@ class SDCardError(Exception):
     except StopIteration:
       self.response_code_string = ''
 
+  def __str__(self):
+    return self.response_code_string
+
 class ProtocolError(Exception):
   """
   A protocol error is caused when a machine provides a valid response packet with an invalid
@@ -94,3 +103,6 @@ class ProtocolError(Exception):
   """
   def __init__(self, value):
     self.value = value
+
+  def __str__(self):
+    return self.__class__.__name__
