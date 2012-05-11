@@ -26,6 +26,12 @@ class S3gTests(unittest.TestCase):
     self.inputstream = None
     self.file = None
 
+  def test_add_obj_to_payload_empty(self):
+    payload = bytearray()
+    self.r.AddObjToPayload(payload, [])
+    for i, j in zip(payload, bytearray()):
+      self.assertEqual(i, j)
+
   def test_add_obj_to_payload(self):
     toAdd = ['a', 'b', 'c', 'd']
     nestedLoop = [1, 2, 3, 4, toAdd]
@@ -42,6 +48,7 @@ class S3gTests(unittest.TestCase):
     for i, j in zip(payload, expected):
       self.assertEqual(i, j) 
     
+
 
   def test_build_and_send_payload_nested_iterators(self):
     response_payload = bytearray()
