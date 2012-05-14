@@ -6,7 +6,9 @@ A suite of tests to be run on a replicator with the s3g python module.  These te
   s3gFunctionTests: The meat of this test class; makes sure all commands understodd by the replicator are executed correctly.  Currently this requires some user feedback.  A test rig should be assembled to circumvent user interaction.
   SDCardTests: Tests the ensure the replicator can communicate with its SD card port.  this is broken out into a separate test suite due to its dependence on a set of test files located in ./testFiles/
 """
-
+import os, sys
+lib_path = os.path.abspath('../')
+sys.path.append(lib_path)
 
 import unittest
 import optparse
@@ -15,7 +17,6 @@ import io
 import struct
 from array import array
 import time
-import sys
 import s3g
 
 
@@ -42,7 +43,6 @@ class s3gPacketTests(unittest.TestCase):
   def setUp(self):
     self.s3g = s3g.s3g()
     self.s3g.file = serial.Serial(options.serialPort,'115200', timeout=1)
-    self.s3g.AbortImmediately()
 
   def tearDown(self):
     self.s3g.file.close()
@@ -133,40 +133,31 @@ class s3gSendReceiveTests(unittest.TestCase):
   def setUp(self):
     self.s3g = s3g.s3g()
     self.s3g.file = serial.Serial(options.serialPort, '115200', timeout=1)
-    self.s3g.AbortImmediately()
 
   def tearDown(self):
     self.s3g.file.close()
+    self.s3g. = None
 
   def test_ResetToFactoryReply(self):
-    self.s3g.ResetToFactory(0)
+    self.s3g.ResetToFactory()
 
   def test_QueueSongReply(self):
     self.s3g.QueueSong(1)
 
   def test_SetBuildPercentReply(self):
-    self.s3g.SetBuildPercent(100, 0)
+    self.s3g.SetBuildPercent(100)
 
   def test_SetBeepReply(self):
-    self.s3g.SetBeep(1000, 3, 0)
+    self.s3g.SetBeep(1000, 3)
 
   def test_SetPotentiometerValueReply(self):
-    self.s3g.SetPotentiometerValue(False, False, False, False, False, 0)
+    self.s3g.SetPotentiometerValue(['x', 'y', 'z', 'a', 'b'],0)
 
   def test_SetRGBLEDReply(self):
-    self.s3g.SetRGBLED(0, 255, 0, 0, 0)
+    self.s3g.SetRGBLED(0, 255, 0, 0)
 
   def test_WaitForButtonReply(self):
     self.s3g.WaitForButton('up', 0, True, False, False)
-
-  def test_SetServo1PositionReply(self):
-    self.assertRaises(s3g.TransmissionError, self.s3g.SetServo1Position, 0, 90)
-
-  def test_SetMotor1SpeedRPMReply(self):
-    self.assertRaises(s3g.TransmissionError , self.s3g.SetMotor1SpeedRPM, 0, 5)
-
-  def test_ToggleMotor1Reply(self):
-    self.assertRaises(s3g.TransmissionError, self.s3g.ToggleMotor1, 0, False, False)
 
   def test_ToolheadInitReply(self):
     self.s3g.ToolheadInit(0)
@@ -177,20 +168,17 @@ class s3gSendReceiveTests(unittest.TestCase):
   def testGetToolStatusReply(self):
     self.s3g.GetToolStatus(0)
 
-  def test_GetMotor1SpeedReply(self):
-    self.assertRaises(s3g.TransmissionError, self.s3g.GetMotor1Speed, 0)
-
   def test_StoreHomePositionsReply(self):
-    self.s3g.StoreHomePositions(True, True, True, True, True)
+    self.s3g.StoreHomePositions(['x', 'y', 'z', 'a', 'b'])
 
   def test_RecallHomePositionsReply(self):
-    self.s3g.RecallHomePositions(True, True, True, True, True)
+    self.s3g.RecallHomePositions(['x', 'y', 'z', 'a', 'b'])
 
   def test_QueueExtendedPointNewReply(self):
-    self.s3g.QueueExtendedPointNew([0, 0, 0, 0, 0], 1, True, True, True, True, True)
+    self.s3g.QueueExtendedPointNew([0, 0, 0, 0, 0], 1, ['x', 'y', 'z', 'a', 'b'])
 
-  def test_ToggleEnableAxesReply(self):
-    self.s3g.ToggleEnableAxes(True, True, True, True, True, True)
+  def test_ToggleAxesReply(self):
+    self.s3g.ToggleAxes(['x', 'y', 'z', 'a', 'b'], True)
 
   def test_WaitForPlatformReply(self):
     self.s3g.WaitForPlatformReady(0, 100, 50)
@@ -231,12 +219,6 @@ class s3gSendReceiveTests(unittest.TestCase):
   def test_InitReply(self):
     self.s3g.Init()
 
-  def test_ToggleValveReply(self):
-    self.assertEqual(s3g.TransmissionError, self.s3g.ToggleValve, 0, False)
-
-  def test_ToggleFanReply(self):
-      self.assertRaises(s3g.TransmissionError, self.s3g.ToggleFan, 0, False)
-
   def test_IsPlatformReadyReply(self):
     self.s3g.IsPlatformReady(0)
 
@@ -257,9 +239,6 @@ class s3gSendReceiveTests(unittest.TestCase):
 
   def test_GetPlatformTemperatureReply(self):
     self.s3g.GetPlatformTemperature(0)
-
-  def test_GetToollheadVersionReply(self):
-    self.s3g.GetToolheadVersion(0)
 
   def test_BuildEndNotificationReply(self):
     self.s3g.BuildEndNotification()
@@ -741,7 +720,7 @@ class s3gFunctionTests(unittest.TestCase):
   def test_StoreHomePositions(self):
     pointToSet = [1, 2, 3, 4, 5]
     self.s3g.QueueExtendedPoint(pointToSet, 500)
-    self.s3g.StoreHomePositions(True, True, True, True, True)
+    self.s3g.StoreHomePositions(['x', 'y', 'z', 'a', 'b'])
     x = self.s3g.ReadFromEEPROM(0x000E, 4)
     y = self.s3g.ReadFromEEPROM(0x0012, 4)
     z = self.s3g.ReadFromEEPROM(0x0016, 4)
@@ -755,13 +734,13 @@ class s3gFunctionTests(unittest.TestCase):
   def test_RecallHomePositions(self):
     pointToSet = [1, 2, 3, 4, 5]
     self.s3g.QueueExtendedPoint(pointToSet, 500)
-    self.s3g.StoreHomePositions(True, True, True, True, True)
+    self.s3g.StoreHomePositions(['x', 'y', 'z', 'a', 'b'])
     newPoint = [50, 51, 52, 53, 54]
     self.s3g.QueueExtendedPoint(newPoint, 500)
     time.sleep(5)
-    self.s3g.RecallHomePositions(False, False, False, False, False)
+    self.s3g.RecallHomePositions(['x', 'y', 'z', 'a', 'b'])
     self.assertEqual(newPoint, self.s3g.GetExtendedPosition()[0])
-    self.s3g.RecallHomePositions(True, True, True, True, True)
+    self.s3g.RecallHomePositions(['x', 'y', 'z', 'a', 'b'])
     time.sleep(5)
     self.assertEqual(pointToSet, self.s3g.GetExtendedPosition()[0])
  
@@ -823,23 +802,23 @@ class s3gFunctionTests(unittest.TestCase):
     self.assertEqual(obs, 'y')
 
   def test_SetRGBLED(self):
-    self.s3g.SetRGBLED(0, 255, 0, 0, 0)
+    self.s3g.SetRGBLED(0, 255, 0, 0)
     obs = raw_input("\nAre the LEDs in the bot green? (y/n) ")
     self.assertEqual(obs, 'y')
-    self.s3g.SetRGBLED(0, 255, 0, 128, 0)
+    self.s3g.SetRGBLED(0, 255, 0, 128)
     obs = raw_input("\nAre the LEDs blinking? (y/n) ")
     self.assertEqual('y', obs)
  
   def test_SetBeep(self):
     raw_input("\nAbout to start playing some music.  Start listening! Press enter to continue")
-    self.s3g.SetBeep(261.626, 5, 0)
+    self.s3g.SetBeep(261.626, 5)
     obs = raw_input("\nDid you hear a C note? (y/n) ")
     self.assertEqual('y', obs)
 
   def test_SetBuildPercent(self):
     percent = 42
     self.s3g.BuildStartNotification(1, "percentTest")
-    self.s3g.SetBuildPercent(percent, 0)
+    self.s3g.SetBuildPercent(percent)
     obs = raw_input("\nLook at the interface board for your bot.  Does the build percent say that it is %i percent of the way done? (y/n) "%(percent))
     self.assertEqual('y', obs)
 
@@ -885,6 +864,35 @@ class s3gSDCardTests(unittest.TestCase):
     readName = self.s3g.GetBuildName()
     self.assertEqual(filename, ConvertFromNUL(readName))
 
+class test(unittest.TestCase):
+
+  def setUp(self):
+    self.s3g = s3g.s3g()
+    self.s3g.file = serial.Serial(options.serialPort, '115200', timeout=1)
+    self.s3g.SetExtendedPosition([0, 0, 0, 0, 0])
+    self.s3g.AbortImmediately()
+
+  def tearDown(self):
+    self.s3g.file.close()
+
+  def test_QueueExtendedPointNew(self):
+    home = [0, 0, 0, 0, 0]
+    self.s3g.SetExtendedPosition(home)
+    newPoint = [1, 2, 3, 4, 5]
+    mSConst = 1000
+    duration = 5
+    self.s3g.QueueExtendedPointNew(newPoint, duration*mSConst, [])
+    time.sleep(duration)
+    self.assertEqual(newPoint, self.s3g.GetExtendedPosition()[0])
+    anotherPoint = [5, 6, 7, 8, 9]
+    self.s3g.QueueExtendedPointNew(anotherPoint, duration, ['x', 'y', 'z', 'a', 'b'])
+    time.sleep(duration)
+    finalPoint = []
+    for i, j in zip(newPoint, anotherPoint):
+      finalPoint.append(i+j)
+    self.assertEqual(finalPoint, self.s3g.GetExtendedPosition()[0])
+ 
+
 
 if __name__ == '__main__':
   parser = optparse.OptionParser()
@@ -911,5 +919,5 @@ if __name__ == '__main__':
   sdTests = unittest.TestLoader().loadTestsFromTestCase(s3gSDCardTests)
   smallTest = unittest.TestLoader().loadTestsFromTestCase(test)
   suites = [commonTests, packetTests, sendReceiveTests, functionTests, sdTests, smallTest]
-  for suite in suites[-1]:
+  for suite in suites[2]:
     unittest.TextTestRunner(verbosity=2).run(suite)
