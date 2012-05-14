@@ -1144,7 +1144,7 @@ Calls a factory reset on the eeprom. Resets all values to their "factory" settin
 
 Payload
 
-    uint8: options (Currently unused)
+    uint8: N/A (reserved for future use)
 
 Response (0 bytes)
 
