@@ -11,24 +11,36 @@ class PacketDecodeError(Exception):
     return str(self.value)
 
 class PacketLengthError(PacketDecodeError):
+  """
+  Signifies an error in the length of a packet
+  """
   def __init__(self, length, expected_length):
     self.length = length
     self.expected_length = expected_length
     self.value = {'LENGTH': self.length, 'EXPECTED LENGTH':self.expected_length}
 
 class PacketLengthFieldError(PacketDecodeError):
+  """
+  Signifies an error in a specific field of the packet (i.e. the payload isnt the correct length
+  """
   def __init__(self, length, expected_length):
     self.length = length
     self.expected_length = expected_length
     self.value = {'LENGTH':self.length, 'EXPECTED LENGTH':self.expected_length}
 
 class PacketHeaderError(PacketDecodeError):
+  """
+  Signifies an incorrect header on a packet
+  """
   def __init__(self, header, expected_header):
     self.header = header
     self.expected_header = expected_header
     self.value = {'HEADER':self.header, 'EXPECTED HEADER':self.expected_header}
 
 class PacketCRCError(PacketDecodeError):
+  """
+  Signifies a mismatch in expected and actual CRCs
+  """
   def __init__(self, crc, expected_crc):
     self.crc = crc
     self.expected_crc = expected_crc
@@ -44,18 +56,30 @@ class ResponseError(Exception):
     return str(self.value)
 
 class BufferOverflowError(ResponseError):
+  """
+  Signifies a reported overflow of the buffer from the bot
+  """
   def __init__(self):
     self.value = 'BufferOverflow'
 
 class RetryError(ResponseError):
+  """
+  A generic error reported by the bot
+  """
   def __init__(self, value):
     self.value = value
 
 class BuildCancelledError(ResponseError):
+  """
+  Signifies the cancellation of a build
+  """
   def __init__(self):
     self.value = 'BuildCancelled'
 
 class TimeoutError(ResponseError):
+  """
+  Signifies that a packet has taken too long to be received
+  """
   def __init__(self, data_length, decoder_state):
     self.data_length = data_length
     self.decoder_state = decoder_state
@@ -106,26 +130,12 @@ class ProtocolError(Exception):
   def __str__(self):
     return str(self.value)
 
-class HeatElementReady(ProtocolError):
+class HeatElementReadyError(ProtocolError):
   """
   A heat element ready error is raised when a non 1 or 0 value is returned
   """
 
-class s3gParameterError(ValueError):
-  """
-  An s3g Parameter Error is thrown when an incorrect parameter is passed into an s3g function (i.e. incorrect button name, etc)
-  """
-  def __init__(self, value):
-    self.value = value
-
-  def __str__(self):
-    return str(self.value)
-
-class ButtonError(s3gParameterError):
-  """
-  A Bad button error is raised when a button that is not of type up, down, left, right or center is passed into WaitForButton
-  """
-class EEPROMMismatchError(Exception):
+class EEPROMMismatchError(ProtocolError):
   """
     An EEPROM mismatch error is raised when the length of the information written to the eeprom doesnt match the length of the information passed into WriteToEEPROM
   """
@@ -134,17 +144,31 @@ class EEPROMMismatchError(Exception):
   def __str__(self):
     return str(self.value)
 
-class EEPROMLengthError(s3gParameterError):
+class ParameterError(ValueError):
+  """
+  An Parameter Error is thrown when an incorrect parameter is passed into an s3g function (i.e. incorrect button name, etc)
+  """
+  def __init__(self, value):
+    self.value = value
+
+  def __str__(self):
+    return str(self.value)
+
+class ButtonError(ParameterError):
+  """
+  A Bad button error is raised when a button that is not of type up, down, left, right or center is passed into WaitForButton
+  """
+class EEPROMLengthError(ParameterError):
   """
   An EEPROM length error is raised when too much information is either read or written to the EEPROM
   """
 
-class ToolIndexError(s3gParameterError):
+class ToolIndexError(ParameterError):
   """
   A tool index error is called when a tool index is passed in that is either < 0 or > 127
   """
 
-class PointLengthError(s3gParameterError):
+class PointLengthError(ParameterError):
   """
   A Point length error is caused when a point's length is either too long or too short.
   """

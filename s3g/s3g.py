@@ -137,7 +137,7 @@ class s3g:
   def CaptureToFile(self, filename):
     """
     Capture all subsequent commands up to the 'end capture' command to a file with the given filename on an SD card.
-    @param filename: The name of the file to write to on the SD card
+    @param str filename: The name of the file to write to on the SD card
     """
     response = self.BuildAndSendPayload(host_query_command_dict['CAPTURE_TO_FILE'], 
                                         filename, 
@@ -225,8 +225,8 @@ class s3g:
   def ExtendedStop(self, halt_steppers, clear_buffer):
     """
     Stop the stepper motor motion and/or reset the command buffer.  This differs from the reset and abort commands in that a soft reset of all functions isnt called.
-    @param halt_steppers: A boolean flag that if true will stop the steppers
-    @param clear_buffer: A boolean flag that, if true, will clear the buffer
+    @param boolean halt_steppers: A flag that if true will stop the steppers
+    @param boolean clear_buffer: A flag that, if true, will clear the buffer
     """
     bitfield = 0
     if halt_steppers:
@@ -247,9 +247,9 @@ class s3g:
     Halts the machine until the specified toolhead reaches a ready state, or if the
     timeout is reached.  Toolhead is ready if its temperature is within a specified
     range.
-    @param tool_index toolhead index
-    @param delay: Time in ms between packets to query the toolhead
-    @param timeout: Time to wait in seconds for the toolhead to heat up before moving on
+    @param int tool_index: toolhead index
+    @param int delay: Time in ms between packets to query the toolhead
+    @param int timeout: Time to wait in seconds for the toolhead to heat up before moving on
     """
     self.BuildAndSendPayload(host_action_command_dict['WAIT_FOR_PLATFORM_READY'], 
                             tool_index, 
@@ -262,9 +262,9 @@ class s3g:
     Halts the machine until the specified toolhead reaches a ready state, or if the
     timeout is reached.  Toolhead is ready if its temperature is within a specified
     range.
-    @param tool_index toolhead index
-    @param delay: Time in ms between packets to query the toolhead
-    @param timeout: Time to wait in seconds for the toolhead to heat up before moving on
+    @param int tool_index: toolhead index
+    @param int delay: Time in ms between packets to query the toolhead
+    @param int timeout: Time to wait in seconds for the toolhead to heat up before moving on
     """
     self.BuildAndSendPayload(host_action_command_dict['WAIT_FOR_TOOL_READY'], 
                             tool_index, 
@@ -275,7 +275,7 @@ class s3g:
   def Delay(self, delay):
     """
     Halts all motion for the specified amount of time
-    @param delay: Delay time, in microseconds
+    @param int delay: Delay time, in microseconds
     """
     self.BuildAndSendPayload(host_action_command_dict['DELAY'], 
                             EncodeUint32(delay)
@@ -284,8 +284,8 @@ class s3g:
   def ToggleAxes(self, axes, enable):
     """
     Used to explicitly power steppers on or off.
-    @param axes Array of axis names ['x', 'y', ...] to configure
-    @param enable If true, enable all selected axes. Otherwise, disable the selected
+    @param list axes: Array of axis names ['x', 'y', ...] to configure
+    @param boolean enable: If true, enable all selected axes. Otherwise, disable the selected
            axes.
     """
     axes_bitfield = EncodeAxes(axes)
@@ -302,9 +302,9 @@ class s3g:
     with either relative or absolute positioning.  Relative vs. Absolute positioning
     is done on an axis to axis basis.
 
-    @param point: A 5 dimentional point in steps specifying where each axis should move to
-    @param duration: The total duration of the move in miliseconds
-    @param relative_axes: Array of axes whose coordinates should be considered relative
+    @param list point: A 5 dimentional point in steps specifying where each axis should move to
+    @param int duration: The total duration of the move in miliseconds
+    @param list relative_axes: Array of axes whose coordinates should be considered relative
     """
     if len(point) != self.ExtendedPointLength:
       raise PointLengthError(len(point))
@@ -318,7 +318,7 @@ class s3g:
   def StoreHomePositions(self, axes):
     """
     Write the current axes locations to the EEPROM as the home position
-    @param axes: Array of axis names ['x', 'y', ...] whose position should be saved
+    @param list axes: Array of axis names ['x', 'y', ...] whose position should be saved
     """
     self.BuildAndSendPayload(host_action_command_dict['STORE_HOME_POSITIONS'], 
                             EncodeAxes(axes))
@@ -326,8 +326,8 @@ class s3g:
   def SetPotentiometerValue(self, axes, value):
     """
     Sets the value of the digital potentiometers that control the voltage references for the botsteps
-    @param axes: Array of axis names ['x', 'y', ...] whose potentiometers should be set
-    @param value: The value to set the digital potentiometer to.
+    @param list axes: Array of axis names ['x', 'y', ...] whose potentiometers should be set
+    @param int value: The value to set the digital potentiometer to.
     """
     self.BuildAndSendPayload(host_action_command_dict['SET_POT_VALUE'], 
                             EncodeAxes(axes), 
@@ -338,8 +338,8 @@ class s3g:
   def SetBeep(self, frequency, duration):
     """
     Play a tone of the specified frequency for the specified duration.
-    @param frequency: Frequency of the tone, in hz
-    @param duration: Duration of the tone, in ms
+    @param int frequency: Frequency of the tone, in hz
+    @param int duration: Duration of the tone, in ms
     """
     self.BuildAndSendPayload(host_action_command_dict['SET_BEEP'], 
                             EncodeUint16(frequency), 
@@ -350,10 +350,10 @@ class s3g:
   def SetRGBLED(self, r, g, b, blink):
     """
     Set the brightness and blink rate for RBG LEDs
-    @param r: The r value (0-255) for the LEDs
-    @param g: The g value (0-255) for the LEDs
-    @param b: The b value (0-255) for the LEDs
-    @param blink: The blink rate (0-255) for the LEDs
+    @param int r: The r value (0-255) for the LEDs
+    @param int g: The g value (0-255) for the LEDs
+    @param int b: The b value (0-255) for the LEDs
+    @param int blink: The blink rate (0-255) for the LEDs
     """
     self.BuildAndSendPayload(host_action_command_dict['SET_RGB_LED'], 
                             r, 
@@ -380,11 +380,11 @@ class s3g:
   def ToolQuery(self, tool_index, command, tool_payload = None):
     """
     Query a toolhead for some information
-    @param tool_index toolhead index
-    @param command command to send to the toolhead
-    @param tool_payload payload that goes along with the command, or None
+    @param int tool_index: toolhead index
+    @param int command: command to send to the toolhead
+    @param bytearray tool_payload: payload that goes along with the command, or None
            if the command does not have a payload
-    @return payload received from the tool
+    @return bytearray payload: received from the tool
     """
     if tool_index > max_tool_index or tool_index < 0:
       raise ProtocolError(1)
@@ -404,8 +404,8 @@ class s3g:
   def ReadFromEEPROM(self, offset, length):
     """
     Read some data from the machine. The data structure is implementation specific.
-    @param offset EEPROM location to begin reading from
-    @param length Number of bytes to read from the EEPROM (max 31)
+    @param byte offset: EEPROM location to begin reading from
+    @param int length: Number of bytes to read from the EEPROM (max 31)
     @return byte array of data read from EEPROM
     """
     if length > maximum_payload_length - 1:
@@ -420,8 +420,8 @@ class s3g:
   def WriteToEEPROM(self, offset, data):
     """
     Write some data to the machine. The data structure is implementation specific.
-    @param offset EEPROM location to begin writing to
-    @param data Data to write to the EEPROM
+    @param byte offset: EEPROM location to begin writing to
+    @param int data: Data to write to the EEPROM
     """
     if len(data) > maximum_payload_length - 4:
       raise EEPROMLengthError(len(data))
@@ -466,7 +466,7 @@ class s3g:
   def PlaybackCapture(self, filename):
     """
     Instruct the machine to play back (build) a file from it's SD card.
-    @param filename Name of the file to print. Should have been retrieved by 
+    @param str filename: Name of the file to print. Should have been retrieved by 
     """
     response = self.BuildAndSendPayload(host_query_command_dict['PLAYBACK_CAPTURE'], 
                                         filename, 
@@ -480,7 +480,7 @@ class s3g:
   def GetNextFilename(self, reset):
     """
     Get the next filename from the machine
-    @param reset If true, reset the file index to zero and return the first available filename.
+    @param boolean reset: If true, reset the file index to zero and return the first available filename.
     """
     if reset == True:
       flag = 1
@@ -500,6 +500,7 @@ class s3g:
   def GetBuildName(self):
     """
     Get the build name of the file printing on the machine, if any.
+    @param str filename: The filename of the current print 
     """
     response = self.BuildAndSendPayload(host_query_command_dict['GET_BUILD_NAME'])
     [response_code, filename] = UnpackResponseWithString('<B', response)
@@ -509,7 +510,7 @@ class s3g:
   def GetExtendedPosition(self):
     """
     Gets the current machine position
-    @return tuple containing the 5D position the machine is currently located at, and the endstop states.
+    @return tuple position: containing the 5D position the machine is currently located at, and the endstop states.
     """
     response = self.BuildAndSendPayload(host_query_command_dict['GET_EXTENDED_POSITION'])
   
@@ -523,8 +524,8 @@ class s3g:
   def QueuePoint(self, point, rate):
     """
     Move the toolhead to a new position at the given rate
-    @param position array 3D position to move to. All dimension should be in steps.
-    @param rate double Movement speed, in steps/??
+    @param list position array 3D position to move to. All dimension should be in steps.
+    @param double rate: Movement speed, in steps/??
     """
     if len(point) != self.PointLength:
       raise PointLengthError(len(point))
@@ -536,7 +537,7 @@ class s3g:
   def SetPosition(self, position):
     """
     Inform the machine that it should consider this p
-    @param position 3D position to set the machine to, in steps.
+    @param list position: 3D position to set the machine to, in steps.
     """
     if len(position) != self.PointLength:
       raise PointLengthError(len(position))
@@ -548,9 +549,9 @@ class s3g:
     """
     Move the toolhead in the negativedirection, along the specified axes,
     until an endstop is reached or a timeout occurs.
-    @param axes Array of axis names ['x', 'y', ...] to move
-    @param rate Movement rate, in steps/??
-    @param timeout Amount of time to move (TODO: units?) before halting the command
+    @param list axes: Array of axis names ['x', 'y', ...] to move
+    @param double rate: Movement rate, in steps/??
+    @param double timeout: Amount of time to move (TODO: units?) before halting the command
     """
     self.BuildAndSendPayload(host_action_command_dict['FIND_AXES_MINIMUMS'], 
                             EncodeAxes(axes), 
@@ -562,9 +563,9 @@ class s3g:
     """
     Move the toolhead in the positive direction, along the specified axes,
     until an endstop is reached or a timeout occurs.
-    @param axes Array of axis names ['x', 'y', ...] to move
-    @param rate Movement rate, in steps/??
-    @param timeout Amount of time to move (TODO: units?) before halting the command
+    @param list axes: Array of axis names ['x', 'y', ...] to move
+    @param double rate: Movement rate, in steps/??
+    @param double timeout: Amount of time to move (TODO: units?) before halting the command
     """
     self.BuildAndSendPayload(host_action_command_dict['FIND_AXES_MAXIMUMS'], 
                             EncodeAxes(axes), 
@@ -575,9 +576,9 @@ class s3g:
   def ToolActionCommand(self, tool_index, command, tool_payload = None):
     """
     Send a command to a toolhead
-    @param tool_index toolhead index
-    @param command command to send to the toolhead
-    @param tool_payload payload that goes along with the command
+    @param int tool_index: toolhead index
+    @param int command: command to send to the toolhead
+    @param bytearray tool_payload: payload that goes along with the command
     """
     if tool_index > max_tool_index or tool_index < 0:
       raise ToolIndexError(tool_index)
@@ -597,8 +598,8 @@ class s3g:
   def QueueExtendedPoint(self, point, rate):
     """
     Move the toolhead to a new position at the given rate
-    @param position 5D position to move to. All dimension should be in steps.
-    @param rate double Movement speed, in steps/??
+    @param list position: 5D position to move to. All dimension should be in steps.
+    @param double rate: Movement speed, in steps/??
     """
     if len(point) != self.ExtendedPointLength:
       raise PointLengthError(len(point))
@@ -610,7 +611,7 @@ class s3g:
   def SetExtendedPosition(self, position):
     """
     Inform the machine that it should consider this point its current point
-    @param position 5D position to set the machine to, in steps.
+    @param list position: 5D position to set the machine to, in steps.
     """
     if len(position) != self.ExtendedPointLength:
       raise PointLengthError(len(position))
@@ -621,11 +622,11 @@ class s3g:
   def WaitForButton(self, button, timeout, ready_on_timeout, reset_on_timeout, clear_screen):
     """
     Wait until a user either presses a button on the interface board, or a timeout occurs
-    @param button: A button, must be one of the following: up, down, left, right center.
-    @param timeout: Duration, in seconds, the bot will wait for a response.  A timeout of 0 indicated no timeout.  TimeoutReadyState, timeoutReset determine what action is taken after timeout
-    @param ready_on_timeout: Bot changes to the ready state after tiemout
-    @param reset_on_timeout: Resets the bot on timeout
-    @param clear_screen: Clears the screen on buttonPress
+    @param str button: A button, must be one of the following: up, down, left, right center.
+    @param double timeout: Duration, in seconds, the bot will wait for a response.  A timeout of 0 indicated no timeout.  TimeoutReadyState, timeoutReset determine what action is taken after timeout
+    @param boolean ready_on_timeout: Bot changes to the ready state after tiemout
+    @param boolean reset_on_timeout: Resets the bot on timeout
+    @param boolean clear_screen: Clears the screen on buttonPress
     """
     if button == 'center':
       button = 0x01
@@ -653,19 +654,19 @@ class s3g:
                             optionsField
                             )
 
-  def ResetToFactory(self, options):
+  def ResetToFactory(self):
     """
     Calls factory reset on the EEPROM.  Resets all values to their factory settings.  Also soft resets the board
-    @param options: Currently unused
     """
-    self.BuildAndSendPayload(host_action_command_dict['RESET_TO_FACTORY'], 
-                            options
+    self.BuildAndSendPayload(
+                            host_action_command_dict['RESET_TO_FACTORY'],
+                            0x00
                             )
 
   def QueueSong(self, song_id):
     """
     Play predefined sogns on the piezo buzzer
-    @param songId: The id of the song to play.
+    @param int songId: The id of the song to play.
     """
     self.BuildAndSendPayload(host_action_command_dict['QUEUE_SONG'], 
                             song_id
@@ -674,7 +675,7 @@ class s3g:
   def SetBuildPercent(self, percent):
     """
     Sets the percentage done for the current build.  This value is displayed on the interface board's screen.
-    @param percent: Percent of the build done (0-100)
+    @param int percent: Percent of the build done (0-100)
     """
     self.BuildAndSendPayload(host_action_command_dict['SET_BUILD_PERCENT'], 
                             percent, 
@@ -684,14 +685,14 @@ class s3g:
   def DisplayMessage(self, row, col, message, timeout, clearExisting, lastInGroup, waitForButton):
     """
     Display a message to the screen
-    @param row Row to draw the message at
-    @param col Column to draw the message at
-    @param message Message to write to the screen
-    @param timeout Amount of time to display the message for, in seconds. 
+    @param int row: Row to draw the message at
+    @param int col: Column to draw the message at
+    @param str message: Message to write to the screen
+    @param int timeout: Amount of time to display the message for, in seconds. 
                    If 0, leave the message up indefinately.
-    @param clearExisting: Boolean flag.  If True, This will clear the existing message buffer and timeout
-    @param lastInGroup: Boolean flag.  If true, signifies that this message is the last in a group of messages
-    @param waitForButton: Boolean flag.  If true, waits for a button to be pressed before clearing the screen
+    @param boolean clearExisting: flag.  If True, This will clear the existing message buffer and timeout
+    @param boolean lastInGroup: flag.  If true, signifies that this message is the last in a group of messages
+    @param boolean waitForButton: flag.  If true, waits for a button to be pressed before clearing the screen
     """
     bitField = 0
     if clearExisting:
@@ -712,8 +713,8 @@ class s3g:
   def BuildStartNotification(self, command_count, build_name):
     """
     Notify the machine that a build has been started
-    @param command_count Number of host commands in the build
-    @param build_name Name of the build
+    @param int command_count Number of host commands in the build
+    @param str build_name Name of the build
     """
     self.BuildAndSendPayload(host_action_command_dict['BUILD_START_NOTIFICATION'], 
                             EncodeUint32(command_count), 
@@ -731,7 +732,7 @@ class s3g:
   def GetToolheadVersion(self, tool_index):
     """
     Get the firmware version number of the specified toolhead
-    @return Version number
+    @return double Version number
     """
     payload = bytearray()
     self.AddObjToPayload(payload, EncodeUint16(s3g_version))
@@ -744,8 +745,8 @@ class s3g:
   def GetPIDState(self, tool_index):
     """
     Retrieve the state variables of the PID controller.  This is intended for tuning the PID Constants
-    @param tool_index: Which tool index to query for information
-    @return The terms associated with the tool_index'sError Term, Delta Term, Last Output and the platform's Error Term, Delta Term and Last Output
+    @param int tool_index: Which tool index to query for information
+    @return dictionary The terms associated with the tool_index'sError Term, Delta Term, Last Output and the platform's Error Term, Delta Term and Last Output
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PID_STATE'])
     [response_code, exError, exDelta, exLast, plError, plDelta, plLast] = UnpackResponse('<Bhhhhhh', response)
@@ -762,7 +763,7 @@ class s3g:
   def GetToolStatus(self, tool_index):
     """
     Retrieve some information about the tool
-    @param tool_index: The tool we would like to query for information
+    @param int tool_index: The tool we would like to query for information
     @return A dictionary containing status information about the tool_index
       ExtruderReady : The extruder has reached target temp
       PlatformError: an error was detected with the platform heater (if the tool supports one).  The platform heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.
@@ -783,8 +784,8 @@ class s3g:
   def SetServo1Position(self, tool_index, theta):
     """
     Sets the tool_index's servo as position 1 to a certain angle 
-    @param tool_index: The tool that will be set
-    @param theta: angle to set the servo to
+    @param int tool_index: The tool that will be set
+    @param int theta: angle to set the servo to
     """
     payload = bytearray()
     self.AddObjToPayload(payload, theta)
@@ -793,23 +794,23 @@ class s3g:
   def ToolheadAbort(self, tool_index):
     """
     Used to terminate a build during printing.  Disables any engaged heaters and motors
-    @param tool_index: the tool which is to be aborted
+    @param int tool_index: the tool which is to be aborted
     """
     self.ToolActionCommand(tool_index, slave_action_command_dict['ABORT'], bytearray())
 
   def ToolheadPause(self, tool_index):
     """
     This function is intended to be called infrequently by the end user to pause the toolhead and make various adjustments during a print
-    @param tool_index: The tool which is to be paused
+    @param int tool_index: The tool which is to be paused
     """
     self.ToolActionCommand(tool_index, slave_action_command_dict['PAUSE'], bytearray())
 
   def ToggleMotor1(self, tool_index, toggle, direction):
     """
     Toggles the motor of a certain toolhead to be either on or off.  Can also set direction.
-    @param tool_index: the tool's motor that will be set
-    @param toggle: The enable/disable flag.  If true, will turn the motor on.  If false, disables the motor.
-    @param direction: If true, sets the motor to turn clockwise.  If false, sets the motor to turn counter-clockwise
+    @param int tool_index: the tool's motor that will be set
+    @param boolean toggle: The enable/disable flag.  If true, will turn the motor on.  If false, disables the motor.
+    @param boolean direction: If true, sets the motor to turn clockwise.  If false, sets the motor to turn counter-clockwise
     """
     payload = bytearray()
     bitfield = 0
@@ -823,8 +824,8 @@ class s3g:
   def SetMotor1SpeedRPM(self, tool_index, duration):
     """
     This sets the motor speed as an RPM value
-    @param tool_index : The tool's motor that will be set
-    @param duration : Durtation of each rotation, in microseconds
+    @param int tool_index : The tool's motor that will be set
+    @param int duration : Durtation of each rotation, in microseconds
     """
     payload = bytearray()
     self.AddObjToPayload(payload, EncodeUint32(duration))
@@ -833,8 +834,8 @@ class s3g:
   def GetMotor1Speed(self, tool_index):
     """
     Gets the toohead's motor speed in Rotations per Minute (RPM)
-    @param tool_index: The tool index that will be queried for Motor speed
-    @return Duration of each rotation, in miliseconds
+    @param int tool_index: The tool index that will be queried for Motor speed
+    @return int Duration of each rotation, in miliseconds
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_MOTOR_1_SPEED_RPM'])
     [response_code, speed] = UnpackResponse('<BI', response)
@@ -843,8 +844,8 @@ class s3g:
   def GetToolheadTemperature(self, tool_index):
     """
     Retrieve the toolhead temperature
-    @param tool_index Toolhead Index
-    @return temperature reported by the toolhead
+    @param int tool_index: Toolhead Index
+    @return int temperature: reported by the toolhead
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOLHEAD_TEMP'])
     [response_code, temperature] = UnpackResponse('<BH', response)
@@ -854,25 +855,26 @@ class s3g:
   def IsToolReady(self, tool_index):
     """
     Determine if the tool is at temperature, and is therefore ready to be used.
-    @param tool_index Toolhead Index
-    @return true if the toolhead is ready
+    @param int tool_index: Toolhead Index
+    @return boolean isReady: True if tool is done heating, false otherwise
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['IS_TOOL_READY'])
     [response_code, ready] = UnpackResponse('<BB', response)
-
+    isReady = False
     if ready == 1:
-      return True
+      isReady = True
     elif ready == 0:
-      return False
+      isReady = False
     else:
-      raise HeatElementReady(ready)
+      raise HeatElementReadyError(ready)
+    return isReady
 
   def ReadFromToolheadEEPROM(self, tool_index, offset, length):
     """
     Read some data from the toolhead. The data structure is implementation specific.
-    @param offset EEPROM location to begin reading from
-    @param length Number of bytes to read from the EEPROM (max 31)
-    @return byte array of data read from EEPROM
+    @param byte offset: EEPROM location to begin reading from
+    @param int length: Number of bytes to read from the EEPROM (max 31)
+    @return byte array: of data read from EEPROM
     """
     if length > maximum_payload_length - 1:
       raise EEPROMLengthError(length)
@@ -889,8 +891,9 @@ class s3g:
   def WriteToToolheadEEPROM(self, tool_index, offset, data):
     """
     Write some data to the toolhead. The data structure is implementation specific.
-    @param offset EEPROM location to begin writing to
-    @param data Data to write to the EEPROM
+    @param int tool_index: Index of tool to access
+    @param byte offset: EEPROM location to begin writing to
+    @param list data: Data to write to the EEPROM
     """
     # TODO: this length is bad
     if len(data) > maximum_payload_length - 6:
@@ -910,8 +913,8 @@ class s3g:
   def GetPlatformTemperature(self, tool_index):
     """
     Retrieve the build platform temperature
-    @param tool_index Toolhead Index
-    @return temperature reported by the toolhead
+    @param int tool_index: Toolhead Index
+    @return int temperature: reported by the toolhead
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PLATFORM_TEMP'])
     [response_code, temperature] = UnpackResponse('<BH', response)
@@ -921,8 +924,8 @@ class s3g:
   def GetToolheadTargetTemperature(self, tool_index):
     """
     Retrieve the toolhead target temperature (setpoint)
-    @param tool_index Toolhead Index
-    @return temperature that the toolhead is attempting to achieve
+    @param int tool_index: Toolhead Index
+    @return int temperature: that the toolhead is attempting to achieve
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOLHEAD_TARGET_TEMP'])
     [response_code, temperature] = UnpackResponse('<BH', response)
@@ -932,8 +935,8 @@ class s3g:
   def GetPlatformTargetTemperature(self, tool_index):
     """
     Retrieve the build platform target temperature (setpoint)
-    @param tool_index Toolhead Index
-    @return temperature that the build platform is attempting to achieve
+    @param int tool_index: Toolhead Index
+    @return int temperature: that the build platform is attempting to achieve
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PLATFORM_TARGET_TEMP'])
     [response_code, temperature] = UnpackResponse('<BH', response)
@@ -943,24 +946,26 @@ class s3g:
   def IsPlatformReady(self, tool_index):
     """
     Determine if the platform is at temperature, and is therefore ready to be used.
-    @param tool_index Toolhead Index
-    @return true if the platform is ready
+    @param int tool_index: Toolhead Index
+    @return boolean isReady: true if the platform is at target temperature, false otherwise
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['IS_PLATFORM_READY'])
     [response_code, ready] = UnpackResponse('<BB', response)
 
+    isReady = False
     if ready == 1:
-      return True
+      isReady = True
     elif ready == 0:
-      return False
+      isReady = False
     else:
-      raise HeatElementReady(ready)
+      raise HeatElementReadyError(ready)
+    return isReady
 
   def ToggleFan(self, tool_index, state):
     """
     Turn the fan output on or off
-    @param tool_index Toolhead Index
-    @param state If True, turn the fan on, otherwise off.
+    @param int tool_index: Toolhead Index
+    @param boolean state: If True, turn the fan on, otherwise off.
     """
 
     payload = bytearray()
@@ -973,8 +978,8 @@ class s3g:
   def ToggleValve(self, tool_index, state):
     """
     Turn the valve output on or off
-    @param tool_index Toolhead Index
-    @param state If True, turn the valvue on, otherwise off.
+    @param int tool_index: Toolhead Index
+    @param boolean state: If True, turn the valvue on, otherwise off.
     """
 
     payload = bytearray()
@@ -992,15 +997,15 @@ class s3g:
       turn off all outputs
       detaching all servo devices
       sesetting motor speed to 0
-    @param tool_index: The tool to re-initialize
+    @param int tool_index: The tool to re-initialize
     """
     self.ToolActionCommand(tool_index, slave_action_command_dict['INIT'])
 
   def SetToolheadTemperature(self, tool_index, temperature):
     """
     Set a certain toolhead's temperature
-    @param tool_index: Toolhead Index
-    @param Temperature: Temperature to heat up to in Celcius
+    @param int tool_index: Toolhead Index
+    @param int Temperature: Temperature to heat up to in Celcius
     """
     payload = bytearray()
     self.AddObjToPayload(payload, EncodeUint16(temperature))
@@ -1010,8 +1015,8 @@ class s3g:
   def SetPlatformTemperature(self, tool_index, temperature):
     """
     Set the platform's temperature
-    @param tool_index: Platform Index
-    @param Temperature: Temperature to heat up to in Celcius
+    @param int tool_index: Platform Index
+    @param int Temperature: Temperature to heat up to in Celcius
     """
     payload = bytearray()
     self.AddObjToPayload(payload, EncodeUint16(temperature))
