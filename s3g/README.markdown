@@ -1,6 +1,7 @@
 #s3g Module
 The s3g module is designed to communicate to a Makerbot Printer via s3g Packets.  The main objective of this module is to both transform certain actions (i.e. move-to-a-position, heat-up-a-toolhead) into packets of information to be sent and to decode packets of information received from a printer into human parsable formats.  
 
+For documentation of the functions the s3g module is able to use, see the s3g.py file for complete documentation.
 
 ##Initialization
 This module is totally stand alone, and does not require any dependencies to generate s3g packets.  _HOWEVER_, in order to communicate with a printer, pyserial is required.  To get pyserial, go to pyserial.sourceforge.net, download the source code and install.
