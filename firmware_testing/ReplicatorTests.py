@@ -1,3 +1,8 @@
+import os
+import sys
+lib_path = os.path.abspath('../')
+sys.path.append(lib_path)
+
 """
 A suite of tests to be run on a replicator with the s3g python module.  These tests are broken down into several categories:
   CommonFunctionTests: Tests that ensure functions used by all test cases are valid
@@ -10,12 +15,13 @@ import os, sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import unittest
+import unittest2 as unittest
+
 import optparse
 import serial
 import io
 import struct
-from array import array
+import array
 import time
 import s3g
 
@@ -631,7 +637,7 @@ class s3gFunctionTests(unittest.TestCase):
     self.assertTrue(self.s3g.IsFinished())
     self.assertEqual(bufferSize, self.s3g.GetAvailableBufferSize())
 
-  @unittest.skip("Delay is broken, delaysin mili instead of micro.  This woul dmake us delay for a long time, so we skip this step for now")
+  @unittest.skip("Delay is broken, delays in miliseconds instead of microseconds.  This woul dmake us delay for a long time, so we skip this step for now")
   def test_Delay(self):
     axes = ['x', 'y']
     feedrate = 500
@@ -918,6 +924,6 @@ if __name__ == '__main__':
   functionTests = unittest.TestLoader().loadTestsFromTestCase(s3gFunctionTests)
   sdTests = unittest.TestLoader().loadTestsFromTestCase(s3gSDCardTests)
   smallTest = unittest.TestLoader().loadTestsFromTestCase(test)
-  suites = [commonTests, packetTests, sendReceiveTests, functionTests, sdTests, smallTest]
-  for suite in suites[2]:
+  suites = [commonTests, packetTests, sendReceiveTests, functionTests, sdTests, ]
+  for suite in suites[-1]:
     unittest.TextTestRunner(verbosity=2).run(suite)
