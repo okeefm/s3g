@@ -1,7 +1,7 @@
 #s3g Module
-The s3g module is designed to communicate to a Makerbot Printer via s3g Packets.  The main objective of this module is to both transform certain actions (i.e. move-to-a-position, heat-up-a-toolhead) into packets of information to be sent and to decode packets of information received from a printer into human parsable formats.  
+The s3g module is designed to communicate with a Makerbot Printer using via s3g Packets.  The main objective of this module is to both transform certain actions (i.e. move-to-a-position, heat-up-a-toolhead) into packets of information to be sent and to decode packets of information received from a printer into human parsable formats.  
 
-For documentation of the functions the s3g module is able to use, see the s3g.py file for complete documentation.
+See the innards of the s3g.py file for documentation of the separate functions available to the s3g module.
 
 ##Initialization
 This module is totally stand alone, and does not require any dependencies to generate s3g packets.  _HOWEVER_, in order to communicate with a printer, pyserial is required.  To get pyserial, go to pyserial.sourceforge.net, download the source code and install.
@@ -12,7 +12,7 @@ import serial</code></pre>
 
 Next you must create the s3g object:
 <pre><code>s = s3g.s3g()</code></pre>
-While the s3g object has been created, it can neither generate s3g packets nor communicate with a printer.  In order to do the former, the s3g object needs something to write to.  Once the s3g object is told to execute a certain command, it will generate the proper payload, encode that payload into a packet, and then WRITE it to a certain location.  To initialize that location:
+While the s3g object has been created, it can neither generate s3g packets nor communicate with a printer.  In order to do the former, the s3g object needs something to write to.  Once the s3g object is told to execute a certain command, it will generate the proper payload, encode that payload into a packet, and then WRITE it to a certain location.  To initialize that location as a serial port:
 <pre><code>s.file = serial.Serial(port, baudrate, timeout=n)</code></pre>
 In this case, port is whatever port the bot is connected at, the baudrate is some rate the bot can communicate at, and the timeout is how long the pyserial object will try to send information without a response before stopping.  
 
@@ -24,12 +24,14 @@ To close the serial port to a bot:
 <pre><code>s.file = None</code></pre>
 
 ##Accepted format of commands
-The s3g module is set up to only take in parameters formatted in a specific way generate packets correctly.  Not adhering to these standards will cause unintended results.
+The s3g module is set up to only take in parameters formatted in a specific way generate packets correctly.  Not adhering to these standards will cause unintended results.  While most of these parameters are fairly easy to understand, the following are parameters that might not be as obvious:
 
 ###Points
-Points come in two flavors: regular and extended; both are identical except for their respective lengths, which are 3 and 5.  Regular points are of length 3 and are used to manipulate the x, y and z corrordinates.  Extended points are of length 5 and are used to move the both on its x, y, z, a and b corrordinates.
+Points come in two flavors: regular and extended; both are identical except for their respective lengths, which are 3 and 5.  Regular points are of length 3 and are used to manipulate the x, y and z axes.  Extended points are of length 5 and are used to move on the x, y, z, a and b axes.
 
 Both regular and extended points are made up of python lists in this format:
+<pre><code>[x, y, z]</code></pre>
+OR
 <pre><code>[x, y, z, a, b]</code></pre>
 
 ###Axes Lists
