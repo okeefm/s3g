@@ -1,5 +1,5 @@
 """
-Control an s3g device (Makerbot, etc) using osc!
+Measure communication statistics of the machine
 
 Requires these modules:
 * pySerial: http://pypi.python.org/pypi/pyserial
@@ -40,8 +40,8 @@ class LineGenerator:
 
     def GetNextPoint(self):
         target = [
-            self.last_target[0] + self.radius,
-            self.last_target[1] + self.radius,
+            self.last_target[0] - self.radius,
+            self.last_target[1] - self.radius,
             0,
             0,
             0
@@ -102,50 +102,42 @@ r = s3g.s3g()
 
 r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 
-print 'homing...'
-r.SetExtendedPosition([0,0,0,0,0])
-r.FindAxesMaximums(['x','y'],500,60)
-r.RecallHomePositions(['x','y'])
-r.QueueExtendedPoint([0,0,0,0,0],500)
-
-while not r.IsFinished():
-    pass
-
-print 'ready'
-
-
 # Test patterns to run
-test_states = [
-    [400, 10,  300],
-    [400, 30,  300],
-    [400, 50,  300],
-    [400, 70,  300],
-    [400, 90,  300],
-    [400, 110, 300],
-    [400, 130, 300],
-    [400, 150, 300],
-    [400, 170, 300],
-    [400, 190, 300],
-]
+target_position = 13000
+
+test_states = []
+for moves in range(100,1400,120):
+    test_states.append([target_position/moves, 1,500])
+for duration in range(9,2,-1):
+    test_states.append([duration, 1,500])
+
+print test_states
 
 # How long to test each motion, in seconds
-test_length = 5
+test_length = 3
 
-print "velocity, radius, divisions, distance, duration," + \
-      " command_count, max_time, min_time, average_time," + \
-      " total_distance, total_retries, total_overflows"
+print "commands/sec, velocity, distance, command_length," + \
+      " command_count, max_queue_time, min_queue_time, average_queue_time," + \
+      " total_distance, total_retries, total_overflows," + \
+      " total_time, expected_time"
 
 for test_state in test_states:
 
-    generator = CircleGenerator(test_state[0], test_state[1], test_state[2])
+    r.FindAxesMaximums(['x','y'],500,60)
+    r.SetExtendedPosition([0,0,0,0,0])
+    while not r.IsFinished():
+        pass
+
+    generator = LineGenerator(test_state[0], test_state[1], test_state[2])
 
     command_count = 0
     queue_times = []
     r.total_retries = 0
     r.total_overflows = 0
+    target = [0,0,0,0,0]
 
     start_time = time.time()
-    while time.time() < start_time + test_length:
+    while target[0] > -target_position:
         target,velocity = generator.GetNextPoint()
  
         try:
@@ -163,19 +155,23 @@ for test_state in test_states:
             r.ToggleAxes(['x','y','z','a','b'],False)
             exit(1)
 
+    while not r.IsFinished():
+        pass
+    total_time = time.time() - start_time
 
     min_time = 1000
     max_time = 0
-    total_time = 0
+    queue_total_time = 0
     for queue_time in queue_times:
         min_time = min(min_time, queue_time)
         max_time = max(max_time, queue_time)
-        total_time += queue_time
+        queue_total_time += queue_time
 
-    print "%.2f, %.2f, %.2f, %.2f, %.4f, %i, %.4f, %.4f, %.4f, %.4f, %i, %i"%(
-        generator.velocity, generator.radius, generator.divisions, generator.distance, generator.duration,
-        command_count, max_time, min_time, total_time/command_count,
-        generator.distance*command_count, r.total_retries, r.total_overflows
+    print "%.2f, %.2f, %.4f, %.4f, %i, %.4f, %.4f, %.4f, %.4f, %i, %i, %.2f, %.2f"%(
+        1.0/generator.duration, generator.velocity, generator.distance, generator.duration,
+        command_count, max_time, min_time, queue_total_time/command_count,
+        generator.distance*command_count, r.total_retries, r.total_overflows,
+        total_time, generator.duration*command_count,
     )
 
 

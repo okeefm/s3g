@@ -63,11 +63,11 @@ if options.dump_eeprom:
   print "Host EEPROM memory map:"
   for offset in range(0, 1024, 16):
     data = r.ReadFromEEPROM(offset, 16)
-    print '%04i'%(offset), binascii.hexlify(buffer(data))
+    print '%04x'%(offset), binascii.hexlify(buffer(data))
 
   for tool_index in range(0, options.toolheads):
     print "Tool %i EEPROM memory map:"%(tool_index)
     for offset in range(0, 1024, 16):
       data = r.ReadFromToolheadEEPROM(tool_index, offset, 16)
-      print '%04i'%(offset), binascii.hexlify(buffer(data))
+      print '%04x'%(offset), binascii.hexlify(buffer(data))
 
