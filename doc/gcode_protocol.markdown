@@ -57,16 +57,86 @@ Registers (none)
 ## G162 - Home given axes to maximum
 
 ## M6 - Wait for toolhead to reach temperature
-## M18 - Disable motor(s)
-## M70 - Display message on machine
-## M72 - Play a tone or song
-## M73 - Set build %
-## M101 - Turn extruder on, forward
-## M102 - Turn extruder on, reverse
-## M103 - Turn extruder off
-## M104 - Set toolhead temperature
-## M105 - 
-## M108 - Set extruder max speed
-## M109 - Set build platform temperature
-## M132 - Load current position from EEPROM
+Instruct the machine to wait for the toolhead to reach its target temperature
 
+Registers
+
+    T: Toolhead to wait for
+    P: Timeout to use while waiting
+
+## M18 - Disable motor(s)
+Instruct the machine to disable the axes
+
+Registers
+
+    X: (optional)
+    Y: (optional)
+    Z: (optional)
+    A: (optional)
+    B: (optional)
+
+## M70 - Display message on machine
+Instruct the machine to print a message
+
+Registers
+
+    P: Type of message
+    ;: Message to display
+
+## M72 - Play a tone or song
+Instruct the machine to play a preset song
+
+Registers
+
+    P: ID of the song to play
+
+## M73 - Set build %
+Sets the percentage of the current build
+
+Registers
+
+   P: Build Percentage
+
+## M101 - Turn extruder on, forward
+Sets the extruder direction to clockwise
+
+Registers (none)
+## M102 - Turn extruder on, reverse
+Sets the extruder direction to counter-clockwise
+
+Registers (none)
+
+## M103 - Turn extruder off
+Disables the extruder motor
+
+Registers (none)
+
+## M104 - Set toolhead temperature
+Sets the current toolhead's temperature
+
+Registers
+
+    S: Temperature to set the toolhead to
+
+## M105 - Read toolhead temperature
+Read the current toolhead's temperature
+
+Registers (none)
+
+## M108 - Set extruder max speed
+Sets the current toolhead's motor speed to a certain speed
+
+Registers
+
+    R: The motor RPM speed
+
+## M109 - Set build platform temperature
+Sets the current build platform's temperature
+
+Registers
+
+    S: Temperature to set the platform to
+## M132 - Load current home position from EEPROM
+Recalls current home position from the EEPROM and waits for the buffer to empty
+
+Registers (none)
