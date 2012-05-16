@@ -4,6 +4,7 @@ A stream parser that decodes an s3g stream
 
 import optparse
 import struct
+import array
 from constants import *
 
 
@@ -26,11 +27,11 @@ commandInfo = {
     146     :     ["SET RGB LED", 'B', 'B', 'B', 'B', 'B'],
     147     :     ["SET BEEP", 'H', 'H', 'B'],
     148     :     ["WAIT FOR BUTTON", 'B', 'H', 'B'],
-    149     :     ["DISPLAY MESSAGE", 'B', 'B', 'B', 'B', 'char[]', 'B'],
+    149     :     ["DISPLAY MESSAGE", 'B', 'B', 'B', 'B', 's'],
     150     :     ["SET BUILD PERCENT", 'B', 'B'],
     151     :     ["QUEUE SONG", 'B'],
     152     :     ["RESET TO FACTORY", 'B'],
-    153     :     ["BUILD START NOTIFICATION", 'I', 'char[]', 'B'],
+    153     :     ["BUILD START NOTIFICATION", 'I', 's'],
     154     :     ["BUILD END NOTIFICATION"],
     1       :     ["INIT"],
     3       :     ["SET TOOLHEAD TARGET TEMP", 'h'],
@@ -75,7 +76,7 @@ structFormats = {
     'L'       :     8, #Unsigned
     'f'       :     4,
     'd'       :     8,
-    'char[]'  :     's', 
+    's'  :     -1, 
 }
 
 class s3gStreamDecoder:
@@ -90,16 +91,23 @@ class s3gStreamDecoder:
     @param formatString: Format string we use to determine how many bytes to read
     @return list: objects unpacked from the input s3g file
     """
-    totalBytes = 0
-    readingString = False
-    for char in formatString:
-      if structFormats[char] == 's':
-        readingString = True
-      if readingString:
-        
-      totalBytes+=structFormats[char]
-    b = self.file.read(totalBytes)
-    return struct.unpack('<'+formatString, b)
+    returnParams = []
+    for formatter in formatString:
+      b = ''
+      #We read in strings separately than regular objects 
+      if formatter == 's':
+        while True:
+          readByte = self.file.read(1)
+          if struct.unpack('<B', readByte)[0] == 0:
+            break
+          b += readByte
+        returnParams.append(struct.unpack('<'+str(len(b))+formatter, b)[0])
+      else:
+        for i in range(structFormats[formatter]):
+          b += self.file.read(1)
+        returnParams.append(struct.unpack('<'+formatter, b)[0])
+    
+    return returnParams
     
   def GetCommandParameters(self, cmd):
     """Given a command number, returns the associated information in a list
@@ -112,7 +120,7 @@ class s3gStreamDecoder:
     if len(info) == 1:
       parameters = []
     else:
-      formatString = ''.join(info[1:])
+      formatString = info[1:]
       parameters = self.ReadBytes(formatString)
     return parameters
 

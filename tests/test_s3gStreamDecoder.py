@@ -28,10 +28,10 @@ class DecoderTests(unittest.TestCase):
     self.outputstream.write(payload)
     self.outputstream.seek(0)
     readVal = self.d.ReadBytes('BBB')
-    self.assertEqual(readVal, struct.unpack('<BBB', array.array('B', payload)))
+    self.assertEqual(readVal, list(struct.unpack('<BBB', array.array('B', payload))))
 
   def test_GetCommandParameters(self):
-    point = (1, 2, 3, 4, 5)
+    point = [1, 2, 3, 4, 5]
     duration = 42
     relativeAxes = 0
     cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
