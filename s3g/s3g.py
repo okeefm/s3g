@@ -548,8 +548,8 @@ class s3g:
   def GetExtendedPosition(self):
     """
     Gets the current machine position
-    @return tuple position: containing the 5D position the machine is currently located at, 
-    and the endstop states.
+    @return tuple position: containing the 5D position the machine is currently located
+    at, and the endstop states.
     """
     response = self.BuildAndSendPayload(host_query_command_dict['GET_EXTENDED_POSITION'])
   
