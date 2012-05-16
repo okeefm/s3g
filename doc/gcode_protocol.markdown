@@ -7,7 +7,6 @@ These are the rules for this interpreter:
 * Exactly 1 G or M code per command line
 * No register values carry over between commands (some registers may affect the interpreter state machine)
 * Only absolute positioning in milimeter mode are supported
-* Two kinds of comments are supported, parens and semicolon
 
 The interpreter state machine stores these states:
 
@@ -22,6 +21,19 @@ The interpreter state machine stores these states:
 Supported cmmands were extracted from [representative gcode files](https://github.com/makerbot/s3g/tree/master/doc/gcode_samples), created in both Skeinforge and Miracle Grue.
 
 Hints about what the commands are expected to do were extracted from ReplicatorG's [gcode parser](https://github.com/makerbot/ReplicatorG/blob/master/src/replicatorg/app/gcode/GCodeParser.java).
+
+# Parser
+
+## Comments
+Both semicolon ; and parens () style comments are supported. If multiple comments are present on a line, they are extracted and combined into a single comment. Comments are parsed using the following rules:
+
+* Semicolons are evaluated first; anything to the right of the semicolon in unconditionally considered a comment (including additional semicolons, and parentheses)
+* Nested parentheses are accepted. The data inside of the nested parentheses are added to the comment, while the parentheses characters are not.
+* An unclosed opening parenthesis is accepted. Everything to the right of the parenthesis is treated as a comment.
+* A closing paren that was not preceeded by an opening parenthesis is an error.
+
+## Commands
+Each line must have exactly one G or M code, and 0 or more other codes. Each code must be separated by whitespace. Codes should have a value attached to them. If the value contains a decimal place, it must use a period to demarcate this. Upper and lower case codes are accepted, but will be converted to uppercase.
 
 # Supported G Codes
 

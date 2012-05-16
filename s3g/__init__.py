@@ -6,3 +6,4 @@ from errors import *
 from crc import *
 from coding import *
 from packet import *
+from gcode import *

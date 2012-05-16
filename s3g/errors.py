@@ -146,7 +146,7 @@ class EEPROMMismatchError(ProtocolError):
 
 class ParameterError(ValueError):
   """
-  An Parameter Error is thrown when an incorrect parameter is passed into an s3g function (i.e. incorrect button name, etc)
+  A parameter error is thrown when an incorrect parameter is passed into an s3g function (i.e. incorrect button name, etc)
   """
   def __init__(self, value):
     self.value = value
@@ -156,8 +156,9 @@ class ParameterError(ValueError):
 
 class ButtonError(ParameterError):
   """
-  A Bad button error is raised when a button that is not of type up, down, left, right or center is passed into WaitForButton
+  A bad button error is raised when a button that is not of type up, down, left, right or center is passed into WaitForButton
   """
+
 class EEPROMLengthError(ParameterError):
   """
   An EEPROM length error is raised when too much information is either read or written to the EEPROM
@@ -170,5 +171,31 @@ class ToolIndexError(ParameterError):
 
 class PointLengthError(ParameterError):
   """
-  A Point length error is caused when a point's length is either too long or too short.
+  A point length error is caused when a point's length is either too long or too short.
   """
+
+class GcodeError(ValueError):
+  """
+  Gcode errrors are raised when the gcode parser encounters an invalid line
+  """
+
+class CommentError(GcodeError):
+  """
+  A comment error is raised if an closing parenthesis ) is found without a previous
+  opening parenthesis (.
+  #TODO: Add line number, full text of line.
+  """
+
+class InvalidCodeError(GcodeError):
+  """
+  An invalid code error is raised if a code is found that is not a roman character.
+  #TODO: add line number, code.
+  """
+
+class RepeatCodeError(GcodeError):
+  """
+  A repeat code error is raised if a single code is repeated multiple times in a gcode
+  line (for example: G0 G0)
+  #TODO: add line number, code.
+  """
+
