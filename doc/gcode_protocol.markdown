@@ -115,13 +115,13 @@ Registers
 
 # Supported M Codes
 
-## M6 - Wait for toolhead to reach temperature
-Instruct the machine to wait for the toolhead to reach its target temperature
+## M6 - Toolhead Change Request
+
 
 Registers
 
-    T: Toolhead to wait for (TODO: is this extracted from the command parser's register?)
-    P: Timeout to use while waiting, in seconds (TODO: is this correct?)
+    T: Toolhead to change to
+    P: Timeout
 
 ## M18 - Disable axes stepper motors
 Instruct the machine to disable the stepper motors for the specifed axes.
@@ -139,7 +139,7 @@ Instruct the machine to display a message on it's interface LCD.
 
 Registers
 
-    P: Type of message (TODO: Explain this)
+    P: Time to display message for
     comment: Message to display
 
 ## M72 - Play a tone or song
@@ -177,9 +177,6 @@ Set the target temperature for the current toolhead
 Registers
 
     S: Temperature to set the toolhead to, in degrees C
-
-## M105 - Read toolhead temperature
-#TODO: This is a query command, it shouldn't be supported yet (it's an error that it is is in a .gcode file)
 
 ## M108 - Set extruder max speed
 Set the motor speed for the current toolhead
