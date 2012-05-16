@@ -6,43 +6,44 @@ import optparse
 import struct
 import array
 from constants import *
+from errors import BadS3GHeader
 
 
 commandInfo = {
-    129     :     ["QUEUE POINT", 'i', 'i', 'i', 'i'],
-    130     :     ["SET POSITION", 'i', 'i', 'i'],
-    131     :     ["FIND AXES MINIMUMS", 'B', 'I', 'H'],
-    132     :     ["FIND AXES MAXIMUMS", 'B', 'I', 'H'],
-    133     :     ["DELAY", 'I'],
-    135     :     ["WAIT FOR TOOL READY", 'B', 'H', 'H'],
-    136     :     ["TOOL ACTION COMMAND", 'B', 'B'], #Tool action command will need to have an additional list concatonated onto this one, since the 2nd index is another command
-    137     :     ["ENABLE AXES", 'B'],
-    139     :     ["QUEUE EXTENDED POINT", 'i', 'i', 'i', 'i', 'i', 'I'],
-    140     :     ["SET EXTENDED POSITION", 'i', 'i', 'i', 'i', 'i'],
-    141     :     ["WAIT FOR PLATFORM READY", 'B', 'H', 'H'],
-    142     :     ["QUEUE EXTENDED POINT NEW", 'i', 'i', 'i', 'i', 'i', 'I', 'B'],
-    143     :     ["STORE HOME OFFSETS", 'B'],
-    144     :     ["RECALL HOME OFFSETS", 'B'],
-    145     :     ["SET POT VALUE", 'B', 'B'],
-    146     :     ["SET RGB LED", 'B', 'B', 'B', 'B', 'B'],
-    147     :     ["SET BEEP", 'H', 'H', 'B'],
-    148     :     ["WAIT FOR BUTTON", 'B', 'H', 'B'],
-    149     :     ["DISPLAY MESSAGE", 'B', 'B', 'B', 'B', 's'],
-    150     :     ["SET BUILD PERCENT", 'B', 'B'],
-    151     :     ["QUEUE SONG", 'B'],
-    152     :     ["RESET TO FACTORY", 'B'],
-    153     :     ["BUILD START NOTIFICATION", 'I', 's'],
-    154     :     ["BUILD END NOTIFICATION"],
-    1       :     ["INIT"],
-    3       :     ["SET TOOLHEAD TARGET TEMP", 'h'],
-    6       :     ["SET MOTOR 1 SPED RPM", 'I'],
-    10      :     ["TOGGLE MOTOR 1", 'B'],
-    12      :     ["TOGGLE FAN", 'B'],
-    13      :     ["TOGGLE VALVE", 'B'],
-    14      :     ["SET SERVO 1 POSITION", 'B'],
-    23      :     ["PAUSE"],
-    24      :     ["ABORT"],
-    31      :     ["SET PLATFORM TEMP", 'h'],
+    129     :     ['i', 'i', 'i', 'i'], #"QUEUE POINT", 
+    130     :     ['i', 'i', 'i'], #"SET POSITION", 
+    131     :     ['B', 'I', 'H'], #"FIND AXES MINIMUMS", 
+    132     :     ['B', 'I', 'H'], #"FIND AXES MAXIMUMS", 
+    133     :     ['I'], #"DELAY", 
+    135     :     ['B', 'H', 'H'], #"WAIT FOR TOOL READY", 
+    136     :     ['B', 'B', 'B'], #"TOOL ACTION COMMAND", Tool action command will need to have an additional list concatonated onto this one, since the 2nd index is another command
+    137     :     ['B'], #"ENABLE AXES", 
+    139     :     ['i', 'i', 'i', 'i', 'i', 'I'],#"QUEUE EXTENDED POINT", 
+    140     :     ['i', 'i', 'i', 'i', 'i'], #"SET EXTENDED POSITION", 
+    141     :     ['B', 'H', 'H'],  #"WAIT FOR PLATFORM READY", 
+    142     :     ['i', 'i', 'i', 'i', 'i', 'I', 'B'], #"QUEUE EXTENDED POINT NEW", 
+    143     :     ['B'], #"STORE HOME OFFSETS", 
+    144     :     ['B'], #"RECALL HOME OFFSETS", 
+    145     :     ['B', 'B'], #"SET POT VALUE", 
+    146     :     ['B', 'B', 'B', 'B', 'B'], #"SET RGB LED", 
+    147     :     ['H', 'H', 'B'], #"SET BEEP", 
+    148     :     ['B', 'H', 'B'], #"WAIT FOR BUTTON", 
+    149     :     ['B', 'B', 'B', 'B', 's'], #"DISPLAY MESSAGE", 
+    150     :     ['B', 'B'], #"SET BUILD PERCENT", 
+    151     :     ['B'], #"QUEUE SONG", 
+    152     :     ['B'], #"RESET TO FACTORY", 
+    153     :     ['I', 's'], #"BUILD START NOTIFICATION", 
+    154     :     [], #"BUILD END NOTIFICATION"
+    1       :     [], #"INIT"
+    3       :     ['h'], #"SET TOOLHEAD TARGET TEMP", 
+    6       :     ['I'], #"SET MOTOR 1 SPED RPM", 
+    10      :     ['B'], #"TOGGLE MOTOR 1", 
+    12      :     ['B'], #"TOGGLE FAN", 
+    13      :     ['B'], #"TOGGLE VALVE", 
+    14      :     ['B'], #"SET SERVO 1 POSITION", 
+    23      :     [], #"PAUSE"
+    24      :     [], #"ABORT"
+    31      :     ['h'], #"SET PLATFORM TEMP", 
 }
 
 gcodeParameters = {
@@ -84,61 +85,73 @@ class s3gStreamDecoder:
   def __init__(self):
     self.currentTool = 0
 
-  def ReadBytes(self, formatString):
+  def ParseOutParameters(self, cmd):
     """Reads and decodes a certain number of bytes using a specific format string
     from the input s3g file
-    
-    @param formatString: Format string we use to determine how many bytes to read
+   
+    @param int cmd: The command's parameters we are trying to parse out 
     @return list: objects unpacked from the input s3g file
     """
+    formatString = commandInfo[cmd]
     returnParams = []
     for formatter in formatString:
-      b = ''
-      #We read in strings separately than regular objects 
       if formatter == 's':
-        while True:
-          readByte = self.file.read(1)
-          if struct.unpack('<B', readByte)[0] == 0:
-            break
-          b += readByte
+        b = self.GetStringBytes()[:-1] #Remove the null terminated symbol
         returnParams.append(struct.unpack('<'+str(len(b))+formatter, b)[0])
       else:
-        for i in range(structFormats[formatter]):
-          b += self.file.read(1)
+        b = self.GetBytes(formatter)
         returnParams.append(struct.unpack('<'+formatter, b)[0])
-    
+    if cmd == host_action_command_dict['TOOL_ACTION_COMMAND']:
+      returnParams.extend(self.ParseOutParameters(returnParams[1]))
     return returnParams
-    
-  def GetCommandParameters(self, cmd):
-    """Given a command number, returns the associated information in a list
 
-    i.e. If the cmd is 130, we will return a list 
-    @param int cmd: The command number of the current command
-    @return tuple: A tuple of all information associated with that command
-    """
-    info = commandInfo[cmd]
-    if len(info) == 1:
-      parameters = []
-    else:
-      formatString = info[1:]
-      parameters = self.ReadBytes(formatString)
-    return parameters
+  def GetStringBytes(self):
+    b = ''
+    while True:
+      readByte = self.file.read(1)
+      if struct.unpack('<B', readByte)[0] == 0:
+        b += readByte
+        return b
+      b += readByte
+
+  def GetBytes(self, formatter):
+    b = ''
+    for i in range(structFormats[formatter]):
+      b+= self.file.read(1)
+    return b
 
   def GetNextCommand(self):
-    """Gets the next command along with all associated parameters
+    """Gets the next command number
 
-    @return list
-      list[0] cmd
-      list[1...n] parameters associated with this cmd
+    @return int The command number
     """
     cmd = self.file.read(1)
-    cmd = struct.unpack('<B', cmd)[0]
-    params = self.GetCommandParameters(cmd)
-    info = [cmd]
-    info.extend(params)
-    return info
+    return struct.unpack('<B', cmd)[0]
+
+  def ParseNextPayload(self):
+    """Gets the next command and returns the parsed commands and associated parameters
+
+    @return list: a list of the cmd and  all information associated with that command
+    """
+    cmd = self.GetNextCommand()
+    print cmd
+    parameters = self.ParseOutParameters(cmd)
+    return [cmd] + parameters
+
+  def ParseNextPacket(self):
+    readHeader = self.file.read(1)
+    readHeader = struct.unpack('<B', readHeader)[0]
+    if readHeader != header:
+      raise BadS3GHeader
+    length = self.file.read(1)
+    length = struct.unpack('<B', length)
+    payload = self.ParseNextPayload()
+    crc = self.file.read(1)
+    crc = struct.unpack('<B', crc)
+    return [header, length] + payload + [crc]
     
-  
+ 
+       
 
 if __name__ == '__main__':
   parser = optparse.OptionParser()

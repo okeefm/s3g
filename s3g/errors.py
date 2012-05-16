@@ -172,3 +172,8 @@ class PointLengthError(ParameterError):
   """
   A Point length error is caused when a point's length is either too long or too short.
   """
+
+class BadS3GHeader(Exception):
+  """
+  This error is raised when parsing s3g and a bad header is encountered.
+  """
