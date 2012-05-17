@@ -39,7 +39,7 @@ r.QueueExtendedPoint([0,0,5000,0,0], 400)
 
 _Note: All points are in steps, and all speeds are in DDA. This is s3g, not gcode!_
 
-Now, instruct the machine to heat toolhead 0, wait up to 5 minutes for it to reach temperature, then extrude for 10 seconds:
+Now, instruct the machine to heat toolhead 0, wait up to 5 minutes for it to reach temperature, then extrude for 12.5 seconds:
 
 ```python
 r.SetToolheadTemperature(0, 220)

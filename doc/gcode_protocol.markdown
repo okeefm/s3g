@@ -4,7 +4,7 @@ We support a limited GCODE interpreter, for the purpose of printing files genera
 
 These are the rules for this interpreter:
 
-* Exactly 1 G or M code per command line
+* At most 1 G or M code per command line
 * No register values carry over between commands (some registers may affect the interpreter state machine)
 * Only absolute positioning in milimeter mode are supported
 
@@ -33,7 +33,7 @@ Both semicolon ; and parens () style comments are supported. If multiple comment
 * A closing paren that was not preceeded by an opening parenthesis is an error.
 
 ## Commands
-Each line must have exactly one G or M code, and 0 or more other codes. Each code must be separated by whitespace. Codes should have a value attached to them. If the value contains a decimal place, it must use a period to demarcate this. Upper and lower case codes are accepted, but will be converted to uppercase.
+Each line must have at most one G or M code, and 0 or more other codes. Each code must be separated by whitespace. Codes should have a value attached to them. If the value contains a decimal place, it must use a period to demarcate this. Upper and lower case codes are accepted, but will be converted to uppercase.
 
 # Supported G Codes
 

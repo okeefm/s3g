@@ -128,6 +128,14 @@ class ParseCommandTests(unittest.TestCase):
     command = 'G0 G0'
     self.assertRaises(s3g.RepeatCodeError, s3g.ParseCommand, command)
 
+  def test_reject_both_g_and_m_code(self):
+    command = 'G0 M0'
+    self.assertRaises(s3g.MultipleCommandCodeError, s3g.ParseCommand, command)
+
+  def test_reject_both_g_and_m_code(self):
+    command = 'M0 G0'
+    self.assertRaises(s3g.MultipleCommandCodeError, s3g.ParseCommand, command)
+
   def test_many_codes(self):
     command = 'M0 X1 Y2 Z3 F4'
     expected_registers = {
@@ -141,15 +149,18 @@ class ParseCommandTests(unittest.TestCase):
     registers = s3g.ParseCommand(command)
     assert expected_registers == registers
 
-
 class ParseSampleGcodeFileTests(unittest.TestCase):
   """
   Run the parser across all of the sample gcode files, to verify that no assertions
   are thrown
   """
   def test_parse_files(self):
+    # Terriable hack, to support running from the root or test directory.
+    files = []
     path = '../doc/gcode_samples/'
-    files = glob.glob(os.path.join(path, '*.gcode'))
+    files += glob.glob(os.path.join(path, '*.gcode'))
+    path = 'doc/gcode_samples/'
+    files += glob.glob(os.path.join(path, '*.gcode'))
 
     assert len(files) > 0
 

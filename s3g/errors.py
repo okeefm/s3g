@@ -174,17 +174,6 @@ class PointLengthError(ParameterError):
   A point length error is caused when a point's length is either too long or too short.
   """
 
-class GcodeError(ValueError):
-  """
-  Gcode errrors are raised when the gcode parser encounters an invalid line
-  """
-
-class CommentError(GcodeError):
-  """
-  A comment error is raised if an closing parenthesis ) is found without a previous
-  opening parenthesis (.
-  #TODO: Add line number, full text of line.
-  """
 
 class StreamDecoderError(Exception):
   """
@@ -200,6 +189,20 @@ class CommandError(StreamDecoderError):
   """
   Encountered when s3gStreamDecoder attempts to parse out a command that is not defined
   """
+
+
+class GcodeError(ValueError):
+  """
+  Gcode errrors are raised when the gcode parser encounters an invalid line
+  """
+
+class CommentError(GcodeError):
+  """
+  A comment error is raised if an closing parenthesis ) is found without a previous
+  opening parenthesis (.
+  #TODO: Add line number, full text of line.
+  """
+
 class InvalidCodeError(GcodeError):
   """
   An invalid code error is raised if a code is found that is not a roman character.
@@ -207,6 +210,13 @@ class InvalidCodeError(GcodeError):
   """
 
 class RepeatCodeError(GcodeError):
+  """
+  A repeat code error is raised if a single code is repeated multiple times in a gcode
+  line (for example: G0 G0)
+  #TODO: add line number, code.
+  """
+
+class MultipleCommandCodeError(GcodeError):
   """
   A repeat code error is raised if a single code is repeated multiple times in a gcode
   line (for example: G0 G0)

@@ -1,4 +1,4 @@
-# GCODE interpreter
+# Gcode parser, 
 
 from errors import *
 
@@ -57,6 +57,11 @@ def ParseCommand(command):
     if code in registers.keys():
       raise RepeatCodeError()
 
+    # Don't allow both G and M codes in the same line
+    if ( code == 'G' and 'M' in registers.keys() ) or \
+       ( code == 'M' and 'G' in registers.keys() ):
+      raise MultipleCommandCodeError()
+
     # If the code doesn't have a value, we consider it a flag, and set it to true.
     if len(pair) == 1:
       registers[code] = True
@@ -77,3 +82,43 @@ def ParseLine(line):
   registers = ParseCommand(command)
 
   return registers, comment
+
+
+class GcodeStateMachine():
+  """
+  Read in gcode line by line, tracking some state variables and running known
+  commands against an s3g machine.
+  """
+  position = None            # Current machine position
+  offset_register = None     # Current offset register, if any
+  toolhead = 0               # Tool ID
+  toolhead_speed = 0         # Speed of the tool, in rpm???
+  toolhead_direction = True  # Tool direction; True=forward, False=reverse
+  toolhead_enabled = False   # Tool enabled; True=enabled, False=disabled
+
+  def ExecuteLine(self, command):
+    """
+    Execute a line of gcode
+    @param string command Gcode command to execute
+    """
+
+    # Parse the line
+    registers, comment = ParseLine(command)
+
+    # Update the state information    
+
+    # Run the command
+    if 'G' in registers.keys():
+      print 'Got G code: %i'%(registers['G']),
+    elif 'M' in registers.keys():
+      print 'Got M code: %i'%(registers['M']),
+    else:
+      print 'Got no code?',
+
+    print registers,
+
+    if comment != '':
+      print 'comment=%s'%(comment),
+
+    print ''
+
