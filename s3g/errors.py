@@ -186,11 +186,20 @@ class CommentError(GcodeError):
   #TODO: Add line number, full text of line.
   """
 
-class BadS3GHeader(Exception):
+class StreamDecoderError(Exception):
+  """
+  A class of errors pertaining to the s3g stream decoder
+  """
+
+class PacketHeaderError(StreamDecoderError):
   """
   This error is raised when parsing s3g and a bad header is encountered.
   """
 
+class CommandError(StreamDecoderError):
+  """
+  Encountered when s3gStreamDecoder attempts to parse out a command that is not defined
+  """
 class InvalidCodeError(GcodeError):
   """
   An invalid code error is raised if a code is found that is not a roman character.

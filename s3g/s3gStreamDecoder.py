@@ -6,7 +6,7 @@ import optparse
 import struct
 import array
 from constants import *
-from errors import BadS3GHeader
+from errors import *
 
 
 commandInfo = {
@@ -97,13 +97,17 @@ class s3gStreamDecoder:
     for formatter in formatString:
       if formatter == 's':
         b = self.GetStringBytes()[:-1] #Remove the null terminated symbol
-        returnParams.append(struct.unpack('<'+str(len(b))+formatter, b)[0])
+        returnParams.append(self.parseParameter('<'+str(len(b))+formatter, b))
       else:
         b = self.GetBytes(formatter)
-        returnParams.append(struct.unpack('<'+formatter, b)[0])
+        returnParams.append(self.parseParameter('<'+formatter, b))
     if cmd == host_action_command_dict['TOOL_ACTION_COMMAND']:
       returnParams.extend(self.ParseOutParameters(returnParams[1]))
     return returnParams
+
+  def parseParameter(self, formatString, bytes):
+    returnParam = struct.unpack(formatString, bytes)[0]
+    return returnParam
 
   def GetStringBytes(self):
     b = ''
@@ -121,12 +125,15 @@ class s3gStreamDecoder:
     return b
 
   def GetNextCommand(self):
-    """Gets the next command number
+    """Assuming the file pointer is at a command, Gets the next command number
 
     @return int The command number
     """
     cmd = self.file.read(1)
-    return struct.unpack('<B', cmd)[0]
+    cmd = struct.unpack('<B', cmd)[0]
+    if cmd not in commandInfo.keys():
+      raise CommandError
+    return cmd
 
   def ParseNextPayload(self):
     """Gets the next command and returns the parsed commands and associated parameters
@@ -134,29 +141,21 @@ class s3gStreamDecoder:
     @return list: a list of the cmd and  all information associated with that command
     """
     cmd = self.GetNextCommand()
-    print cmd
     parameters = self.ParseOutParameters(cmd)
     return [cmd] + parameters
 
   def ParseNextPacket(self):
+    """
+    Assuming the file pointer is at the beginning of a packet, we parse out the information from that packet
+    @return Human readable version of this s3g packet
+    """
     readHeader = self.file.read(1)
     readHeader = struct.unpack('<B', readHeader)[0]
     if readHeader != header:
-      raise BadS3GHeader
+      raise PacketHeaderError 
     length = self.file.read(1)
-    length = struct.unpack('<B', length)
+    length = struct.unpack('<B', length)[0]
     payload = self.ParseNextPayload()
     crc = self.file.read(1)
-    crc = struct.unpack('<B', crc)
+    crc = struct.unpack('<B', crc)[0]
     return [header, length] + payload + [crc]
-    
- 
-       
-
-if __name__ == '__main__':
-  parser = optparse.OptionParser()
-  parser.add_option("-f", "--filename", dest="filename", 
-                  help="s3g file to open")
-  (options, args) = parser.parse_args()
-  d = s3gStreamDecoder()
-  d.file = open(options.filename, 'rb')
