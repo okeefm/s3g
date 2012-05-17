@@ -200,6 +200,9 @@ class s3g:
     self.BuildAndSendPayload(host_query_command_dict['PAUSE'])
 
   def GetCommunicationStats(self):
+    """
+    Get some communication statistics about traffic on the tool network from the Host.
+    """
     response = self.BuildAndSendPayload(host_query_command_dict['GET_COMMUNICATION_STATS'])
 
     [response_code,

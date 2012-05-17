@@ -270,6 +270,8 @@ Response code values can be as follows:
 </tr>
 </table>
 
+_Historical note: Firmware versions prior to 2.9 did not have the high bit set for error codes. This was changed to avoid having the response code conflict with tool indexes on the tool network_ 
+
 # Data formats
 
 ## Integer
@@ -1478,20 +1480,3 @@ Payload
 
 Response (0 bytes)
 
-## 38 - Set motor speed (DDA) *Deprecated*
-This sets the motor speed as a DDA value, in microseconds between step. It should not actually enable the motor until the motor enable command is given. For future implementation of 5D (vs 4D) two DDA codes are sent - the DDA to start with and the DDA to end with. The third uint32 is the number of steps to take. The direction to go is set by code 8, 'Set motor direction'
-
-Payload
-
-    uint32: Speed, in microseconds between steps (start of movement)
-    uint32: Speed, in microseconds between steps (end of movement)
-    uint32: total steps to take.
-
-Response (0 bytes)
-
-## 40 - Light indicator LED *Deprecated*
-This command turns on an indicator light (for gen 4, the motor direction LED). This command is intended to serve as visual feedback to an operator that the electronics are communicating properly. Note that it should not be used during regular operation, because it interferes with h-bridge operation.
-
-Payload (0 bytes)
-
-Response (0 bytes)

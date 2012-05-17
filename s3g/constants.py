@@ -75,7 +75,6 @@ slave_action_command_dict = {
   'PAUSE'                      : 23,
   'ABORT'                      : 24,
   'SET_PLATFORM_TEMP'          : 31,
-#  'SET_MOTOR_1_SPEED_DDA'      : 38, We are considering this deprecated, but some people use it in the wild so we are keeping it in here as a reminder
 }
 
 response_code_dict = {
