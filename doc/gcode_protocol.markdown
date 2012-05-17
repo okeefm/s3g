@@ -146,13 +146,13 @@ Registers
 
 # Supported M Codes
 
-## M6 - Toolhead Change Request
-
+## M6 - Wait for toolhead to reach temperature
+Instruct the machine to wait for the toolhead to reach its target temperature
 
 Registers
 
-    T: Toolhead to change to
-    P: Timeout
+    T: Toolhead to wait for (TODO: is this extracted from the command parser's register?)
+    P: Maximum time to wait, in seconds (TODO: is this correct?)
 
 ## M18 - Disable axes stepper motors
 Instruct the machine to disable the stepper motors for the specifed axes.
@@ -170,7 +170,7 @@ Instruct the machine to display a message on it's interface LCD.
 
 Registers
 
-    P: Time to display message for
+    P: Time to display message for (TODO: Units?)
     comment: Message to display
 
 ## M72 - Play a tone or song
