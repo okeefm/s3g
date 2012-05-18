@@ -159,3 +159,12 @@ class s3gStreamDecoder:
     crc = self.file.read(1)
     crc = struct.unpack('<B', crc)[0]
     return [header, length] + payload + [crc]
+
+  def ReadStream(self):
+    packets = []
+    try:
+      while True:
+        packets.append(self.ParseNextPacket())
+    except struct.error:
+      return packets
+

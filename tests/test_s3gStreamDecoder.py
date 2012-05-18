@@ -122,7 +122,56 @@ class DecoderTests(unittest.TestCase):
     self.assertEqual(readPacket[9], relativeAxes)
     self.assertEqual(readPacket[10], crc)
 
-    
+
+  def test_ReadStream(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    point = [1, 2, 3, 4, 5]
+    duration = 42
+    relativeAxes = 0
+    self.outputstream.seek(0)
+    self.s.QueueExtendedPointNew(point, duration, [])
+    self.outputstream.seek(0)
+    self.s.SetExtendedPosition(point)
+    self.outputstream.seek(0)
+    self.s.SetPosition(point[:3])
+    self.inputstream.seek(0)
+    packets = self.d.ReadStream()
+    cmdNumbers = [
+        s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'], 
+        s3g.host_action_command_dict['SET_EXTENDED_POSITION'], 
+        s3g.host_action_command_dict['SET_POSITION']
+        ]
+    for readCmd, cmd in zip([packets[0][2], packets[1][2], packets[2][2]], cmdNumbers):
+      self.assertEqual(readCmd, cmd)
+
+class FileDecoderTests(unittest.TestCase):
+
+  def setUp(self):
+    self.d = s3g.s3gStreamDecoder()
+    self.outputstream = io.BytesIO() # Stream that we will send responses on
+    self.inputstream = io.BytesIO()
+    self.d.file = self.inputstream
+    self.file = io.BufferedRWPair(self.outputstream, self.inputstream)
+    self.s = s3g.s3gFileWriter()
+    self.s.file = self.file
+
+  def tearDown(self):
+    self.d = None
+    self.s = None
+
+  def test_ParseNextPacket(self):
+    point = [1, 2, 3, 4, 5]
+    duration = 42
+    relativeAxes = 0x01 + 0x02
+    self.s.QueueExtendedPointNew(point, duration, ['x', 'y'])
+    self.inputstream.seek(0)
+    readPayload = self.d.ParseNextPacket()
+    self.assertEqual(readPayload[0], s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'])
+    self.assertEqual(readPayload[1:6], point)
+    self.assertEqual(point[6], duration)
+    self.assertEqual(point[7], relativeAxes)
 
 if __name__ == "__main__":
   unittest.main()
