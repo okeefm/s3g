@@ -7,4 +7,5 @@ from crc import *
 from coding import *
 from packet import *
 from s3gStreamDecoder import *
+from s3gFileDecoder import *
 from gcode import *
