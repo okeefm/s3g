@@ -243,6 +243,22 @@ class S3gTests(unittest.TestCase):
     payload = s3g.DecodePacket(packet)
     self.assertEqual(payload[0], s3g.host_query_command_dict['PAUSE'])
 
+  def test_tool_query_negative_tool_index(self):
+    self.assertRaises(
+        s3g.ToolIndexError, 
+        self.r.ToolQuery, 
+        -1, 
+        s3g.slave_query_command_dict['GET_VERSION']
+        )
+
+  def test_tool_query_too_high_tool_index(self):
+    self.assertRaises(
+        s3g.ToolIndexError, 
+        self.r.ToolQuery, 
+        s3g.max_tool_index+1, 
+        s3g.slave_query_command_dict['GET_VERSION']
+        )
+
   def test_tool_query_no_payload(self):
     tool_index = 2
     command = 0x12
@@ -736,15 +752,22 @@ class S3gTests(unittest.TestCase):
     assert payload[2:6] == s3g.EncodeUint32(rate)
     assert payload[6:8] == s3g.EncodeUint16(timeout)
 
-  def test_tool_action_command_bad_tool_index(self):
-    tool_indices = [-1, s3g.max_tool_index+1]
-    command = 0x12
-    command_payload = 'abcdefghij'
+  def test_tool_action_command_negative_tool_index(self):
+      self.assertRaises(
+          s3g.ToolIndexError,
+          self.r.ToolActionCommand,
+          -1, 
+          s3g.slave_action_command_dict['INIT']
+          )
 
-    for tool_index in tool_indices:
-      self.assertRaises(s3g.ToolIndexError,
-                        self.r.ToolActionCommand,
-                        tool_index, command, command_payload)
+  def test_tool_action_command_too_high_tool_index(self):
+      self.assertRaises(
+          s3g.ToolIndexError,
+          self.r.ToolActionCommand,
+          s3g.max_tool_index+1,
+          s3g.slave_action_command_dict['INIT']
+          )
+                      
 
   def test_tool_action_command(self):
     tool_index = 2
@@ -1402,9 +1425,8 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.assertRaises(s3g.ProtocolError, self.r.IsToolReady, tool_index)
+    self.assertRaises(s3g.HeatElementReadyError, self.r.IsToolReady, tool_index)
 
-  # TODO: also test for bad codes, both here and in platform.
   def test_is_tool_ready(self):
     tool_index = 2
     ready_states = [[True, 1],
@@ -1575,7 +1597,7 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.assertRaises(s3g.ProtocolError, self.r.IsPlatformReady, tool_index)
+    self.assertRaises(s3g.HeatElementReadyError, self.r.IsPlatformReady, tool_index)
 
   def test_is_platform_ready(self):
     tool_index = 2

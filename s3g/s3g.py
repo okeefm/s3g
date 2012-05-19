@@ -435,7 +435,7 @@ class s3g:
     @return bytearray payload: received from the tool
     """
     if tool_index > max_tool_index or tool_index < 0:
-      raise ProtocolError(1)
+      raise ToolIndexError(1)
 
     if tool_payload != None:
       return self.BuildAndSendQueryPayload(
