@@ -33,69 +33,72 @@ class S3gTests(unittest.TestCase):
       self.assertEqual(i, j)
 
   def test_add_obj_to_payload(self):
-    toAdd = ['a', 'b', 'c', 'd']
+    toAdd = ["abc", "def", "ghi", "jkl"]
     nestedLoop = [1, 2, 3, 4, toAdd]
     expected = bytearray()
     for i in toAdd:
-      expected.append(i)
+      expected.extend(i)
     for j in nestedLoop[:-1]:
       expected.append(j)
     for k in nestedLoop[-1]:
-      expected.append(k)
+      expected.extend(k)
 
     payload = bytearray()
-    self.r.AddObjToPayload(payload, ['a', 'b', 'c', 'd', nestedLoop])
+    self.r.AddObjToPayload(payload, toAdd + nestedLoop)
     for i, j in zip(payload, expected):
       self.assertEqual(i, j) 
     
+  def test_build_payload(self):
+    toAdd = ["a", "b", "c", "d", [1, 2, 3], [4, 5, 6]]
+    expectedPayload = bytearray()
+    for l in [toAdd[0:4],toAdd[-2], toAdd[-1]]:
+      expectedPayload.extend(l)
+    payload = self.r.BuildPayload(toAdd)
+    self.assertEqual(expectedPayload, payload)
 
+  def test_build_payload_empty(self):
+    expectedPayload = bytearray()
+    payload = self.r.BuildPayload([])
+    self.assertEqual(expectedPayload, payload)
 
-  def test_build_and_send_payload_nested_iterators(self):
+  def test_build_and_send_action_payload(self):
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
-    point = [0, 0, 0, 0, 0]
     cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
-    duration = 0
-    axes = ['x', 'y']
-    expected = bytearray()
-    expected.append(cmd)
-    for cor in point:
-      expected.extend(s3g.EncodeInt32(cor))
-    expected.extend(s3g.EncodeUint32(duration))
-    expected.append(s3g.EncodeAxes(axes))
-      
-    self.r.BuildAndSendPayload(cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), s3g.EncodeAxes(axes))
-    
+    point = [1, 2, 3, 4, 5]
+    duration = 42
+    relativeAxes = 0
+    self.r.BuildAndSendActionPayload([cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), relativeAxes])
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
+    self.assertEqual(payload[0], cmd)
+    self.assertEqual(payload[1:5], s3g.EncodeInt32(point[0]))
+    self.assertEqual(payload[5:9], s3g.EncodeInt32(point[1]))
+    self.assertEqual(payload[9:13], s3g.EncodeInt32(point[2]))
+    self.assertEqual(payload[13:17], s3g.EncodeInt32(point[3]))
+    self.assertEqual(payload[17:21], s3g.EncodeInt32(point[4]))
+    self.assertEqual(payload[21:25], s3g.EncodeInt32(duration))
+    self.assertEqual(payload[-1], relativeAxes)
 
-    for i, j in zip(expected, payload):
-      self.assertEqual(i, j)
-    
-
-  def test_build_and_send_payload(self):
-    """
-    Pass case: All parameters passed are added to the byte array and returned correctly
-    """
+  def test_build_and_send_query_payload(self):
+    cmd = s3g.host_query_command_dict['GET_VERSION']
+    s3gVersion = s3g.s3g_version
+    botVersion = 502
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.extend(s3g.EncodeUint16(botVersion))
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
-    header = 42
-    info = ['a', 'b', 'c', 'd']
-    footer = 0x01
-    expected = bytearray()
-    expected.append(header)
-    expected.extend(info)
-    expected.append(footer)
-    self.r.BuildAndSendPayload(header, info, footer)
+    queryResponsePayload = self.r.BuildAndSendQueryPayload([cmd, s3g.EncodeUint16(botVersion)])
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
-    for i, j in zip(expected, payload):
-      self.assertEqual(i, j)
-
+    self.assertEqual(payload[0], cmd)
+    self.assertEqual(payload[1:3], s3g.EncodeUint16(botVersion))
+    self.assertEqual(queryResponsePayload[0], s3g.response_code_dict['SUCCESS'])
+    self.assertEqual(queryResponsePayload[1:3], s3g.EncodeUint16(botVersion))
+    
   def test_send_packet_timeout(self):
     """
     Time out when no data is received. The input stream should have max_rety_count copies of the
@@ -676,6 +679,12 @@ class S3gTests(unittest.TestCase):
       assert payload[(i*4+1):(i*4+5)] == s3g.EncodeInt32(target[i])
     payload[13:17] == s3g.EncodeInt32(velocity)
 
+  def test_set_position_short_length(self):
+    self.assertRaises(s3g.PointLengthError, self.r.SetPosition, [1, 2])
+
+  def test_set_position_long_length(self):
+    self.assertRaises(s3g.PointLengthError, self.r.SetPosition, [1, 2, 3, 4])
+
   def test_set_position(self):
     target = [1,-2,3]
 
@@ -782,6 +791,12 @@ class S3gTests(unittest.TestCase):
     for i in range(0, 5):
       assert payload[(i*4+1):(i*4+5)] == s3g.EncodeInt32(target[i])
     assert payload[21:25] == s3g.EncodeInt32(velocity)
+
+  def test_set_extended_position_short_length(self):
+    self.assertRaises(s3g.PointLengthError, self.r.SetExtendedPosition, [1, 2, 3, 4])
+
+  def test_set_extended_position_long_length(self):
+    self.assertRaises(s3g.PointLengthError, self.r.SetExtendedPosition, [1, 2, 3, 4, 5, 6])
 
   def test_set_extended_position(self):
     target = [1,-2,3,-4,5]
