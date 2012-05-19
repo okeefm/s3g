@@ -1,4 +1,4 @@
-__all__ = ['s3g', 'constants', 'errors', 'crc', 'coding', 'packet']
+__all__ = ['s3g', 'constants', 'errors', 'crc', 'coding', 'packet', 's3gStreamDecoder']
 
 from s3g import *
 from constants import *
@@ -7,5 +7,4 @@ from crc import *
 from coding import *
 from packet import *
 from s3gStreamDecoder import *
-from s3gFileDecoder import *
 from gcode import *
