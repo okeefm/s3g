@@ -174,23 +174,6 @@ class PointLengthError(ParameterError):
   A point length error is caused when a point's length is either too long or too short.
   """
 
-
-class StreamDecoderError(Exception):
-  """
-  A class of errors pertaining to the s3g stream decoder
-  """
-
-class PacketHeaderError(StreamDecoderError):
-  """
-  This error is raised when parsing s3g and a bad header is encountered.
-  """
-
-class CommandError(StreamDecoderError):
-  """
-  Encountered when s3gStreamDecoder attempts to parse out a command that is not defined
-  """
-
-
 class GcodeError(ValueError):
   """
   Gcode errrors are raised when the gcode parser encounters an invalid line
@@ -223,3 +206,8 @@ class MultipleCommandCodeError(GcodeError):
   #TODO: add line number, code.
   """
 
+class StringTooLongError(Exception):
+  """
+  A stringTooLongError is raised when a string is parsed out of an s3g stream that longer
+  than the specified maximum payload length
+  """

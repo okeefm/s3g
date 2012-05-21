@@ -58,7 +58,7 @@ structFormats = {
     'L'       :     8, #Unsigned
     'f'       :     4,
     'd'       :     8,
-    's'  :     -1, 
+    's'       :     -1, 
 }
 
 class s3gStreamDecoder:

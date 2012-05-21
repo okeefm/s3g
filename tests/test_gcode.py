@@ -68,6 +68,12 @@ class ExtractCommentsTests(unittest.TestCase):
     assert 'commandacommandb' == command
     assert 'comment' == comment
 
+  def test_comment_left_and_semicolon(self):
+    line = 'asdf(qwer);testing'
+    [command, comment] = s3g.ExtractComments(line)
+    self.assertEqual('asdf', command)
+    self.assertEqual('testingqwer', comment)
+
 class ParseCommandTests(unittest.TestCase):
   def test_empty_string(self):
     command = ''
