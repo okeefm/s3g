@@ -89,12 +89,28 @@ class GcodeStateMachine():
   Read in gcode line by line, tracking some state variables and running known
   commands against an s3g machine.
   """
-  position = None            # Current machine position
+  position = {    # Current machine position
+      'X' : 0,
+      'Y' : 0,
+      'Z' : 0,
+      'A' : 0,
+      'B' : 0,
+      }
+  homePosition = {
+      'X' : 0,
+      'Y' : 0,
+      'Z' : 0, 
+      }
   offset_register = None     # Current offset register, if any
   toolhead = 0               # Tool ID
   toolhead_speed = 0         # Speed of the tool, in rpm???
   toolhead_direction = True  # Tool direction; True=forward, False=reverse
   toolhead_enabled = False   # Tool enabled; True=enabled, False=disabled
+
+  def SetPosition(self, registers):
+    for key in registers:
+      if key in position:
+        position[key] = registers[key]
 
   def ExecuteLine(self, command):
     """
@@ -106,6 +122,36 @@ class GcodeStateMachine():
     registers, comment = ParseLine(command)
 
     # Update the state information    
+    if 'G' in registers:
+      if registers['G'] == 1:
+        SetPosition(registers)
+      elif registers['G'] == 10:
+        offset_register = registers['P']
+        SetPosition(registers),
+      elif registers['G'] == 54:
+        toolhead = 0,
+      elif registers['G'] == 55:
+        toolhead = 1,
+      elif registers['G'] == 92:
+        SetPosition(registers)
+      elif registers['G'] == 161:
+        self.SetPosition({'Z':0})
+      elif registers['G'] == 162:
+        self.SetPosition({'X':0, 'Y':0})
+    elif 'M' in registers:
+      if registers['M'] == 101:
+        tool_enabled = True
+        direction = True
+      if registers['M'] == 102:
+        tool_enabled = True
+        direction = False
+      if registers['M'] == 103:
+        tool_enabled = False
+      if registers['M'] == 108:
+        tool_speed = registers['R']
+      if registers['M'] == 132:
+        SetPosition(HomePosition)
+
 
     # Run the command
     if 'G' in registers.keys():
