@@ -155,6 +155,91 @@ class ParseCommandTests(unittest.TestCase):
     registers = s3g.ParseCommand(command)
     assert expected_registers == registers
 
+
+class StateMachineTests(unittest.TestCase):
+  def setUp(self):
+    self.sm = s3g.GcodeStateMachine()
+
+  def tearDown(self):
+    self.sm = None
+
+  def test_set_position(self):
+    setPos = {
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        'A' : 4,
+        'B' : 5,
+        }
+    self.sm.SetPosition(setPos)
+    self.assertEqual(setPos, self.sm.position)
+
+  def test_g1_state(self):
+    command = 'G1 X1 Y2 Z3 A4 B5'
+    self.sm.ExecuteLine(command)
+    self.assertEqual({'X':1,'Y':2,'Z':3,'A':4,'B':5}, self.sm.position)
+ 
+  def test_g10_state(self):
+    command = 'G10 X1 Y2 Z3 A4 B5 P1'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(1, self.sm.offset_register)
+    self.assertEqual({'X':1,'Y':2,'Z':3,'A':4,'B':5}, self.sm.position)
+
+  def test_g54_state(self):
+    command = 'G54'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(self.sm.toolhead, 0)
+
+  def test_g55_state(self):
+    command = 'G55'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(self.sm.toolhead, 1)
+
+  def test_g92_state(self):
+    command = 'G92 X1 Y2 Z3 A4 B5'
+    self.sm.ExecuteLine(command)
+    self.assertEqual({'X':1,'Y':2,'Z':3,'A':4,'B':5}, self.sm.position)
+
+  def test_g161_state(self):
+    command = 'G161 Z'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(self.sm.position['Z'], 0)
+
+  def test_g162_state(self):
+    command = 'G162 X Y'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(self.sm.position['X'], 0)
+    self.assertEqual(self.sm.position['Y'], 0)
+
+  def test_M101_state(self):
+    command = 'M101'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(self.sm.tool_enabled, True)
+    self.assertEqual(self.sm.direction, True)
+
+  def test_m102_state(self):
+    command = 'M102'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(self.sm.tool_enabled, True)
+    self.assertEqual(self.sm.direction, False)
+
+  def test_m103_state(self):
+    command = 'M103'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(self.sm.tool_enabled, False)
+
+  def test_m108_state(self):
+    command = 'M108 R42'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(self.sm.tool_speed, 42)
+
+  def test_m132_state(self):
+    self.sm.HomePosition = {'X' : 3, 'Y' : 2, 'Z' : 1}
+    command = 'M132 X Y Z'
+    self.sm.ExecuteLine(command)
+    for axis in ['X', 'Y', 'Z']:
+      self.assertEqual(self.sm.HomePosition[axis], self.sm.position[axis])
+    
 class ParseSampleGcodeFileTests(unittest.TestCase):
   """
   Run the parser across all of the sample gcode files, to verify that no assertions
@@ -175,5 +260,6 @@ class ParseSampleGcodeFileTests(unittest.TestCase):
         for line in lines:
           registers, comment = s3g.ParseLine(line)
 
+  
 if __name__ == "__main__":
   unittest.main()

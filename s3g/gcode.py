@@ -89,28 +89,29 @@ class GcodeStateMachine():
   Read in gcode line by line, tracking some state variables and running known
   commands against an s3g machine.
   """
-  position = {    # Current machine position
-      'X' : 0,
-      'Y' : 0,
-      'Z' : 0,
-      'A' : 0,
-      'B' : 0,
-      }
-  homePosition = {
-      'X' : 0,
-      'Y' : 0,
-      'Z' : 0, 
-      }
-  offset_register = None     # Current offset register, if any
-  toolhead = 0               # Tool ID
-  toolhead_speed = 0         # Speed of the tool, in rpm???
-  toolhead_direction = True  # Tool direction; True=forward, False=reverse
-  toolhead_enabled = False   # Tool enabled; True=enabled, False=disabled
+  def __init__(self):
+    self.position = {    # Current machine position
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
+    self.homePosition = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0, 
+        }
+    self.offset_register = None     # Current offset register, if any
+    self.toolhead = 0               # Tool ID
+    self.toolhead_speed = 0         # Speed of the tool, in rpm???
+    self.toolhead_direction = True  # Tool direction; True=forward, False=reverse
+    self.toolhead_enabled = False   # Tool enabled; True=enabled, False=disabled
 
   def SetPosition(self, registers):
     for key in registers:
-      if key in position:
-        position[key] = registers[key]
+      if key in self.position:
+        self.position[key] = registers[key]
 
   def ExecuteLine(self, command):
     """
@@ -124,33 +125,33 @@ class GcodeStateMachine():
     # Update the state information    
     if 'G' in registers:
       if registers['G'] == 1:
-        SetPosition(registers)
+        self.SetPosition(registers)
       elif registers['G'] == 10:
-        offset_register = registers['P']
-        SetPosition(registers),
+        self.offset_register = registers['P']
+        self.SetPosition(registers),
       elif registers['G'] == 54:
-        toolhead = 0,
+        self.toolhead = 0
       elif registers['G'] == 55:
-        toolhead = 1,
+        self.toolhead = 1
       elif registers['G'] == 92:
-        SetPosition(registers)
+        self.SetPosition(registers)
       elif registers['G'] == 161:
         self.SetPosition({'Z':0})
       elif registers['G'] == 162:
         self.SetPosition({'X':0, 'Y':0})
     elif 'M' in registers:
       if registers['M'] == 101:
-        tool_enabled = True
-        direction = True
+        self.tool_enabled = True
+        self.direction = True
       if registers['M'] == 102:
-        tool_enabled = True
-        direction = False
+        self.tool_enabled = True
+        self.direction = False
       if registers['M'] == 103:
-        tool_enabled = False
+        self.tool_enabled = False
       if registers['M'] == 108:
-        tool_speed = registers['R']
+        self.tool_speed = int(registers['R'])
       if registers['M'] == 132:
-        SetPosition(HomePosition)
+        self.SetPosition(self.HomePosition)
 
 
     # Run the command
