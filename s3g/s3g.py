@@ -26,22 +26,6 @@ class s3g:
     self.total_retries = 0
     self.total_overflows = 0
 
-  def AddObjToPayload(self, payload, obj):
-    """Adds an object to the payload
-
-    Objects come in three flavors: single objects, iterators and iterators nested in iterators.  
-    Because we cannot extend iterators of iterators, we use this recursive function to break all 
-    iterators down into single objects and add them that way.
-
-    @param payload A payload in the form of a byte array we add the obj to
-    @param obj The object we want to add to the payload
-    """
-    try:
-      payload.append(obj)
-    except:
-      for o in obj:
-        self.AddObjToPayload(payload, o)
-
   def BuildPayload(self, args):
     """Given a set of arguments, puts them inside a payload and returns said payload
 
@@ -49,7 +33,7 @@ class s3g:
     @return bytearray payload: The payload to be encoded and sent
     """
     payload = bytearray()
-    self.AddObjToPayload(payload, args)
+    AddObjToPayload(payload, args)
     return payload
 
   def BuildAndSendActionPayload(self, *args):
@@ -68,7 +52,7 @@ class s3g:
     @return The packet returned by SendCommand
     """
     payload = bytearray()
-    self.AddObjToPayload(payload, args)
+    AddObjToPayload(payload, args)
     return self.SendCommand(payload)
 
   def SendCommand(self, payload):
@@ -810,7 +794,7 @@ class s3g:
     @return double Version number
     """
     payload = bytearray()
-    self.AddObjToPayload(payload, EncodeUint16(s3g_version))
+    AddObjToPayload(payload, EncodeUint16(s3g_version))
    
     response = self.ToolQuery(tool_index,slave_query_command_dict['GET_VERSION'], payload)
     [response_code, version] = UnpackResponse('<BH', response)
@@ -868,7 +852,7 @@ class s3g:
     @param int theta: angle to set the servo to
     """
     payload = bytearray()
-    self.AddObjToPayload(payload, theta)
+    AddObjToPayload(payload, theta)
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_SERVO_1_POSITION'], payload)
 
   def ToolheadAbort(self, tool_index):
@@ -899,7 +883,7 @@ class s3g:
       bitfield |= 0x01
     if direction:
       bitfield |= 0x02
-    self.AddObjToPayload(payload, bitfield)
+    AddObjToPayload(payload, bitfield)
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_MOTOR_1'], payload)
 
   def SetMotor1SpeedRPM(self, tool_index, duration):
@@ -909,7 +893,7 @@ class s3g:
     @param int duration : Durtation of each rotation, in microseconds
     """
     payload = bytearray()
-    self.AddObjToPayload(payload, EncodeUint32(duration))
+    AddObjToPayload(payload, EncodeUint32(duration))
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_MOTOR_1_SPEED_RPM'], payload)
 
   def GetMotor1Speed(self, tool_index):
@@ -961,7 +945,7 @@ class s3g:
       raise EEPROMLengthError(length)
 
     payload = bytearray()
-    self.AddObjToPayload(payload,
+    AddObjToPayload(payload,
                          [EncodeUint16(offset),
                           length])
 
@@ -981,7 +965,7 @@ class s3g:
       raise EEPROMLengthError(len(data))
 
     payload = bytearray()
-    self.AddObjToPayload(
+    AddObjToPayload(
       payload, 
       [EncodeUint16(offset),
       len(data),
@@ -1053,9 +1037,9 @@ class s3g:
 
     payload = bytearray()
     if state == True:
-      self.AddObjToPayload(payload, 0x01)
+      AddObjToPayload(payload, 0x01)
     else:
-      self.AddObjToPayload(payload, 0x00)
+      AddObjToPayload(payload, 0x00)
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_FAN'], payload)
 
   def ToggleValve(self, tool_index, state):
@@ -1067,9 +1051,9 @@ class s3g:
 
     payload = bytearray()
     if state == True:
-      self.AddObjToPayload(payload, 0x01)
+      AddObjToPayload(payload, 0x01)
     else:
-      self.AddObjToPayload(payload, 0x00)
+      AddObjToPayload(payload, 0x00)
 
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_VALVE'], payload)
 
@@ -1091,7 +1075,7 @@ class s3g:
     @param int Temperature: Temperature to heat up to in Celcius
     """
     payload = bytearray()
-    self.AddObjToPayload(payload, EncodeUint16(temperature))
+    AddObjToPayload(payload, EncodeUint16(temperature))
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP'], payload)
 
 
@@ -1102,5 +1086,5 @@ class s3g:
     @param int Temperature: Temperature to heat up to in Celcius
     """
     payload = bytearray()
-    self.AddObjToPayload(payload, EncodeUint16(temperature))
+    AddObjToPayload(payload, EncodeUint16(temperature))
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_PLATFORM_TEMP'], payload)

@@ -12,11 +12,12 @@ import s3g
 class s3gFileWriterTests(unittest.TestCase):
   def setUp(self):
     self.r = s3g.s3gFileWriter()
-    self.r.file = open('fileWriterTest.s3g', 'w')
+    self.inputstream = io.BytesIO()
+    self.r.file = self.inputstream
 
   def tearDown(self):
     self.r = None
-    self.file = None
+    self.inputstream = None
 
   def test_build_and_send_query_packet(self):
     self.assertRaises(s3g.AttemptedQueryCommand, self.r.BuildAndSendQueryPayload, [42])
@@ -27,9 +28,7 @@ class s3gFileWriterTests(unittest.TestCase):
     payload.extend('12345')
     payload.append(0x00)
     self.r.SendCommand(payload)
-    self.r.file.close()
-    output = open('fileWriterTest.s3g', 'r')
-    readPayload = output.readline()
+    readPayload = self.inputstream.getvalue()
     self.assertEqual(payload, readPayload)
 
 if __name__ == "__main__":
