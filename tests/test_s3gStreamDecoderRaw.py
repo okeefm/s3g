@@ -42,11 +42,11 @@ class s3gStreamDecoderRawTests(unittest.TestCase):
     packaged = self.d.PackagePacket(a, b, l, c)
     self.assertEqual(expectedPackage, packaged)
 
-  def test_GetCommandInfo(self):
+  def test_GetCommandFormat(self):
     expectedFormatString = ['i', 'i', 'i', 'i']
     cmd = bytearray()
     cmd.append('\x81')
-    formatString = self.d.GetCommandInfo(cmd)
+    formatString = self.d.GetCommandFormat(cmd)
     self.assertEqual(expectedFormatString, formatString)
 
   def test_ParseParameter(self):

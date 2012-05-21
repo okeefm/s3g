@@ -8,7 +8,7 @@ import array
 import constants
 import errors
 
-commandInfo = {
+commandFormats = {
     129     :     ['i', 'i', 'i', 'i'], #"QUEUE POINT", 
     130     :     ['i', 'i', 'i'], #"SET POSITION", 
     131     :     ['B', 'I', 'H'], #"FIND AXES MINIMUMS", 
@@ -45,24 +45,6 @@ commandInfo = {
     31      :     ['h'], #"SET PLATFORM TEMP", 
 }
 
-gcodeParameters = {
-    130     :     ['G0', 'X', 'Y', 'Z'],
-    142     :     ['G1', 'X', 'Y', 'Z', 'E', 'F'],
-    133     :     ['G4', 'F'],
-    140     :     ['G92', 'X', 'Y', 'Z', 'A', 'B'],
-    145     :     ['G130', 'X', 'Y', 'Z', 'A', 'B'],
-    131     :     ['G161', 'X', 'Y', 'Z', 'F'],
-    132     :     ['G162', 'X', 'Y', 'Z', 'F'],
-    135     :     ['M6', 'T', 'F'],
-    137     :     ['M18', 'X', 'Y', 'Z', 'A', 'B'],
-    149     :     ['M70', 'P', ';'],
-    150     :     ['M73', 'P'],
-    151     :     ['M72', 'P'],
-    3       :     ['M104', 'S'],
-    31      :     ['M109', 'S'],
-    144     :     ['M132'],
-}
-
 structFormats = {
     'c'       :     1,
     'b'       :     1, #Signed
@@ -84,8 +66,13 @@ class s3gStreamDecoder:
   def __init__(self):
     pass
 
-  def GetCommandInfo(self, cmd):
-    return commandInfo[cmd]
+  def GetCommandFormat(self, cmd):
+    """Gets the format for all bytes associated with a certain command
+
+    @param int cmd
+    @return list: Format of the bytes for cmd
+    """
+    return commandFormats[cmd]
 
   def ParseOutParameters(self, cmd):
     """Reads and decodes a certain number of bytes using a specific format string
@@ -94,15 +81,16 @@ class s3gStreamDecoder:
     @param int cmd: The command's parameters we are trying to parse out 
     @return list: objects unpacked from the input s3g file
     """
-    formatString = self.GetCommandInfo(cmd)
+    formatString = self.GetCommandFormat(cmd)
     returnParams = []
     for formatter in formatString:
       if formatter == 's':
         b = self.GetStringBytes()
-        returnParams.append(self.ParseParameter('<'+str(len(b))+formatter, b))
+        formatString = '<'+str(len(b))+formatter
       else:
         b = self.GetBytes(formatter)
-        returnParams.append(self.ParseParameter('<'+formatter, b))
+        formatString = '<'+formatter
+      returnParams.append(self.ParseParameter(formatString, b))
     if cmd == constants.host_action_command_dict['TOOL_ACTION_COMMAND']:
       returnParams.extend(self.ParseOutParameters(returnParams[1]))
     return returnParams
@@ -138,6 +126,12 @@ class s3gStreamDecoder:
         return b
 
   def GetBytes(self, formatter):
+    """Given a formatter, we read in a certain amount of bytes
+    
+    @param string formatter: The format string we use to diving the number
+    of bytes we read in
+    @return string bytes: The correct number of bytes read in
+    """
     b = ''
     for i in range(structFormats[formatter]):
       b+= self.file.read(1)
@@ -190,6 +184,10 @@ class s3gStreamDecoder:
     return package
 
   def ReadStream(self):
+    """Reads from an s3g stream until it cant read anymore
+    @return packets: A list of packets, where each index of 
+      the list is comprised of one packet
+    """
     packets = []
     try:
       while True:

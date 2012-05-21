@@ -34,14 +34,14 @@ class s3gStreamDecoderTests(unittest.TestCase):
     packaged = self.d.PackagePacket('a', 'b', l, 'c')
     self.assertEqual(expectedPackaged, packaged)
   
-  def test_GetCommandInfo(self):
+  def test_GetCommandFormat(self):
     cases = {
         129: ['i', 'i', 'i', 'i'],
         130: ['i', 'i', 'i'],
         131: ['B', 'I', 'H'],
         }
     for case in cases:
-      formatString = self.d.GetCommandInfo(case)
+      formatString = self.d.GetCommandFormat(case)
       self.assertEqual(formatString, cases[case])
 
   def test_GetBytes(self):
