@@ -28,6 +28,7 @@ class s3gFileWriterTests(unittest.TestCase):
     payload.extend('12345')
     payload.append(0x00)
     self.r.SendCommand(payload)
+    self.inputstream.seek(0)
     readPayload = self.inputstream.getvalue()
     self.assertEqual(payload, readPayload)
 
