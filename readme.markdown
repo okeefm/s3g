@@ -118,3 +118,18 @@ Bot generated errors will throw their own specific errors, such as:
 
     SD Card Errors
     Extended Stop Errors
+
+##GCode Errors
+GCode errors are thrown when reading through a GCode file and parsing out g/m codes and comments.
+Cause By:
+
+    Improperly Formatted Comments
+    Bad Codes
+    Codes That Are Repeated Multiple Times On A Single Line
+    M And G Codes Present On The Same Line
+    
+##S3G Stream Reading Errors
+These errors are thrown when the s3g module encounters errors during s3g stream parsing.  
+Caused By:
+
+    Encoded Strings Above The Max Payload Length
