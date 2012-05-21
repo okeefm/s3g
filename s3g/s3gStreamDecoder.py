@@ -85,6 +85,9 @@ class s3gStreamDecoder:
   def __init__(self):
     self.currentTool = 0
 
+  def GetCommandInfo(self, cmd):
+    return commandInfo[cmd]
+
   def ParseOutParameters(self, cmd):
     """Reads and decodes a certain number of bytes using a specific format string
     from the input s3g file
@@ -92,21 +95,24 @@ class s3gStreamDecoder:
     @param int cmd: The command's parameters we are trying to parse out 
     @return list: objects unpacked from the input s3g file
     """
-    formatString = commandInfo[cmd]
+    formatString = self.GetCommandInfo(cmd)
     returnParams = []
     for formatter in formatString:
       if formatter == 's':
-        b = self.GetStringBytes()[:-1] #Remove the null terminated symbol
-        returnParams.append(self.parseParameter('<'+str(len(b))+formatter, b))
+        b = self.GetStringBytes()
+        returnParams.append(self.ParseParameter('<'+str(len(b))+formatter, b))
       else:
         b = self.GetBytes(formatter)
-        returnParams.append(self.parseParameter('<'+formatter, b))
+        returnParams.append(self.ParseParameter('<'+formatter, b))
     if cmd == host_action_command_dict['TOOL_ACTION_COMMAND']:
       returnParams.extend(self.ParseOutParameters(returnParams[1]))
     return returnParams
 
-  def parseParameter(self, formatString, bytes):
+  def ParseParameter(self, formatString, bytes):
     returnParam = struct.unpack(formatString, bytes)[0]
+    #Remove the null terminator from the decoded string if present
+    if 's' in formatString and returnParam[-1] == '\x00':
+      returnParam = returnParam[:-1]
     return returnParam
 
   def GetStringBytes(self):
@@ -130,9 +136,7 @@ class s3gStreamDecoder:
     @return int The command number
     """
     cmd = self.file.read(1)
-    cmd = struct.unpack('<B', cmd)[0]
-    if cmd not in commandInfo.keys():
-      raise CommandError
+    cmd = self.ParseParameter('<B', cmd)
     return cmd
 
   def ParseNextPayload(self):
@@ -147,18 +151,30 @@ class s3gStreamDecoder:
   def ParseNextPacket(self):
     """
     Assuming the file pointer is at the beginning of a packet, we parse out the information from that packet
-    @return Human readable version of this s3g packet
+    @return parsed packet from the stream
     """
     readHeader = self.file.read(1)
-    readHeader = struct.unpack('<B', readHeader)[0]
-    if readHeader != header:
-      raise PacketHeaderError 
+    readHeader = self.ParseParameter('<B', readHeader)
     length = self.file.read(1)
-    length = struct.unpack('<B', length)[0]
+    length = self.ParseParameter('<B', length)
     payload = self.ParseNextPayload()
     crc = self.file.read(1)
-    crc = struct.unpack('<B', crc)[0]
-    return [header, length] + payload + [crc]
+    crc = self.ParseParameter('<B', crc)
+    return self.PackagePacket(readHeader, length, payload, crc)
+
+  def PackagePacket(self, *args):
+    """Packages all args into a single list
+
+    @param args: Arguments to be packaged
+    @return package: A single non-nested list comprised of all arguments
+    """
+    package = []
+    for arg in args:
+      try:
+        package.extend(arg)
+      except TypeError:
+        package.append(arg)
+    return package
 
   def ReadStream(self):
     packets = []

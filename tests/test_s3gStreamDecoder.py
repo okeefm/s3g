@@ -11,18 +11,33 @@ import array
 import s3g
 
 
-class DecoderTests(unittest.TestCase):
+class s3gStreamDecoderTests(unittest.TestCase):
   def setUp(self):
-    self.d = s3g.s3gStreamDecoder()
+    self.s = s3g.s3g()
     self.outputstream = io.BytesIO() # Stream that we will send responses on
     self.inputstream = io.BytesIO()
-    self.d.file = self.inputstream
     self.file = io.BufferedRWPair(self.outputstream, self.inputstream)
-    self.s = s3g.s3g()
     self.s.file = self.file
+    self.d = s3g.s3gStreamDecoder.s3gStreamDecoder()
+    self.d.file = self.inputstream
 
   def tearDown(self):
+    self.s = None
     self.d = None
+
+  def test_PackagePacket(self):
+    a = 'a'
+    b = 'b'
+    l = [1, 2, 3, 4]
+    c = 'c'
+    expectedPackaged = ['a', 'b', 1, 2, 3, 4, 'c']
+    packaged = self.d.PackagePacket('a', 'b', l, 'c')
+    self.assertEqual(expectedPackaged, packaged)
+  
+  def test_GetCommandInfo(self):
+    expectedFormatString = ['i', 'i', 'i', 'i']
+    formatString = self.d.GetCommandInfo(129)
+    self.assertEqual(expectedFormatString, formatString) 
 
   def test_GetBytes(self):
     val = 42
@@ -51,7 +66,7 @@ class DecoderTests(unittest.TestCase):
     length = 1
     theta = 10
     payload = bytearray()
-    self.s.AddObjToPayload(payload, [cmd, tool_index, toolCmd, length, theta])
+    s3g.coding.AddObjToPayload(payload, [cmd, tool_index, toolCmd, length, theta])
     self.inputstream.write(payload)
     self.inputstream.seek(1)
     info = self.d.ParseOutParameters(s3g.host_action_command_dict['TOOL_ACTION_COMMAND'])
@@ -60,13 +75,14 @@ class DecoderTests(unittest.TestCase):
     self.assertEqual(info[2], length)
     self.assertEqual(info[3], theta)
     
-  def test_returnParam(self):
+  def test_ParseParameter(self):
     cases = [
     [256, s3g.EncodeUint32(256), '<i'],
-    ['asdf', array.array('B', 'asdf'),  '<4s']
+    ['asdf', array.array('B', 'asdf'),  '<4s'],
+    ['asdf', array.array('B', 'asdf\x00'), '<5s'],
     ]
     for case in cases:
-      self.assertEqual(case[0], self.d.parseParameter(case[2], case[1]))
+      self.assertEqual(case[0], self.d.ParseParameter(case[2], case[1]))
 
   def test_GetNextCommand(self):
     cmd = s3g.host_query_command_dict['INIT']
@@ -100,7 +116,7 @@ class DecoderTests(unittest.TestCase):
     duration = 42
     relativeAxes = 0x01 + 0x02
     payload =bytearray()
-    self.s.AddObjToPayload(payload, [cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), relativeAxes])
+    s3g.coding.AddObjToPayload(payload, [cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), relativeAxes])
     crc = s3g.CalculateCRC(payload)
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
@@ -145,33 +161,6 @@ class DecoderTests(unittest.TestCase):
         ]
     for readCmd, cmd in zip([packets[0][2], packets[1][2], packets[2][2]], cmdNumbers):
       self.assertEqual(readCmd, cmd)
-
-class FileDecoderTests(unittest.TestCase):
-
-  def setUp(self):
-    self.d = s3g.s3gStreamDecoder()
-    self.outputstream = io.BytesIO() # Stream that we will send responses on
-    self.inputstream = io.BytesIO()
-    self.d.file = self.inputstream
-    self.file = io.BufferedRWPair(self.outputstream, self.inputstream)
-    self.s = s3g.s3gFileWriter()
-    self.s.file = self.file
-
-  def tearDown(self):
-    self.d = None
-    self.s = None
-
-  def test_ParseNextPacket(self):
-    point = [1, 2, 3, 4, 5]
-    duration = 42
-    relativeAxes = 0x01 + 0x02
-    self.s.QueueExtendedPointNew(point, duration, ['x', 'y'])
-    self.inputstream.seek(0)
-    readPayload = self.d.ParseNextPacket()
-    self.assertEqual(readPayload[0], s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'])
-    self.assertEqual(readPayload[1:6], point)
-    self.assertEqual(point[6], duration)
-    self.assertEqual(point[7], relativeAxes)
 
 if __name__ == "__main__":
   unittest.main()
