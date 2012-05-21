@@ -11,7 +11,7 @@ class EncoderTests(unittest.TestCase):
 
   def test_add_obj_to_payload_empty(self):
     payload = bytearray()
-    AddObjToPayload(payload, [])
+    s3g.AddObjToPayload(payload, [])
     for i, j in zip(payload, bytearray()):
       self.assertEqual(i, j)
 
@@ -27,7 +27,7 @@ class EncoderTests(unittest.TestCase):
       expected.append(k)
 
     payload = bytearray()
-    AddObjToPayload(payload, ['a', 'b', 'c', 'd', nestedLoop])
+    s3g.AddObjToPayload(payload, ['a', 'b', 'c', 'd', nestedLoop])
     for i, j in zip(payload, expected):
       self.assertEqual(i, j) 
  
