@@ -27,10 +27,7 @@ class s3gStreamDecoderRaw(s3gStreamDecoder.s3gStreamDecoder):
     @return The bytes that were passed in wrapped in a bytearray
     """
     returnBytes = bytearray()
-    try:
-      returnBytes.extend(bytes)
-    except:
-      returnBytes.append(bytes)
+    coding.AddObjToPayload(returnBytes, bytes)
     return returnBytes
 
   def PackagePacket(self, *args):
