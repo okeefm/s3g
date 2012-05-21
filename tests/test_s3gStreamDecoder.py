@@ -35,9 +35,14 @@ class s3gStreamDecoderTests(unittest.TestCase):
     self.assertEqual(expectedPackaged, packaged)
   
   def test_GetCommandInfo(self):
-    expectedFormatString = ['i', 'i', 'i', 'i']
-    formatString = self.d.GetCommandInfo(129)
-    self.assertEqual(expectedFormatString, formatString) 
+    cases = {
+        129: ['i', 'i', 'i', 'i'],
+        130: ['i', 'i', 'i'],
+        131: ['B', 'I', 'H'],
+        }
+    for case in cases:
+      formatString = self.d.GetCommandInfo(case)
+      self.assertEqual(formatString, cases[case])
 
   def test_GetBytes(self):
     val = 42
@@ -47,7 +52,16 @@ class s3gStreamDecoderTests(unittest.TestCase):
     self.inputstream.write(payload)
     self.inputstream.seek(0)
     readVal = self.d.GetBytes('I')
-    self.assertEqual(struct.unpack('<I',readVal)[0], val) 
+    self.assertEqual(readVal, encodedVal) 
+
+  def test_GetStringBytesPathological(self):
+    b = bytearray()
+    for i in range(s3g.constants.maximum_payload_length):
+      b.append('a')
+    b.append('\x00')
+    self.inputstream.write(b)
+    self.inputstream.seek(0)
+    self.assertRaises(s3g.errors.StringTooLongError, self.d.GetStringBytes)
 
   def test_GetStringBytes(self):
     val = 'asdf'
@@ -58,8 +72,26 @@ class s3gStreamDecoderTests(unittest.TestCase):
     self.inputstream.seek(0)
     readVal = self.d.GetStringBytes()
     self.assertEqual(readVal, val+'\x00')
-    
+   
   def test_ParseOutParameters(self):
+    cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
+    point = [1, 2, 3, 4, 5]
+    duration = 42
+    relativeAxes = 0
+    expectedPayload = bytearray()
+    s3g.coding.AddObjToPayload(expectedPayload, [[s3g.coding.EncodeInt32(cor) for cor in point], s3g.coding.EncodeUint32(duration), relativeAxes])
+    self.inputstream.write(expectedPayload)
+    self.inputstream.seek(0)
+    info = self.d.ParseOutParameters(cmd)
+    self.assertEqual(expectedPayload[0:4], s3g.coding.EncodeInt32(info[0]))
+    self.assertEqual(expectedPayload[4:8], s3g.coding.EncodeInt32(info[1]))
+    self.assertEqual(expectedPayload[8:12], s3g.coding.EncodeInt32(info[2]))
+    self.assertEqual(expectedPayload[12:16], s3g.coding.EncodeInt32(info[3]))
+    self.assertEqual(expectedPayload[16:20], s3g.coding.EncodeInt32(info[4]))
+    self.assertEqual(expectedPayload[20:24], s3g.coding.EncodeUint32(info[5]))
+    self.assertEqual(expectedPayload[24], info[6])
+ 
+  def test_ParseOutParametersToolAction(self):
     cmd = s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
     tool_index = 0
     toolCmd = s3g.slave_action_command_dict['SET_SERVO_1_POSITION']
@@ -91,11 +123,11 @@ class s3gStreamDecoderTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
     self.s.Init()
-    self.inputstream.seek(2, 0) #Get around first two bytes of the packet, since we only want to check the command
+    self.inputstream.seek(2) #Get around first two bytes of the packet, since we only want to check the command
     readCmd = self.d.GetNextCommand()
     self.assertEqual(readCmd, cmd)
 
-  def test_ParseNextPayloadBuildStart(self):
+  def test_ParseNextPayload(self):
     cmd = s3g.host_action_command_dict['BUILD_START_NOTIFICATION']
     commandCount = 1
     buildName = "test"

@@ -5,9 +5,8 @@ A stream parser that decodes an s3g stream
 import optparse
 import struct
 import array
-from constants import *
-from errors import *
-
+import constants
+import errors
 
 commandInfo = {
     129     :     ['i', 'i', 'i', 'i'], #"QUEUE POINT", 
@@ -83,7 +82,7 @@ structFormats = {
 class s3gStreamDecoder:
 
   def __init__(self):
-    self.currentTool = 0
+    pass
 
   def GetCommandInfo(self, cmd):
     return commandInfo[cmd]
@@ -104,11 +103,17 @@ class s3gStreamDecoder:
       else:
         b = self.GetBytes(formatter)
         returnParams.append(self.ParseParameter('<'+formatter, b))
-    if cmd == host_action_command_dict['TOOL_ACTION_COMMAND']:
+    if cmd == constants.host_action_command_dict['TOOL_ACTION_COMMAND']:
       returnParams.extend(self.ParseOutParameters(returnParams[1]))
     return returnParams
 
   def ParseParameter(self, formatString, bytes):
+    """Given a format string and a set of bytes, unpacks the bytes into the given format
+
+    @param string formatString: A format string of format to be used when unpacking bytes with the struct object
+    @param bytes: The bytes to be unpacked
+    @return The correctly unpacked string
+    """
     returnParam = struct.unpack(formatString, bytes)[0]
     #Remove the null terminator from the decoded string if present
     if 's' in formatString and returnParam[-1] == '\x00':
@@ -116,13 +121,21 @@ class s3gStreamDecoder:
     return returnParam
 
   def GetStringBytes(self):
+    """Get all bytes associated with a string
+    Assuming the next parameter is a null terminated string, 
+    we read bytes until we find that null terminator
+    and return the string.  If we read over the 
+    packet limit, we raise a StringTooLong error.
+    @return The bytes making up a null terminated string
+    """
     b = ''
     while True:
       readByte = self.file.read(1)
-      if struct.unpack('<B', readByte)[0] == 0:
-        b += readByte
-        return b
       b += readByte
+      if len(b) > constants.maximum_payload_length:
+        raise errors.StringTooLongError
+      elif b[-1] == '\x00':
+        return b
 
   def GetBytes(self, formatter):
     b = ''
