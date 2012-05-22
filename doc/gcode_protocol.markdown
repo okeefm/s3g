@@ -57,14 +57,45 @@ Parameters
 
 ## G1 - Linear interpolation
 Move to the specified position at the current or specified feedrate.
+NB: There are two methods of forming the G1 command:
 
-Registers
+    XYZABF: This gives explicit axes positions, in mm
+    XYZEF: This gives explicit axes positions for XYZ, then a new tool_speed.
 
-    X: (optional) If present, new X axis position, in mm
-    Y: (optional) If present, new Y axis position, in mm
-    Z: (optional) If present, new Z axis position, in mm
-    E: (optional) If present, 5D-style extruder speed, (TODO: units?)
-    F: (optional) Feedrate, in mm/min
+We should only accept one form or the other.  A mixture will result in an error being thrown.
+
+XYZABF Form:
+
+  Registers
+
+       X: (optional) If present, new X axis position, in mm
+       Y: (optional) If present, new Y axis position, in mm
+       Z: (optional) If present, new Z axis position, in mm
+       A: (optional) If present, new A axis position, in mm
+       B: (optional) If present, new B axis position, in mm
+       F: (optional) Feedrate, in mm/min
+
+  S3g Output
+
+      QueueExtendedPoint(point, rate)
+
+  Parameters
+
+      point = [x, y, z, a, b]
+      rate = F
+
+XYZEF Form
+
+  S3g Output
+
+      QueueExtendedPoint(point, rate)
+
+  Parameters
+
+      point = [x, y, z]
+      rate = F
+
+    
 
 ## G4 - Dwell
 If a toolhead is not enabled, this command simply pauses motion for the specified time. If a toolhead is enabled, then this command extrudes at the current rate and direction for the specified time, but does not move the toolhead.
