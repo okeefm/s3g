@@ -5,17 +5,11 @@ if a user tries to write a query command to file, we throw a AttemptedQueryComma
 """
 
 from s3g import *
-from abstractWriter import *
 
-class s3gFileWriter(abstractWriter):
+class s3gFileWriter(s3g):
 
   def BuildAndSendQueryPayload(self, *args):
     raise AttemptedQueryCommand
   
-  def BuildAndSendActionPayload(self, *args):
-    payload = BuildPayload(args)
-    self.SendCommand(payload)
-
   def SendCommand(self, payload):
     self.file.write(payload)
-

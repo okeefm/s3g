@@ -17,8 +17,10 @@ class S3gTests(unittest.TestCase):
     self.r = s3g.s3g()
     self.outputstream = io.BytesIO() # Stream that we will send responses on
     self.inputstream = io.BytesIO()  # Stream that we will receive commands on
-    self.file = io.BufferedRWPair(self.outputstream, self.inputstream)
-    self.r.file = self.file
+
+    writer = s3g.streamWriter()
+    writer.file = io.BufferedRWPair(self.outputstream, self.inputstream)
+    self.r.writer = writer
 
   def tearDown(self):
     self.r = None
@@ -31,12 +33,12 @@ class S3gTests(unittest.TestCase):
     expectedPayload = bytearray()
     for l in [toAdd[0:4],toAdd[-2], toAdd[-1]]:
       expectedPayload.extend(l)
-    payload = self.r.BuildPayload(toAdd)
+    payload = s3g.BuildPayload(toAdd)
     self.assertEqual(expectedPayload, payload)
 
   def test_build_payload_empty(self):
     expectedPayload = bytearray()
-    payload = self.r.BuildPayload([])
+    payload = s3g.BuildPayload([])
     self.assertEqual(expectedPayload, payload)
 
   def test_build_and_send_action_payload(self):
@@ -48,7 +50,7 @@ class S3gTests(unittest.TestCase):
     point = [1, 2, 3, 4, 5]
     duration = 42
     relativeAxes = 0
-    self.r.BuildAndSendActionPayload([cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), relativeAxes])
+    self.r.writer.BuildAndSendActionPayload([cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), relativeAxes])
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
     self.assertEqual(payload[0], cmd)
@@ -69,7 +71,7 @@ class S3gTests(unittest.TestCase):
     response_payload.extend(s3g.EncodeUint16(botVersion))
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
-    queryResponsePayload = self.r.BuildAndSendQueryPayload([cmd, s3g.EncodeUint16(botVersion)])
+    queryResponsePayload = self.r.writer.BuildAndSendQueryPayload([cmd, s3g.EncodeUint16(botVersion)])
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
     self.assertEqual(payload[0], cmd)
@@ -86,7 +88,7 @@ class S3gTests(unittest.TestCase):
     packet = s3g.EncodePayload(payload)
     expected_packet = s3g.EncodePayload(payload)
 
-    self.assertRaises(s3g.TransmissionError,self.r.SendPacket, packet)
+    self.assertRaises(s3g.TransmissionError,self.r.writer.SendPacket, packet)
 
     self.inputstream.seek(0)
     for i in range (0, s3g.max_retry_count):
@@ -111,7 +113,7 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    assert response_payload == self.r.SendPacket(packet)
+    assert response_payload == self.r.writer.SendPacket(packet)
 
     self.inputstream.seek(0)
     for i in range (0, s3g.max_retry_count - 1):
@@ -131,7 +133,7 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    assert response_payload == self.r.SendPacket(packet)
+    assert response_payload == self.r.writer.SendPacket(packet)
     assert s3g.EncodePayload(payload) == self.inputstream.getvalue()
 
   # TODO: Test timing based errors- can we send half a response, get it to re-send, then send a regular response?
@@ -148,7 +150,7 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.assertEqual(response_payload, self.r.SendCommand(payload))
+    self.assertEqual(response_payload, self.r.writer.SendCommand(payload))
     self.assertEqual(s3g.EncodePayload(payload), self.inputstream.getvalue())
 
   def test_get_version(self):

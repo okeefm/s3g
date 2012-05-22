@@ -1,6 +1,7 @@
 # Some utilities for speaking s3g
 import struct
 import time
+import logging
 
 # TODO: Do these go in their own namespace?
 from constants import *
@@ -8,141 +9,38 @@ from errors import *
 from crc import *
 from coding import *
 from packet import *
-import logging
+
+def BuildPayload(args):
+  """Given a set of arguments, puts them inside a payload and returns said payload
+
+  @param list args: List of arguemnts to add to a payload
+  @return bytearray payload: The payload to be encoded and sent
+  """
+  payload = bytearray()
+  AddObjToPayload(payload, args)
+  return payload
+
 
 class s3g:
   def __init__(self):
-    self.file = None
-    #self.logfile = open('output_stats','w')
+    self.writer = None
+
     self.logger = logging.getLogger('output_stats')
     hdlr = logging.FileHandler('./output_stats')
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     hdlr.setFormatter(formatter)
     self.logger.addHandler(hdlr)
     self.logger.setLevel(logging.ERROR)
+
     self.ExtendedPointLength = 5
     self.PointLength = 3
-
-    self.total_retries = 0
-    self.total_overflows = 0
-
-  def BuildPayload(self, args):
-    """Given a set of arguments, puts them inside a payload and returns said payload
-
-    @param list args: List of arguemnts to add to a payload
-    @return bytearray payload: The payload to be encoded and sent
-    """
-    payload = bytearray()
-    AddObjToPayload(payload, args)
-    return payload
-
-  def BuildAndSendActionPayload(self, *args):
-    """
-    Given a set of parameters, puts them into a bytearray and send them off using SendCommand
-
-    @param *args A set of arguments to put inside a bytearray
-    """
-    payload = self.BuildPayload(args)
-    self.SendCommand(payload)
-
-  def BuildAndSendQueryPayload(self, *args):
-    """Given a set of parameters, puts them into a bytearray and sends them off using Sendcommand.
-    
-    @param *args A set of arguments to put inside a bytearray
-    @return The packet returned by SendCommand
-    """
-    payload = bytearray()
-    AddObjToPayload(payload, args)
-    return self.SendCommand(payload)
-
-  def SendCommand(self, payload):
-    """
-    Wraps a payload in a packet with a header, length, payload and proper CRC to send to the machine
-    @param payload Command to send to the machine
-    @return Response payload, if successful. 
-    """
-    packet = EncodePayload(payload)
-    return self.SendPacket(packet)
-
-
-  def SendPacket(self, packet):
-    """
-    Attempt to send a packet to the machine, retrying up to 5 times if an error
-    occurs.
-    @param packet Packet to send to the machine
-    @return Response payload, if successful. 
-    """
-    overflow_count = 0
-    retry_count = 0
-
-    while True:
-      decoder = PacketStreamDecoder()
-      self.file.write(packet)
-      self.file.flush()
-
-      # Timeout if a response is not received within 1 second.
-      start_time = time.time()
-
-      try:
-        while (decoder.state != 'PAYLOAD_READY'):
-          # Try to read a byte
-          data = ''
-          while data == '':
-            if (time.time() > start_time + timeout_length):
-              raise TimeoutError(len(data), decoder.state)
-
-            # pySerial streams handle blocking read. Be sure to set up a timeout when
-            # initializing them, or this could hang forever
-            data = self.file.read(1)
-
-          data = ord(data)
-          decoder.ParseByte(data)
-       
-        CheckResponseCode(decoder.payload[0])        
- 
-        # TODO: Should we chop the response code?
-        return decoder.payload
-
-      except (BufferOverflowError) as e:
-        # Buffer overflow error- wait a while for the buffer to clear, then try again.
-        # TODO: This could hang forever if the machine gets stuck; is that what we want?
-
-        self.logger.warning('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}\n'
-          %(overflow_count,retry_count))
-
-        self.total_overflows += 1
-        overflow_count += 1
-
-        time.sleep(.2)
-
-      except (PacketDecodeError, RetryError, TimeoutError) as e:
-        # Sent a packet to the host, but got a malformed response or timed out waiting
-        # for a reply. Retry immediately.
-
-        self.logger.warning('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'
-          %(type(e),e.__str__(),retry_count))
-
-        self.total_retries += 1
-        retry_count += 1
-
-      except Exception as e:
-        # Other exceptions are propigated upwards.
-
-        self.logger.warning('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}\n'
-          %(type(e),e.__str__(),retry_count))
-        raise e
-
-      if retry_count >= max_retry_count:
-        self.logger.warning('{"event":"transmission_error"}\n')
-        raise TransmissionError
-
 
   def GetVersion(self):
     """
     Get the firmware version number of the connected machine
     @return Version number
     """
-    response = self.BuildAndSendQueryPayload(
+    response = self.writer.BuildAndSendQueryPayload(
       host_query_command_dict['GET_VERSION'], 
       EncodeUint16(s3g_version)
     )
@@ -155,7 +53,7 @@ class s3g:
     Capture all subsequent commands up to the 'end capture' command to a file with the given filename on an SD card.
     @param str filename: The name of the file to write to on the SD card
     """
-    response = self.BuildAndSendQueryPayload(
+    response = self.writer.BuildAndSendQueryPayload(
       host_query_command_dict['CAPTURE_TO_FILE'], 
       filename, 
       0x00
@@ -169,7 +67,7 @@ class s3g:
     Send the end capture signal to the bot, so it stops capturing data and writes all commands out to a file on the SD card
     @return The number of bytes written to file
     """
-    response = self.BuildAndSendQueryPayload(host_query_command_dict['END_CAPTURE'])
+    response = self.writer.BuildAndSendQueryPayload(host_query_command_dict['END_CAPTURE'])
     
     [response_code, sdResponse] = UnpackResponse('<BI', response)
     return sdResponse
@@ -178,14 +76,14 @@ class s3g:
     """
     Reset the bot, unless the bot is waiting to tell us a build is cancelled.
     """
-    self.BuildAndSendActionPayload(host_query_command_dict['RESET'])
+    self.writer.BuildAndSendActionPayload(host_query_command_dict['RESET'])
 
 
   def IsFinished(self):
     """
     Checks if the steppers are still executing a command
     """
-    response = self.BuildAndSendQueryPayload(host_query_command_dict['IS_FINISHED'])
+    response = self.writer.BuildAndSendQueryPayload(host_query_command_dict['IS_FINISHED'])
     
     [response_code, isFinished] = UnpackResponse('<B?', response)
     return isFinished
@@ -194,16 +92,16 @@ class s3g:
     """
     Clears the buffer of all commands
     """
-    self.BuildAndSendActionPayload(host_query_command_dict['CLEAR_BUFFER'])
+    self.writer.BuildAndSendActionPayload(host_query_command_dict['CLEAR_BUFFER'])
 
   def Pause(self):
     """
     Pause the machine
     """
-    self.BuildAndSendActionPayload(host_query_command_dict['PAUSE'])
+    self.writer.BuildAndSendActionPayload(host_query_command_dict['PAUSE'])
 
   def GetCommunicationStats(self):
-    response = self.BuildAndSendQueryPayload(host_query_command_dict['GET_COMMUNICATION_STATS'])
+    response = self.writer.BuildAndSendQueryPayload(host_query_command_dict['GET_COMMUNICATION_STATS'])
 
     [response_code,
      packetsReceived,
@@ -227,7 +125,7 @@ class s3g:
     @return: A python dictionary of various flags and whether theywere set or not at reset
     POWER_ERRPR : An error was detected with the system power.
     """
-    response = self.BuildAndSendQueryPayload(host_query_command_dict['GET_MOTHERBOARD_STATUS'])
+    response = self.writer.BuildAndSendQueryPayload(host_query_command_dict['GET_MOTHERBOARD_STATUS'])
     
 
     [response_code, bitfield] = UnpackResponse('<BB', response)
@@ -251,7 +149,7 @@ class s3g:
       bitfield |= 0x01
     if clear_buffer:
       bitfield |= 0x02
-    response = self.BuildAndSendQueryPayload(
+    response = self.writer.BuildAndSendQueryPayload(
       host_query_command_dict['EXTENDED_STOP'],  
       bitfield
     )
@@ -270,7 +168,7 @@ class s3g:
     @param int delay: Time in ms between packets to query the toolhead
     @param int timeout: Time to wait in seconds for the toolhead to heat up before moving on
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['WAIT_FOR_PLATFORM_READY'], 
       tool_index, 
       EncodeUint16(delay), 
@@ -286,7 +184,7 @@ class s3g:
     @param int delay: Time in ms between packets to query the toolhead
     @param int timeout: Time to wait in seconds for the toolhead to heat up before moving on
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['WAIT_FOR_TOOL_READY'], 
       tool_index, 
       EncodeUint16(delay), 
@@ -298,7 +196,7 @@ class s3g:
     Halts all motion for the specified amount of time
     @param int delay: Delay time, in microseconds
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['DELAY'], 
       EncodeUint32(delay)
     )
@@ -313,7 +211,7 @@ class s3g:
     axes_bitfield = EncodeAxes(axes)
     if enable:
       axes_bitfield |= 0x80
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['ENABLE_AXES'], 
       axes_bitfield
     )
@@ -332,7 +230,7 @@ class s3g:
     if len(point) != self.ExtendedPointLength:
       raise PointLengthError(len(point))
 
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'], 
       [EncodeInt32(cor) for cor in point], 
       EncodeUint32(duration), 
@@ -344,7 +242,7 @@ class s3g:
     Write the current axes locations to the EEPROM as the home position
     @param list axes: Array of axis names ['x', 'y', ...] whose position should be saved
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['STORE_HOME_POSITIONS'], 
       EncodeAxes(axes)
     )
@@ -355,7 +253,7 @@ class s3g:
     @param list axes: Array of axis names ['x', 'y', ...] whose potentiometers should be set
     @param int value: The value to set the digital potentiometer to.
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['SET_POT_VALUE'], 
       EncodeAxes(axes), 
       value
@@ -368,7 +266,7 @@ class s3g:
     @param int frequency: Frequency of the tone, in hz
     @param int duration: Duration of the tone, in ms
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['SET_BEEP'], 
       EncodeUint16(frequency), 
       EncodeUint16(duration), 
@@ -383,7 +281,7 @@ class s3g:
     @param int b: The b value (0-255) for the LEDs
     @param int blink: The blink rate (0-255) for the LEDs
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['SET_RGB_LED'], 
       r, 
       g, 
@@ -398,7 +296,7 @@ class s3g:
     Recall and move to the home positions written to the EEPROM
     @param axes: Array of axis names ['x', 'y', ...] whose position should be saved
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['RECALL_HOME_POSITIONS'], 
       EncodeAxes(axes)
     )
@@ -407,7 +305,7 @@ class s3g:
     """
     Initialize the machine to a default state
     """
-    self.BuildAndSendActionPayload(host_query_command_dict['INIT'])
+    self.writer.BuildAndSendActionPayload(host_query_command_dict['INIT'])
 
   def ToolQuery(self, tool_index, command, tool_payload = None):
     """
@@ -422,14 +320,14 @@ class s3g:
       raise ToolIndexError(1)
 
     if tool_payload != None:
-      return self.BuildAndSendQueryPayload(
+      return self.writer.BuildAndSendQueryPayload(
         host_query_command_dict['TOOL_QUERY'], 
         tool_index, 
         command, 
         tool_payload
       )
     else:
-      return self.BuildAndSendQueryPayload(
+      return self.writer.BuildAndSendQueryPayload(
         host_query_command_dict['TOOL_QUERY'], 
         tool_index, 
         command
@@ -445,7 +343,7 @@ class s3g:
     if length > maximum_payload_length - 1:
       raise EEPROMLengthError(length)
 
-    response = self.BuildAndSendQueryPayload(
+    response = self.writer.BuildAndSendQueryPayload(
       host_query_command_dict['READ_FROM_EEPROM'], 
       EncodeUint16(offset), 
       length
@@ -461,7 +359,7 @@ class s3g:
     if len(data) > maximum_payload_length - 4:
       raise EEPROMLengthError(len(data))
 
-    response = self.BuildAndSendQueryPayload(
+    response = self.writer.BuildAndSendQueryPayload(
       host_query_command_dict['WRITE_TO_EEPROM'], 
       EncodeUint16(offset), 
       len(data), 
@@ -477,7 +375,7 @@ class s3g:
     @return Available buffer size, in bytes
     """
 
-    response = self.BuildAndSendQueryPayload(host_query_command_dict['GET_AVAILABLE_BUFFER_SIZE'])
+    response = self.writer.BuildAndSendQueryPayload(host_query_command_dict['GET_AVAILABLE_BUFFER_SIZE'])
     [response_code, buffer_size] = UnpackResponse('<BI', response)
 
     return buffer_size
@@ -488,7 +386,7 @@ class s3g:
     @return tuple containing the 3D position the machine is currently located at, 
     and the endstop states.
     """
-    response = self.BuildAndSendQueryPayload(host_query_command_dict['GET_POSITION'])
+    response = self.writer.BuildAndSendQueryPayload(host_query_command_dict['GET_POSITION'])
     [response_code, x, y, z, axes_bits] = UnpackResponse('<BiiiB', response)
 
     return [x, y, z], axes_bits
@@ -498,14 +396,14 @@ class s3g:
     Stop the machine by disabling steppers, clearing the command buffers, and 
     instructing the toolheads to shut down
     """
-    resposne = self.BuildAndSendQueryPayload(host_query_command_dict['ABORT_IMMEDIATELY'])
+    resposne = self.writer.BuildAndSendQueryPayload(host_query_command_dict['ABORT_IMMEDIATELY'])
 
   def PlaybackCapture(self, filename):
     """
     Instruct the machine to play back (build) a file from it's SD card.
     @param str filename: Name of the file to print. Should have been retrieved by 
     """
-    response = self.BuildAndSendQueryPayload(
+    response = self.writer.BuildAndSendQueryPayload(
       host_query_command_dict['PLAYBACK_CAPTURE'], 
       filename, 
       0x00
@@ -526,7 +424,7 @@ class s3g:
       flag = 1
     else:
       flag = 0
-    response = self.BuildAndSendQueryPayload(
+    response = self.writer.BuildAndSendQueryPayload(
       host_query_command_dict['GET_NEXT_FILENAME'], 
       flag
     )
@@ -543,7 +441,7 @@ class s3g:
     Get the build name of the file printing on the machine, if any.
     @param str filename: The filename of the current print 
     """
-    response = self.BuildAndSendQueryPayload(host_query_command_dict['GET_BUILD_NAME'])
+    response = self.writer.BuildAndSendQueryPayload(host_query_command_dict['GET_BUILD_NAME'])
     [response_code, filename] = UnpackResponseWithString('<B', response)
 
     return filename
@@ -554,7 +452,7 @@ class s3g:
     @return tuple position: containing the 5D position the machine is currently located at, 
     and the endstop states.
     """
-    response = self.BuildAndSendQueryPayload(host_query_command_dict['GET_EXTENDED_POSITION'])
+    response = self.writer.BuildAndSendQueryPayload(host_query_command_dict['GET_EXTENDED_POSITION'])
   
     [response_code,
      x, y, z, a, b,
@@ -571,7 +469,7 @@ class s3g:
     """
     if len(point) != self.PointLength:
       raise PointLengthError(len(point))
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['QUEUE_POINT'], 
       [EncodeInt32(cor) for cor in point], 
       EncodeUint32(rate)
@@ -584,7 +482,7 @@ class s3g:
     """
     if len(position) != self.PointLength:
       raise PointLengthError(len(position))
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['SET_POSITION'], 
       [EncodeInt32(cor) for cor in position]
     )
@@ -597,7 +495,7 @@ class s3g:
     @param double rate: Movement rate, in steps/??
     @param double timeout: Amount of time to move (TODO: units?) before halting the command
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['FIND_AXES_MINIMUMS'], 
       EncodeAxes(axes), 
       EncodeUint32(rate), 
@@ -612,7 +510,7 @@ class s3g:
     @param double rate: Movement rate, in steps/??
     @param double timeout: Amount of time to move (TODO: units?) before halting the command
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['FIND_AXES_MAXIMUMS'], 
       EncodeAxes(axes), 
       EncodeUint32(rate), 
@@ -630,7 +528,7 @@ class s3g:
       raise ToolIndexError(tool_index)
 
     if tool_payload != None:
-      self.BuildAndSendActionPayload(
+      self.writer.BuildAndSendActionPayload(
         host_action_command_dict['TOOL_ACTION_COMMAND'], 
         tool_index, 
         command, 
@@ -638,7 +536,7 @@ class s3g:
         tool_payload
       )
     else:
-      self.BuildAndSendActionPayload(
+      self.writer.BuildAndSendActionPayload(
         host_action_command_dict['TOOL_ACTION_COMMAND'],
         tool_index,
         command
@@ -653,7 +551,7 @@ class s3g:
     """
     if len(point) != self.ExtendedPointLength:
       raise PointLengthError(len(point))
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['QUEUE_EXTENDED_POINT'], 
       [EncodeInt32(cor) for cor in point], 
       EncodeUint32(rate)
@@ -666,7 +564,7 @@ class s3g:
     """
     if len(position) != self.ExtendedPointLength:
       raise PointLengthError(len(position))
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['SET_EXTENDED_POSITION'], 
       [EncodeInt32(cor) for cor in position]
     )
@@ -702,7 +600,7 @@ class s3g:
       optionsField |= 0x02
     if clear_screen:
       optionsField |= 0x04
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['WAIT_FOR_BUTTON'], 
       button, 
       EncodeUint16(timeout), 
@@ -713,7 +611,7 @@ class s3g:
     """
     Calls factory reset on the EEPROM.  Resets all values to their factory settings.  Also soft resets the board
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['RESET_TO_FACTORY'],
       0x00
     )
@@ -723,7 +621,7 @@ class s3g:
     Play predefined sogns on the piezo buzzer
     @param int songId: The id of the song to play.
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['QUEUE_SONG'], 
       song_id
     )
@@ -733,7 +631,7 @@ class s3g:
     Sets the percentage done for the current build.  This value is displayed on the interface board's screen.
     @param int percent: Percent of the build done (0-100)
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['SET_BUILD_PERCENT'], 
       percent, 
       0x00
@@ -758,7 +656,7 @@ class s3g:
       bitField |= 0x02
     if waitForButton:
       bitField |= 0x04
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['DISPLAY_MESSAGE'], 
       bitField, 
       col, 
@@ -774,7 +672,7 @@ class s3g:
     @param int command_count Number of host commands in the build
     @param str build_name Name of the build
     """
-    self.BuildAndSendActionPayload(
+    self.writer.BuildAndSendActionPayload(
       host_action_command_dict['BUILD_START_NOTIFICATION'], 
       EncodeUint32(command_count), 
       build_name, 
@@ -785,7 +683,7 @@ class s3g:
     """
     Notify the machine that a build has been stopped.
     """
-    self.BuildAndSendActionPayload(host_action_command_dict['BUILD_END_NOTIFICATION'])
+    self.writer.BuildAndSendActionPayload(host_action_command_dict['BUILD_END_NOTIFICATION'])
 
 
   def GetToolheadVersion(self, tool_index):
