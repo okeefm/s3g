@@ -108,10 +108,15 @@ class GcodeStateMachine():
     self.toolhead_direction = True  # Tool direction; True=forward, False=reverse
     self.toolhead_enabled = False   # Tool enabled; True=enabled, False=disabled
 
-  def SetPosition(self, registers):
+  def SetPosition(self, registers, position):
+    """Given a set of registers and a position, sets the position's applicable axes values to those in registers.
+   
+    @param dictionary registers: A set of registers that have updated point information
+    @param dictionary position: The current position that will be updated 
+    """
     for key in registers:
-      if key in self.position:
-        self.position[key] = registers[key]
+      if key in position:
+        position[key] = registers[key]
 
   def ExecuteLine(self, command):
     """
@@ -124,21 +129,23 @@ class GcodeStateMachine():
 
     # Update the state information    
     if 'G' in registers:
+      if registers['G'] == 0:
+        self.SetPosition(registers, self.homePosition) 
       if registers['G'] == 1:
-        self.SetPosition(registers)
+        self.SetPosition(registers, self.position)
       elif registers['G'] == 10:
         self.offset_register = registers['P']
-        self.SetPosition(registers),
+        self.SetPosition(registers, self.position)
       elif registers['G'] == 54:
         self.toolhead = 0
       elif registers['G'] == 55:
         self.toolhead = 1
       elif registers['G'] == 92:
-        self.SetPosition(registers)
+        self.SetPosition(registers, self.position)
       elif registers['G'] == 161:
-        self.SetPosition({'Z':0})
+        self.SetPosition({'Z':0}, self.position)
       elif registers['G'] == 162:
-        self.SetPosition({'X':0, 'Y':0})
+        self.SetPosition({'X':0, 'Y':0}, self.position)
     elif 'M' in registers:
       if registers['M'] == 101:
         self.tool_enabled = True
@@ -151,7 +158,7 @@ class GcodeStateMachine():
       if registers['M'] == 108:
         self.tool_speed = int(registers['R'])
       if registers['M'] == 132:
-        self.SetPosition(self.HomePosition)
+        self.SetPosition(self.HomePosition, self.position)
 
 
     # Run the command
