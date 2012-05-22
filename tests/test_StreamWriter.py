@@ -12,8 +12,8 @@ class StreamWriterTests(unittest.TestCase):
     self.outputstream = io.BytesIO() # Stream that we will send responses on
     self.inputstream = io.BytesIO()  # Stream that we will receive commands on
 
-    self.w = s3g.StreamWriter()
-    self.w.file = io.BufferedRWPair(self.outputstream, self.inputstream)
+    file = io.BufferedRWPair(self.outputstream, self.inputstream)
+    self.w = s3g.StreamWriter(file)
 
   def tearDown(self):
     self.w = None

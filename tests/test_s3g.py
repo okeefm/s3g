@@ -18,8 +18,8 @@ class S3gTests(unittest.TestCase):
     self.outputstream = io.BytesIO() # Stream that we will send responses on
     self.inputstream = io.BytesIO()  # Stream that we will receive commands on
 
-    writer = s3g.StreamWriter()
-    writer.file = io.BufferedRWPair(self.outputstream, self.inputstream)
+    file = io.BufferedRWPair(self.outputstream, self.inputstream)
+    writer = s3g.StreamWriter(file)
     self.r.writer = writer
 
   def tearDown(self):

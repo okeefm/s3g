@@ -4,7 +4,13 @@ from abstractWriter import *
 from s3g import *
 
 class StreamWriter(AbstractWriter):
-  def __init__(self):
+  def __init__(self, file):
+    """ Initialize a new stream writer
+
+    @param string file File object to interact with
+    """
+    self.file = file
+
     self.total_retries = 0
     self.total_overflows = 0
 
