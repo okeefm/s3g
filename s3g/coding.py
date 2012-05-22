@@ -3,6 +3,22 @@ import array
 
 from errors import *
 
+def AddObjToPayload(payload, obj):
+  """Adds an object to the payload
+
+  Objects come in three flavors: single objects, iterators and iterators nested in iterators.
+  Because we cannot extend iterators of iterators, we use this recursive function to break all
+  iterators down into single objects and add them that way.
+
+  @param bytearray payload: A payload in the form of a bytearray we add the obj to
+  @param obj: The obj we want to add to the payload
+  """
+  try:
+    payload.append(obj)
+  except:
+    for o in obj:
+      AddObjToPayload(payload, o)
+
 def EncodeInt32(number):
   """
   Encode a 32-bit signed integer as a 4-byte string

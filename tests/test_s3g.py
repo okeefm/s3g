@@ -26,28 +26,6 @@ class S3gTests(unittest.TestCase):
     self.inputstream = None
     self.file = None
 
-  def test_add_obj_to_payload_empty(self):
-    payload = bytearray()
-    self.r.AddObjToPayload(payload, [])
-    for i, j in zip(payload, bytearray()):
-      self.assertEqual(i, j)
-
-  def test_add_obj_to_payload(self):
-    toAdd = ["abc", "def", "ghi", "jkl"]
-    nestedLoop = [1, 2, 3, 4, toAdd]
-    expected = bytearray()
-    for i in toAdd:
-      expected.extend(i)
-    for j in nestedLoop[:-1]:
-      expected.append(j)
-    for k in nestedLoop[-1]:
-      expected.extend(k)
-
-    payload = bytearray()
-    self.r.AddObjToPayload(payload, toAdd + nestedLoop)
-    for i, j in zip(payload, expected):
-      self.assertEqual(i, j) 
-    
   def test_build_payload(self):
     toAdd = ["a", "b", "c", "d", [1, 2, 3], [4, 5, 6]]
     expectedPayload = bytearray()
