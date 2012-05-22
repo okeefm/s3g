@@ -22,15 +22,15 @@ class s3gFileWriterTests(unittest.TestCase):
   def test_build_and_send_query_packet_not_implemented(self):
     self.assertRaises(NotImplementedError, self.w.BuildAndSendQueryPayload, [42])
 
-  def test_send_command(self):
-    payload = bytearray()
-    payload.append(s3g.header)
-    payload.extend('12345')
-    payload.append(0x00)
-    self.w.SendCommand(payload)
+  def test_build_and_send_action_payload(self):
+    data = 'abcde'
+    expected_payload = s3g.BuildPayload(data)
+
+    self.w.BuildAndSendActionPayload(data)
+
     self.inputstream.seek(0)
-    readPayload = self.inputstream.getvalue()
-    self.assertEqual(payload, readPayload)
+    payload = self.inputstream.getvalue()
+    assert payload == expected_payload
 
 if __name__ == "__main__":
   unittest.main()

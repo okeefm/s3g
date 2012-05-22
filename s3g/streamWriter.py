@@ -19,12 +19,9 @@ class StreamWriter(AbstractWriter):
     payload = BuildPayload(args)
     self.SendCommand(payload)
 
-
-
   def SendCommand(self, payload):
     packet = EncodePayload(payload)
     return self.SendPacket(packet)
-
 
   def SendPacket(self, packet):
     """
