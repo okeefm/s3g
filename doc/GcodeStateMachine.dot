@@ -1,0 +1,30 @@
+// vim:ai:et:fenc=utf-8:ff=unix:sw=4:ts=4:
+
+digraph
+{
+  rankdir=TB;
+
+  "READ_COMMAND" [shape=diamond];
+  "READ_COMMAND" -> "IS_G_COMMAND";
+  "IS_G_COMMAND" -> "STATE=SET_POSITION" [label="G0/G1/G92"];
+  "IS_G_COMMAND" -> "STATE=DWELL" [label="G4"];
+  "STATE=DWELL" -> "STATE=EXTRUDE_DONT_MOVE" [label="TOOL ENABLED"];
+  "STATE=DWELL" -> "STATE=DELAY" [label="TOOL DISABLED"];
+  "IS_G_COMMAND" -> "STATE=SET_OFFSETS"  [label="G10"];
+  "STATE=SET_OFFSETS" -> "STATE=SET_TOOL_0_OFFSET" [label="TOOL=0"];
+  "STATE=SET_OFFSETS" -> "STATE=SET_TOOL_1_OFFSET" [label="TOOL=1"];
+  "IS_G_COMMAND" -> "STATE=USE_TOOL_0" [label="G54"];
+  "IS_G_COMMAND" -> "STATE=USE_TOOL_1" [label="G55"];
+  "IS_G_COMMAND" -> "STATE=FIND_AXES_MINS" [label="G161"];
+  "IS_G_COMMAND" -> "STATE=FIND_AXES_MAXS" [label="G162"];
+
+  "READ_COMMAND" -> "IS_M_COMMAND";
+  "IS_M_COMMAND" -> "STATE=ENABLE_TOOL" [label="M101/M102"]
+  "STATE=ENABLE_TOOL" -> "STATE=TOOL_FORWARD" [label="M101"]
+  "STATE=ENABLE_TOOL" -> "STATE=TOOL_BACKWARDS" [label="M102"]
+  "IS_M_COMMAND" -> "STATE=DISABLE_TOOL" [label="M103"]
+  "IS_M_COMMAND" -> "STATE=SET_MAX_SPEED" [label="M108"]
+ }
+
+
+
