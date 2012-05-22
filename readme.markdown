@@ -133,3 +133,11 @@ These errors are thrown when the s3g module encounters errors during s3g stream 
 Caused By:
 
     Encoded Strings Above The Max Payload Length
+
+
+# Contributing
+Contributions are welcome to this project! All changes must be in the style of the project, and include unit tests that are as complete as possible. Place all source code in the s3g/ directory, and all tests in the tests/ directory. Before submitting a patch, ensure that all unit tests pass by running the unit test script:
+
+```python
+python unit_tests.py
+```
