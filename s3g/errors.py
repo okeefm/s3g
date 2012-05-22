@@ -201,8 +201,8 @@ class RepeatCodeError(GcodeError):
 
 class MultipleCommandCodeError(GcodeError):
   """
-  A repeat code error is raised if a single code is repeated multiple times in a gcode
-  line (for example: G0 G0)
+  A repeat code error is raised if both a g and m code are present on the same line
+  line (for example: G0 M0)
   #TODO: add line number, code.
   """
 

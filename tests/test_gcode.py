@@ -5,6 +5,7 @@ sys.path.append(lib_path)
 
 import glob
 import unittest
+import io
 
 import s3g
 
@@ -180,10 +181,10 @@ class StateMachineTests(unittest.TestCase):
     self.assertEqual({'X':1,'Y':2,'Z':3,'A':4,'B':5}, self.sm.position)
  
   def test_g10_state(self):
-    command = 'G10 X1 Y2 Z3 A4 B5 P1'
+    command = 'G10 X1 Y2 Z3 P1'
     self.sm.ExecuteLine(command)
     self.assertEqual(1, self.sm.offset_register)
-    self.assertEqual({'X':1,'Y':2,'Z':3,'A':4,'B':5}, self.sm.position)
+    self.assertEqual({'X':1,'Y':2,'Z':3}, self.sm.homePosition)
 
   def test_g54_state(self):
     command = 'G54'
@@ -260,6 +261,19 @@ class ParseSampleGcodeFileTests(unittest.TestCase):
         for line in lines:
           registers, comment = s3g.ParseLine(line)
 
-  
+  def test_gcode_s3g_interface(self):
+    def setUp(self):
+      self.sm = s3g.GcodeStateMachine()
+      self.r = s3g.s3gFileWriter()
+      self.inputstream = io.BytesIO()
+      slef.r.file = self.inputstream
+
+    def tearDown(self):
+      self.sm = None
+      self.r. = None
+      self.inputstream = None
+
+
+ 
 if __name__ == "__main__":
   unittest.main()
