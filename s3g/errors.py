@@ -173,8 +173,3 @@ class PointLengthError(ParameterError):
   A Point length error is caused when a point's length is either too long or too short.
   """
 
-class AttemptedQueryCommand(Exception):
-  """
-  This type of error is reserved for s3gFileWriter.  Since we cannot write query
-  commands to a file, we throw this whenever a user tries to.
-  """

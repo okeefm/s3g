@@ -18,7 +18,7 @@ class S3gTests(unittest.TestCase):
     self.outputstream = io.BytesIO() # Stream that we will send responses on
     self.inputstream = io.BytesIO()  # Stream that we will receive commands on
 
-    writer = s3g.streamWriter()
+    writer = s3g.StreamWriter()
     writer.file = io.BufferedRWPair(self.outputstream, self.inputstream)
     self.r.writer = writer
 

@@ -4,12 +4,24 @@ Due to the nature of building to file, we cannot handle ANY Query commands.  Thu
 if a user tries to write a query command to file, we throw a AttemptedQueryCommand error.
 """
 
-from s3g import *
+from abstractWriter import *
 
-class s3gFileWriter(s3g):
+class FileWriter(AbstractWriter):
+  """ A file writer can be used to export an s3g payload stream to a file
+  """
+    
+  def __init__(self, file):
+    """ Initialize a new file writer
 
-  def BuildAndSendQueryPayload(self, *args):
-    raise AttemptedQueryCommand
-  
+    @param string file File object to write to.
+    """
+    self.file = file
+
+  # TODO: test me
+  def BuildAndSendActionPayload(self, *args):
+    payload = BuildPayload(args)
+    self.SendCommand(payload)
+
+  # TODO: test me
   def SendCommand(self, payload):
     self.file.write(payload)

@@ -3,19 +3,23 @@
 from abstractWriter import *
 from s3g import *
 
-class streamWriter(abstractWriter):
+class StreamWriter(AbstractWriter):
   def __init__(self):
     self.total_retries = 0
     self.total_overflows = 0
 
+  # TODO: test me
   def BuildAndSendQueryPayload(self, *args):
     payload = bytearray()
     AddObjToPayload(payload, args)
     return self.SendCommand(payload)
 
+  # TODO: test me
   def BuildAndSendActionPayload(self, *args):
     payload = BuildPayload(args)
     self.SendCommand(payload)
+
+
 
   def SendCommand(self, payload):
     packet = EncodePayload(payload)
