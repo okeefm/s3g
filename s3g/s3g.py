@@ -101,6 +101,9 @@ class s3g:
     self.writer.BuildAndSendActionPayload(host_query_command_dict['PAUSE'])
 
   def GetCommunicationStats(self):
+    """
+    Get some communication statistics about traffic on the tool network from the Host.
+    """
     response = self.writer.BuildAndSendQueryPayload(host_query_command_dict['GET_COMMUNICATION_STATS'])
 
     [response_code,
@@ -449,8 +452,8 @@ class s3g:
   def GetExtendedPosition(self):
     """
     Gets the current machine position
-    @return tuple position: containing the 5D position the machine is currently located at, 
-    and the endstop states.
+    @return tuple position: containing the 5D position the machine is currently located
+    at, and the endstop states.
     """
     response = self.writer.BuildAndSendQueryPayload(host_query_command_dict['GET_EXTENDED_POSITION'])
   

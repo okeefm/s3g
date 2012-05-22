@@ -8,7 +8,6 @@ import io
 
 import s3g
 
-
 class S3gTests(unittest.TestCase):
   """
   Emulate a machine
@@ -40,8 +39,6 @@ class S3gTests(unittest.TestCase):
     expectedPayload = bytearray()
     payload = s3g.BuildPayload([])
     self.assertEqual(expectedPayload, payload)
-
-
 
   def test_get_version(self):
     version = 0x5DD5
