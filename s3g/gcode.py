@@ -84,7 +84,7 @@ def ParseLine(line):
   return registers, comment
 
 
-class GcodeStateMachine():
+class GcodeStateMachine(object):
   """
   Read in gcode line by line, tracking some state variables and running known
   commands against an s3g machine.

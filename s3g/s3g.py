@@ -10,7 +10,7 @@ from coding import *
 from packet import *
 import logging
 
-class s3g:
+class s3g(object):
   def __init__(self):
     self.file = None
     #self.logfile = open('output_stats','w')

@@ -61,7 +61,7 @@ structFormats = {
     's'       :     -1, 
 }
 
-class s3gStreamDecoder:
+class s3gStreamDecoder(object):
 
   def __init__(self):
     pass

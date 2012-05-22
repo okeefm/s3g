@@ -28,7 +28,7 @@ parser.add_option("-b", "--baud", dest="serialbaud",
                   help="serial port baud rate", default="115200")
 (options, args) = parser.parse_args()
 
-class LineGenerator:
+class LineGenerator(object):
     def __init__(self, radius, divisions, velocity):
         self.radius = radius
         self.divisions = divisions
@@ -46,16 +46,16 @@ class LineGenerator:
             0,
             0
         ]
- 
+
         velocity = self.velocity
         self.last_target = target
 
         self.distance = self.radius
         self.duration = self.distance*velocity*.000001
-   
-	return target, velocity
 
-class CircleGenerator:
+        return target, velocity
+
+class CircleGenerator(object):
     def __init__(self, radius, divisions, velocity):
         self.angle = 0
         self.radius = radius
@@ -95,8 +95,8 @@ class CircleGenerator:
 
         self.last_target = target
         self.angle = (self.angle + 2*math.pi/self.divisions)%(math.pi*2)
-   
-	return target, velocity
+
+        return target, velocity
 
 r = s3g.s3g()
 
