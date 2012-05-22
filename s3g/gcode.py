@@ -97,16 +97,25 @@ class GcodeStateMachine():
         'A' : 0,
         'B' : 0,
         }
-    self.homePosition = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0, 
+    self.offsetPosition = {
+        0 : {
+            'X' : 0,
+            'Y' : 0,
+            'Z' : 0, 
+            },
+        1 : {
+            'X' : 0,
+            'Y' : 0,
+            'Z' : 0, 
+            },
         }
     self.offset_register = None     # Current offset register, if any
     self.toolhead = 0               # Tool ID
     self.toolhead_speed = 0         # Speed of the tool, in rpm???
     self.toolhead_direction = True  # Tool direction; True=forward, False=reverse
     self.toolhead_enabled = False   # Tool enabled; True=enabled, False=disabled
+    self.s3g = None
+    self.rapidFeedrate = 300
 
   def SetPosition(self, registers, position):
     """Given a set of registers and a position, sets the position's applicable axes values to those in registers.
@@ -129,37 +138,36 @@ class GcodeStateMachine():
 
     # Update the state information    
     if 'G' in registers:
-      if registers['G'] == 0:
-        self.SetPosition(registers, self.homePosition) 
-      if registers['G'] == 1:
+      if registers['G'] == 0 or registers['G'] == 92:
+        self.SetPosition(registers, self.position)
+      elif registers['G'] == 1:
+        if 'E' in registers:
+          if 'A' in registers or 'B' in registers:
+            raise LinearInterpolationError
+          else:
+            self.toolhead_speed = int(registers['E'])
         self.SetPosition(registers, self.position)
       elif registers['G'] == 10:
-        self.offset_register = registers['P']
-        self.SetPosition(registers, self.position)
+        self.SetPosition(registers, self.offsetPosition[registers['P']])
       elif registers['G'] == 54:
         self.toolhead = 0
       elif registers['G'] == 55:
         self.toolhead = 1
-      elif registers['G'] == 92:
-        self.SetPosition(registers, self.position)
       elif registers['G'] == 161:
         self.SetPosition({'Z':0}, self.position)
       elif registers['G'] == 162:
         self.SetPosition({'X':0, 'Y':0}, self.position)
     elif 'M' in registers:
+      if registers['M'] == 101 or registers['M'] == 102:
+        self.tool_enabled = True
       if registers['M'] == 101:
-        self.tool_enabled = True
         self.direction = True
-      if registers['M'] == 102:
-        self.tool_enabled = True
+      elif registers['M'] == 102:
         self.direction = False
-      if registers['M'] == 103:
+      elif registers['M'] == 103:
         self.tool_enabled = False
-      if registers['M'] == 108:
-        self.tool_speed = int(registers['R'])
-      if registers['M'] == 132:
-        self.SetPosition(self.HomePosition, self.position)
-
+      elif registers['M'] == 108:
+        self.toolhead_speed = int(registers['R'])
 
     # Run the command
     if 'G' in registers.keys():
@@ -176,3 +184,6 @@ class GcodeStateMachine():
 
     print ''
 
+
+  def RapidPositioning(self):
+    self.s3g.QueuePoint(self.position[:3], self.rapidFeedrate)

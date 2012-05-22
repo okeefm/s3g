@@ -1,3 +1,4 @@
+import mockS3g
 import os
 import sys
 lib_path = os.path.abspath('../')
@@ -156,6 +157,35 @@ class ParseCommandTests(unittest.TestCase):
     registers = s3g.ParseCommand(command)
     assert expected_registers == registers
 
+class s3gInterfaceTests(unittest.TestCase):
+  def setUp(self):
+    self.sm = s3g.GcodeStateMachine()
+    self.inputstream = io.BytesIO()
+    self.r = mockS3g.mockS3g()
+    self.r.file = self.inputstream
+    self.d = s3g.s3gStreamDecoder.s3gStreamDecoder()
+    self.d.file = self.inputstream
+
+  def tearDown(self):
+    self.sm = None
+    self.r = None
+    self.d = None
+    self.inputstream = None
+    self.outputstream = None
+
+  def test_MockS3g(self):
+    b = bytearray() 
+    b.append('\x00')
+    self.r.SendPacket(b)
+    readBytes = bytearray(self.inputstream.getvalue())
+    self.assertEqual(b, readBytes)
+
+"""  def test_rapid_positioning(self):
+    command = "G0 X1 Y2 Z3"
+    self.sm.ExecuteLine(command)
+    expected = [129, 1, 2, 3, self.sm.rapidFeedrate]
+    readPayload = self.d.ParseNextPacket()
+    self.assertEqual(readPayload[2:-1], expected)"""
 
 class StateMachineTests(unittest.TestCase):
   def setUp(self):
@@ -172,19 +202,35 @@ class StateMachineTests(unittest.TestCase):
         'A' : 4,
         'B' : 5,
         }
-    self.sm.SetPosition(setPos)
+    self.sm.SetPosition(setPos, self.sm.position)
     self.assertEqual(setPos, self.sm.position)
 
-  def test_g1_state(self):
+  def test_g0_state(self):
+    command = 'G0 X1 Y2 Z3'
+    self.sm.ExecuteLine(command)
+    self.assertEqual({'X':1, 'Y':2, 'Z':3, 'A':0, 'B':0}, self.sm.position)
+
+  def test_g1_state_a_b(self):
     command = 'G1 X1 Y2 Z3 A4 B5'
     self.sm.ExecuteLine(command)
     self.assertEqual({'X':1,'Y':2,'Z':3,'A':4,'B':5}, self.sm.position)
+
+  def test_g1_state_e(self):
+    expectedPoint = {'X':1, 'Y':2, 'Z':3}
+    command = "G1 X1 Y2 Z3 E42"
+    self.sm.ExecuteLine(command)
+    self.assertEqual(42, self.sm.toolhead_speed)
+    for axis in ['X', 'Y', 'Z']:
+      self.assertEqual(expectedPoint[axis], self.sm.position[axis])
  
+  def test_g1_state_e_a_b(self):
+    command = "G1 E42 A1 B2"
+    self.assertRaises(s3g.LinearInterpolationError, self.sm.ExecuteLine, command)
+
   def test_g10_state(self):
     command = 'G10 X1 Y2 Z3 P1'
     self.sm.ExecuteLine(command)
-    self.assertEqual(1, self.sm.offset_register)
-    self.assertEqual({'X':1,'Y':2,'Z':3}, self.sm.homePosition)
+    self.assertEqual({'X':1,'Y':2,'Z':3}, self.sm.offsetPosition[1])
 
   def test_g54_state(self):
     command = 'G54'
@@ -232,15 +278,8 @@ class StateMachineTests(unittest.TestCase):
   def test_m108_state(self):
     command = 'M108 R42'
     self.sm.ExecuteLine(command)
-    self.assertEqual(self.sm.tool_speed, 42)
+    self.assertEqual(self.sm.toolhead_speed, 42)
 
-  def test_m132_state(self):
-    self.sm.HomePosition = {'X' : 3, 'Y' : 2, 'Z' : 1}
-    command = 'M132 X Y Z'
-    self.sm.ExecuteLine(command)
-    for axis in ['X', 'Y', 'Z']:
-      self.assertEqual(self.sm.HomePosition[axis], self.sm.position[axis])
-    
 class ParseSampleGcodeFileTests(unittest.TestCase):
   """
   Run the parser across all of the sample gcode files, to verify that no assertions
@@ -270,7 +309,7 @@ class ParseSampleGcodeFileTests(unittest.TestCase):
 
     def tearDown(self):
       self.sm = None
-      self.r. = None
+      self.r = None
       self.inputstream = None
 
 
