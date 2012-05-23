@@ -26,8 +26,9 @@ parser.add_option("-d", "--dumpeeprom", dest="dump_eeprom",
 (options, args) = parser.parse_args()
 
 
+file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 r = s3g.s3g()
-r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
+r.writer = s3g.StreamWriter(file)
 
 print "firmware version: %i"%(r.GetVersion())
 print "build name: %s"%(r.GetBuildName())
@@ -63,11 +64,11 @@ if options.dump_eeprom:
   print "Host EEPROM memory map:"
   for offset in range(0, 1024, 16):
     data = r.ReadFromEEPROM(offset, 16)
-    print '%04i'%(offset), binascii.hexlify(buffer(data))
+    print '%04x'%(offset), binascii.hexlify(buffer(data))
 
   for tool_index in range(0, options.toolheads):
     print "Tool %i EEPROM memory map:"%(tool_index)
     for offset in range(0, 1024, 16):
       data = r.ReadFromToolheadEEPROM(tool_index, offset, 16)
-      print '%04i'%(offset), binascii.hexlify(buffer(data))
+      print '%04x'%(offset), binascii.hexlify(buffer(data))
 

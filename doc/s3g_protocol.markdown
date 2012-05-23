@@ -12,6 +12,18 @@ The third part of the document talks about the fine details of how commands are 
 
 The final portion of the document is a catalog of all of the commands that the Host and Tools can implement.
 
+## Implementations of this protocol
+
+Firmware repositories:
+
+* For Gen3 and Gen4 electronics (Cupcake, Thing-O-Matic, Reprap): [G3Firmware](http://github.com/makerbot/G3Firmware)
+* For Mightyboard (Replicator): [MightyBoardFirmware](http://github.com/makerbot/MightyBoardFirmware)
+
+Host software:
+
+* [ReplicatorG](http://github.com/makerbot/ReplicatorG)
+* [pyS3g](http://github.com/makerbot/s3g)
+
 ## Definitions
 
 Here is some vocabulary, that should be used when talking about the protocol:
@@ -45,50 +57,53 @@ Here is some vocabulary, that should be used when talking about the protocol:
  <td>Tool ID</td>
  <td>A unique address that is assigned to each Tool, that allows it to be addressed individually by the Host. Valid Tool IDs are 0-126. It is recommended to use 0 for the first Tool, and 1 for the second Tool.</td>
 </tr>
+<tr>
+ <td>Query Command</td>
+ <td>A query command is a command that should be evaluated and acknowledged immediately. They are used for things such as setting or reading temperatures.</td>
+</tr>
+<tr>
+ <td>Buffered Command</td>
+ <td>A buffered command should be acknowledge immediately, but the Host or Tool may choose to store in a buffer for later execution. These should be used for commands that could take a long time to execute, such as motion commands.
+</tr>
 </table>
 
-## Architecture
+# Architecture
 
 An s3g system looks like this:
 
 ![block diagram of system architecture](https://github.com/makerbot/s3g/raw/master/doc/SystemArchitecture.png)
 
+There are two networks, the host network and the tool network. Both networks (host, tool) have a single network master. On the host network, this is a PC, and on the tool network, this is the Host. The host network must have one slave device (the Host), and the tool network can have one or more slave devices (Tool N).
 
-Both networks (host, tool) have a single network master. On the host network, this is a PC, and on the tool network, this is the Host. All network communications are initiated by the network host; a tool node can never initiate a data transfer.
+_Note: On the MightyBoard, the tool bus is emulated in software in order to be backwards compatible._
 
-Data is sent over the network as a series of packets. Each network transaction consists of at least two packets: a command packet, followed by a response packet.  Every packet from a network master must be responded to.
+## Normal communication
 
-. All commands are query/response.  The host in each pair will always initiate communications, never the tool.  All packets are synchronous; they will wait for a response from the client before sending the next packet.  The firmware will continue rendering buffered commands while receiving new commands and replying to them.
+All communication is initiated by the network master sending a single packet over the network, which contains either a query command or buffered command. If the slave device receives the packet, it must respond with a single packet, containing a response code and any response data.
 
-Packets must be responded to promptly.  No command should ever block.
+This is what a normal communication over the host network looks like:
 
+![host command success](https://github.com/makerbot/s3g/raw/master/doc/HostCommandSuccess.png)
 
-All communications, both host-mb and mb-toolboard, are at 38400bps.  It should take approximately 1/3rd ms. to transmit one byte at those speeds. The maximum packet size of 32+3 bytes should take no more than 12ms to transmit.  We establish a 20ms. window from the reception of a start byte until packet completion.  If a packet is not completed within this window, it is considered to have timed out.
+Communication over the tool network works similarly:
 
-It is expected that there will be a lag between the completion of a command packet and the beginning of a response packet.  This may include a round-trip request to a toolhead, for example.  This window is expected to be 36ms. at the most.  Again, if the first byte of the response packet is not received by the time 36ms. has passed, the packet is presumed to have timed out.
+![tool command success](https://github.com/makerbot/s3g/raw/master/doc/ToolCommandSuccess.png)
 
-Handling Packet Failures
-If a packet has timed out, the host or board should treat the entire packet transaction as void.  It should:
-●Return its packet reception state machine to a ready state.
-●Presume that no action has been taken on the transaction
-●Attempt to resend the packet, if it was a host packet.
+Finally, a PC may communicate with a Tool by forwarding a packet through the Host:
 
+![host tool command success](https://github.com/makerbot/s3g/raw/master/doc/HostToolCommandSuccess.png)
 
-Command Buffering
-To ensure smooth motion, as well as to support print queueing, we'll want certain commands to be queued in a buffer.  This means we won't get immediate feedback from any queued command.  To this end we will break commands down into two categories: action commands that are put in the command buffer, and query commands that require an immediate response.  In order to make it simple to differentiate the commands on the firmware side, we will break them up into two sets: commands numbered 0-127 will be query commands, and commands numbered 128-255 will be action commands to be put into the buffer.  The firmware can then simply look at the highest bit to determine which type of packet it is. 
+The slave device is expected to begin responding to a master command within 40ms of receiving it. This is currently broken for a number of commands in actual systems. If a slave takes too long to respond to a command, then the trasmission is to be considered a timeout. _Note: Many commands in the current implementation break this requirement, and no known PC implementation enforces it._
 
+## Handling Errors
 
-# Implementations
+Of course, communication is not always so rosy. There are a number of things that could prevent a successful transmission, such as electrical noise or busy firmware. The protocol uses two methods to protect against this: a CRC check at the end of every packet, and a timeout counter while receiving data.
 
-Firmware repositories:
+If the master sends a packet over the network and does not receive a response, then the transmission is considered a timeout and can be re-tried up to 5 times. If the master does receive a response packet but it is damaged (either due to an invalid header, length, or CRC check), then it is considered a decoder error, and can be retried. Finally, if the master receives a valid response packet, but the packets response code indicates that the slave encountered a buffer overflow or retry error, then the master should attempt retransmission of the packet.
 
-* For Gen3 and Gen4 electronics (Cupcake, Thing-O-Matic, Reprap): [G3Firmware](http://github.com/makerbot/G3Firmware)
-* For Mightyboard (Replicator): [MightyBoardFirmware](http://github.com/makerbot/MightyBoardFirmware)
+Here is a reference implementation of a packet send state machine:
 
-Host software:
-
-* [ReplicatorG](http://github.com/makerbot/ReplicatorG)
-* [pyS3g](http://github.com/makerbot/s3g)
+![SendCommand state machine diagram](https://github.com/makerbot/s3g/raw/master/doc/SendCommand.png)
 
 
 # Packet formats
@@ -120,7 +135,7 @@ All packets have the following structure:
 <tr>
  <td>2+N</td>
  <td>CRC</td>
- <td>The [8-bit iButton/Maxim CRC](http://www.maxim-ic.com/app-notes/index.mvp/id/27) of the payload</td>
+ <td>The <a href="http://www.maxim-ic.com/app-notes/index.mvp/id/27">8-bit iButton/Maxim CRC</a> of the payload</td>
 </tr>
 </table>
 
@@ -175,7 +190,9 @@ A note about Tool IDs:
 
 The tool ID is the ID number of a toolhead. A toolhead may only respond to commands that are directed at its ID. If the packet is corrupt, the tool should *not* respond with an error message to avoid collisions.
 
-The exception to this is the tool ID 127. This represents any listening device. The address 127 should only be used when setting the ID of a tool. _Note: Before firmware version 2.92, the broadcast address was 255._
+The exception to this is the tool ID 127. This represents any listening device. The address 127 should only be used when setting the ID of a tool.
+
+_Note: Before firmware version 2.92, the broadcast address was 255._
 
 ## Response Packet Structure (both Host and Tool Networks)
 The response payload contains the response to a single command:
@@ -253,11 +270,87 @@ Response code values can be as follows:
 </tr>
 </table>
 
+_Historical note: Firmware versions prior to 2.9 did not have the high bit set for error codes. This was changed to avoid having the response code conflict with tool indexes on the tool network_ 
+
 # Data formats
 
-TODO:
+## Integer
+Integers represent numbers. All integers are in little endian format.
 
-uint8, uint16, int16, uint32, int32, axes bitfield
+<table>
+<tr>
+ <th>Type</th>
+ <th>Size</th>
+ <th>Range</th>
+</tr>
+<tr>
+ <td>uint8</td>
+ <td>1 byte</td>
+ <td>0 to 255</td>
+</tr>
+<tr>
+ <td>uint16</td>
+ <td>2 bytes</td>
+ <td>0 to 65535</td>
+</tr>
+<tr>
+ <td>int16</td>
+ <td>2 bytes</td>
+ <td>-32768 to 32767</td>
+</tr>
+<tr>
+ <td>uint32</td>
+ <td>4 bytes</td>
+ <td>0 to 4294967296</td>
+</tr>
+<tr>
+ <td>int32</td>
+ <td>4 bytes</td>
+ <td>-−2147483648 to 2147483647</td>
+</tr>
+</table>
+
+## Axes bitfield
+An axes bitfield structure is used to represent a selection of axes.
+
+<table>
+<tr>
+ <th>Bit</th>
+ <th>Name</th>
+</tr>
+<tr>
+ <td>7</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>6</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>5</td>
+ <td>N/A</td>
+</tr>
+<tr>
+ <td>4</td>
+ <td>B axis</td>
+</tr>
+<tr>
+ <td>3</td>
+ <td>A axis</td>
+</tr>
+<tr>
+ <td>2</td>
+ <td>Z axis</td>
+</tr>
+<tr>
+ <td>1</td>
+ <td>Y axis</td>
+</tr>
+<tr>
+ <td>0</td>
+ <td>X axis</td>
+</tr>
+</table>
 
 ## SD Response codes
 <table>
@@ -441,7 +534,7 @@ Response
     uint8: SD response code
 
 ## 17 - Reset
-Call a soft reset.  This calls all reset functions on the bot. Same as abort.
+Call a soft reset. This calls all reset functions on the bot. Same as abort.
 
 Payload (0 bytes)
 
@@ -461,7 +554,7 @@ Response
     1+N bytes: Name of the next file, in ASCII, terminated with a null character. If the operation was unsuccessful, this will be a null character.
 
 ## 20 - Get build name
-Retrieve the name of the file currently being built. If the machine is not currently printing, a null terminated string of length 0 is returned.  If the bot has finished a print and has not been reset (hard or soft), it will return the name of the last file built.
+Retrieve the name of the file currently being built. If the machine is not currently printing, a null terminated string of length 0 is returned. If the bot has finished a print and has not been reset (hard or soft), it will return the name of the last file built.
 
 Payload (0 bytes)
 
@@ -555,7 +648,7 @@ Response
 </table>
 
 ## 22 - Extended stop: Stop a subset of systems
-Stop the stepper motor motion and/or reset the command buffer.  This differs from the reset and abort commands in that a soft reset of all functions is not called
+Stop the stepper motor motion and/or reset the command buffer. This differs from the reset and abort commands in that a soft reset of all functions is not called
 
 Payload
 
@@ -592,22 +685,22 @@ Response
 </tr>
 <tr>
  <td>5</td>
- <td>WDRF</td>
+ <td>WDRF *Deprecated*</td>
  <td>Watchdog reset flag was set at restart</td>
 </tr>
 <tr>
  <td>4</td>
- <td>BORF</td>
+ <td>BORF *Deprecated*</td>
  <td>Brownout reset flag was set at restart</td>
 </tr>
 <tr>
  <td>3</td>
- <td>EXTRF</td>
+ <td>EXTRF *Deprecated*</td>
  <td>External reset flag was set at restart</td>
 </tr>
 <tr>
  <td>2</td>
- <td>PORF</td>
+ <td>PORF *Deprecated*</td>
  <td>Power-on reset flag was set at restart</td>
 </tr>
 <tr>
@@ -623,7 +716,7 @@ Response
 </table>
 
 ## 26 - Get communication statistics
-Gathers statistics about communication over the tool network. This was intended for use while troubleshooting Gen3/4 machines.
+Gathers statistics about communication over the tool network. This wass intended for use while troubleshooting Gen3/4 machines.
 
 Payload (0 bytes)
 
@@ -649,6 +742,8 @@ Payload
     int32: Z coordinate, in steps
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
 
+Response (0 bytes)
+
 ## 130 - Set position
 Reset the current position of the axes to the given values.
 
@@ -657,6 +752,8 @@ Payload
     int32: X position, in steps
     int32: Y position, in steps
     int32: Z position, in steps
+
+Response (0 bytes)
 
 ## 131 - Find axes minimums: Move specified axes in the negative direction until their limit switch is triggered.
 This function will find the minimum position that the hardware can travel to, then stop. Note that all axes are moved syncronously. If one of the axes (Z, for example) should be moved separately, then a seperate command should be sent to move that axis. Note that a minimum endstop is required for each axis that is to be moved.
@@ -667,6 +764,8 @@ Payload
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
     uint16: Timeout, in seconds.
 
+Response (0 bytes)
+
 ## 132 - Find axes maximums: Move specified axes in the positive direction until their limit switch is triggered.
 This function will find the maximum position that the hardware can travel to, then stop. Note that all axes are moved syncronously. If one of the axes (Z, for example) should be moved separately, then a seperate command should be sent to move that axis. Note that a maximum endstop is required for each axis that is to be moved.
 
@@ -676,12 +775,16 @@ Payload
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
     uint16: Timeout, in seconds.
 
+Response (0 bytes)
+
 ## 133 - Delay: Pause all motion for the specified time
 Halt all motion for the specified amount of time.
 
 Payload
 
     uint32: Delay, in microseconds
+
+Response (0 bytes)
 
 ## 135 - Wait for tool ready: Wait until a tool is ready before proceeding
 This command halts machine motion until the specified toolhead reaches a ready state. A tool is ready when it's temperature is within range of the setpoint.
@@ -691,6 +794,8 @@ Payload
     uint8: Tool ID of the tool to wait for
     uint16: Delay between query packets sent to the tool, in ms (nominally 100 ms)
     uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
+
+Response (0 bytes)
 
 ## 136 - Tool action command: Send an action command to a tool for execution
 This command is for sending an action command to the tool. The host firmware will then pass the query along to the appropriate tool, wait for a response from the tool, and pass the response back to the host. TODO: Does the master handle retries?
@@ -702,6 +807,8 @@ Payload
     uint8: Length of the tool command payload (N)
     N bytes: Tool command payload, 0-? bytes.
 
+Response (0 bytes)
+
 ## 137 - Enable/disable axes: Explicitly enable or disable stepper motor controllers
 This command is used to explicitly power steppers on or off. Generally, it is used to shut down the steppers after a build to save power and avoid generating excessive heat.
 
@@ -709,42 +816,44 @@ Payload
 
     uint8: Bitfield codifying the command (see below)
 
+Response (0 bytes)
+
 <table>
 <tr>
  <th>Bit</th>
  <th>Details</th>
 </tr>
 <tr>
- <th>7</th>
- <th>If set to 1, enable all selected axes. Otherwise, disable all selected axes.</th>
+ <td>7</td>
+ <td>If set to 1, enable all selected axes. Otherwise, disable all selected axes.</td>
 </tr>
 <tr>
- <th>6</th>
- <th>N/A</th>
+ <td>6</td>
+ <td>N/A</td>
 </tr>
 <tr>
- <th>5</th>
- <th>N/A</th>
+ <td>5</td>
+ <td>N/A</td>
 </tr>
 <tr>
- <th>4</th>
- <th>B axis select</th>
+ <td>4</td>
+ <td>B axis select</td>
 </tr>
 <tr>
- <th>3</th>
- <th>A axis select</th>
+ <td>3</td>
+ <td>A axis select</td>
 </tr>
 <tr>
- <th>2</th>
- <th>Z axis select</th>
+ <td>2</td>
+ <td>Z axis select</td>
 </tr>
 <tr>
- <th>1</th>
- <th>Y axis select</th>
+ <td>1</td>
+ <td>Y axis select</td>
 </tr>
 <tr>
- <th>0</th>
- <th>X axis select</th>
+ <td>0</td>
+ <td>X axis select</td>
 </tr>
 </table>
 
@@ -762,6 +871,8 @@ Payload
     int32: B coordinate, in steps
     uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
 
+Response (0 bytes)
+
 ## 140 - Set extended position
 Reset the current position of the axes to the given values.
 
@@ -773,6 +884,8 @@ Payload
     int32: A position, in steps
     int32: B position, in steps
 
+Response (0 bytes)
+
 ## 141 - Wait for platform ready: Wait until a build platform is ready before proceeding
 This command halts machine motion until the specified tool device reaches a ready state. A build platform is ready when it's temperature is within range of the setpoint.
 
@@ -781,6 +894,8 @@ Payload
     uint8: Tool ID of the build platform to wait for
     uint16: Delay between query packets sent to the tool, in ms (nominally 100 ms)
     uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
+
+Response (0 bytes)
 
 ## 142 - Queue extended point, new style
 This queues a point to move to.
@@ -797,50 +912,70 @@ Payload
     uint32: Duration of the movement, in microseconds
     uint8: Axes bitfield to specify which axes are relative. Any axis with a bit set should make a relative movement.
 
+Response (0 bytes)
+
 ## 143 - Store home positions
 Record the positions of the selected axes to device EEPROM
 
 Payload
+
     uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
+
+Response (0 bytes)
 
 ## 144 - Recall home positions
 Recall the positions of the selected axes from device EEPROM
 
 Payload
+
     uint8: Axes bitfield to specify which axes' positions to recall. Any axes with a bit set should have it's position recalled.
+
+Response (0 bytes)
 
 ## 145 - Set digital potentiometer value
 Set the value of the digital potentiometers that control the voltage reference for the botsteps
 
 Payload
+
     uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
     uint8: value (valid range 0-127), values over max will be capped at max
+
+Response (0 bytes)
 
 ## 146 - Set RGB LED value
 Set Brightness levels for RGB led strip
 
 Payload
-    uint8:  red value (all pix are 0-255)
-    uint8:  green 
-    uint8:  blue
-    uint8:  blink rate (0-255 valid)
-    uint8:  effect (currently unused)
-    
+
+    uint8: red value (all pix are 0-255)
+    uint8: green 
+    uint8: blue
+    uint8: blink rate (0-255 valid)
+    uint8: N/A (reserved for future use)
+
+Response (0 bytes)
+
 ## 147 - Set Beep
 Set a buzzer frequency and buzz time
 
 Payload
+
     uint16: frequency
     uint16: buzz length in ms
-    uint8:  effect  (currently unused)
+    uint8: N/A (reserved for future use)
+
+Response (0 bytes)
 
 ## 148 - Wait for button
 Wait until either a user presses a button on the interface board, or a timeout occurs.
 
 Payload
+
     uint8: Bit field of buttons to wait for (see below)
     uint16: Timeout, in seconds. A value of 0 indicates that the command should not time out.
     uint8: Options bitfield (see below)
+
+Response (0 bytes)
 
 Button field
 <table>
@@ -922,28 +1057,29 @@ Options Field
 </tr>
 </table>
 
-
 ## 149 - Display message to LCD
 This command is used to display a message to the LCD board.
-The maximum buffer size is limited by the maximum package size.  Thus a full screen cannot be written with one command.
+The maximum buffer size is limited by the maximum package size. Thus a full screen cannot be written with one command.
 Messages are stored in a buffer and the full buffer is displayed when the "last message in group" flag is 1.
-The buffer is also displayed when the clear message flag is 1.  If multiple packets are received before the screen update is called, they will all be displayed.  After screen update is called, the screen will wait until the "last message in group" is received to display the full buffer.  TODO: clean this
+The buffer is also displayed when the clear message flag is 1. If multiple packets are received before the screen update is called, they will all be displayed. After screen update is called, the screen will wait until the "last message in group" is received to display the full buffer. TODO: clean this
 The "last message in group" flag must be used for display of multi-packet messages.
-Normal popping of the message screen, such as when a print is over, is ignored if the "last message in group" flag has not been received.  This is because the bot thinks it is still waiting for the remainder of a message.
+Normal popping of the message screen, such as when a print is over, is ignored if the "last message in group" flag has not been received. This is because the bot thinks it is still waiting for the remainder of a message.
 
 if the "clear message" flag is 1, the message buffer will be cleared and any existing timeout out will be cleared.
 
-If the "wait on button" flag is 1, the message screen will clear after a user button press is received.  The timeout field is still relevant if the button press is never received.  
+If the "wait on button" flag is 1, the message screen will clear after a user button press is received. The timeout field is still relevant if the button press is never received.
 
 Text will auto-wrap at end of line. \n is recognized as new line start. \r is ignored.
 
 Payload
+
     uint8: Options bitfield (see below)
     uint8: Horizontal position to display the message at (commonly 0-19)
     uint8: Vertical position to display the message at (commonly 0-3)
     uint8: Timeout, in seconds. If 0, this message will left on the screen
     1+N bytes: Message to write to the screen, in ASCII, terminated with a null character.
 
+Response (0 bytes)
 
 <table>
 <tr>
@@ -985,28 +1121,34 @@ Payload
 </table>
 
 ## 150 - Set Build Percentage
-Set the percent done for the current build.  This value will be displayed on the Monitor screen
+Set the percent done for the current build. This value will be displayed on the Monitor screen
 
 Payload
-  
+ 
     uint8: percent (0-100)
-    uint8: ignore (currently unused
+    uint8: N/A (reserved for future use)
+
+Response (0 bytes)
 
 ## 151 - Queue Song
 Play predefined songs on the piezo buzzer
 
 Payload
-  
-    uint8: songID  - select from a predefined list of songs
 
+    uint8: songID: select from a predefined list of songs
+
+Response (0 bytes)
+
+TODO: List of available songs?
 
 ## 152 - Reset to Factory
-Calls a factory reset on the eeprom.  Resets all values to their "factory" settings.  A soft reset of the board is also called.
+Calls a factory reset on the eeprom. Resets all values to their "factory" settings. A soft reset of the board is also called.
 
 Payload
 
-    uint8: options (Currently unused)
+    uint8: N/A (reserved for future use)
 
+Response (0 bytes)
 
 ## 153 - Build start notification
 Tells the motherboard that a build is about to begin, and provides the name of the job for status reporting. This allows the motherboard to display an appropriate build screen on the interface board.
@@ -1144,33 +1286,33 @@ Response
  <th>Details</th>
 </tr>
 <tr>
- <th>7</th>
- <th>EXTRUDER_ERROR</th>
- <th>An error was detected with the extruder heater (if the tool supports one). The extruder heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.</th>
+ <td>7</td>
+ <td>EXTRUDER_ERROR</td>
+ <td>An error was detected with the extruder heater (if the tool supports one). The extruder heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.</td>
 </tr>
 <tr>
- <th>6</th>
- <th>PLATFORM_ERROR</th>
- <th>An error was detected with the platform heater (if the tool supports one). The platform heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.</th>
+ <td>6</td>
+ <td>PLATFORM_ERROR</td>
+ <td>An error was detected with the platform heater (if the tool supports one). The platform heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.</td>
 </tr>
 <tr>
  <td>5</td>
- <td>WDRF</td>
+ <td>WDRF *Deprecated*</td>
  <td>Watchdog reset flag was set at restart</td>
 </tr>
 <tr>
  <td>4</td>
- <td>BORF</td>
+ <td>BORF *Deprecated*</td>
  <td>Brownout reset flag was set at restart</td>
 </tr>
 <tr>
  <td>3</td>
- <td>EXTRF</td>
+ <td>EXTRF *Deprecated*</td>
  <td>External reset flag was set at restart</td>
 </tr>
 <tr>
  <td>2</td>
- <td>PORF</td>
+ <td>PORF *Deprecated*</td>
  <td>Power-on reset flag was set at restart</td>
 </tr>
 <tr>
@@ -1202,7 +1344,7 @@ Response
 # Tool Action Commands
 
 ## 01 - Init: Initialize firmware to boot state
-Initialization consists of:
+Initialization resets the toolhead and all processes it controls to the boot state.  some examples of processes that will be reset are:
 
     * Resetting target temperatures to 0
     * Turning off all outputs (fan, motor, etc)
@@ -1247,44 +1389,44 @@ Response (0 bytes)
  <th>Details</th>
 </tr>
 <tr>
- <th>7</th>
- <th>N/A</th>
- <th></th>
+ <td>7</td>
+ <td>N/A</td>
+ <td></td>
 </tr>
 <tr>
- <th>6</th>
- <th>N/A</th>
- <th></th>
+ <td>6</td>
+ <td>N/A</td>
+ <td></td>
 </tr>
 <tr>
- <th>5</th>
- <th>N/A</th>
- <th></th>
+ <td>5</td>
+ <td>N/A</td>
+ <td></td>
 </tr>
 <tr>
- <th>4</th>
- <th>N/A</th>
- <th></th>
+ <td>4</td>
+ <td>N/A</td>
+ <td></td>
 </tr>
 <tr>
- <th>3</th>
- <th>N/A</th>
- <th></th>
+ <td>3</td>
+ <td>N/A</td>
+ <td></td>
 </tr>
 <tr>
- <th>2</th>
- <th>N/A</th>
- <th></th>
+ <td>2</td>
+ <td>N/A</td>
+ <td></td>
 </tr>
 <tr>
- <th>1</th>
- <th>DIR</th>
- <th>If set, motor should be turned in a clockwise direciton. Otherwise, it should be turned in a counterclockwise direction</th>
+ <td>1</td>
+ <td>DIR</td>
+ <td>If set, motor should be turned in a clockwise direciton. Otherwise, it should be turned in a counterclockwise direction</td>
 </tr>
 <tr>
- <th>0</th>
- <th>ENABLE</th>
- <th>If set, enable the motor. If unset, disable the motor</th>
+ <td>0</td>
+ <td>ENABLE</td>
+ <td>If set, enable the motor. If unset, disable the motor</td>
 </tr>
 </table>
 
@@ -1338,20 +1480,3 @@ Payload
 
 Response (0 bytes)
 
-## 38 - Set motor speed (DDA)
-This sets the motor speed as a DDA value, in microseconds between step. It should not actually enable the motor until the motor enable command is given. For future implementation of 5D (vs 4D) two DDA codes are sent - the DDA to start with and the DDA to end with. The third uint32 is the number of steps to take. The direction to go is set by code 8, 'Set motor direction'
-
-Payload
-
-    uint32: Speed, in microseconds between steps (start of movement)
-    uint32: Speed, in microseconds between steps (end of movement)
-    uint32: total steps to take.
-
-Response (0 bytes)
-
-## 40 - Light indicator LED
-This command turns on an indicator light (for gen 4, the motor direction LED). This command is intended to serve as visual feedback to an operator that the electronics are communicating properly. Note that it should not be used during regular operation, because it interferes with h-bridge operation.
-
-Payload (0 bytes)
-
-Response (0 bytes)
