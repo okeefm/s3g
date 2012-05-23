@@ -42,7 +42,7 @@ class s3gStreamDecoderTests(unittest.TestCase):
         131: ['B', 'I', 'H'],
         }
     for case in cases:
-      formatString = self.d.GetCommandFormat(case)
+      formatString = s3g.commandFormats[case]
       self.assertEqual(formatString, cases[case])
 
   def test_GetBytes(self):

@@ -6,6 +6,7 @@ import coding
 import s3gStreamDecoder
 import struct
 import array
+import constants
 
 class s3gStreamDecoderRaw(s3gStreamDecoder.s3gStreamDecoder):
 

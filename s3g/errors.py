@@ -212,3 +212,7 @@ class StringTooLongError(Exception):
   than the specified maximum payload length
   """
 
+class EndOfFileError(Exception):
+  """
+  An EndOfFileError is raised when the end of an s3g file is reached prematurely.
+  """
