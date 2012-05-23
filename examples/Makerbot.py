@@ -7,7 +7,7 @@ import s3g
 from time import sleep
 
 
-class Makerbot:
+class Makerbot(object):
   def __init__(self, serialportname, baudrate, timeout=0):
     self.s3g = s3g.s3g()
     self.serialportname = serialportname

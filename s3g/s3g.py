@@ -21,7 +21,7 @@ def BuildPayload(args):
   return payload
 
 
-class s3g:
+class s3g(object):
   def __init__(self):
     self.writer = None
 
