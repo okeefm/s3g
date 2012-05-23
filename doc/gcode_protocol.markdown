@@ -86,6 +86,14 @@ XYZABF Form:
 
 XYZEF Form
 
+     X: (optional) If present, new X axis position, in mm
+     Y: (optional) If present, new Y axis position, in mm
+     Z: (optional) If present, new Z axis position, in mm
+     E: (optional) If present, speed of extrusion, in 
+     F: (optional) Feedrate, in mm/min
+
+
+
   S3g Output
 
       QueueExtendedPoint(point, rate)
@@ -307,6 +315,28 @@ Parameters
 
 ## M70 - Display message on machine
 Instruct the machine to display a message on it's interface LCD.
+
+Registers
+
+    P: Time to display message for (TODO: Units?)
+    comment: Message to display
+
+S3g Output
+
+    DisplayMessage(row, col, message, timeout, clear existing flag, last in group flag, wait for button flag)
+
+Parameters
+
+    Row = 0
+    Col = 0
+    Message = Comment
+    Timeout = 0
+    Clear Existing Flag = True
+    Last In Group Flag= True
+    Wait For Button Flag= False
+
+## M71 - Display message on machine and wait for button press
+Instruct the machine to display a message on it's interface LCD and wait for a button to be pressed.
 
 Registers
 

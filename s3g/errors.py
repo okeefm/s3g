@@ -206,6 +206,12 @@ class MultipleCommandCodeError(GcodeError):
   #TODO: add line number, code.
   """
 
+class LinearInterpolationError(GcodeError):
+  """
+  A G1 (Linear Interpolation) command can have either an E register defined or both
+  the A and B registers defined.  If both sets are defined, we throw this error.
+  """
+
 class StringTooLongError(Exception):
   """
   A stringTooLongError is raised when a string is parsed out of an s3g stream that longer
