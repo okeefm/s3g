@@ -41,7 +41,7 @@ host_action_command_dict = {
   'QUEUE_EXTENDED_POINT'      : 139,
   'SET_EXTENDED_POSITION'     : 140,
 #  'WAIT_FOR_PLATFORM_READY'   : 141,
-#  'QUEUE_EXTENDED_POINT_NEW'  : 142,
+  'QUEUE_EXTENDED_POINT_NEW'  : 142,
 #  'STORE_HOME_POSITIONS'      : 143,
 #  'RECALL_HOME_POSITIONS'     : 144,
 #  'PAUSE_FOR_INTERACTION'     : 145,
@@ -800,6 +800,24 @@ class s3g:
     payload.extend(EncodeInt32(position[3]))
     payload.extend(EncodeInt32(position[4]))
     payload.extend(EncodeUint32(rate))
+    
+    self.SendCommand(payload)
+
+  def QueueExtendedPointNew(self, position, rate, relative):
+    """
+    Move the toolhead to a new position at the given rate
+    @param position 5D position to move to. All dimension should be in steps.
+    @param rate double Movement speed, in steps/??
+    """
+    payload = bytearray()
+    payload.append(host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'])
+    payload.extend(EncodeInt32(position[0]))
+    payload.extend(EncodeInt32(position[1]))
+    payload.extend(EncodeInt32(position[2]))
+    payload.extend(EncodeInt32(position[3]))
+    payload.extend(EncodeInt32(position[4]))
+    payload.extend(EncodeUint32(rate))
+    payload.append(relative)
     
     self.SendCommand(payload)
 
