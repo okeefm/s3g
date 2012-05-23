@@ -7,6 +7,7 @@ sys.path.append(lib_path)
 import glob
 import unittest
 import io
+import time
 
 import s3g
 
@@ -165,6 +166,7 @@ class s3gInterfaceTests(unittest.TestCase):
     self.r.file = self.inputstream
     self.d = s3g.s3gStreamDecoder.s3gStreamDecoder()
     self.d.file = self.inputstream
+    self.sm.s3g = self.r
 
   def tearDown(self):
     self.sm = None
@@ -173,23 +175,73 @@ class s3gInterfaceTests(unittest.TestCase):
     self.inputstream = None
     self.outputstream = None
 
+  def test_get_point(self):
+    self.sm.position={
+                      'X' : 1,
+                      'Y' : 2,
+                      'Z' : 3,
+                      }
+    self.assertEqual([1, 2, 3], self.sm.GetPoint())
+
+  def test_get_extended_point(self):
+    self.sm.position={
+                      'X' : 1,
+                      'Y' : 2,
+                      'Z' : 3,
+                      'A' : 4,
+                      'B' : 5,
+                      }
+    self.assertEqual([1, 2, 3, 4, 5], self.sm.GetExtendedPoint())
+
   def test_MockS3g(self):
-    b = bytearray() 
+    b = bytearray()
     b.append('\x00')
     self.r.SendPacket(b)
     readBytes = bytearray(self.inputstream.getvalue())
     self.assertEqual(b, readBytes)
 
-"""  def test_rapid_positioning(self):
+  def test_rapid_positioning(self):
     command = "G0 X1 Y2 Z3"
     self.sm.ExecuteLine(command)
-    expected = [129, 1, 2, 3, self.sm.rapidFeedrate]
+    self.inputstream.seek(0)
     readPayload = self.d.ParseNextPacket()
-    self.assertEqual(readPayload[2:-1], expected)"""
+    self.assertEqual(readPayload[2], s3g.host_action_command_dict['QUEUE_POINT'])
+
+  def test_linear_interpolation(self):
+    command = 'G1 X1 Y2 Z3 F500'
+    self.sm.ExecuteLine(command)
+    self.inputstream.seek(0)
+    readPayload = self.d.ParseNextPacket()
+    self.assertEqual(readPayload[2], s3g.host_action_command_dict['QUEUE_EXTENDED_POINT'])
+
+  def test_dwell_enabled(self):
+    self.sm.tool_enabled = True
+    command = "G4 P10"
+    startTime = time.time()
+    self.sm.ExecuteLine(command)
+    finalTime = time.time()
+    self.assertAlmostEqual(finalTime-startTime, 0)
+    self.inputstream.seek(0)
+    packets = self.d.ReadStream()
+    for packet in packets:
+      self.assertEqual(packet[2], s3g.host_action_command_dict['QUEUE_EXTENDED_POINT'])
+
+  def test_dwell_disabled(self):
+    self.sm.tool_enabled = False
+    command = "G4 P10"
+    microConstant = 1000000
+    miliConstant = 1000
+    self.sm.ExecuteLine(command)
+    self.inputstream.seek(0)
+    readPacket = self.d.ParseNextPacket()
+    self.assertEqual(readPacket[2], s3g.host_action_command_dict['DELAY'])
 
 class StateMachineTests(unittest.TestCase):
   def setUp(self):
     self.sm = s3g.GcodeStateMachine()
+    self.r = mockS3g.mockS3g()
+    self.r.file = io.BytesIO()
+    self.sm.s3g = self.r
 
   def tearDown(self):
     self.sm = None
@@ -299,19 +351,6 @@ class ParseSampleGcodeFileTests(unittest.TestCase):
       with open(file) as lines:
         for line in lines:
           registers, comment = s3g.ParseLine(line)
-
-  def test_gcode_s3g_interface(self):
-    def setUp(self):
-      self.sm = s3g.GcodeStateMachine()
-      self.r = s3g.s3gFileWriter()
-      self.inputstream = io.BytesIO()
-      slef.r.file = self.inputstream
-
-    def tearDown(self):
-      self.sm = None
-      self.r = None
-      self.inputstream = None
-
 
  
 if __name__ == "__main__":

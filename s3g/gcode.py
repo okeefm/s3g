@@ -1,6 +1,7 @@
 # Gcode parser, 
 
 from errors import *
+import time
 
 def ExtractComments(line):
   """
@@ -110,10 +111,14 @@ class GcodeStateMachine():
             },
         }
     self.offset_register = None     # Current offset register, if any
-    self.toolhead = 0               # Tool ID
-    self.toolhead_speed = 0         # Speed of the tool, in rpm???
-    self.toolhead_direction = True  # Tool direction; True=forward, False=reverse
-    self.toolhead_enabled = False   # Tool enabled; True=enabled, False=disabled
+    self.toolhead = None               # Tool ID
+    self.toolheadDict = {
+        0   :   'A',
+        1   :   'B',
+        }
+    self.toolhead_speed = None         # Speed of the tool, in rpm???
+    self.toolhead_direction = None # Tool direction; True=forward, False=reverse
+    self.toolhead_enabled = None # Tool enabled; True=enabled, False=disabled
     self.s3g = None
     self.rapidFeedrate = 300
 
@@ -144,8 +149,6 @@ class GcodeStateMachine():
         if 'E' in registers:
           if 'A' in registers or 'B' in registers:
             raise LinearInterpolationError
-          else:
-            self.toolhead_speed = int(registers['E'])
         self.SetPosition(registers, self.position)
       elif registers['G'] == 10:
         self.SetPosition(registers, self.offsetPosition[registers['P']])
@@ -171,19 +174,92 @@ class GcodeStateMachine():
 
     # Run the command
     if 'G' in registers.keys():
-      print 'Got G code: %i'%(registers['G']),
+      GCodeInterface = {
+          0     :     self.RapidPositioning,
+          1     :     self.LinearInterpolation,
+          4     :     self.Dwell,
+          #92    :     self.SetPosition,
+          #130   :     self.SetPotentiometerValues,
+          #161   :     self.FindAxesMinimums,
+          #162   :     self.FindAxesMaximums,
+          }
+      try:
+        GCodeInterface[registers['G']](registers, comment)
+      except KeyError:
+        pass
     elif 'M' in registers.keys():
-      print 'Got M code: %i'%(registers['M']),
+      MCodeInterface = {
+          #6     :     self.WaitForToolhead,
+          #18    :     self.DisableAxes,
+          #70    :     self.DisplayMessage,
+          #71    :     self.DisplayMessageButtonWait,
+          #72    :     self.QueueSong,
+          #73    :     self.SetBuildPercentage,
+          #104   :     self.SetToolheadTemperature,
+          #109   :     self.SetPlatformTemperature,
+          #132   :     self.RecallHomePosition,
+          }
+      try: 
+        MCodeInterface[registers['M']](registers, comment)
+      except KeyError:
+        pass
     else:
       print 'Got no code?',
 
-    print registers,
-
-    if comment != '':
-      print 'comment=%s'%(comment),
-
-    print ''
 
 
-  def RapidPositioning(self):
-    self.s3g.QueuePoint(self.position[:3], self.rapidFeedrate)
+  def GetPoint(self):
+    return [
+            self.position['X'], 
+            self.position['Y'], 
+            self.position['Z'],
+           ]
+
+  def GetExtendedPoint(self):
+    return [
+            self.position['X'], 
+            self.position['Y'], 
+            self.position['Z'], 
+            self.position['A'], 
+            self.position['B'],
+           ]
+
+  def RapidPositioning(self, registers, comment):
+    """Moves at a high speed to a specific point
+
+    @param dict registers: Registers parsed out of the gcode command
+    @param string comment: Comment associated with the gcode command
+    """
+    self.s3g.QueuePoint(self.GetPoint(), self.rapidFeedrate)
+
+  def LinearInterpolation(self, registers, comment):
+    """Moves to a new 5d point.  If E register is defined, uses linear
+    interpolation of the extruder axis.  Otherwise, moves explicitely.
+    
+    @param dict registers: Registers parsed out of the gcode command
+    @param string command: Comment associated with the gcode command
+    """
+    self.s3g.QueueExtendedPoint(self.GetExtendedPoint(), registers['F'])
+
+  def Dwell(self, registers, comment):
+    """Can either delay all functionality of the machine, or have the machine
+    sit in place while extruding at the current rate and direction.
+
+    @param dict registers: Registers parsed out of the gcode command
+    @param string command: Comment associated with the gcode command
+    """
+    if self.tool_enabled:
+      if self.tool_direction:
+        delta = self.tool_speed
+      else:
+        delta = -self.tool_speed
+      startTime = time.time()
+      while time.time() < startTime + registers['P']:
+        self.position[self.toolheadDict[self.toolhead]] += delta
+        RPS = self.tool_speed / 60.0
+        RPMS = self.tool_speed / RPS
+    else:
+      microConstant = 1000000
+      miliConstant = 1000
+      self.s3g.Delay(registers['P']*(microConstant/miliConstant))
+      
