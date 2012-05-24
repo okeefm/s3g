@@ -10,30 +10,75 @@ import array
 
 import s3g
 
-
-class s3gStreamDecoderTests(unittest.TestCase):
+class FileReaderTests_2(unittest.TestCase):
   def setUp(self):
-    self.r = s3g.s3g()
-    self.outputstream = io.BytesIO() # Stream that we will send responses on
-    self.inputstream = io.BytesIO()
-    file = io.BufferedRWPair(self.outputstream, self.inputstream)
-    self.r.writer = s3g.StreamWriter(file)
+    self.d = s3g.FileReader()
 
-    self.d = s3g.s3gStreamDecoder.s3gStreamDecoder()
+    self.inputstream = io.BytesIO()
     self.d.file = self.inputstream
 
   def tearDown(self):
     self.r = None
     self.d = None
 
-  def test_PackagePacket(self):
-    a = 'a'
-    b = 'b'
-    l = [1, 2, 3, 4]
-    c = 'c'
-    expectedPackaged = ['a', 'b', 1, 2, 3, 4, 'c']
-    packaged = self.d.PackagePacket('a', 'b', l, 'c')
-    self.assertEqual(expectedPackaged, packaged)
+  def test_ReadBytes_zero_data(self):
+    self.d.ReadBytes(0)
+
+  def test_ReadBytes_too_little_data(self):
+    self.assertRaises(s3g.EndOfFileError, self.d.ReadBytes, 1)
+
+  def test_ReadBytes_enough_data(self):
+    data = '1234567890'
+    self.inputstream.write(data)
+    self.inputstream.seek(0)
+    assert data == self.d.ReadBytes(len(data))
+
+  def test_GetNextCommand_bad_command(self):
+    command = 0xFF # Assume that 0xff is not a valid command
+
+    self.inputstream.write(chr(command))
+    self.inputstream.seek(0)
+
+    self.assertRaises(s3g.BadCommandError, self.d.GetNextCommand)
+
+  def test_GetNextCommand_host_action_command(self):
+    command = s3g.host_action_command_dict['QUEUE_POINT']
+
+    self.inputstream.write(chr(command))
+    self.inputstream.seek(0)
+
+    self.assertEquals(command, self.d.GetNextCommand())
+
+  def test_GetNextCommand_slave_action_command(self):
+    command = s3g.slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP']
+
+    self.inputstream.write(chr(command))
+    self.inputstream.seek(0)
+
+    self.assertEquals(command, self.d.GetNextCommand())
+
+class FileReaderTests(unittest.TestCase):
+  def setUp(self):
+    self.r = s3g.s3g()
+    self.inputstream = io.BytesIO() # File that we will send responses on
+
+    self.r.writer = s3g.FileWriter(self.inputstream)
+
+    self.d = s3g.FileReader()
+    self.d.file = self.inputstream
+
+  def tearDown(self):
+    self.r = None
+    self.d = None
+
+#  def test_PackagePacket(self):
+#    a = 'a'
+#    b = 'b'
+#    l = [1, 2, 3, 4]
+#    c = 'c'
+#    expectedPackaged = ['a', 'b', 1, 2, 3, 4, 'c']
+#    packaged = self.d.PackagePacket('a', 'b', l, 'c')
+#    self.assertEqual(expectedPackaged, packaged)
   
   def test_GetCommandFormat(self):
     cases = {
@@ -42,18 +87,19 @@ class s3gStreamDecoderTests(unittest.TestCase):
         131: ['B', 'I', 'H'],
         }
     for case in cases:
-      formatString = self.d.GetCommandFormat(case)
+      formatString = s3g.commandFormats[case]
       self.assertEqual(formatString, cases[case])
 
   def test_GetBytes(self):
-    val = 42
-    encodedVal = s3g.EncodeUint32(val)
+    data = 'abcd'
+
     payload = bytearray()
-    payload.extend(encodedVal)
+    payload.extend(data)
     self.inputstream.write(payload)
     self.inputstream.seek(0)
+
     readVal = self.d.GetBytes('I')
-    self.assertEqual(readVal, encodedVal) 
+    self.assertEqual(readVal, data)
 
   def test_GetStringBytesPathological(self):
     b = bytearray()
@@ -62,7 +108,7 @@ class s3gStreamDecoderTests(unittest.TestCase):
     b.append('\x00')
     self.inputstream.write(b)
     self.inputstream.seek(0)
-    self.assertRaises(s3g.errors.StringTooLongError, self.d.GetStringBytes)
+    self.assertRaises(s3g.StringTooLongError, self.d.GetStringBytes)
 
   def test_GetStringBytes(self):
     val = 'asdf'
@@ -117,82 +163,66 @@ class s3gStreamDecoderTests(unittest.TestCase):
     for case in cases:
       self.assertEqual(case[0], self.d.ParseParameter(case[2], case[1]))
 
-  def test_GetNextCommand(self):
-    cmd = s3g.host_query_command_dict['INIT']
-    response_payload = bytearray()
-    response_payload.append(s3g.response_code_dict['SUCCESS'])
-    self.outputstream.write(s3g.EncodePayload(response_payload))
-    self.outputstream.seek(0)
-    self.r.Init()
-    self.inputstream.seek(2) #Get around first two bytes of the packet, since we only want to check the command
-    readCmd = self.d.GetNextCommand()
-    self.assertEqual(readCmd, cmd)
-
   def test_ParseNextPayload(self):
     cmd = s3g.host_action_command_dict['BUILD_START_NOTIFICATION']
     commandCount = 1
     buildName = "test"
-    response_payload = bytearray()
-    response_payload.append(s3g.response_code_dict['SUCCESS'])
-    self.outputstream.write(s3g.EncodePayload(response_payload))
-    self.outputstream.seek(0)
+
     self.r.BuildStartNotification(commandCount, buildName)
-    self.inputstream.seek(2)
+    self.inputstream.seek(0)
+
     info = self.d.ParseNextPayload()
     self.assertEqual(info[0], cmd)
     self.assertEqual(info[1], commandCount)
     self.assertEqual(info[2], buildName)
     
-  def test_ParseNextPacket(self):
-    cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
-    point = [1, 2, 3, 4, 5]
-    duration = 42
-    relativeAxes = 0x01 + 0x02
-    payload =bytearray()
-    s3g.coding.AddObjToPayload(payload, [cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), relativeAxes])
-    crc = s3g.CalculateCRC(payload)
-    response_payload = bytearray()
-    response_payload.append(s3g.response_code_dict['SUCCESS'])
-    self.outputstream.write(s3g.EncodePayload(response_payload))
-    self.outputstream.seek(0)
-    self.r.QueueExtendedPointNew(
-        point, 
-        duration, 
-        ['x', 'y']
-        )
-    self.inputstream.seek(0)
-    readPacket = self.d.ParseNextPacket()
-    self.assertEqual(readPacket[0], s3g.header)
-    self.assertEqual(readPacket[1], len(payload))
-    self.assertEqual(readPacket[2], s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'])
-    for i in range(5):
-      self.assertEqual(readPacket[3+i], point[i])
-    self.assertEqual(readPacket[8], duration)
-    self.assertEqual(readPacket[9], relativeAxes)
-    self.assertEqual(readPacket[10], crc)
+#  def test_ParseNextPacket(self):
+#    cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
+#    point = [1, 2, 3, 4, 5]
+#    duration = 42
+#    relativeAxes = 0x01 + 0x02
+#
+#    payload = bytearray()
+#    s3g.coding.AddObjToPayload(payload, [cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), relativeAxes])
+#    crc = s3g.CalculateCRC(payload)
+#
+#    self.r.QueueExtendedPointNew(
+#        point, 
+#        duration, 
+#        ['x', 'y']
+#        )
+#    self.outputstream.seek(0)
+#
+#    readPacket = self.d.ParseNextPacket()
+#
+#    self.assertEqual(readPacket[0], s3g.header)
+#    self.assertEqual(readPacket[1], len(payload))
+#    self.assertEqual(readPacket[2], s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'])
+#    for i in range(5):
+#      self.assertEqual(readPacket[3+i], point[i])
+#    self.assertEqual(readPacket[8], duration)
+#    self.assertEqual(readPacket[9], relativeAxes)
+#    self.assertEqual(readPacket[10], crc)
 
 
-  def test_ReadStream(self):
-    response_payload = bytearray()
-    response_payload.append(s3g.response_code_dict['SUCCESS'])
-    self.outputstream.write(s3g.EncodePayload(response_payload))
+  def test_ReadFile(self):
     point = [1, 2, 3, 4, 5]
     duration = 42
     relativeAxes = 0
-    self.outputstream.seek(0)
+
     self.r.QueueExtendedPointNew(point, duration, [])
-    self.outputstream.seek(0)
     self.r.SetExtendedPosition(point)
-    self.outputstream.seek(0)
     self.r.SetPosition(point[:3])
     self.inputstream.seek(0)
-    packets = self.d.ReadStream()
+
+    payloads = self.d.ReadFile()
     cmdNumbers = [
         s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'], 
         s3g.host_action_command_dict['SET_EXTENDED_POSITION'], 
         s3g.host_action_command_dict['SET_POSITION']
         ]
-    for readCmd, cmd in zip([packets[0][2], packets[1][2], packets[2][2]], cmdNumbers):
+
+    for readCmd, cmd in zip([payloads[0][0], payloads[1][0], payloads[2][0]], cmdNumbers):
       self.assertEqual(readCmd, cmd)
 
 if __name__ == "__main__":

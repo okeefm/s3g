@@ -212,3 +212,23 @@ class StringTooLongError(Exception):
   than the specified maximum payload length
   """
 
+class S3gStreamError(Exception):
+  """
+  Raised when unexpected data is found while reading an s3g stream.
+  """
+
+class EndOfFileError(S3gStreamError):
+  """
+  An EndOfFileError is raised when the end of an s3g file is reached prematurely.
+  """
+
+class BadCommandError(S3gStreamError):
+  """
+  Bad data was found when decoding a command.
+  """
+  def __init__(self, command):
+    self.command = command
+
+  def __str__(self):
+    return repr(self.command)
+
