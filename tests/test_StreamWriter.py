@@ -2,7 +2,6 @@ import os
 import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
-
 import io
 import unittest
 import s3g
@@ -107,6 +106,21 @@ class StreamWriterTests(unittest.TestCase):
     self.w.BuildAndSendActionPayload([cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), relativeAxes])
 
     assert s3g.EncodePayload(payload) == self.inputstream.getvalue()
+
+  def test_build_and_send_query_payload_with_null_terminated_string(self):
+    cmd = s3g.host_query_command_dict['GET_NEXT_FILENAME']
+    flag = 0x01
+    payload = s3g.BuildPayload([cmd, flag])
+    filename = 'asdf\x00'
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.append(s3g.sd_error_dict['SUCCESS'])
+    response_payload.extend(filename)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+    self.assertEqual(response_payload, self.w.BuildAndSendQueryPayload([cmd, flag]))
+    self.assertEqual(s3g.EncodePayload(payload), self.inputstream.getvalue())
+    
 
   def test_build_and_send_query_payload(self):
     cmd = s3g.host_query_command_dict['GET_VERSION']

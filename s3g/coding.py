@@ -133,8 +133,9 @@ def UnpackResponseWithString(format, data):
     raise ProtocolError("Not enough data received from machine, expected=%i, got=%i"%
       (struct.calcsize(format)+1,len(data))
     )
+
   #Check for a null terminator on the string
-  elif (data[-1]) != '\x00':
+  elif (data[-1]) != 0:
     raise ProtocolError("Expected null terminated string.")
 
   output = UnpackResponse(format, data[0:struct.calcsize(format)])

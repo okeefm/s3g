@@ -137,40 +137,61 @@ class EncoderTests(unittest.TestCase):
       assert s3g.EncodeAxes(case[0]) == case[1]
 
   def test_unpack_response_no_format(self):
-    self.assertRaises(s3g.ProtocolError,s3g.UnpackResponse,'','abcde')
+    b = bytearray()
+    b.extend('abcde')
+    self.assertRaises(s3g.ProtocolError,s3g.UnpackResponse,'',b)
 
   def test_unpack_response_short_data(self):
-    self.assertRaises(s3g.ProtocolError,s3g.UnpackResponse,'<I','abc')
+    b = bytearray()
+    b.extend('abc')
+    self.assertRaises(s3g.ProtocolError,s3g.UnpackResponse,'<I',b)
 
   def test_unpack_response(self):
     expected_data = [1,'a','b','c']
-    data = s3g.UnpackResponse('<Iccc','\x01\x00\x00\x00abc')
+    b = bytearray()
+    b.extend(s3g.EncodeUint32(1))
+    for data in expected_data[1:]:
+      b.append(data)
+    data = s3g.UnpackResponse('<Iccc',b)
     for i in range(0, len(expected_data)):
       assert(data[i] == expected_data[i])
 
   def test_unpack_response_with_string_empty_string(self):
     expected_string = '\x00'
-    data = s3g.UnpackResponseWithString('', expected_string)
+    b = bytearray()
+    b.append(expected_string)
+    data = s3g.UnpackResponseWithString('', b)
     self.assertEqual(expected_string, data[0])
 
   def test_unpack_response_with_string_no_format(self):
     expected_string = 'abcde\x00'
-    data = s3g.UnpackResponseWithString('',expected_string)
+    b = bytearray()
+    b.extend(expected_string)
+    data = s3g.UnpackResponseWithString('',b)
     assert(len(data) == 1)
     assert data[0] == expected_string
 
   def test_unpack_response_with_string_missing_string(self):
-    self.assertRaises(s3g.ProtocolError,s3g.UnpackResponseWithString,'<I','abcd')
+    b = bytearray()
+    b.extend('abcd')
+    self.assertRaises(s3g.ProtocolError,s3g.UnpackResponseWithString,'<I',b)
 
   def test_unpack_response_with_string(self):
     expected_data = [1, 'a', 'b', 'c', 'ABCDE\x00']
-    data = s3g.UnpackResponseWithString('<Iccc','\x01\x00\x00\x00abcABCDE\x00')
+    b = bytearray()
+    b.extend(s3g.EncodeUint32(1))
+    for data in expected_data[1:-1]:
+      b.append(data)
+    b.extend(expected_data[-1])
+    data = s3g.UnpackResponseWithString('<Iccc',b)
     for expected, d in zip(expected_data, data):
       self.assertEqual(expected, d)
 
   def test_unpack_response_with_non_null_terminated_string(self):
-    expected_data = ['ABCDE']
-    self.assertRaises(s3g.ProtocolError, s3g.UnpackResponseWithString, '', 'ABCDE')
+    expected_data = 'ABCDE'
+    b = bytearray()
+    b.extend(expected_data)
+    self.assertRaises(s3g.ProtocolError, s3g.UnpackResponseWithString, '', b)
 
 if __name__ == "__main__":
   unittest.main()

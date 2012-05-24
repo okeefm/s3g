@@ -336,7 +336,7 @@ class S3gTests(unittest.TestCase):
         self.assertRaises(s3g.SDCardError,self.r.GetNextFilename,False)
 
   def test_get_next_filename_reset(self):
-    filename = 'abcdefghijkl'
+    filename = 'abcdefghijkl\x00'
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
@@ -353,7 +353,7 @@ class S3gTests(unittest.TestCase):
     assert payload[1] == 1
 
   def test_get_next_filename_no_reset(self):
-    filename = 'abcdefghijkl'
+    filename = 'abcdefghijkl\x00'
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
@@ -370,7 +370,7 @@ class S3gTests(unittest.TestCase):
     assert payload[1] == 0
 
   def test_get_build_name(self):
-    build_name = 'abcdefghijklmnop'
+    build_name = 'abcdefghijklmnop\x00'
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
