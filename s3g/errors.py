@@ -226,4 +226,9 @@ class BadCommandError(S3gStreamError):
   """
   Bad data was found when decoding a command.
   """
+  def __init__(self, command):
+    self.command = command
+
+  def __str__(self):
+    return repr(self.command)
 

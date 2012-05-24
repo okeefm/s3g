@@ -28,6 +28,7 @@ host_action_command_dict = {
   'FIND_AXES_MINIMUMS'        : 131,
   'FIND_AXES_MAXIMUMS'        : 132,
   'DELAY'                     : 133,
+  'CHANGE_TOOL'               : 134,
   'WAIT_FOR_TOOL_READY'       : 135,
   'TOOL_ACTION_COMMAND'       : 136,
   'ENABLE_AXES'               : 137,
@@ -112,6 +113,7 @@ commandFormats = {
     131     :     ['B', 'I', 'H'], #"FIND AXES MINIMUMS", 
     132     :     ['B', 'I', 'H'], #"FIND AXES MAXIMUMS", 
     133     :     ['I'], #"DELAY", 
+    134     :     ['B'], # CHANGE TOOL,
     135     :     ['B', 'H', 'H'], #"WAIT FOR TOOL READY", 
     136     :     ['B', 'B', 'B'], #"TOOL ACTION COMMAND", Tool action command will need to have an additional list concatonated onto this one, since the 2nd index is another command
     137     :     ['B'], #"ENABLE AXES", 

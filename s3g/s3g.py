@@ -204,6 +204,16 @@ class s3g(object):
       EncodeUint32(delay)
     )
 
+  def ChangeTool(self, tool_index):
+    """
+    Change to the specified toolhead
+    @param int tool_index: toolhead index
+    """
+    self.writer.BuildAndSendActionPayload(
+      host_action_command_dict['CHANGE_TOOL'], 
+      tool_index
+    )
+
   def ToggleAxes(self, axes, enable):
     """
     Used to explicitly power steppers on or off.

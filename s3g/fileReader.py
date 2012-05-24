@@ -35,7 +35,7 @@ class FileReader(object):
     # TODO: Break the tool action commands out of here
     if (not cmd in slave_action_command_dict.values()) and \
        (not cmd in host_action_command_dict.values()):
-      raise BadCommandError
+      raise BadCommandError(cmd)
 
     return cmd
 
@@ -154,7 +154,9 @@ class FileReader(object):
     payloads = []
     try:
       while True:
-        payloads.append(self.ParseNextPayload())
+        payload = self.ParseNextPayload()
+        payloads.append(payload)
+
     # TODO: We aren't catching partial packets at the end of files here.
     except EndOfFileError:
       return payloads
