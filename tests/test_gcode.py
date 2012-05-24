@@ -157,6 +157,84 @@ class ParseCommandTests(unittest.TestCase):
     registers = s3g.ParseCommand(command)
     assert expected_registers == registers
 
+class gcodeStateTests(unittest.TestCase):
+
+  def setUp(self):
+    self.g = s3g.GcodeParser()
+
+  def tearDown(self):
+    self.g = None
+
+  def test_g_162_state_no_registers(self):
+    command = "G192"
+    self.g.ExecuteLine(command)
+    for key in self.g.states:
+      self.assertTrue(self.g.states[key] == 0)
+
+  def test_g_162_state(self):
+    """
+    Tests to make sure G162 properly looses only those points passed in
+    """
+    command = "G192 X"
+    self.g.ExecuteLine(command)
+    for key in self.g.states:
+      if key == 'X':
+        self.assertTrue(self.g.states[key] == None)
+      else:
+        self.assertTrue(self.g.states[key] != None)
+
+  def test_g_162_state_overloaded_registers(self):
+    command = "G192 X Y Z A"
+    self.assertRaises(s3g.ExtraRegisterError, self.g.ExecuteLine, command)
+
+  def test_g_162_state_all_registers_accounted_for(self):
+    """
+    Tests to make sure that throwing all registers in a command doesnt raise an
+    extra register error.
+    """
+    command = "G192 X Y Z"
+    self.g.ExecuteLine(command)
+
+class gcodeS3gInterfaceTests(unittest.TestCase):
+
+  def setUp(self):
+    self.g = s3g.GcodeParser()
+    self.r = s3g.s3g()
+    self.inputstream = io.BytesIO()
+    self.writer = s3g.FileWriter(self.inputstream)
+    self.r.writer = self.write
+    self.d = s3g.FileReader()
+    self.d.file = self.inputstream
+   
+  def tearDown(self):
+    self.g = None
+    self.r = None
+    self.inputstream = None
+    self.writer = None
+    
+  def test_find_axes_minimums(self):
+    registers = {'X':True, 'Y':True, 'Z':True}
+    encodedAxes = s3g.EncodeAxes(['x', 'y', 'z'])
+    self.g.FindAxesMinimums(registers, '')
+    self.inputstream.seek(0)
+    packet = self.d.ParseNextPacket()
+    self.assertEqual(packet[0], s3g.host_action_command_dict['FIND_AXES_MINIMUMS'])
+    self.assertEqual(packet[1], encodedAxes)
+
+  def test_find_axes_minimums_no_axes(self):
+    registers = {}
+    encodedAxes = 0
+    self.g.FindAxesMinimums(registers, '')
+    self.inputstream.seek(0)
+    packet = self.d.ParseNextPacket()
+    self.assertEqual(packet[0], s3g.host_action_command_dict['FIND_AXES_MINIMUMS'])
+    self.assertEqual(packet[1], encodedAxes)
+
+  def test_send_g161_command(self):
+    command = "G161"
+    self.gg
+    
+
 class s3gInterfaceTestsDEPRECATED():
   def setUp(self):
     self.sm = s3g.GcodeStateMachine()
