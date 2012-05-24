@@ -92,25 +92,80 @@ class GcodeStateMachine(object):
   """
   def __init__(self):
     self.position = {    # Current machine position
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'B' : 0,
-        }
+      'X' : 0,
+      'Y' : 0,
+      'Z' : 0,
+      'A' : 0,
+      'B' : 0,
+      }
     self.offsetPosition = {}
     self.offset_register = None     # Current offset register, if any
     self.toolhead = None               # Tool ID
     self.toolheadDict = {
-        0   :   'A',
-        1   :   'B',
-        }
+      0   :   'A',
+      1   :   'B',
+      }
     self.toolhead_speed = None         # Speed of the tool, in rpm???
     self.toolhead_direction = None # Tool direction; True=forward, False=reverse
     self.toolhead_enabled = None # Tool enabled; True=enabled, False=disabled
     self.s3g = None
     self.rapidFeedrate = 300
     self.findingTimeout = 60 #Seconds
+
+    self.GCODE_INSTRUCTIONS = {
+      0   : self.RapidPositioning,
+      1   : self.LinearInterpolation,
+      4   : self.Dwell,
+      10  : self.StoreOffsets,
+      21  : self.MilimeterProgramming,
+#      54  : self.UseP0Offsets,
+#      55  : self.UseP1Offsets,
+#      90  : self.AbsoluteProgramming,
+#      92  : self.SetPosition,
+#      130 : self.SetPotentiometers,
+#      161 : self.HomeAxesMaximum,
+#      162 : self.HomeAxesMinimum,
+    }
+
+  def RapidPositioning(self, registers):
+    """Moves at a high speed to a specific point
+
+    @param dict registers: Registers parsed out of the gcode command
+    """
+    self.s3g.QueuePoint(self.GetPoint(), self.rapidFeedrate)
+    pass
+
+  def LinearInterpolation(self, registers):
+    pass
+
+  def Dwell(self, registers):
+    """Can either delay all functionality of the machine, or have the machine
+    sit in place while extruding at the current rate and direction.
+
+    @param dict registers: Registers parsed out of the gcode command
+    """
+    if self.toolhead_enabled:
+      if self.toolhead_direction:
+        delta = self.toolhead_speed
+      else:
+        delta = -self.toolhead_speed
+      startTime = time.time()
+      while time.time() < startTime + registers['P']:
+        self.position[self.toolheadDict[self.toolhead]] += delta
+        RPS = self.toolhead_speed / 60.0
+        RPMS = self.toolhead_speed / RPS
+    else:
+      microConstant = 1000000
+      miliConstant = 1000
+      self.s3g.Delay(registers['P']*(microConstant/miliConstant))
+    pass
+
+  def StoreOffsets(self, registers):
+    pass
+
+  def MilimeterProgramming(self, registers):
+    pass
+      
 
   def SetOffsets(self, registers):
     """Given a set of registers, sets the offset assigned by P to be equal to those axes in registers.  If the P register is missing, OR the register is considered a flag, we raise an exception.
@@ -164,6 +219,13 @@ class GcodeStateMachine(object):
     # Parse the line
     registers, comment = ParseLine(command)
 
+    if 'G' in registers:
+      if registers['G'] in self.GCODE_INSTRUCTIONS:
+        self.GCODE_INSTRUCTIONS[registers['G']](registers)
+      else:
+        raise "Unrecognized gcode"
+
+    """
     # Update the state information    
     if 'G' in registers:
       if registers['G'] == 0:
@@ -201,6 +263,7 @@ class GcodeStateMachine(object):
       elif registers['G'] == 162:
         self.LosePosition(registers)
         #self.FindAxesMaximums(registers)
+
     elif 'M' in registers:
       if registesr['M'] == 6:
         pass
@@ -266,7 +329,7 @@ class GcodeStateMachine(object):
         pass
     else:
       print 'Got no code?'
-
+    """
 
   def ParseOutAxes(self, registers):
     """Given a set of registers, returns a list of all present axes
@@ -293,35 +356,7 @@ class GcodeStateMachine(object):
             self.position['B'],
            ]
 
-  def RapidPositioning(self, registers, comment):
-    """Moves at a high speed to a specific point
 
-    @param dict registers: Registers parsed out of the gcode command
-    @param string comment: Comment associated with the gcode command
-    """
-    self.s3g.QueuePoint(self.GetPoint(), self.rapidFeedrate)
-
-  def Dwell(self, registers):
-    """Can either delay all functionality of the machine, or have the machine
-    sit in place while extruding at the current rate and direction.
-
-    @param dict registers: Registers parsed out of the gcode command
-    @param string command: Comment associated with the gcode command
-    """
-    if self.toolhead_enabled:
-      if self.toolhead_direction:
-        delta = self.toolhead_speed
-      else:
-        delta = -self.toolhead_speed
-      startTime = time.time()
-      while time.time() < startTime + registers['P']:
-        self.position[self.toolheadDict[self.toolhead]] += delta
-        RPS = self.toolhead_speed / 60.0
-        RPMS = self.toolhead_speed / RPS
-    else:
-      microConstant = 1000000
-      miliConstant = 1000
-      self.s3g.Delay(registers['P']*(microConstant/miliConstant))
 
   def PositionRegister(self):
     """Gets the current extended position and sets the machine's position to be equal to the modified position

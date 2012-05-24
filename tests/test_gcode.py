@@ -1,4 +1,3 @@
-import mockS3g
 import os
 import sys
 lib_path = os.path.abspath('../')
@@ -162,8 +161,10 @@ class s3gInterfaceTests(unittest.TestCase):
   def setUp(self):
     self.sm = s3g.GcodeStateMachine()
     self.inputstream = io.BytesIO()
-    self.r = mockS3g.mockS3g()
-    self.r.file = self.inputstream
+
+    self.r = s3g.s3g()
+    self.r.writer = s3g.FileWriter(self.inputstream)
+
     self.d = s3g.s3gStreamDecoder.s3gStreamDecoder()
     self.d.file = self.inputstream
     self.sm.s3g = self.r
@@ -307,7 +308,8 @@ class s3gInterfaceTests(unittest.TestCase):
 class StateMachineTests(unittest.TestCase):
   def setUp(self):
     self.sm = s3g.GcodeStateMachine()
-    self.r = mockS3g.mockS3g()
+    self.r = s3g.s3g()
+
     self.r.file = io.BytesIO()
     self.sm.s3g = self.r
 
@@ -592,10 +594,10 @@ class ParseSampleGcodeFileTests(unittest.TestCase):
   def test_parse_files(self):
     # Terriable hack, to support running from the root or test directory.
     files = []
-    path = '../doc/gcode_samples/'
-    files += glob.glob(os.path.join(path, '*.gcode'))
-    path = 'doc/gcode_samples/'
-    files += glob.glob(os.path.join(path, '*.gcode'))
+#    path = '../doc/gcode_samples/'
+#    files += glob.glob(os.path.join(path, '*.gcode'))
+#    path = 'doc/gcode_samples/'
+#    files += glob.glob(os.path.join(path, '*.gcode'))
 
     assert len(files) > 0
 
