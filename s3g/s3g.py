@@ -579,7 +579,7 @@ class s3g:
     until an endstop is reached or a timeout occurs.
     @param list axes: Array of axis names ['x', 'y', ...] to move
     @param double rate: Movement rate, in steps/??
-    @param double timeout: Amount of time to move (TODO: units?) before halting the command
+    @param double timeout: Amount of time in seconds to move before halting the command
     """
     self.BuildAndSendPayload(
       host_action_command_dict['FIND_AXES_MINIMUMS'], 
@@ -594,7 +594,7 @@ class s3g:
     until an endstop is reached or a timeout occurs.
     @param list axes: Array of axis names ['x', 'y', ...] to move
     @param double rate: Movement rate, in steps/??
-    @param double timeout: Amount of time to move (TODO: units?) before halting the command
+    @param double timeout: Amount of time to move in seconds before halting the command
     """
     self.BuildAndSendPayload(
       host_action_command_dict['FIND_AXES_MAXIMUMS'], 
