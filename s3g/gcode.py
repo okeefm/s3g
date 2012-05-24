@@ -1,5 +1,6 @@
 # Gcode parser, 
 
+from gcodeStates import *
 from errors import *
 import time
 
@@ -41,7 +42,7 @@ def ParseCommand(command):
   @param string command Command portion of a gcode line
   @return dict Dictionary of commands, and their values (if any)
   """
-  registers = {}
+  codes = {}
 
   pairs = command.split()
   for pair in pairs:
@@ -55,34 +56,46 @@ def ParseCommand(command):
     code = code.upper()
 
     # If the code already exists, this is an error.
-    if code in registers.keys():
+    if code in codes.keys():
       raise RepeatCodeError()
 
     # Don't allow both G and M codes in the same line
-    if ( code == 'G' and 'M' in registers.keys() ) or \
-       ( code == 'M' and 'G' in registers.keys() ):
+    if ( code == 'G' and 'M' in codes.keys() ) or \
+       ( code == 'M' and 'G' in codes.keys() ):
       raise MultipleCommandCodeError()
 
     # If the code doesn't have a value, we consider it a flag, and set it to true.
     if len(pair) == 1:
-      registers[code] = True
+      codes[code] = True
 
     else:
-      registers[code] = float(pair[1:])
+      codes[code] = float(pair[1:])
 
-  return registers
+  return codes
 
 def ParseLine(line):
   """
-  Parse a line of gcode into a map of registers, and a comment field.
+  Parse a line of gcode into a map of codes, and a comment field.
   @param string line line of gcode to parse
-  @return tuple containing an array of registers, and a comment string
+  @return tuple containing an array of codes, and a comment string
   """
 
   command, comment = ExtractComments(line)
-  registers = ParseCommand(command)
+  codes = ParseCommand(command)
 
-  return registers, comment
+  return codes, comment
+
+
+def CheckForExtraneousCodes(codes, allowed_codes):
+  """ Check that all of the codes are expected for this command.
+
+  Throws an InvalidCodeError if an unexpected code was found
+  @codes dict 
+  """
+  difference = set(codes.keys()) - set(allowed_codes)
+
+  if len(difference) > 0:
+    raise InvalidCodeError
 
 
 class GcodeParser(object):
@@ -90,14 +103,15 @@ class GcodeParser(object):
   Read in gcode line by line, tracking some state variables and running known
   commands against an s3g machine.
   """
-    self.states = GcodeState()
+  def __init__(self):
+    self.states = GcodeStates()
 
     self.GCODE_INSTRUCTIONS = {
       0   : [self.RapidPositioning,      ['XYZ']],
       1   : [self.LinearInterpolation,   ['XYZABF']],
 #      4   : self.Dwell,
 #      10  : self.StoreOffsets,
-      21  : self.MilimeterProgramming,   [''],
+      21  : [self.MilimeterProgramming,   ['']],
 #      54  : self.UseP0Offsets,
 #      55  : self.UseP1Offsets,
 #      90  : self.AbsoluteProgramming,
@@ -122,22 +136,22 @@ class GcodeParser(object):
 #       132 : self.LoadPosition,
     }
 
-#  def RapidPositioning(self, registers):
+#  def RapidPositioning(self, codes):
 #    """Moves at a high speed to a specific point
 #
-#    @param dict registers: Registers parsed out of the gcode command
+#    @param dict codes: Codes parsed out of the gcode command
 #    """
 #    self.s3g.QueuePoint(self.GetPoint(), self.rapidFeedrate)
 #    pass
 
-#  def LinearInterpolation(self, registers):
+#  def LinearInterpolation(self, codes):
 #    pass
 
-#  def Dwell(self, registers):
+#  def Dwell(self, codes):
 #    """Can either delay all functionality of the machine, or have the machine
 #    sit in place while extruding at the current rate and direction.
 
-#    @param dict registers: Registers parsed out of the gcode command
+#    @param dict codes: Codes parsed out of the gcode command
 #    """
 #    if self.toolhead_enabled:
 #      if self.toolhead_direction:
@@ -145,32 +159,32 @@ class GcodeParser(object):
 #      else:
 #        delta = -self.toolhead_speed
 #      startTime = time.time()
-#      while time.time() < startTime + registers['P']:
+#      while time.time() < startTime + codes['P']:
 #        self.position[self.toolheadDict[self.toolhead]] += delta
 #        RPS = self.toolhead_speed / 60.0
 #        RPMS = self.toolhead_speed / RPS
 #    else:
 #      microConstant = 1000000
 #      miliConstant = 1000
-#      self.s3g.Delay(registers['P']*(microConstant/miliConstant))
+#      self.s3g.Delay(codes['P']*(microConstant/miliConstant))
 
-#  def StoreOffsets(self, registers):
+#  def StoreOffsets(self, codes):
 #    """
-#    Given a set of registers, sets the offset assigned by P to be equal to 
-#    those axes in registers.  If the P register is missing, OR the register
+#    Given a set of codes, sets the offset assigned by P to be equal to 
+#    those axes in codes.  If the P code is missing, OR the code
 #    is considered a flag, we raise an exception.
 #
-#    @param dict registers: The registers that have been parsed out of the gcode
+#    @param dict codes: The codes that have been parsed out of the gcode
 #    """
-#    if 'P' not in registers:
-#      raise MissingRegisterError
-#    elif isinstance(registers['P'], bool):
-#      raise InvalidRegisterError
-#    self.offsetPosition[registers['P']] = {}
-#    for axis in self.ParseOutAxes(registers):
-#      self.offsetPosition[registers['P']][axis] = registers[axis]
+#    if 'P' not in codes:
+#      raise MissingCodeError
+#    elif isinstance(codes['P'], bool):
+#      raise InvalidCodeError
+#    self.offsetPosition[codes['P']] = {}
+#    for axis in self.ParseOutAxes(codes):
+#      self.offsetPosition[codes['P']][axis] = codes[axis]
 
-  def MilimeterProgramming(self, registers):
+  def MilimeterProgramming(self, codes):
     """ Set the programming mode to milimeters
     """
     pass
@@ -178,22 +192,22 @@ class GcodeParser(object):
 
 
 
-#  def UpdateInternalPosition(self, registers):
-#    """Given a set of registers, sets the position and applies any offsets, if needed
-#    @param registers: The registers parsed out of the g/m command
+#  def UpdateInternalPosition(self, codes):
+#    """Given a set of codes, sets the position and applies any offsets, if needed
+#    @param codes: The codes parsed out of the g/m command
 #    """
-#    self.SetPosition(registers)
-#    self.ApplyNeededOffsetsToPosition(registers)
+#    self.SetPosition(codes)
+#    self.ApplyNeededOffsetsToPosition(codes)
 
-#  def SetPosition(self, registers):
-#    """Given a set of registers, sets the state machine's position's applicable axes values to those in registers.  If a register is set as a flag, that register is disregarded
+#  def SetPosition(self, codes):
+#    """Given a set of codes, sets the state machine's position's applicable axes values to those in codes.  If a code is set as a flag, that code is disregarded
 #   
-#    @param dictionary registers: A set of registers that have updated point information
+#    @param dictionary codes: A set of codes that have updated point information
 #    """
-#    for key in registers:
+#    for key in codes:
 #      if key in self.position:
-#        if not isinstance(registers[key], bool):
-#          self.position[key] = registers[key]
+#        if not isinstance(codes[key], bool):
+#          self.position[key] = codes[key]
 
 #  def ApplyNeededOffsetsToPosition(self):
 #    """Given a position, applies the applicable offsets to that position
@@ -203,8 +217,8 @@ class GcodeParser(object):
 #      for key in self.offsetPosition[self.toolhead]:
 #        self.position[key] += self.offsetPosition[self.toolhead][key]
 
-#  def LosePosition(self, registers):
-#    axes = self.ParseOutAxes(registers)
+#  def LosePosition(self, codes):
+#    axes = self.ParseOutAxes(codes)
 #    for axis in axes:
 #      self.position[axis] = None
 
@@ -215,106 +229,106 @@ class GcodeParser(object):
     """
 
     # Parse the line
-    registers, comment = ParseLine(command)
+    codes, comment = ParseLine(command)
 
-    if 'G' in registers:
-      if registers['G'] in self.GCODE_INSTRUCTIONS:
-        self.CheckForExtraneousRegisters(registers, registers['G'][1])
-        self.GCODE_INSTRUCTIONS[registers['G']][0](registers, comment)
+    if 'G' in codes:
+      if codes['G'] in self.GCODE_INSTRUCTIONS:
+        CheckForExtraneousCodes(codes, codes['G'][1])
+        self.GCODE_INSTRUCTIONS[codes['G']][0](codes, comment)
 
       else:
         raise "Unrecognized gcode"
 
     else:
-      if registers['M'] in self.MCODE_INSTRUCTIONS:
-        self.CheckForExtraneousRegisters(registers, registers['M'][1])
-        self.MCODE_INSTRUCTIONS[registers['M']][0](registers, comment)
+      if codes['M'] in self.MCODE_INSTRUCTIONS:
+        CheckForExtraneousCodes(codes, codes['M'][1])
+        self.MCODE_INSTRUCTIONS[codes['M']][0](codes, comment)
 
       else:
         raise "Unrecognized gcode"
 
     """
     # Update the state information    
-    if 'G' in registers:
-      if registers['G'] == 0:
-        self.SetPosition(registers)
+    if 'G' in codes:
+      if codes['G'] == 0:
+        self.SetPosition(codes)
         self.ApplyNeededOffsetsToPosition()
         self.RapidPositioning()
-      elif registers['G'] == 1:
-        if 'E' in registers:
-          if 'A' in registers or 'B' in registers:
+      elif codes['G'] == 1:
+        if 'E' in codes:
+          if 'A' in codes or 'B' in codes:
             raise LinearInterpolationError
           else:
-            self.InterpolateERegister(registers)
+            self.InterpolateECode(codes)
             self.SetPosition()
             self.ApplyNeededOffsetsToPosition()
             #self.SendPointToMachine()
         else:
-          self.SetPosition(registers)
+          self.SetPosition(codes)
           self.ApplyNeededOffsetsToPosition()
           #self.SendPointToMachine()
-      elif registers['G'] == 4:
-        self.Dwell(registers)
-      elif registers['G'] == 10:
-        self.SetOffsets(registers)
-      elif registers['G'] == 54:
+      elif codes['G'] == 4:
+        self.Dwell(codes)
+      elif codes['G'] == 10:
+        self.SetOffsets(codes)
+      elif codes['G'] == 54:
         self.toolhead = 0
-      elif registers['G'] == 55:
+      elif codes['G'] == 55:
         self.toolhead = 1
-      elif registers['G'] == 92:
-        self.SetPosition(registers)
+      elif codes['G'] == 92:
+        self.SetPosition(codes)
         self.ApplyNeededOffsetsToPosition()
         self.RapidPositioning()
-      elif registers['G'] == 161:
-        self.LosePosition(registers)
-        #self.FindAxesMinimums(registers)
-      elif registers['G'] == 162:
-        self.LosePosition(registers)
-        #self.FindAxesMaximums(registers)
+      elif codes['G'] == 161:
+        self.LosePosition(codes)
+        #self.FindAxesMinimums(codes)
+      elif codes['G'] == 162:
+        self.LosePosition(codes)
+        #self.FindAxesMaximums(codes)
 
-    elif 'M' in registers:
+    elif 'M' in codes:
       if registesr['M'] == 6:
         pass
-        #self.WaitForToollhead(registers)
-      elif registers['M'] == 18:
-        #self.DisableAxes(registers)
-      elif registers['M'] == 70:
-        self.DisplayMessage(registers)
-      elif registers['M'] == 72:
-        self.QueueSong(registers)
-      elif registers['M'] == 73:
-        self.SetBuildPercentage(registers)
-      elif registers['M'] == 101:
+        #self.WaitForToollhead(codes)
+      elif codes['M'] == 18:
+        #self.DisableAxes(codes)
+      elif codes['M'] == 70:
+        self.DisplayMessage(codes)
+      elif codes['M'] == 72:
+        self.QueueSong(codes)
+      elif codes['M'] == 73:
+        self.SetBuildPercentage(codes)
+      elif codes['M'] == 101:
         self.toolhead_enabled = True
         self.toolhead_direction = True
-      elif registers['M'] == 102:
+      elif codes['M'] == 102:
         self.toolhead_enabled = True
         self.toolhead_direction = False
-      elif registers['M'] == 103:
+      elif codes['M'] == 103:
         self.toolhead_enabled = False
-      elif registers['M'] == 104:
-        self.SetToolheadTemperature(registers)
-      elif registers['M'] == 109:
-        self.SetPlatformTemperature(registers)
-      elif registers['M'] == 108:
-        if 'R' not in registers:
-          raise MissingRegisterError
-        if isinstance(registers['R'], bool):
-          raise InvalidRegisterError
-        self.toolhead_speed = registers['R']
-      elif registers['M'] == 132:
-        self.LosePosition(registers)
-        self.RecallHomePosition(registers)
+      elif codes['M'] == 104:
+        self.SetToolheadTemperature(codes)
+      elif codes['M'] == 109:
+        self.SetPlatformTemperature(codes)
+      elif codes['M'] == 108:
+        if 'R' not in codes:
+          raise MissingCodeError
+        if isinstance(codes['R'], bool):
+          raise InvalidCodeError
+        self.toolhead_speed = codes['R']
+      elif codes['M'] == 132:
+        self.LosePosition(codes)
+        self.RecallHomePosition(codes)
     """
 
-#  def ParseOutAxes(self, registers):
-#    """Given a set of registers, returns a list of all present axes
+#  def ParseOutAxes(self, codes):
+#    """Given a set of codes, returns a list of all present axes
 #
-#    @param dict registers: Registers parsed out of the gcode command
-#    @return list: List of axes in registers
+#    @param dict codes: Codes parsed out of the gcode command
+#    @return list: List of axes in codes
 #    """
 #    possibleAxes = ['X', 'Y', 'Z', 'A', 'B']
-#    return [axis for axis in registers if axis in possibleAxes]
+#    return [axis for axis in codes if axis in possibleAxes]
 
 #  def GetPoint(self):
 #    return [
@@ -334,29 +348,29 @@ class GcodeParser(object):
 
 
 
-#  def PositionRegister(self):
+#  def PositionCode(self):
 #    """Gets the current extended position and sets the machine's position to be equal to the modified position
 #    """ 
 #    self.s3g.SetExtendedPosition(self.GetExtendedPoint()) 
 
-#  def SetPotentiometerValues(self, registers):
-#    """Given a set of registers, sets the machine's potentiometer value to a specified value in the registers
+#  def SetPotentiometerValues(self, codes):
+#    """Given a set of codes, sets the machine's potentiometer value to a specified value in the codes
 #
-#    @param dict registers: Registers parsed out of the gcode command
+#    @param dict codes: Codes parsed out of the gcode command
 #    """
 #    #Put all values in a hash table
 #    valTable = {}
-#    #For each register in registers thats an axis:
-#    for a in self.ParseOutAxes(registers):
+#    #For each code in codes thats an axis:
+#    for a in self.ParseOutAxes(codes):
 #      #Try to append it to the appropriate list
 #      try:
-#        valTable[int(registers[a])].append(a.lower())
+#        valTable[int(codes[a])].append(a.lower())
 #      #Never been encountered before, make a list
 #      except KeyError:
-#        valTable[int(registers[a])] = [a.lower()]
+#        valTable[int(codes[a])] = [a.lower()]
 #    for val in valTable:
 #      self.s3g.SetPotentiometerValue(valTable[val], val)
 
-#  def FindAxesMinimums(self, registers):
-#    axes = [axis.lower for axis in self.ParseOutAxes(registers)]
+#  def FindAxesMinimums(self, codes):
+#    axes = [axis.lower for axis in self.ParseOutAxes(codes)]
 #    self.s3g.FindAxesMinimums(axes, ['F'], self.findingTimeout)

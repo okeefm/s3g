@@ -206,20 +206,20 @@ class MultipleCommandCodeError(GcodeError):
   #TODO: add line number, code.
   """
 
-class MissingRegisterError(GcodeError):
+class MissingCodeError(GcodeError):
   """
-  A Missing Register Error is raised if a compulsory register is missing
+  A Missing Code Error is raised if a compulsory code is missing
   """
 
-class InvalidRegisterError(GcodeError):
+class InvalidCodeError(GcodeError):
   """
-  An Invalid Register error is raised if a register is not set to the correct value
+  An Invalid Code error is raised if a code is not set to the correct value
   I.E.: A P command needs to be an int, but is instead passed in as a flag
   """
 
 class LinearInterpolationError(GcodeError):
   """
-  A G1 (Linear Interpolation) command can have either an E register defined or both
+  A G1 (Linear Interpolation) command can have either an E code defined or both
   the A and B registers defined.  If both sets are defined, we throw this error.
   """
 
