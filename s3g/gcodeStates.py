@@ -21,14 +21,14 @@ class GcodeStates(object):
                 'Z' : 0,
                 'A' : 0,
                 'B' : 0,
-                }
+                },
         1   :   {
                 'X' : 0,
                 'Y' : 0,
                 'Z' : 0,
                 'A' : 0,
                 'B' : 0,
-                }
+                },
         }
     self.offset_register = None   #Curent offset register
     self.toolhead = None    #Current toolhead in use
