@@ -125,6 +125,13 @@ class GcodeStateMachine():
     for axis in self.ParseOutAxes(registers):
       self.offsetPosition[registers['P']][axis] = registers[axis]
 
+  def UpdateInternalPosition(self, registers):
+    """Given a set of registers, sets the position and applies any offsets, if needed
+    @param registers: The registers parsed out of the g/m command
+    """
+    self.SetPosition(registers)
+    self.ApplyNeededOffsetsToPosition(registers)
+
   def SetPosition(self, registers):
     """Given a set of registers, sets the state machine's position's applicable axes values to those in registers.  If a register is set as a flag, that register is disregarded
    

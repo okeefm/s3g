@@ -423,12 +423,12 @@ class StateMachineTests(unittest.TestCase):
     self.sm.SetOffsets(registers)
     self.assertEqual(self.sm.offsetPositions[1], {})
      
-  def test_g0_92_state_no_tool_offset(self):
+  def test_g0_state_no_tool_offset(self):
     command = 'G0 X1 Y2 Z3'
     self.sm.ExecuteLine(command)
     self.assertEqual({'X':1, 'Y':2, 'Z':3, 'A':0, 'B':0}, self.sm.position)
 
-  def test_g0_91_state_tool_offset(self):
+  def test_g0_state_tool_offset(self):
     command = 'G0 X1 Y2 Z3'
     self.sm.toolhead = 0
     self.sm.offsetPosition[0] = {}

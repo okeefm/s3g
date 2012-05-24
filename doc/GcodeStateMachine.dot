@@ -17,6 +17,9 @@ digraph
   "4_IS_P_REGISTER_DEFINED?" [shape=rectangle];
   "10_IS_P_REGISTER_DEFINED?" [shape=rectangle];
   "IS_P_REGISTER_DEFINED?" [shape=rectangle];
+  "IS_A_AND_B_DEFINED?" [shape=rectangle];
+  "1_IS_A_AND_B_DEFINED?" [shape=rectangle];
+  "92_IS_A_AND_B_DEFINED?" [shape=rectangle];
   "IS_TOOL_ENABLED?" [shape=diamond];
   "IS_A_OR_B_REGISTERS_DEFINED?" [shape=diamond];
   "IS_E_REGISTER_DEFINED?" [shape=diamond];
@@ -52,7 +55,8 @@ digraph
   "IS_A_OR_B_REGISTERS_DEFINED?" -> "THROW_LINEAR_INTERPOLATION_ERROR" [label="yes"];
   "IS_A_OR_B_REGISTERS_DEFINED?" -> "INTERPOLATE_E_POSITION" [label="no"];
   "INTERPOLATE_E_POSITION" -> "1_UPDATE_SM_POSITION" [label="e"];
-  "1_UPDATE_SM_POSITION" -> "MOVETO_POSITION" [label="e"];
+  "1_UPDATE_SM_POSITION" -> "1_IS_A_AND_B_DEFINED?" [label = "e"];
+  "1_IS_A_AND_B_DEFINED?" -> "MOVETO_POSITION" [label="e"];
   "IS_E_REGISTER_DEFINED?" -> "1_UPDATE_SM_POSITION" [label="no"];
   "CODE=4" -> "4_IS_P_REGISTER_DEFINED?" [label="e"];
   "4_IS_P_REGISTER_DEFINED?" -> "IS_TOOL_ENABLED?" [label="e"];
@@ -69,12 +73,12 @@ digraph
   "CODE=54" -> "TOOL=0" [label="e"];
   "CODE=55" -> "TOOL=1" [label="e"];
   "CODE=92" -> "92_UPDATE_SM_POSITION" [label="e"];
-  "92_UPDATE_SM_POSITION" -> "SET_POSITION" [label="e"];
+  "92_UPDATE_SM_POSITION" -> "92_IS_A_AND_B_DEFINED?"
+  "92_IS_A_AND_B_DEFINED?" -> "SET_POSITION" [label="e"];
   "CODE=161" -> "FIND_AXES_MINIMUMS" [label="e"];
   "FIND_AXES_MINIMUMS" -> "LOSE_POSITION" [label="e"];
   "CODE=162" -> "FIND_AXES_MAXIMUMS" [label="e"];
   "FIND_AXES_MAXIMUMS" -> "LOSE_POSITION";
+  "IS_A_AND_B_DEFINED?" -> "A_AND_B_DEFINED_ERROR" [label="yes"];
+  "IS_A_AND_B_DEFINED?" -> "A_AND_B_CHECK_RETURN" [label="no"];
 }
-
-
-
