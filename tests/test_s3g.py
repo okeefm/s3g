@@ -8,7 +8,6 @@ import io
 
 import s3g
 
-
 class S3gTests(unittest.TestCase):
   """
   Emulate a machine
@@ -17,8 +16,10 @@ class S3gTests(unittest.TestCase):
     self.r = s3g.s3g()
     self.outputstream = io.BytesIO() # Stream that we will send responses on
     self.inputstream = io.BytesIO()  # Stream that we will receive commands on
-    self.file = io.BufferedRWPair(self.outputstream, self.inputstream)
-    self.r.file = self.file
+
+    file = io.BufferedRWPair(self.outputstream, self.inputstream)
+    writer = s3g.StreamWriter(file)
+    self.r.writer = writer
 
   def tearDown(self):
     self.r = None
@@ -26,125 +27,18 @@ class S3gTests(unittest.TestCase):
     self.inputstream = None
     self.file = None
 
-  def test_build_and_send_payload_nested_iterators(self):
-    response_payload = bytearray()
-    response_payload.append(s3g.response_code_dict['SUCCESS'])
-    self.outputstream.write(s3g.EncodePayload(response_payload))
-    self.outputstream.seek(0)
-    point = [0, 0, 0, 0, 0]
-    cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
-    duration = 0
-    axes = ['x', 'y']
-    expected = bytearray()
-    expected.append(cmd)
-    for cor in point:
-      expected.extend(s3g.EncodeInt32(cor))
-    expected.extend(s3g.EncodeUint32(duration))
-    expected.append(s3g.EncodeAxes(axes))
-      
-    self.r.BuildAndSendPayload(cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), s3g.EncodeAxes(axes))
-    
-    packet = bytearray(self.inputstream.getvalue())
-    payload = s3g.DecodePacket(packet)
+  def test_build_payload(self):
+    toAdd = ["a", "b", "c", "d", [1, 2, 3], [4, 5, 6]]
+    expectedPayload = bytearray()
+    for l in [toAdd[0:4],toAdd[-2], toAdd[-1]]:
+      expectedPayload.extend(l)
+    payload = s3g.BuildPayload(toAdd)
+    self.assertEqual(expectedPayload, payload)
 
-    for i, j in zip(expected, payload):
-      self.assertEqual(i, j)
-    
-
-  def test_build_and_send_payload(self):
-    """
-    Pass case: All parameters passed are added to the byte array and returned correctly
-    """
-    response_payload = bytearray()
-    response_payload.append(s3g.response_code_dict['SUCCESS'])
-    self.outputstream.write(s3g.EncodePayload(response_payload))
-    self.outputstream.seek(0)
-    header = 42
-    info = ['a', 'b', 'c', 'd']
-    footer = 0x01
-    expected = bytearray()
-    expected.append(header)
-    expected.extend(info)
-    expected.append(footer)
-    self.r.BuildAndSendPayload(header, info, footer)
-    packet = bytearray(self.inputstream.getvalue())
-    payload = s3g.DecodePacket(packet)
-    for i, j in zip(expected, payload):
-      self.assertEqual(i, j)
-
-  def test_send_packet_timeout(self):
-    """
-    Time out when no data is received. The input stream should have max_rety_count copies of the
-    payload packet in it.
-    """
-    payload = 'abcde'
-    packet = s3g.EncodePayload(payload)
-    expected_packet = s3g.EncodePayload(payload)
-
-    self.assertRaises(s3g.TransmissionError,self.r.SendPacket, packet)
-
-    self.inputstream.seek(0)
-    for i in range (0, s3g.max_retry_count):
-      for byte in expected_packet:
-        assert byte == ord(self.inputstream.read(1))
-
-  def test_send_packet_many_bad_responses(self):
-    """
-    Passing case: test that the transmission can recover from one less than the alloted
-    number of errors.
-    """
-    payload = 'abcde'
-    packet = s3g.EncodePayload(payload)
-    expected_packet = s3g.EncodePayload(payload)
-
-    response_payload = bytearray()
-    response_payload.append(s3g.response_code_dict['SUCCESS'])
-    response_payload.extend('12345')
-
-    for i in range (0, s3g.max_retry_count - 1):
-      self.outputstream.write('a')
-    self.outputstream.write(s3g.EncodePayload(response_payload))
-    self.outputstream.seek(0)
-
-    assert response_payload == self.r.SendPacket(packet)
-
-    self.inputstream.seek(0)
-    for i in range (0, s3g.max_retry_count - 1):
-      for byte in expected_packet:
-        assert byte == ord(self.inputstream.read(1))
-
-  def test_send_packet(self):
-    """
-    Passing case: Preload the buffer with a correctly formatted expected response, and
-    verify that it works correctly.
-    """
-    payload = 'abcde'
-    packet = s3g.EncodePayload(payload)
-    response_payload = bytearray()
-    response_payload.append(s3g.response_code_dict['SUCCESS'])
-    response_payload.extend('12345')
-    self.outputstream.write(s3g.EncodePayload(response_payload))
-    self.outputstream.seek(0)
-
-    assert response_payload == self.r.SendPacket(packet)
-    assert s3g.EncodePayload(payload) == self.inputstream.getvalue()
-
-  # TODO: Test timing based errors- can we send half a response, get it to re-send, then send a regular response?
-
-  def test_send_command(self):
-    """
-    Passing case: Preload the buffer with a correctly formatted expected response, and verigy that it works correctly
-    """
-    payload = 'abcde'
-
-    response_payload = bytearray()
-    response_payload.append(s3g.response_code_dict['SUCCESS'])
-    response_payload.extend('12345')
-    self.outputstream.write(s3g.EncodePayload(response_payload))
-    self.outputstream.seek(0)
-
-    self.assertEqual(response_payload, self.r.SendCommand(payload))
-    self.assertEqual(s3g.EncodePayload(payload), self.inputstream.getvalue())
+  def test_build_payload_empty(self):
+    expectedPayload = bytearray()
+    payload = s3g.BuildPayload([])
+    self.assertEqual(expectedPayload, payload)
 
   def test_get_version(self):
     version = 0x5DD5
@@ -215,6 +109,22 @@ class S3gTests(unittest.TestCase):
 
     payload = s3g.DecodePacket(packet)
     self.assertEqual(payload[0], s3g.host_query_command_dict['PAUSE'])
+
+  def test_tool_query_negative_tool_index(self):
+    self.assertRaises(
+        s3g.ToolIndexError, 
+        self.r.ToolQuery, 
+        -1, 
+        s3g.slave_query_command_dict['GET_VERSION']
+        )
+
+  def test_tool_query_too_high_tool_index(self):
+    self.assertRaises(
+        s3g.ToolIndexError, 
+        self.r.ToolQuery, 
+        s3g.max_tool_index+1, 
+        s3g.slave_query_command_dict['GET_VERSION']
+        )
 
   def test_tool_query_no_payload(self):
     tool_index = 2
@@ -426,7 +336,7 @@ class S3gTests(unittest.TestCase):
         self.assertRaises(s3g.SDCardError,self.r.GetNextFilename,False)
 
   def test_get_next_filename_reset(self):
-    filename = 'abcdefghijkl'
+    filename = 'abcdefghijkl\x00'
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
@@ -443,7 +353,7 @@ class S3gTests(unittest.TestCase):
     assert payload[1] == 1
 
   def test_get_next_filename_no_reset(self):
-    filename = 'abcdefghijkl'
+    filename = 'abcdefghijkl\x00'
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
@@ -460,7 +370,7 @@ class S3gTests(unittest.TestCase):
     assert payload[1] == 0
 
   def test_get_build_name(self):
-    build_name = 'abcdefghijklmnop'
+    build_name = 'abcdefghijklmnop\x00'
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
@@ -652,6 +562,12 @@ class S3gTests(unittest.TestCase):
       assert payload[(i*4+1):(i*4+5)] == s3g.EncodeInt32(target[i])
     payload[13:17] == s3g.EncodeInt32(velocity)
 
+  def test_set_position_short_length(self):
+    self.assertRaises(s3g.PointLengthError, self.r.SetPosition, [1, 2])
+
+  def test_set_position_long_length(self):
+    self.assertRaises(s3g.PointLengthError, self.r.SetPosition, [1, 2, 3, 4])
+
   def test_set_position(self):
     target = [1,-2,3]
 
@@ -703,15 +619,22 @@ class S3gTests(unittest.TestCase):
     assert payload[2:6] == s3g.EncodeUint32(rate)
     assert payload[6:8] == s3g.EncodeUint16(timeout)
 
-  def test_tool_action_command_bad_tool_index(self):
-    tool_indices = [-1, s3g.max_tool_index+1]
-    command = 0x12
-    command_payload = 'abcdefghij'
+  def test_tool_action_command_negative_tool_index(self):
+      self.assertRaises(
+          s3g.ToolIndexError,
+          self.r.ToolActionCommand,
+          -1, 
+          s3g.slave_action_command_dict['INIT']
+          )
 
-    for tool_index in tool_indices:
-      self.assertRaises(s3g.ToolIndexError,
-                        self.r.ToolActionCommand,
-                        tool_index, command, command_payload)
+  def test_tool_action_command_too_high_tool_index(self):
+      self.assertRaises(
+          s3g.ToolIndexError,
+          self.r.ToolActionCommand,
+          s3g.max_tool_index+1,
+          s3g.slave_action_command_dict['INIT']
+          )
+                      
 
   def test_tool_action_command(self):
     tool_index = 2
@@ -758,6 +681,12 @@ class S3gTests(unittest.TestCase):
     for i in range(0, 5):
       assert payload[(i*4+1):(i*4+5)] == s3g.EncodeInt32(target[i])
     assert payload[21:25] == s3g.EncodeInt32(velocity)
+
+  def test_set_extended_position_short_length(self):
+    self.assertRaises(s3g.PointLengthError, self.r.SetExtendedPosition, [1, 2, 3, 4])
+
+  def test_set_extended_position_long_length(self):
+    self.assertRaises(s3g.PointLengthError, self.r.SetExtendedPosition, [1, 2, 3, 4, 5, 6])
 
   def test_set_extended_position(self):
     target = [1,-2,3,-4,5]
@@ -1044,6 +973,21 @@ class S3gTests(unittest.TestCase):
     payload = s3g.DecodePacket(packet)
     self.assertEqual(payload[0], s3g.host_action_command_dict['DELAY'])
     self.assertEqual(payload[1:], s3g.EncodeUint32(delay))
+
+  def test_change_tool(self):
+    tool_index = 2
+
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.ChangeTool(tool_index)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = s3g.DecodePacket(packet)
+    self.assertEqual(payload[0], s3g.host_action_command_dict['CHANGE_TOOL'])
+    self.assertEqual(payload[1], tool_index)
 
   def test_get_communication_stats(self):
     stats = {
@@ -1363,9 +1307,8 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.assertRaises(s3g.ProtocolError, self.r.IsToolReady, tool_index)
+    self.assertRaises(s3g.HeatElementReadyError, self.r.IsToolReady, tool_index)
 
-  # TODO: also test for bad codes, both here and in platform.
   def test_is_tool_ready(self):
     tool_index = 2
     ready_states = [[True, 1],
@@ -1536,7 +1479,7 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.assertRaises(s3g.ProtocolError, self.r.IsPlatformReady, tool_index)
+    self.assertRaises(s3g.HeatElementReadyError, self.r.IsPlatformReady, tool_index)
 
   def test_is_platform_ready(self):
     tool_index = 2

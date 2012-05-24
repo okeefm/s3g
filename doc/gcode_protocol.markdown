@@ -4,18 +4,47 @@ We support a limited GCODE interpreter, for the purpose of printing files genera
 
 These are the rules for this interpreter:
 
-* At most 1 G or M code per command line
-* No register values carry over between commands (some registers may affect the interpreter state machine)
+* At most 1 G or M Code per Command
+* Codes are only applied to the Command that they belong to.
+* Commands may update the interpreter state machine
+* Commands must not include extraneous Codes (checking is not yet implemented)
 * Only absolute positioning in milimeter mode are supported
 
 The interpreter state machine stores these states:
 
-* Current machine position
-* Current toolhead (0, 1)
+* Machine position (x,y,z,a,b)
+* Offset register (0, 1)
+* Toolhead index (0, 1)
 * Toolhead RPM
 * Toolhead direction
 * Toolhead enable state
-* Current position register (0, 1)
+
+## Definitions
+
+Here is some vocabulary, that should be used when talking about the protocol:
+
+<table>
+<tr>
+ <th>Name</th>
+ <th>Definition</th>
+ <th>Example</th>
+</tr>
+<tr>
+ <td>Command</td>
+ <td>A command is a single line of gcode. Commands consist of 0 or more codes, and 0 or more comments</td>
+ <td>G1 X23 Y10 (Move to new position)</td>
+</tr>
+<tr>
+ <td>Code</td>
+ <td>A code is a roman charater followed by a value</td>
+ <td>T1</td>
+</tr>
+<tr>
+ <td>Comment</td>
+ <td>A comment is a user readable block of text that can be added to a </td>
+ <td>(Happy comment)</td>
+</tr>
+</table>
 
 ## References
 Supported cmmands were extracted from [representative gcode files](https://github.com/makerbot/s3g/tree/master/doc/gcode_samples), created in both Skeinforge and Miracle Grue.
@@ -34,6 +63,9 @@ Both semicolon ; and parens () style comments are supported. If multiple comment
 
 ## Commands
 Each line must have at most one G or M code, and 0 or more other codes. Each code must be separated by whitespace. Codes should have a value attached to them. If the value contains a decimal place, it must use a period to demarcate this. Upper and lower case codes are accepted, but will be converted to uppercase.
+
+## Codes
+Codes can either 
 
 # Supported G Codes
 
@@ -282,8 +314,8 @@ Instruct the machine to wait for the toolhead to reach its target temperature
 
 Registers
 
-    T: Toolhead to wait for (TODO: is this extracted from the command parser's register?)
     P: Maximum time to wait, in seconds (TODO: is this correct?)
+    T: (optional) If present, first change to the specified tool
 
 S3g Output
 
@@ -395,7 +427,9 @@ Parameters
 ## M103 - Turn extruder off
 Disables the extruder motor
 
-Registers (none)
+Registers
+
+    T: (optional) If present, first change to the specified tool
 
 S3g Output
 
@@ -411,6 +445,7 @@ Set the target temperature for the current toolhead
 Registers
 
     S: Temperature to set the toolhead to, in degrees C
+    T: (optional) If present, first change to the specified tool
 
 S3g Output
 
@@ -427,6 +462,7 @@ Set the motor speed for the current toolhead
 Registers
 
     R: Motor speed, in RPM
+    T: (optional) If present, first change to the specified tool
 
 S3g Output
     
@@ -442,6 +478,7 @@ Sets the target temperature for the current build platform
 Registers
 
     S: Temperature to set the platform to, in degrees C
+    T: (optional) If present, first change to the specified tool
 
 S3g Output
 

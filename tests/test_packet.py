@@ -121,44 +121,36 @@ class PacketStreamDecoderTests(unittest.TestCase):
     self.assertRaises(s3g.PacketCRCError,self.s.ParseByte,s3g.CalculateCRC(payload)+1)
 
   def test_reject_response_generic_error(self):
+    cases = [
+      ['GENERIC_ERROR',          s3g.RetryError],
+      ['ACTION_BUFFER_OVERFLOW', s3g.BufferOverflowError],
+      ['CRC_MISMATCH',           s3g.RetryError],
+      ['DOWNSTREAM_TIMEOUT',     s3g.TransmissionError],
+      ['TOOL_LOCK_TIMEOUT',      s3g.TransmissionError],
+      ['CANCEL_BUILD',           s3g.BuildCancelledError],
+    ]
+
+    for case in cases:
+      self.s = s3g.PacketStreamDecoder()
+
+      payload = bytearray()
+      payload.append(s3g.response_code_dict[case[0]])
+
+      self.s.ParseByte(s3g.header)
+      self.s.ParseByte(len(payload))
+      for i in range (0, len(payload)):
+        self.s.ParseByte(payload[i])
+      self.assertRaises(case[1], s3g.CheckResponseCode, payload[0])
+
+  def test_reject_response_unknown_error_code(self):
     payload = bytearray()
-    payload.append(s3g.response_code_dict['GENERIC_ERROR'])
+    payload.append(0xFF)  # Note: We assume that 0xFF is not a valid error code.
 
     self.s.ParseByte(s3g.header)
     self.s.ParseByte(len(payload))
     for i in range (0, len(payload)):
       self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.RetryError, s3g.CheckResponseCode, payload[0])
-
-  def test_reject_response_action_buffer_overflow(self):
-    payload = bytearray()
-    payload.append(s3g.response_code_dict['ACTION_BUFFER_OVERFLOW'])
-
-    self.s.ParseByte(s3g.header)
-    self.s.ParseByte(len(payload))
-    for i in range (0, len(payload)):
-      self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.BufferOverflowError, s3g.CheckResponseCode, payload[0])
-
-  def test_reject_response_crc_mismatch(self):
-    payload = bytearray()
-    payload.append(s3g.response_code_dict['CRC_MISMATCH'])
-
-    self.s.ParseByte(s3g.header)
-    self.s.ParseByte(len(payload))
-    for i in range (0, len(payload)):
-      self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.RetryError, s3g.CheckResponseCode, payload[0])
-
-  def test_reject_response_downstream_timeout(self):
-    payload = bytearray()
-    payload.append(s3g.response_code_dict['DOWNSTREAM_TIMEOUT'])
-
-    self.s.ParseByte(s3g.header)
-    self.s.ParseByte(len(payload))
-    for i in range (0, len(payload)):
-      self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.TransmissionError, s3g.CheckResponseCode, payload[0])
+    self.assertRaises(s3g.ProtocolError, s3g.CheckResponseCode, payload[0])
 
   def test_accept_packet(self):
     payload = bytearray()

@@ -71,7 +71,7 @@ def CheckResponseCode(response_code):
 
   raise ProtocolError('Response code 0x%02X not understood'%(response_code))
 
-class PacketStreamDecoder:
+class PacketStreamDecoder(object):
   """
   A state machine that accepts bytes from an s3g packet stream, checks the validity of
   each packet, then extracts and returns the payload.

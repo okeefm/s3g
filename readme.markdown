@@ -15,7 +15,8 @@ Create an s3g object, and attach it to a serial port:
 
 ```python
 r = s3g.s3g()
-r.file = serial.Serial(port, 115200, timeout=.2)
+file = serial.Serial(port, 115200, timeout=.2)
+r.writer = s3g.StreamWriter(file)
 ```
 
 _Note: Replace port with your serial port (example: '/dev/tty.usbmodemfd121')_
@@ -133,3 +134,11 @@ These errors are thrown when the s3g module encounters errors during s3g stream 
 Caused By:
 
     Encoded Strings Above The Max Payload Length
+
+
+# Contributing
+Contributions are welcome to this project! All changes must be in the style of the project, and include unit tests that are as complete as possible. Place all source code in the s3g/ directory, and all tests in the tests/ directory. Before submitting a patch, ensure that all unit tests pass by running the unit test script:
+
+```python
+python unit_tests.py
+```
