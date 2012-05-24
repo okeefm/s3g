@@ -157,7 +157,7 @@ class ParseCommandTests(unittest.TestCase):
     registers = s3g.ParseCommand(command)
     assert expected_registers == registers
 
-class s3gInterfaceTests(unittest.TestCase):
+class s3gInterfaceTestsDEPRECATED():
   def setUp(self):
     self.sm = s3g.GcodeStateMachine()
     self.inputstream = io.BytesIO()
@@ -305,7 +305,7 @@ class s3gInterfaceTests(unittest.TestCase):
     self.assertEqual(packet[4], feedrate)
     self.assertEqual(packet[5], self.sm.findingTimeout)
  
-class StateMachineTests(unittest.TestCase):
+class StateMachineTestsDEPRECATED():
   def setUp(self):
     self.sm = s3g.GcodeStateMachine()
     self.r = s3g.s3g()
