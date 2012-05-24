@@ -248,12 +248,13 @@ Registers
 
 S3g Output
 
-    FindAxesMinimums(axes, feedrate)
+    FindAxesMinimums(axes, feedrate, timeout)
 
 Parameters
 
     Axes = List Of All Present Axes
     Feedrate = F
+    Timeout = Hardcoded timeout of 60 seconds
 
 ## G162 - Home given axes to maximum
 Instruct the machine to home the specified axes to their maximum position.
@@ -334,28 +335,6 @@ Parameters
     Clear Existing Flag = True
     Last In Group Flag= True
     Wait For Button Flag= False
-
-## M71 - Display message on machine and wait for button press
-Instruct the machine to display a message on it's interface LCD and wait for a button to be pressed.
-
-Registers
-
-    P: Time to display message for (TODO: Units?)
-    comment: Message to display
-
-S3g Output
-
-    DisplayMessage(row, col, message, timeout, clear existing flag, last in group flag, wait for button flag)
-
-Parameters
-
-    Row = 0
-    Col = 0
-    Message = Comment
-    Timeout = 0
-    Clear Existing Flag = True
-    Last In Group Flag= True
-    Wait For Button Flag= True
 
 ## M72 - Play a tone or song
 Instruct the machine to play a preset song. Acceptable song IDs are machine specific.

@@ -202,8 +202,6 @@ class GcodeStateMachine():
         #self.DisableAxes(registers)
       elif registers['M'] == 70:
         self.DisplayMessage(registers)
-      elif registers['M'] == 71:
-        self.DisplayMessageButonWait(registers)
       elif registers['M'] == 72:
         self.QueueSong(registers)
       elif registers['M'] == 73:
@@ -249,7 +247,6 @@ class GcodeStateMachine():
           #6     :     self.WaitForToolhead,
           #18    :     self.DisableAxes,
           #70    :     self.DisplayMessage,
-          #71    :     self.DisplayMessageButtonWait,
           #72    :     self.QueueSong,
           #73    :     self.SetBuildPercentage,
           #104   :     self.SetToolheadTemperature,
