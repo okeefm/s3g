@@ -24,7 +24,6 @@ digraph
   "IS_A_OR_B_REGISTERS_DEFINED?" [shape=diamond];
   "IS_E_REGISTER_DEFINED?" [shape=diamond];
   "IS_TOOL_ENABLED?" [shape=diamond];
-  "WHICH_OFFSET_TO_SET?" [shape=diamond];
   "ARE_OFFSETS_DEFINED?" [shape=diamond];
   "IS_TOOLHEAD_DEFINED?" [shape=diamond];
   "IS_P_REGISTER_A_FLAG?" [shape=diamond];
