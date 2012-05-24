@@ -1,5 +1,5 @@
 """
-A stream parser that decodes an s3g stream
+A file parser that decodes an s3g file
 """
 
 import struct
@@ -7,7 +7,7 @@ import struct
 from errors import *
 from constants import *
 
-class s3gStreamDecoder(object):
+class FileReader(object):
 
   def __init__(self):
     pass
@@ -24,6 +24,20 @@ class s3gStreamDecoder(object):
       raise EndOfFileError
     
     return data 
+
+  def GetNextCommand(self):
+    """Assuming the file pointer is at a command, gets the next command number
+
+    @return int The command number
+    """
+    cmd = ord(self.ReadBytes(1))
+
+    # TODO: Break the tool action commands out of here
+    if (not cmd in slave_action_command_dict.values()) and \
+       (not cmd in host_action_command_dict.values()):
+      raise BadCommandError
+
+    return cmd
 
   def ParseOutParameters(self, cmd):
     """Reads and decodes a certain number of bytes using a specific format string
@@ -88,13 +102,6 @@ class s3gStreamDecoder(object):
       b+= self.ReadBytes(1)
     return b
 
-  def GetNextCommand(self):
-    """Assuming the file pointer is at a command, gets the next command number
-
-    @return int The command number
-    """
-    cmd = self.ReadBytes(1)
-    return ord(cmd)
 
   def ParseNextPayload(self):
     """Gets the next command and returns the parsed commands and associated parameters
@@ -106,48 +113,49 @@ class s3gStreamDecoder(object):
     parameters = self.ParseOutParameters(cmd)
     return [cmd] + parameters
 
-  def ParseNextPacket(self):
+#  def ParseNextPacket(self):
+#    """
+#    Assuming the file pointer is at the beginning of a packet, we parse out the information from that packet
+#    @return parsed packet from the file 
+#    """
+#    readHeader = self.ReadBytes(1)
+#    readHeader = self.ParseParameter('<B', readHeader)
+#
+#    length = self.ReadBytes(1)
+#    length = self.ParseParameter('<B', length)
+#
+#    payload = self.ParseNextPayload()
+#
+#    crc = self.ReadBytes(1)
+#    crc = self.ParseParameter('<B', crc)
+#
+#    return self.PackagePacket(readHeader, length, payload, crc)
+
+#  def PackagePacket(self, *args):
+#    """Packages all args into a single list
+#
+#    @param args: Arguments to be packaged
+#    @return package: A single non-nested list comprised of all arguments
+#    """
+#    package = []
+#    for arg in args:
+#      try:
+#        package.extend(arg)
+#      except TypeError:
+#        package.append(arg)
+#    return package
+
+  def ReadFile(self):
+    """Reads from an s3g file until it cant read anymore
+
+    @return payloads: A list of payloads, where each index of 
+      the list is comprised of one payload
     """
-    Assuming the file pointer is at the beginning of a packet, we parse out the information from that packet
-    @return parsed packet from the stream
-    """
-    readHeader = self.ReadBytes(1)
-    readHeader = self.ParseParameter('<B', readHeader)
-
-    length = self.ReadBytes(1)
-    length = self.ParseParameter('<B', length)
-
-    payload = self.ParseNextPayload()
-
-    crc = self.ReadBytes(1)
-    crc = self.ParseParameter('<B', crc)
-
-    return self.PackagePacket(readHeader, length, payload, crc)
-
-  def PackagePacket(self, *args):
-    """Packages all args into a single list
-
-    @param args: Arguments to be packaged
-    @return package: A single non-nested list comprised of all arguments
-    """
-    package = []
-    for arg in args:
-      try:
-        package.extend(arg)
-      except TypeError:
-        package.append(arg)
-    return package
-
-  def ReadStream(self):
-    """Reads from an s3g stream until it cant read anymore
-    @return packets: A list of packets, where each index of 
-      the list is comprised of one packet
-    """
-    packets = []
+    payloads = []
     try:
       while True:
-        packets.append(self.ParseNextPacket())
+        payloads.append(self.ParseNextPayload())
     # TODO: We aren't catching partial packets at the end of files here.
     except EndOfFileError:
-      return packets
+      return payloads
 

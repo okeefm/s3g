@@ -1,14 +1,15 @@
 """
-An s3gStreamDecoder that returns unmodified payloads from the stream
+An s3gFileDecoder that returns unmodified payloads from the file
 """
 
 import coding
-import s3gStreamDecoder
 import struct
 import array
-import constants
 
-class s3gStreamDecoderRaw(s3gStreamDecoder.s3gStreamDecoder):
+from fileReader import *
+from constants import *
+
+class FileReaderRaw(FileReader):
 
   def GetCommandFormat(self, cmd):
     """Because the Raw decoder always has information as bytes, we override the super's GetCommandFormat function with our own, that unpacks the byte value and gets the commandInfo
@@ -18,10 +19,11 @@ class s3gStreamDecoderRaw(s3gStreamDecoder.s3gStreamDecoder):
     """
     hashableCmd = array.array('B', cmd)
     hashableCmd = struct.unpack('<B', hashableCmd)[0]
-    return s3gStreamDecoder.commandFormats[hashableCmd]
+
+    return commandFormats[hashableCmd]
 
   def ParseParameter(self, formatString, bytes):
-    """Because we always want the raw data pulled out of the stream we are reading, we override the super's ParseParameter function with our own that just takes the bytes and throws them into a byte array
+    """Because we always want the raw data pulled out of the file we are reading, we override the super's ParseParameter function with our own that just takes the bytes and throws them into a byte array
 
     @param formatString: The format we want to unpack the bytes in
     @param bytes: The bytes that were just read in
