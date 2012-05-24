@@ -1,0 +1,28 @@
+// vim:ai:et:fenc=utf-8:ff=unix:sw=4:ts=4:
+
+digraph
+{
+  rankdir=TB;
+
+
+  "READ_COMMAND" -> "IS_M_COMMAND";
+  "IS_M_COMMAND" -> "CODE=101";
+  "CODE=101" -> "TOOL_FORWARD";
+  "IS_M_COMMAND" -> "CODE=102";
+  "CODE=102" -> "TOOL_REVERSE";
+  "TOOL_REVERSE" -> "ENABLE_TOOL";
+  "TOOL_FORWARD" -> "ENABLE_TOOL";
+  "IS_M_COMMAND" -> "CODE=103";
+  "CODE=103" -> "DISABLE_TOOL";
+  "IS_M_COMMAND" -> "CODE=108";
+  "CODE=108" -> "IS_R_REGISTER_DEFINED?";
+  "IS_R_REGISTER_DEFINED?" -> "MISSING_REGISTER_ERROR" [label="no"];
+  "IS_R_REGISTER_DEFINED?" -> "IS_R_A_FLAG?" [label="yes"];
+  "IS_R_A_FLAG?" -> "INVALID_REGISTER_ERROR" [label="yes"];
+  "IS_R_A_FLAG?" -> "SET_TOOL_SPEED" [label="no"];
+  "IS_M_COMMAND" -> "CODE=132";
+  "CODE=132" -> "LOSE_POSITION";
+ }
+
+
+

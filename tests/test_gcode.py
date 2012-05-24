@@ -175,6 +175,30 @@ class s3gInterfaceTests(unittest.TestCase):
     self.inputstream = None
     self.outputstream = None
 
+  def test_lose_position(self):
+    for key in self.sm.position:
+      self.sm.position[key] = 0
+    registers = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True}
+    self.sm.LosePosition(registers)
+    for key in self.sm.position:
+      self.assertTrue(self.sm.position[key] == None)
+
+  def test_lose_position_no_registers(self):
+    for key in self.sm.position:
+      self.sm.position[key] = 0
+    registers = {}
+    self.sm.LosePosition(registers)
+    for key in self.sm.position:
+      self.assertTrue(self.sm.position[key] == 0)
+
+  def test_lose_position_nonflagged_registers(self):
+    for key in self.sm.position:
+      self.sm.position[key] = 0
+    registers = {'X':1, 'Y':2, 'Z':3, 'A':4, 'B':5}
+    self.sm.LosePosition(registers)
+    for key in self.sm.position:
+      self.assertTrue(self.sm.position[key] == None)
+  
   def test_get_point(self):
     self.sm.position={
                       'X' : 1,
@@ -202,6 +226,7 @@ class s3gInterfaceTests(unittest.TestCase):
 
   def test_rapid_positioning(self):
     command = "G0 X1 Y2 Z3"
+    self.toolhead = 0
     self.sm.ExecuteLine(command)
     self.inputstream.seek(0)
     readPayload = self.d.ParseNextPacket()
@@ -215,7 +240,9 @@ class s3gInterfaceTests(unittest.TestCase):
     self.assertEqual(readPayload[2], s3g.host_action_command_dict['QUEUE_EXTENDED_POINT'])
 
   def test_dwell_enabled(self):
-    self.sm.tool_enabled = True
+    self.sm.toolhead_enabled = True
+    self.sm.toolhead = 0
+    self.sm.toolhead_speed = 50
     command = "G4 P10"
     startTime = time.time()
     self.sm.ExecuteLine(command)
@@ -227,7 +254,7 @@ class s3gInterfaceTests(unittest.TestCase):
       self.assertEqual(packet[2], s3g.host_action_command_dict['QUEUE_EXTENDED_POINT'])
 
   def test_dwell_disabled(self):
-    self.sm.tool_enabled = False
+    self.sm.toolhead_enabled = False
     command = "G4 P10"
     microConstant = 1000000
     miliConstant = 1000
@@ -236,6 +263,47 @@ class s3gInterfaceTests(unittest.TestCase):
     readPacket = self.d.ParseNextPacket()
     self.assertEqual(readPacket[2], s3g.host_action_command_dict['DELAY'])
 
+  def test_position_register(self):
+    command = "G92 X1 Y2 Z3 A4 B5"
+    self.toolhead = 0
+    self.sm.ExecuteLine(command)
+    self.inputstream.seek(0)
+    readPacket = self.d.ParseNextPacket()
+    self.assertEqual({"X":1,"Y":2,"Z":3,"A":4,"B":5}, self.sm.position)
+    self.assertEqual(readPacket[2], s3g.host_action_command_dict['SET_EXTENDED_POSITION'])
+    self.assertEqual(readPacket[3:8], [1, 2, 3, 4, 5])
+
+  def test_set_potentiometer_values(self):
+    potVals = "X100 Y99 Z98 A97 B96"
+    encodings = {
+        s3g.EncodeAxes('x') : 100,
+        s3g.EncodeAxes('y') : 99,
+        s3g.EncodeAxes('z') : 98,
+        s3g.EncodeAxes('a') : 97,
+        s3g.EncodeAxes('b') : 96,
+        }
+    command = 'G130 ' + potVals
+    self.sm.ExecuteLine(command)
+    self.inputstream.seek(0)
+    packets = self.d.ReadStream()
+    for packet in packets:
+      self.assertEqual(packet[2], s3g.host_action_command_dict['SET_POT_VALUE'])
+      self.assertTrue(packet[3] in encodings.keys())
+      self.assertEqual(packet[4], encodings[packet[3]])
+     
+  def test_find_axes_minimums(self):
+    feedrate = 500
+    axes = ['X', 'Y', 'Z']
+    encodedAxes = [axis.lower() for axis in axes]
+    command = "G161 X Y Z F500"
+    self.sm.ExecuteLine(command)
+    self.inputstream.seek(0)
+    packet = self.d.ParseNextPacket()
+    self.assertEqual(packet[2], s3g.host_action_command_dict['FIND_AXES_MINIMUMS'])
+    self.assertEqual(packet[3], encodedAxes)
+    self.assertEqual(packet[4], feedrate)
+    self.assertEqual(packet[5], self.sm.findingTimeout)
+ 
 class StateMachineTests(unittest.TestCase):
   def setUp(self):
     self.sm = s3g.GcodeStateMachine()
@@ -246,7 +314,22 @@ class StateMachineTests(unittest.TestCase):
   def tearDown(self):
     self.sm = None
 
+  def test_parse_out_axes(self):
+    registers = {
+        "A" : 1,
+        "B" : 2,
+        "C" : 3,
+        "D" : 4,
+        "E" : 5,
+        "X" : 6,
+        "Y" : 7,
+        }
+    for axis in ['A', 'B', 'X', 'Y']:
+      self.assertTrue(axis in self.sm.ParseOutAxes(registers))
+
   def test_set_position(self):
+    for key in self.sm.position:
+      self.sm.position[key] = 0
     setPos = {
         'X' : 1,
         'Y' : 2,
@@ -254,13 +337,106 @@ class StateMachineTests(unittest.TestCase):
         'A' : 4,
         'B' : 5,
         }
-    self.sm.SetPosition(setPos, self.sm.position)
+    self.sm.SetPosition(setPos)
     self.assertEqual(setPos, self.sm.position)
 
-  def test_g0_state(self):
+  def test_set_position_flagged_reg(self):
+    for key in self.sm.position:
+      self.sm.position[key] = 0
+    setPos = {
+        'X' : True,
+        'Y' : 2,
+        'Z' : 3,
+        'A' : 4,
+        'B' : 5,
+        }
+    self.sm.SetPosition(setPos)
+    self.assertEqual({'X':0, 'Y':2, 'Z':3, 'A':4, 'B':5}, self.sm.position)
+
+  def test_apply_offset(self):
+    self.sm.position = {
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        'A' : 4,
+        'B' : 5,
+        }
+    self.sm.offsetPosition[0] = {
+        'X' : 10,
+        'Y' : 11,
+        'Z' : 12,
+        }
+    interpolatedPos = {}
+    for key in self.sm.position:
+      if key in self.sm.offsetPosition[0]:
+        interpolatedPos[key] = self.sm.position[key] + self.sm.offsetPosition[0][key]
+      else:
+        interpolatedPos[key] = self.sm.position[key]
+    self.sm.toolhead = 0
+    self.sm.ApplyNeededOffsetsToPosition()
+    self.assertEqual(interpolatedPos, self.sm.position)
+
+  def test_apply_needed_offset_no_offset_set(self):
+    self.sm.position = {
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        'A' : 4,
+        'B' : 5, 
+        }
+    self.sm.offsetPosition = {}
+    self.sm.toolhead = 0
+    self.assertRaises(KeyError, self.sm.ApplyNeededOffsetsToPosition)
+
+  def test_apply_needed_offset_no_toolhead(self):
+    self.sm.position = {
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        'A' : 4,
+        'B' : 5,
+        }
+    self.sm.offsetPosition = {
+        'X' : 100,
+        'Y' : 200,
+        'Z' : 300,
+        }
+    self.sm.ApplyNeededOffsetsToPosition()
+    self.assertEqual({'X':1, 'Y':2, 'Z':3, 'A':4, 'B':5}, self.sm.position)
+ 
+  def test_set_offsets(self):
+    registers = {'X':1, 'Y':2, 'Z':3,'P':0}
+    self.sm.SetOffsets(registers)
+    self.assertTrue(self.sm.offsetPosition[0] != None)
+    self.assertEqual(self.sm.offsetPosition[0], {'X':1,'Y':2,'Z':3})
+
+  def test_set_offsets_flagged_p(self):
+    registers = {'X':1,'Y':2,'Z':3,'P':True}
+    self.assertRaises(s3g.InvalidRegisterError, self.sm.SetOffsets,registers)
+
+  def test_set_offsets_missing_p(self):
+    registers = {'X':1, 'Y':2, 'Z':3}
+    self.assertRaises(s3g.MissingRegisterError, self.sm.SetOffsets, registers)
+
+  def test_set_offsets_missing_registers(self):
+    registers = {'P':1}
+    self.sm.SetOffsets(registers)
+    self.assertEqual(self.sm.offsetPositions[1], {})
+     
+  def test_g0_92_state_no_tool_offset(self):
     command = 'G0 X1 Y2 Z3'
     self.sm.ExecuteLine(command)
     self.assertEqual({'X':1, 'Y':2, 'Z':3, 'A':0, 'B':0}, self.sm.position)
+
+  def test_g0_91_state_tool_offset(self):
+    command = 'G0 X1 Y2 Z3'
+    self.sm.toolhead = 0
+    self.sm.offsetPosition[0] = {}
+    self.sm.offsetPosition[0]['X'] = 1
+    self.sm.offsetPosition[0]['Y'] = 2
+    self.sm.offsetPosition[0]['Z'] = 3
+    self.sm.ExecuteLine(command)
+    self.assertEqual({'X':2, 'Y':4, 'Z':6, 'A':0, 'B':0}, self.sm.position)
 
   def test_g1_state_a_b(self):
     command = 'G1 X1 Y2 Z3 A4 B5'
@@ -279,13 +455,45 @@ class StateMachineTests(unittest.TestCase):
     command = "G1 E42 A1 B2"
     self.assertRaises(s3g.LinearInterpolationError, self.sm.ExecuteLine, command)
 
-  def test_g10_state(self):
+  def test_g1_state_no_a_b_e(self):
+    command = "G1 X1 Y2 Z3"
+    for key in self.sm.position:
+      self.sm.position[key] = 0
+    self.sm.ExecuteLine(command)
+    self.assertEqual({'X':1, 'Y':2, 'Z':3, 'A':0, 'B':0}, self.sm.position)
+
+  def test_g1_state_no_a_b_e_no_registers_defined(self):
+    command = "G1 X1 Y2 Z3"
+    for key in self.sm.position:
+      self.sm.position[key] = 0
+    self.sm.toolhead = 0
+    self.assertRaises(KeyError, self.sm.ExecuteLine, command)
+
+  def test_g10_state_state(self):
     command = 'G10 X1 Y2 Z3 P1'
     self.sm.ExecuteLine(command)
     self.assertEqual({'X':1,'Y':2,'Z':3}, self.sm.offsetPosition[1])
 
+  def test_g10_state_no_p(self):
+    command = 'G10 X1 Y2 Z3'
+    self.assertRaises(s3g.MissingRegisterError, self.sm.ExecuteLine, command)
+
+  def test_g10_state_undefined_p(self):
+    command = 'G10 X1 Y2 Z3 P'
+    self.assertRaises(s3g.InvalidRegisterError, self.sm.ExecuteLine, command)
+
+  def test_g10_state_only_p(self):
+    command = 'G10 P1'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(self.sm.offsetPosition[1], {})
+
   def test_g54_state(self):
     command = 'G54'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(self.sm.toolhead, 0)
+
+  def test_g54_state_extra_registers(self):
+    command = 'G54 X5 Y1 P51'
     self.sm.ExecuteLine(command)
     self.assertEqual(self.sm.toolhead, 0)
 
@@ -294,43 +502,87 @@ class StateMachineTests(unittest.TestCase):
     self.sm.ExecuteLine(command)
     self.assertEqual(self.sm.toolhead, 1)
 
-  def test_g92_state(self):
-    command = 'G92 X1 Y2 Z3 A4 B5'
+  def test_g55_state_extra_registers(self):
+    command = 'G55 X5 Y1 P51'
     self.sm.ExecuteLine(command)
-    self.assertEqual({'X':1,'Y':2,'Z':3,'A':4,'B':5}, self.sm.position)
+    self.assertEqual(self.sm.toolhead, 1)
 
   def test_g161_state(self):
-    command = 'G161 Z'
+    command = 'G161 Z X Y A B'
     self.sm.ExecuteLine(command)
-    self.assertEqual(self.sm.position['Z'], 0)
+    for key in self.sm.position:
+      self.assertTrue(self.sm.position[key] == None)
+
+  def test_g161_state_no_flags(self):
+    command = 'G161'
+    for key in self.sm.position:
+      self.sm.position[key] = 0
+    self.sm.ExecuteLine(command)
+    for key in self.sm.position:
+      self.assertEqual(0, self.sm.position[key])
 
   def test_g162_state(self):
-    command = 'G162 X Y'
+    command = 'G162 X Y Z A B'
     self.sm.ExecuteLine(command)
-    self.assertEqual(self.sm.position['X'], 0)
-    self.assertEqual(self.sm.position['Y'], 0)
+    for key in self.sm.position:
+      self.assertTrue(self.sm.position[key] == None)
 
-  def test_M101_state(self):
+  def test_g162_state_no_flags(self):
+    command = 'G162'
+    for key in self.sm.position:
+      self.sm.position[key] = 0
+    self.sm.ExecuteLine(command)
+    for key in self.sm.position:
+      self.assertEqual(0, self.sm.position[key])
+
+  def test_m101_state(self):
     command = 'M101'
     self.sm.ExecuteLine(command)
-    self.assertEqual(self.sm.tool_enabled, True)
-    self.assertEqual(self.sm.direction, True)
+    self.assertEqual(self.sm.toolhead_enabled, True)
+    self.assertEqual(self.sm.toolhead_direction, True)
+
+  def test_m102_state_extra_registers(self):
+    command = 'M101 A12'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(self.sm.toolhead_enabled, True)
+    self.assertEqual(self.sm.toolhead_direction, True)
 
   def test_m102_state(self):
     command = 'M102'
     self.sm.ExecuteLine(command)
-    self.assertEqual(self.sm.tool_enabled, True)
-    self.assertEqual(self.sm.direction, False)
+    self.assertEqual(self.sm.toolhead_enabled, True)
+    self.assertEqual(self.sm.toolhead_direction, False)
+
+  def test_m102_state_extra_registers(self):
+    command = 'M102 A12'
+    self.sm.ExecuteLine(command)
+    self.assertEqual(self.sm.toolhead_enabled, True)
+    self.assertEqual(self.sm.toolhead_direction, False)
 
   def test_m103_state(self):
     command = 'M103'
     self.sm.ExecuteLine(command)
-    self.assertEqual(self.sm.tool_enabled, False)
+    self.assertEqual(self.sm.toolhead_enabled, False)
 
   def test_m108_state(self):
     command = 'M108 R42'
     self.sm.ExecuteLine(command)
     self.assertEqual(self.sm.toolhead_speed, 42)
+
+  def test_m108_state_flagged_r(self):
+    command = 'M108 R'
+    self.assertRaises(s3g.InvalidRegisterError, self.sm.ExecuteLine, command)
+
+  def test_m108_state_missing_r(self): 
+    command = 'M108'
+    self.assertRaises(s3g.MissingRegisterError, self.sm.ExecuteLine, command)
+
+  def test_m132_state(self):
+    for key in self.sm.position:
+      self.sm.position[key] = 0
+    command = 'M132 X Y Z'
+    self.sm.ExecuteLine(command)
+    self.assertEqual({'X':None, 'Y':None, 'Z':None, 'A':0, 'B':0}, self.sm.position)
 
 class ParseSampleGcodeFileTests(unittest.TestCase):
   """

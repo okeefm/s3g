@@ -98,18 +98,7 @@ class GcodeStateMachine():
         'A' : 0,
         'B' : 0,
         }
-    self.offsetPosition = {
-        0 : {
-            'X' : 0,
-            'Y' : 0,
-            'Z' : 0, 
-            },
-        1 : {
-            'X' : 0,
-            'Y' : 0,
-            'Z' : 0, 
-            },
-        }
+    self.offsetPosition = {}
     self.offset_register = None     # Current offset register, if any
     self.toolhead = None               # Tool ID
     self.toolheadDict = {
@@ -121,16 +110,43 @@ class GcodeStateMachine():
     self.toolhead_enabled = None # Tool enabled; True=enabled, False=disabled
     self.s3g = None
     self.rapidFeedrate = 300
+    self.findingTimeout = 60 #Seconds
 
-  def SetPosition(self, registers, position):
-    """Given a set of registers and a position, sets the position's applicable axes values to those in registers.
+  def SetOffsets(self, registers):
+    """Given a set of registers, sets the offset assigned by P to be equal to those axes in registers.  If the P register is missing, OR the register is considered a flag, we raise an exception.
+
+    @param dict registers: The registers that have been parsed out of the gcode
+    """
+    if 'P' not in registers:
+      raise MissingRegisterError
+    elif isinstance(registers['P'], bool):
+      raise InvalidRegisterError
+    self.offsetPosition[registers['P']] = {}
+    for axis in self.ParseOutAxes(registers):
+      self.offsetPosition[registers['P']][axis] = registers[axis]
+
+  def SetPosition(self, registers):
+    """Given a set of registers, sets the state machine's position's applicable axes values to those in registers.  If a register is set as a flag, that register is disregarded
    
     @param dictionary registers: A set of registers that have updated point information
-    @param dictionary position: The current position that will be updated 
     """
     for key in registers:
-      if key in position:
-        position[key] = registers[key]
+      if key in self.position:
+        if not isinstance(registers[key], bool):
+          self.position[key] = registers[key]
+
+  def ApplyNeededOffsetsToPosition(self):
+    """Given a position, applies the applicable offsets to that position
+    @param dict position: The position to apply offsets to
+    """
+    if self.toolhead != None:
+      for key in self.offsetPosition[self.toolhead]:
+        self.position[key] += self.offsetPosition[self.toolhead][key]
+
+  def LosePosition(self, registers):
+    axes = self.ParseOutAxes(registers)
+    for axis in axes:
+      self.position[axis] = None
 
   def ExecuteLine(self, command):
     """
@@ -143,42 +159,83 @@ class GcodeStateMachine():
 
     # Update the state information    
     if 'G' in registers:
-      if registers['G'] == 0 or registers['G'] == 92:
-        self.SetPosition(registers, self.position)
+      if registers['G'] == 0:
+        self.SetPosition(registers)
+        self.ApplyNeededOffsetsToPosition()
+        self.RapidPositioning()
       elif registers['G'] == 1:
         if 'E' in registers:
           if 'A' in registers or 'B' in registers:
             raise LinearInterpolationError
-        self.SetPosition(registers, self.position)
+          else:
+            self.InterpolateERegister(registers)
+            self.SetPosition()
+            self.ApplyNeededOffsetsToPosition()
+            #self.SendPointToMachine()
+        else:
+          self.SetPosition(registers)
+          self.ApplyNeededOffsetsToPosition()
+          #self.SendPointToMachine()
+      elif registers['G'] == 4:
+        self.Dwell(registers)
       elif registers['G'] == 10:
-        self.SetPosition(registers, self.offsetPosition[registers['P']])
+        self.SetOffsets(registers)
       elif registers['G'] == 54:
         self.toolhead = 0
       elif registers['G'] == 55:
         self.toolhead = 1
+      elif registers['G'] == 92:
+        self.SetPosition(registers)
+        self.ApplyNeededOffsetsToPosition()
+        self.RapidPositioning()
       elif registers['G'] == 161:
-        self.SetPosition({'Z':0}, self.position)
+        self.LosePosition(registers)
+        #self.FindAxesMinimums(registers)
       elif registers['G'] == 162:
-        self.SetPosition({'X':0, 'Y':0}, self.position)
+        self.LosePosition(registers)
+        #self.FindAxesMaximums(registers)
     elif 'M' in registers:
-      if registers['M'] == 101 or registers['M'] == 102:
-        self.tool_enabled = True
-      if registers['M'] == 101:
-        self.direction = True
+      if registesr['M'] == 6:
+        pass
+        #self.WaitForToollhead(registers)
+      elif registers['M'] == 18:
+        #self.DisableAxes(registers)
+      elif registers['M'] == 70:
+        self.DisplayMessage(registers)
+      elif registers['M'] == 71:
+        self.DisplayMessageButonWait(registers)
+      elif registers['M'] == 72:
+        self.QueueSong(registers)
+      elif registers['M'] == 73:
+        self.SetBuildPercentage(registers)
+      elif registers['M'] == 101:
+        self.toolhead_enabled = True
+        self.toolhead_direction = True
       elif registers['M'] == 102:
-        self.direction = False
+        self.toolhead_enabled = True
+        self.toolhead_direction = False
       elif registers['M'] == 103:
-        self.tool_enabled = False
+        self.toolhead_enabled = False
+      elif registers['M'] == 104:
+        self.SetToolheadTemperature(registers)
+      elif registers['M'] == 109:
+        self.SetPlatformTemperature(registers)
       elif registers['M'] == 108:
-        self.toolhead_speed = int(registers['R'])
-
+        if 'R' not in registers:
+          raise MissingRegisterError
+        if isinstance(registers['R'], bool):
+          raise InvalidRegisterError
+        self.toolhead_speed = registers['R']
+      elif registers['M'] == 132:
+        self.LosePosition(registers)
+        self.RecallHomePosition(registers)
+    
     # Run the command
     if 'G' in registers.keys():
       GCodeInterface = {
-          0     :     self.RapidPositioning,
-          1     :     self.LinearInterpolation,
-          4     :     self.Dwell,
-          #92    :     self.SetPosition,
+          #0     :     self.RapidPositioning,
+          #1     :     self.LinearInterpolation,
+          #4     :     self.Dwell,
           #130   :     self.SetPotentiometerValues,
           #161   :     self.FindAxesMinimums,
           #162   :     self.FindAxesMaximums,
@@ -204,9 +261,17 @@ class GcodeStateMachine():
       except KeyError:
         pass
     else:
-      print 'Got no code?',
+      print 'Got no code?'
 
 
+  def ParseOutAxes(self, registers):
+    """Given a set of registers, returns a list of all present axes
+
+    @param dict registers: Registers parsed out of the gcode command
+    @return list: List of axes in registers
+    """
+    possibleAxes = ['X', 'Y', 'Z', 'A', 'B']
+    return [axis for axis in registers if axis in possibleAxes]
 
   def GetPoint(self):
     return [
@@ -232,34 +297,51 @@ class GcodeStateMachine():
     """
     self.s3g.QueuePoint(self.GetPoint(), self.rapidFeedrate)
 
-  def LinearInterpolation(self, registers, comment):
-    """Moves to a new 5d point.  If E register is defined, uses linear
-    interpolation of the extruder axis.  Otherwise, moves explicitely.
-    
-    @param dict registers: Registers parsed out of the gcode command
-    @param string command: Comment associated with the gcode command
-    """
-    self.s3g.QueueExtendedPoint(self.GetExtendedPoint(), registers['F'])
-
-  def Dwell(self, registers, comment):
+  def Dwell(self, registers):
     """Can either delay all functionality of the machine, or have the machine
     sit in place while extruding at the current rate and direction.
 
     @param dict registers: Registers parsed out of the gcode command
     @param string command: Comment associated with the gcode command
     """
-    if self.tool_enabled:
-      if self.tool_direction:
-        delta = self.tool_speed
+    if self.toolhead_enabled:
+      if self.toolhead_direction:
+        delta = self.toolhead_speed
       else:
-        delta = -self.tool_speed
+        delta = -self.toolhead_speed
       startTime = time.time()
       while time.time() < startTime + registers['P']:
         self.position[self.toolheadDict[self.toolhead]] += delta
-        RPS = self.tool_speed / 60.0
-        RPMS = self.tool_speed / RPS
+        RPS = self.toolhead_speed / 60.0
+        RPMS = self.toolhead_speed / RPS
     else:
       microConstant = 1000000
       miliConstant = 1000
       self.s3g.Delay(registers['P']*(microConstant/miliConstant))
-      
+
+  def PositionRegister(self):
+    """Gets the current extended position and sets the machine's position to be equal to the modified position
+    """ 
+    self.s3g.SetExtendedPosition(self.GetExtendedPoint()) 
+
+  def SetPotentiometerValues(self, registers):
+    """Given a set of registers, sets the machine's potentiometer value to a specified value in the registers
+
+    @param dict registers: Registers parsed out of the gcode command
+    """
+    #Put all values in a hash table
+    valTable = {}
+    #For each register in registers thats an axis:
+    for a in self.ParseOutAxes(registers):
+      #Try to append it to the appropriate list
+      try:
+        valTable[int(registers[a])].append(a.lower())
+      #Never been encountered before, make a list
+      except KeyError:
+        valTable[int(registers[a])] = [a.lower()]
+    for val in valTable:
+      self.s3g.SetPotentiometerValue(valTable[val], val)
+
+  def FindAxesMinimums(self, registers):
+    axes = [axis.lower for axis in self.ParseOutAxes(registers)]
+    self.s3g.FindAxesMinimums(axes, ['F'], self.findingTimeout)
