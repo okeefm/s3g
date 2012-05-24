@@ -85,33 +85,12 @@ def ParseLine(line):
   return registers, comment
 
 
-class GcodeStateMachine(object):
+class GcodeParser(object):
   """
   Read in gcode line by line, tracking some state variables and running known
   commands against an s3g machine.
   """
-  def __init__(self):
-    self.position = {    # Current machine position
-      'X' : 0,
-      'Y' : 0,
-      'Z' : 0,
-      'A' : 0,
-      'B' : 0,
-      }
-    self.offsetPosition = {}
-    self.offset_register = None     # Current offset register, if any
-    self.toolhead = None               # Tool ID
-    self.toolheadDict = {
-      0   :   'A',
-      1   :   'B',
-      }
-    self.toolhead_speed = None         # Speed of the tool, in rpm???
-    self.toolhead_direction = None # Tool direction; True=forward, False=reverse
-    self.toolhead_enabled = None # Tool enabled; True=enabled, False=disabled
-    self.s3g = None
-    self.rapidFeedrate = 300
-    self.findingTimeout = 60 #Seconds
-
+    self.states = GcodeState()
 
     self.GCODE_INSTRUCTIONS = {
       0   : [self.RapidPositioning,      ['XYZ']],
