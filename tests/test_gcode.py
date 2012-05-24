@@ -219,8 +219,8 @@ class gcodeStateTests(unittest.TestCase):
     Tests to make sure that throwing all registers in a command doesnt raise an
     extra register error.
     """
-    command = "G192 X Y Z"
-    self.g.ExecuteLine(command)
+    allRegs = ['X', 'Y', 'Z']
+    self.assertEqual(allRegs, self.g.GCODE_INSTRUCTIONS[162][1])
 
 class gcodeS3gInterfaceTests(unittest.TestCase):
 
