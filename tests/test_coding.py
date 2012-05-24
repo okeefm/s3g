@@ -148,6 +148,11 @@ class EncoderTests(unittest.TestCase):
     for i in range(0, len(expected_data)):
       assert(data[i] == expected_data[i])
 
+  def test_unpack_response_with_string_empty_string(self):
+    expected_string = '\x00'
+    data = s3g.UnpackResponseWithString('', expected_string)
+    self.assertEqual(expected_string, data[0])
+
   def test_unpack_response_with_string_no_format(self):
     expected_string = 'abcde\x00'
     data = s3g.UnpackResponseWithString('',expected_string)
@@ -158,10 +163,14 @@ class EncoderTests(unittest.TestCase):
     self.assertRaises(s3g.ProtocolError,s3g.UnpackResponseWithString,'<I','abcd')
 
   def test_unpack_response_with_string(self):
-    expected_data = [1,'a','b','c','ABCDE\x00']
+    expected_data = [1, 'a', 'b', 'c', 'ABCDE\x00']
     data = s3g.UnpackResponseWithString('<Iccc','\x01\x00\x00\x00abcABCDE\x00')
-    for i in range(0, len(expected_data)):
-      assert(data[i] == expected_data[i])
+    for expected, d in zip(expected_data, data):
+      self.assertEqual(expected, d)
+
+  def test_unpack_response_with_non_null_terminated_string(self):
+    expected_data = ['ABCDE']
+    self.assertRaises(s3g.ProtocolError, s3g.UnpackResponseWithString, '', 'ABCDE')
 
 if __name__ == "__main__":
   unittest.main()
