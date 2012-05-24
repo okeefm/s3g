@@ -80,8 +80,8 @@ class ParseCommandTests(unittest.TestCase):
   def test_empty_string(self):
     command = ''
 
-    registers = s3g.ParseCommand(command)
-    assert {} == registers
+    codes = s3g.ParseCommand(command)
+    assert {} == codes
 
   def test_garbage_code(self):
     cases = [
@@ -106,31 +106,31 @@ class ParseCommandTests(unittest.TestCase):
 
   def test_single_code_accepts_lowercase(self):
     command = 'g'
-    expected_registers = {'G' : True}
+    expected_codes = {'G' : True}
 
-    registers = s3g.ParseCommand(command)
-    assert expected_registers == registers
+    codes = s3g.ParseCommand(command)
+    assert expected_codes == codes
 
   def test_single_code_no_value(self):
     command = 'G'
-    expected_registers = {'G' : True}
+    expected_codes = {'G' : True}
 
-    registers = s3g.ParseCommand(command)
-    assert expected_registers == registers
+    codes = s3g.ParseCommand(command)
+    assert expected_codes == codes
 
   def test_single_code_with_value(self):
     command = 'G0'
-    expected_registers = {'G' : 0}
+    expected_codes = {'G' : 0}
 
-    registers = s3g.ParseCommand(command)
-    assert expected_registers == registers
+    codes = s3g.ParseCommand(command)
+    assert expected_codes == codes
 
   def test_single_code_leading_whitespace(self):
     command = '\t\t\t G0'
-    expected_registers = {'G' : 0}
+    expected_codes = {'G' : 0}
 
-    registers = s3g.ParseCommand(command)
-    assert expected_registers == registers
+    codes = s3g.ParseCommand(command)
+    assert expected_codes == codes
 
   def test_repeated_code(self):
     command = 'G0 G0'
@@ -146,7 +146,7 @@ class ParseCommandTests(unittest.TestCase):
 
   def test_many_codes(self):
     command = 'M0 X1 Y2 Z3 F4'
-    expected_registers = {
+    expected_codes = {
       'M' : 0,
       'X' : 1,
       'Y' : 2,
@@ -154,8 +154,35 @@ class ParseCommandTests(unittest.TestCase):
       'F' : 4,
     }
 
-    registers = s3g.ParseCommand(command)
-    assert expected_registers == registers
+    codes = s3g.ParseCommand(command)
+    assert expected_codes == codes
+
+class CheckForExtraneousCodesTests(unittest.TestCase):
+  def test_no_codes(self):
+    codes = {}
+    allowed_codes = ''
+    s3g.CheckForExtraneousCodes(codes, allowed_codes)
+
+  def test_extra_code_no_allowed_codes(self):
+    codes = {'X' : 0}
+    allowed_codes = ''
+    self.assertRaises(s3g.InvalidCodeError, s3g.CheckForExtraneousCodes, codes, allowed_codes)
+
+  def test_extra_code_some_allowed_codes(self):
+    codes = {'X' : 0, 'A' : 2}
+    allowed_codes = 'XYZ'
+    self.assertRaises(s3g.InvalidCodeError, s3g.CheckForExtraneousCodes, codes, allowed_codes)
+
+  def test_all_allowed_codes(self):
+    codes = {'X' : 0, 'Y' : 2, 'Z' : 3}
+    allowed_codes = 'XYZ'
+    s3g.CheckForExtraneousCodes(codes, allowed_codes)
+
+  def test_fewer_than_all_allowed_codes(self):
+    codes = {'X' : 0, 'Y' : 2}
+    allowed_codes = 'XYZ'
+    s3g.CheckForExtraneousCodes(codes, allowed_codes)
+
 
 class s3gInterfaceTestsDEPRECATED():
   def setUp(self):
@@ -179,24 +206,24 @@ class s3gInterfaceTestsDEPRECATED():
   def test_lose_position(self):
     for key in self.sm.position:
       self.sm.position[key] = 0
-    registers = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True}
-    self.sm.LosePosition(registers)
+    codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True}
+    self.sm.LosePosition(codes)
     for key in self.sm.position:
       self.assertTrue(self.sm.position[key] == None)
 
-  def test_lose_position_no_registers(self):
+  def test_lose_position_no_codes(self):
     for key in self.sm.position:
       self.sm.position[key] = 0
-    registers = {}
-    self.sm.LosePosition(registers)
+    codes = {}
+    self.sm.LosePosition(codes)
     for key in self.sm.position:
       self.assertTrue(self.sm.position[key] == 0)
 
-  def test_lose_position_nonflagged_registers(self):
+  def test_lose_position_nonflagged_codes(self):
     for key in self.sm.position:
       self.sm.position[key] = 0
-    registers = {'X':1, 'Y':2, 'Z':3, 'A':4, 'B':5}
-    self.sm.LosePosition(registers)
+    codes = {'X':1, 'Y':2, 'Z':3, 'A':4, 'B':5}
+    self.sm.LosePosition(codes)
     for key in self.sm.position:
       self.assertTrue(self.sm.position[key] == None)
   
@@ -264,7 +291,7 @@ class s3gInterfaceTestsDEPRECATED():
     readPacket = self.d.ParseNextPacket()
     self.assertEqual(readPacket[2], s3g.host_action_command_dict['DELAY'])
 
-  def test_position_register(self):
+  def test_position_code(self):
     command = "G92 X1 Y2 Z3 A4 B5"
     self.toolhead = 0
     self.sm.ExecuteLine(command)
@@ -317,7 +344,7 @@ class StateMachineTestsDEPRECATED():
     self.sm = None
 
   def test_parse_out_axes(self):
-    registers = {
+    codes = {
         "A" : 1,
         "B" : 2,
         "C" : 3,
@@ -327,7 +354,7 @@ class StateMachineTestsDEPRECATED():
         "Y" : 7,
         }
     for axis in ['A', 'B', 'X', 'Y']:
-      self.assertTrue(axis in self.sm.ParseOutAxes(registers))
+      self.assertTrue(axis in self.sm.ParseOutAxes(codes))
 
   def test_set_position(self):
     for key in self.sm.position:
@@ -407,22 +434,22 @@ class StateMachineTestsDEPRECATED():
     self.assertEqual({'X':1, 'Y':2, 'Z':3, 'A':4, 'B':5}, self.sm.position)
  
   def test_set_offsets(self):
-    registers = {'X':1, 'Y':2, 'Z':3,'P':0}
-    self.sm.SetOffsets(registers)
+    codes = {'X':1, 'Y':2, 'Z':3,'P':0}
+    self.sm.SetOffsets(codes)
     self.assertTrue(self.sm.offsetPosition[0] != None)
     self.assertEqual(self.sm.offsetPosition[0], {'X':1,'Y':2,'Z':3})
 
   def test_set_offsets_flagged_p(self):
-    registers = {'X':1,'Y':2,'Z':3,'P':True}
-    self.assertRaises(s3g.InvalidRegisterError, self.sm.SetOffsets,registers)
+    codes = {'X':1,'Y':2,'Z':3,'P':True}
+    self.assertRaises(s3g.InvalidRegisterError, self.sm.SetOffsets,codes)
 
   def test_set_offsets_missing_p(self):
-    registers = {'X':1, 'Y':2, 'Z':3}
-    self.assertRaises(s3g.MissingRegisterError, self.sm.SetOffsets, registers)
+    codes = {'X':1, 'Y':2, 'Z':3}
+    self.assertRaises(s3g.MissingRegisterError, self.sm.SetOffsets, codes)
 
-  def test_set_offsets_missing_registers(self):
-    registers = {'P':1}
-    self.sm.SetOffsets(registers)
+  def test_set_offsets_missing_codes(self):
+    codes = {'P':1}
+    self.sm.SetOffsets(codes)
     self.assertEqual(self.sm.offsetPositions[1], {})
      
   def test_g0_state_no_tool_offset(self):
@@ -464,7 +491,7 @@ class StateMachineTestsDEPRECATED():
     self.sm.ExecuteLine(command)
     self.assertEqual({'X':1, 'Y':2, 'Z':3, 'A':0, 'B':0}, self.sm.position)
 
-  def test_g1_state_no_a_b_e_no_registers_defined(self):
+  def test_g1_state_no_a_b_e_no_codes_defined(self):
     command = "G1 X1 Y2 Z3"
     for key in self.sm.position:
       self.sm.position[key] = 0
@@ -494,7 +521,7 @@ class StateMachineTestsDEPRECATED():
     self.sm.ExecuteLine(command)
     self.assertEqual(self.sm.toolhead, 0)
 
-  def test_g54_state_extra_registers(self):
+  def test_g54_state_extra_codes(self):
     command = 'G54 X5 Y1 P51'
     self.sm.ExecuteLine(command)
     self.assertEqual(self.sm.toolhead, 0)
@@ -504,7 +531,7 @@ class StateMachineTestsDEPRECATED():
     self.sm.ExecuteLine(command)
     self.assertEqual(self.sm.toolhead, 1)
 
-  def test_g55_state_extra_registers(self):
+  def test_g55_state_extra_codes(self):
     command = 'G55 X5 Y1 P51'
     self.sm.ExecuteLine(command)
     self.assertEqual(self.sm.toolhead, 1)
@@ -543,7 +570,7 @@ class StateMachineTestsDEPRECATED():
     self.assertEqual(self.sm.toolhead_enabled, True)
     self.assertEqual(self.sm.toolhead_direction, True)
 
-  def test_m102_state_extra_registers(self):
+  def test_m102_state_extra_codes(self):
     command = 'M101 A12'
     self.sm.ExecuteLine(command)
     self.assertEqual(self.sm.toolhead_enabled, True)
@@ -555,7 +582,7 @@ class StateMachineTestsDEPRECATED():
     self.assertEqual(self.sm.toolhead_enabled, True)
     self.assertEqual(self.sm.toolhead_direction, False)
 
-  def test_m102_state_extra_registers(self):
+  def test_m102_state_extra_codes(self):
     command = 'M102 A12'
     self.sm.ExecuteLine(command)
     self.assertEqual(self.sm.toolhead_enabled, True)
@@ -604,7 +631,7 @@ class ParseSampleGcodeFileTests(unittest.TestCase):
     for file in files:
       with open(file) as lines:
         for line in lines:
-          registers, comment = s3g.ParseLine(line)
+          codes, comment = s3g.ParseLine(line)
 
  
 if __name__ == "__main__":
