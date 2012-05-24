@@ -67,9 +67,7 @@ digraph
   "IS_TOOL_ENABLED?" -> "DELAY" [label="disabled"];
   "IS_TOOL_ENABLED?" -> "SIT_AND_EXTRUDE" [label="enabled"];
   "CODE=10" -> "10_IS_P_REGISTER_DEFINED?" [label="e"];
-  "10_IS_P_REGISTER_DEFINED?" -> "WHICH_OFFSET_TO_SET?" [label="e"];
-  "WHICH_OFFSET_TO_SET?" -> "SET_TOOL_0_OFFSET" [label="P=0"];
-  "WHICH_OFFSET_TO_SET?" -> "SET_TOOL_1_OFFSET" [label="P=1"];
+  "10_IS_P_REGISTER_DEFINED?" -> "OFFSET_REGISTER=P" [label="e"];
   "CODE=54" -> "TOOL=0" [label="e"];
   "CODE=55" -> "TOOL=1" [label="e"];
   "CODE=92" -> "92_UPDATE_SM_POSITION" [label="e"];
