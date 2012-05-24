@@ -1,5 +1,6 @@
 # Gcode parser, 
 
+from gcodeStates import *
 from errors import *
 import time
 
@@ -102,9 +103,8 @@ class GcodeParser(object):
   Read in gcode line by line, tracking some state variables and running known
   commands against an s3g machine.
   """
-  self.states = GcodeState()
-
   def __init__(self):
+    self.states = GcodeStates()
 
     self.GCODE_INSTRUCTIONS = {
       0   : [self.RapidPositioning,      ['XYZ']],
