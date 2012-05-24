@@ -17,10 +17,10 @@ digraph
   "72_IS_P_REGISTER_DEFINED?" [shape=rectangle];
   "73_IS_P_REGISTER_DEFINED?" [shape=rectangle];
   "104_IS_T_REGISTER_DEFINED?" [shape=rectangle];
-  "108_IS_R_REGISTER_DEFINED?" [shape=rectangle];
   "109_IS_T_REGISTER_DEFINED?" [shape=rectangle];
   "RECOGNIZED_CODE" [shape=diamond];
   "EXTRA_REGISTERS_PRESENT?" [shape=diamond];
+  "TOOLHEAD=T"
   "IS_M_COMMAND" -> "RECOGNIZED_CODE";
   "RECOGNIZED_CODE" -> "UNRECOGNIZED_CODE_ERROR" [label="no"];
   "RECOGNIZED_CODE" -> "EXTRA_REGISTERS_PRESENT?" [label="yes"];
@@ -40,6 +40,7 @@ digraph
   "CODE=6" -> "6_IS_T_REGISTER_DEFINED?" [label="e"];
   "6_IS_T_REGISTER_DEFINED?" -> "6_IS_P_REGISTER_DEFINED?" [label="e"];
   "6_IS_P_REGISTER_DEFINED?" -> "WAIT_FOR_TOOLHEAD_READY" [label="e"];
+  "WAIT_FOR_TOOLHEAD_READY" -> "TOOLHEAD=T";
   "CODE=18" -> "DISABLE_AXES" [label="e"];
   "CODE=70" -> "IS_P_MESSAGE_DEFINED?" [label="e"];
   "IS_P_MESSAGE_DEFINED?" -> "DISPLAY_MESSAGE" [label="e"];
@@ -52,24 +53,27 @@ digraph
   "TOOL_REVERSE" -> "ENABLE_TOOL" [label="e"];
   "TOOL_FORWARD" -> "ENABLE_TOOL" [label="e"];
   "CODE=103" -> "DISABLE_TOOL" [label="e"];
+  "DISABLE_TOOL" -> "TOOLHEAD=T"
   "CODE=104" -> "104_IS_T_REGISTER_DEFINED?" [label="e"];
   "104_IS_T_REGISTER_DEFINED?" -> "SET_TOOLHEAD_TEMPERATURE" [label="e"];
+  "SET_TOOLHEAD_TEMPERATURE" -> "TOOLHEAD=T"
   "CODE=108" -> "IS_T_REGISTER_DEFINED?" [label="e"];
   "IS_T_REGISTER_DEFINED?" -> "IS_T_REGISTER_A_FLAG?" [label="yes"];
-  "IS_T_REGISTER_A_FLAG?" -> "INVALID REGISTER_ERROR" [label="yes"];
-  "IS_T_A_FLAG?" -> "TOOL=T" [label="no"];
-  "TOOL=T" -> "IS_R_REGISTER_DEFINED?";
+  "IS_T_REGISTER_A_FLAG?" -> "INVALID_REGISTER_ERROR" [label="yes"];
+  "IS_T_REGISTER_A_FLAG?" -> "108_TOOLHEAD=T" [label="no"];
+  "108_TOOLHEAD=T" -> "TOOL_SET_IS_R_REGISTER_DEFINED?" [label="e"];
+  "TOOL_SET_IS_R_REGISTER_DEFINED?" -> "TOOL_SET_IS_R_REGISTER_A_FLAG?" [label="yes"];
+  "TOOL_SET_IS_R_REGISTER_A_FLAG?" -> "INVALID_REGISTER_ERROR" [label="yes"];
+  "TOOL_SET_IS_R_REGISTER_DEFINED?" -> "DONE_PROCESSING_108" [label="no"];
+  "TOOL_SET_IS_R_REGISTER_A_FLAG?" -> "TOOL_SPEED=R" [label="no"];
   "IS_T_REGISTER_DEFINED?" -> "IS_R_REGISTER_DEFINED?" [label="no"];
-  "IS_R_REGISTER_DEFINED?" -> "DONE_PROCESSING" [label="no"];
+  "IS_R_REGISTER_DEFINED?" -> "MISSING_REGISTER_ERROR" [label="no"];
   "IS_R_REGISTER_DEFINED?" -> "IS_R_REGISTER_A_FLAG?" [label="yes"];
-  "IS_R_REGISTER_A_FLAG?" -> "INVALID_REGISTER_ERROR" [label = "yes"];
-  "IS_R_REGISTER_A_FLAG?" -> "IS_T_REGISTER_DEFINED?" [label="no"];
-  "IS_T_REGISTER_DEFINED?" -> "TOOLHEAD_SPEED=R" [label="no"];
-  "IS_T_REGISTER_DEFINED?" -> "IS_T_REGISTER_A_FLAG?" [label="yes"];
-  "IS_T_REGISTER_A_FLAG?" -> 
-  "108_IS_R_REGISTER_DEFINED?" -> "SET_TOOL_SPEED" [label="no"];
+  "IS_R_REGISTER_A_FLAG?" -> "INVALID_REGISTER_ERROR" [label="yes"];
+  "IS_R_REGISTER_A_FLAG?" -> "TOOL_SPEED=R" [label="no"];
   "CODE=109" -> "109_IS_T_REGISTER_DEFINED?" [label="e"];
   "109_IS_T_REGISTER_DEFINED?" -> "SET_PLATFORM_TEMPERATURE" [label="e"];
+  "SET_PLATFORM_TEMPERATURE" -> "TOOLHEAD=T";
   "CODE=132" -> "RECALL_HOME_POSITION" [label="e"];
   "RECALL_HOME_POSITION" -> "LOSE_POSITION" [label="e"];
   "IS_*_REGISTER_DEFINED?" -> "MISSING_REGISTER_ERROR" [label="no"];
