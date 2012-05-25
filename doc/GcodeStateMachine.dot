@@ -16,7 +16,7 @@ digraph
   "UPDATE_SM_POSITION" [shape=rectangle];
   "4_IS_P_REGISTER_DEFINED?" [shape=rectangle];
   "10_IS_P_REGISTER_DEFINED?" [shape=rectangle];
-  "IS_P_REGISTER_DEFINED?" [shape=rectangle];
+  "IS_*_REGISTER_DEFINED?" [shape=rectangle];
   "IS_A_AND_B_DEFINED?" [shape=rectangle];
   "1_IS_A_AND_B_DEFINED?" [shape=rectangle];
   "92_IS_A_AND_B_DEFINED?" [shape=rectangle];
@@ -26,7 +26,7 @@ digraph
   "IS_TOOL_ENABLED?" [shape=diamond];
   "ARE_OFFSETS_DEFINED?" [shape=diamond];
   "IS_TOOLHEAD_DEFINED?" [shape=diamond];
-  "IS_P_REGISTER_A_FLAG?" [shape=diamond];
+  "IS_*_REGISTER_A_FLAG?" [shape=diamond];
   "RECOGNIZED_CODE?" [shape=diamond];
   "EXTRA_REGISTERS_PRESENT?" [shape=diamond];
   "IS_G_COMMAND" -> "RECOGNIZED_CODE?";
@@ -59,10 +59,10 @@ digraph
   "IS_E_REGISTER_DEFINED?" -> "1_UPDATE_SM_POSITION" [label="no"];
   "CODE=4" -> "4_IS_P_REGISTER_DEFINED?" [label="e"];
   "4_IS_P_REGISTER_DEFINED?" -> "IS_TOOL_ENABLED?" [label="e"];
-  "IS_P_REGISTER_DEFINED?" -> "MISSING_REGISTER_ERROR" [label="no"];
-  "IS_P_REGISTER_DEFINED?" -> "IS_P_REGISTER_A_FLAG?" [label="yes"];
-  "IS_P_REGISTER_A_FLAG?" -> "INVALID_REGISTER_ERROR" [label="yes"];
-  "IS_P_REGISTER_A_FLAG?" -> "P_REGISTER_CHECK_RETURN" [label="no"];
+  "IS_*_REGISTER_DEFINED?" -> "MISSING_REGISTER_ERROR" [label="no"];
+  "IS_*_REGISTER_DEFINED?" -> "IS_*_REGISTER_A_FLAG?" [label="yes"];
+  "IS_*_REGISTER_A_FLAG?" -> "INVALID_REGISTER_ERROR" [label="yes"];
+  "IS_*_REGISTER_A_FLAG?" -> "*_REGISTER_CHECK_RETURN" [label="no"];
   "IS_TOOL_ENABLED?" -> "DELAY" [label="disabled"];
   "IS_TOOL_ENABLED?" -> "SIT_AND_EXTRUDE" [label="enabled"];
   "CODE=10" -> "10_IS_P_REGISTER_DEFINED?" [label="e"];
@@ -72,9 +72,11 @@ digraph
   "CODE=92" -> "92_UPDATE_SM_POSITION" [label="e"];
   "92_UPDATE_SM_POSITION" -> "92_IS_A_AND_B_DEFINED?"
   "92_IS_A_AND_B_DEFINED?" -> "SET_POSITION" [label="e"];
-  "CODE=161" -> "FIND_AXES_MINIMUMS" [label="e"];
+  "CODE=161" -> "161_IS_F_REGISTER_DEFINED?" [label="e"];
+  "161_IS_F_REGISTER_DEFINED?" -> "FIND_AXES_MINIMUMS" [label="e"];
   "FIND_AXES_MINIMUMS" -> "LOSE_POSITION" [label="e"];
-  "CODE=162" -> "FIND_AXES_MAXIMUMS" [label="e"];
+  "CODE=162" -> "162_IS_F_REGISTER_DEFINED?" [label="e"];
+  "162_IS_F_REGISTER_DEFINED?" -> "FIND_AXES_MAXIMUMS" [label="e"];
   "FIND_AXES_MAXIMUMS" -> "LOSE_POSITION";
   "IS_A_AND_B_DEFINED?" -> "A_AND_B_DEFINED_ERROR" [label="yes"];
   "IS_A_AND_B_DEFINED?" -> "A_AND_B_CHECK_RETURN" [label="no"];
