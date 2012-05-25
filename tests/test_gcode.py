@@ -58,6 +58,14 @@ class gcodeTests(unittest.TestCase):
     allRegs = 'XYZF'
     self.assertEqual(sorted(allRegs), sorted(self.g.GCODE_INSTRUCTIONS[162][1]))
 
+  def test_g_130_missing_p(self):
+    codes = {'G' : 130}
+    self.assertRaises(s3g.MissingCodeError, self.g.SetPotentiometerValues, codes, '')
+
+  def test_g_130_p_is_flag(self):
+    codes = {'G' : 130, 'P' : True}
+    self.assertRaises(s3g.MissingCodeError, self.g.SetPotentiometerValues, codes, '')
+
   def test_find_axes_minimum(self):
     self.g.states.position = {
           'X' : 0,

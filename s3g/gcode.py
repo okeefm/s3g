@@ -23,7 +23,7 @@ class GcodeParser(object):
 #      55  : self.UseP1Offsets,
 #      90  : self.AbsoluteProgramming,
 #      92  : self.SetPosition,
-#      130 : self.SetPotentiometers,
+      130 : self.SetPotentiometers,
       161 : [self.FindAxesMinimum,        'XYZF'],
       162 : [self.FindAxesMaximum,        'XYZF'],
     }
