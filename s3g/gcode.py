@@ -91,7 +91,9 @@ def CheckForExtraneousCodes(codes, allowed_codes):
 
   Throws an InvalidCodeError if an unexpected code was found
   @codes dict 
-  """
+  """ 
+  #TODO Change the way we add in G and M commands.  Its kinda...bad?
+  allowed_codes += "GM"
   difference = set(codes.keys()) - set(allowed_codes)
 
   if len(difference) > 0:
@@ -107,18 +109,18 @@ class GcodeParser(object):
     self.states = GcodeStates()
 
     self.GCODE_INSTRUCTIONS = {
-      0   : [self.RapidPositioning,      ['XYZ']],
-      1   : [self.LinearInterpolation,   ['XYZABF']],
+#      0   : [self.RapidPositioning,      ['XYZ']],
+#      1   : [self.LinearInterpolation,   ['XYZABF']],
 #      4   : self.Dwell,
 #      10  : self.StoreOffsets,
-      21  : [self.MilimeterProgramming,   ['']],
+#      21  : [self.MilimeterProgramming,   ['']],
 #      54  : self.UseP0Offsets,
 #      55  : self.UseP1Offsets,
 #      90  : self.AbsoluteProgramming,
 #      92  : self.SetPosition,
 #      130 : self.SetPotentiometers,
-#      161 : self.HomeAxesMaximum,
-#      162 : self.HomeAxesMinimum,
+      161 : [self.FindAxesMinimum,        'XYZF'],
+      162 : [self.FindAxesMaximum,        'XYZF'],
     }
 
     self.MCODE_INSTRUCTIONS = {
@@ -217,10 +219,10 @@ class GcodeParser(object):
 #      for key in self.offsetPosition[self.toolhead]:
 #        self.position[key] += self.offsetPosition[self.toolhead][key]
 
-#  def LosePosition(self, codes):
-#    axes = self.ParseOutAxes(codes)
-#    for axis in axes:
-#      self.position[axis] = None
+  def LosePosition(self, codes):
+    axes = self.ParseOutAxes(codes)
+    for axis in axes:
+      self.states.position[axis] = None
 
   def ExecuteLine(self, command):
     """
@@ -233,7 +235,7 @@ class GcodeParser(object):
 
     if 'G' in codes:
       if codes['G'] in self.GCODE_INSTRUCTIONS:
-        CheckForExtraneousCodes(codes, codes['G'][1])
+        CheckForExtraneousCodes(codes, self.GCODE_INSTRUCTIONS[codes['G']][1])
         self.GCODE_INSTRUCTIONS[codes['G']][0](codes, comment)
 
       else:
@@ -241,94 +243,24 @@ class GcodeParser(object):
 
     else:
       if codes['M'] in self.MCODE_INSTRUCTIONS:
-        CheckForExtraneousCodes(codes, codes['M'][1])
+        CheckForExtraneousCodes(codes, self.GCODE_INSTRUCTIONS[codes['M']][1])
         self.MCODE_INSTRUCTIONS[codes['M']][0](codes, comment)
 
       else:
         raise UnrecognizedCodeError
 
-    """
-    # Update the state information    
-    if 'G' in codes:
-      if codes['G'] == 0:
-        self.SetPosition(codes)
-        self.ApplyNeededOffsetsToPosition()
-        self.RapidPositioning()
-      elif codes['G'] == 1:
-        if 'E' in codes:
-          if 'A' in codes or 'B' in codes:
-            raise LinearInterpolationError
-          else:
-            self.InterpolateECode(codes)
-            self.SetPosition()
-            self.ApplyNeededOffsetsToPosition()
-            #self.SendPointToMachine()
-        else:
-          self.SetPosition(codes)
-          self.ApplyNeededOffsetsToPosition()
-          #self.SendPointToMachine()
-      elif codes['G'] == 4:
-        self.Dwell(codes)
-      elif codes['G'] == 10:
-        self.SetOffsets(codes)
-      elif codes['G'] == 54:
-        self.toolhead = 0
-      elif codes['G'] == 55:
-        self.toolhead = 1
-      elif codes['G'] == 92:
-        self.SetPosition(codes)
-        self.ApplyNeededOffsetsToPosition()
-        self.RapidPositioning()
-      elif codes['G'] == 161:
-        self.LosePosition(codes)
-        #self.FindAxesMinimums(codes)
-      elif codes['G'] == 162:
-        self.LosePosition(codes)
-        #self.FindAxesMaximums(codes)
+  def ParseOutAxes(self, codes):
+    """Given a set of codes, returns a list of all present axes
 
-    elif 'M' in codes:
-      if registesr['M'] == 6:
-        pass
-        #self.WaitForToollhead(codes)
-      elif codes['M'] == 18:
-        #self.DisableAxes(codes)
-      elif codes['M'] == 70:
-        self.DisplayMessage(codes)
-      elif codes['M'] == 72:
-        self.QueueSong(codes)
-      elif codes['M'] == 73:
-        self.SetBuildPercentage(codes)
-      elif codes['M'] == 101:
-        self.toolhead_enabled = True
-        self.toolhead_direction = True
-      elif codes['M'] == 102:
-        self.toolhead_enabled = True
-        self.toolhead_direction = False
-      elif codes['M'] == 103:
-        self.toolhead_enabled = False
-      elif codes['M'] == 104:
-        self.SetToolheadTemperature(codes)
-      elif codes['M'] == 109:
-        self.SetPlatformTemperature(codes)
-      elif codes['M'] == 108:
-        if 'R' not in codes:
-          raise MissingCodeError
-        if isinstance(codes['R'], bool):
-          raise InvalidCodeError
-        self.toolhead_speed = codes['R']
-      elif codes['M'] == 132:
-        self.LosePosition(codes)
-        self.RecallHomePosition(codes)
+   @param dict codes: Codes parsed out of the gcode command
+    @return list: List of axes in codes
     """
-
-#  def ParseOutAxes(self, codes):
-#    """Given a set of codes, returns a list of all present axes
-#
-#    @param dict codes: Codes parsed out of the gcode command
-#    @return list: List of axes in codes
-#    """
-#    possibleAxes = ['X', 'Y', 'Z', 'A', 'B']
-#    return [axis for axis in codes if axis in possibleAxes]
+    possibleAxes = ['X', 'Y', 'Z', 'A', 'B']
+    parsedAxes = []
+    for code in codes:
+      if code in possibleAxes:
+        parsedAxes.append(code)
+    return parsedAxes
 
 #  def GetPoint(self):
 #    return [
@@ -371,6 +303,16 @@ class GcodeParser(object):
 #    for val in valTable:
 #      self.s3g.SetPotentiometerValue(valTable[val], val)
 
-#  def FindAxesMinimums(self, codes):
-#    axes = [axis.lower for axis in self.ParseOutAxes(codes)]
-#    self.s3g.FindAxesMinimums(axes, ['F'], self.findingTimeout)
+  def FindAxesMaximum(self, codes, command):
+    axes = []
+    for axis in self.ParseOutAxes(codes):
+      axes.append(axis.lower())
+    self.s3g.FindAxesMaximums(axes, codes['F'], self.states.findingTimeout)
+    self.LosePosition(codes
+)
+  def FindAxesMinimum(self, codes, comment):
+    axes = []
+    for axis in self.ParseOutAxes(codes):
+      axes.append(axis.lower())
+    self.s3g.FindAxesMinimums(axes, codes['F'], self.states.findingTimeout)
+    self.LosePosition(codes) 

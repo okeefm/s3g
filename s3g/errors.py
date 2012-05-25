@@ -227,6 +227,16 @@ class ExtraneousCodeError(GcodeError):
   An extraneous code error is raised when a code is found in a command that doesn't support it.
   """
 
+class UnrecognizedGcodeError(GcodeError):
+  """
+  An UnrecognizedGcodeError is thrown when a gcode is parsed out that is not recognized
+  """
+
+class UnrecognizedMcodeError(GcodeError):
+  """
+  An UnrecognizedMcodeError is thrown when an mcode is parsed out that is not recognized
+  """
+
 class StringTooLongError(Exception):
   """
   A stringTooLongError is raised when a string is parsed out of an s3g stream that longer
