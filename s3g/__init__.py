@@ -6,10 +6,11 @@ from fileWriter import *
 from streamWriter import *
 from fileReader import *
 from fileReaderRaw import *
-from gcodeStates import *
 from constants import *
 from errors import *
 from crc import *
 from coding import *
 from packet import *
 from gcode import *
+from gcodeStates import *
+from gcodeUtils import *
