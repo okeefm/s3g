@@ -10,7 +10,7 @@ import mock
 
 import s3g
 
-class gcodeTests(unittest.TestCase):
+class gcodeTestsMockedS3G(unittest.TestCase):
   def setUp(self):
 #    self.inputstream = io.BytesIO()
 #    self.writer = s3g.FileWriter(self.inputstream)
@@ -21,12 +21,40 @@ class gcodeTests(unittest.TestCase):
     self.g = s3g.GcodeParser()
 #    self.g.s3g = self.r
     self.g.s3g = self.mock
-   
-
  
   def tearDown(self):
     self.g = None
     self.r = None
+    self.inputstream = None
+    self.writer = None
+
+  def test_wait_for_toolhead(self):
+    tool_index = 2
+    timeout = 3
+    delay = 100
+
+    codes = {'T':tool_index, 'P':timeout}
+
+    self.g.WaitForToolhead(codes, '')
+
+    self.mock.WaitForToolReady.assert_called_once_with(tool_index, delay, timeout)
+
+
+class gcodeTests(unittest.TestCase):
+  def setUp(self):
+    self.g = s3g.GcodeParser()
+    self.inputstream = io.BytesIO()
+    self.writer = s3g.FileWriter(self.inputstream)
+    self.r = s3g.s3g()
+    self.r.writer = self.writer
+    self.g.s3g = self.r
+    self.d = s3g.FileReader()
+    self.d.file = self.inputstream
+ 
+  def tearDown(self):
+    self.g = None
+    self.r = None
+    self.d = None
     self.inputstream = None
     self.writer = None
 
@@ -62,12 +90,12 @@ class gcodeTests(unittest.TestCase):
     codes = {'G' : 130}
     self.g.SetPotentiometerValues(codes, '')
     self.inputstream.seek(0)
-    payloads = self.d.ReadStream()
+    payloads = self.d.ReadFile()
     self.assertEqual(len(payloads), 0)
 
   def test_set_potentiometer_values_codes_are_flags(self):
     codes = {'G' : 130, 'X' : True}
-    self.assertRaises(CodeValueError, self.SetPotentiometerValues, codes, '')
+    self.assertRaises(s3g.CodeValueError, self.g.SetPotentiometerValues, codes, '')
 
   def test_set_potentiometer_values_one_axis(self):
     codes = {'G' : 130, 'X' : 0}
@@ -87,7 +115,7 @@ class gcodeTests(unittest.TestCase):
     values = [0, 1 ,2, 3, 4]
     self.g.SetPotentiometerValues(codes, '')
     self.inputstream.seek(0)
-    readPayloads = self.d.ReadStream() 
+    readPayloads = self.d.ReadFile() 
     for readPayload, i in zip(readPayloads, range(5)):
       expectedPayload = [cmd, s3g.EncodeAxes(axes[i]), values[i]]
       self.assertEqual(expectedPayload, readPayload)
@@ -168,7 +196,7 @@ class gcodeTests(unittest.TestCase):
 
   def test_find_axes_maximum_no_axes(self):
     codes = {'F':0}
-    cmd = s3g.host_action_command_dict['WAIT_FOR_TOOL_READY']
+    cmd = s3g.host_action_command_dict['FIND_AXES_MAXIMUMS']
     encodedAxes = 0
     feedrate = 0
     expectedPayload = [cmd ,encodedAxes, feedrate, self.g.states.findingTimeout]
@@ -176,17 +204,6 @@ class gcodeTests(unittest.TestCase):
     self.inputstream.seek(0)
     readPayload = self.d.ParseNextPayload()
     self.assertEqual(readPayload, expectedPayload)
-
-  def test_wait_for_toolhead(self):
-    tool_index = 2
-    timeout = 3
-    delay = 100
-
-    codes = {'T':tool_index, 'P':timeout}
-
-    self.g.WaitForToolhead(codes, '')
-
-    self.mock.WaitForToolReady.assert_called_once_with(tool_index, delay, timeout)
 
 
 if __name__ == "__main__":

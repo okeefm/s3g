@@ -160,28 +160,24 @@ class GcodeParser(object):
     for a in ParseOutAxes(codes):
       #Try to append it to the appropriate list
       try:
-        valTable[codes[a]].append(a.lower())
+        valTable[codes[a]].append(a)
       #Never been encountered before, make a list
       except KeyError:
-        valTable[codes[a]] = [a.lower()]
+        valTable[codes[a]] = [a]
     for val in valTable:
       self.s3g.SetPotentiometerValue(valTable[val], val)
 
   def FindAxesMaximum(self, codes, command):
-    if not CodePresentAndNonFlag(codes, ['F']):
+    if not CodePresentAndNonFlag(codes, 'F'):
       raise CodeValueError  
-    axes = []
-    for axis in ParseOutAxes(codes):
-      axes.append(axis.lower())
+    axes = ParseOutAxes(codes) 
     self.s3g.FindAxesMaximums(axes, codes['F'], self.states.findingTimeout)
     self.states.LosePosition(codes)
 
   def FindAxesMinimum(self, codes, comment):
-    if not CodePresentAndNonFlag(codes, ['F']):
+    if not CodePresentAndNonFlag(codes, 'F'):
       raise CodeValueError
-    axes = []
-    for axis in ParseOutAxes(codes):
-      axes.append(axis.lower())
+    axes = ParseOutAxes(codes)
     self.s3g.FindAxesMinimums(axes, codes['F'], self.states.findingTimeout)
     self.states.LosePosition(codes) 
 
