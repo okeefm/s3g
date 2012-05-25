@@ -3,8 +3,9 @@ A state machine for the gcode parser which keeps track of certain
 variables.
 """
 
-class GcodeStates(object):
+from gcodeUtils import *
 
+class GcodeStates(object):
   def __init__(self):
     self.position = {
         'X' : None,
@@ -41,3 +42,8 @@ class GcodeStates(object):
     self.xSPM = 94.139704       #Steps per milimeters on the x axis
     self.ySPM = 94.139704       #Steps per milimeters on the y axis
     self.zSPM = 400             #Steps per milimeters on the z axis
+
+  def LosePosition(self, codes):
+    axes = ParseOutAxes(codes)
+    for axis in axes:
+      self.position[axis] = None

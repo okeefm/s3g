@@ -10,7 +10,6 @@ import time
 import s3g
 
 class gcodeTests(unittest.TestCase):
-
   def setUp(self):
     self.g = s3g.GcodeParser()
     self.r = s3g.s3g()
@@ -130,83 +129,16 @@ class gcodeTests(unittest.TestCase):
     readPayload = self.d.ParseNextPayload()
     self.assertEqual(readPayload, expectedPayload)
 
-class s3gHelperFunctionTests(unittest.TestCase):
-  def setUp(self):
-    self.g = s3g.GcodeParser()
-
-  def tearDown(self):
-    self.g = None
-
-  def test_lose_position(self):
-    self.g.states.position = {
-          'X' : 0,
-          'Y' : 0,
-          'Z' : 0,
-          'A' : 0,
-          'B' : 0,
-          }
-    codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True}
-    self.g.LosePosition(codes)
-    for key in self.g.states.position:
-      self.assertTrue(self.g.states.position[key] == None)
-
-  def test_lose_position_no_codes(self):
-    self.g.states.position = {
-        'X' : 0,
-        'Y' : 1,
-        'Z' : 2,
-        'A' : 3,
-        'B' : 4,
-        }
-    codes = {}
-    expectedPosition = {
-        'X' : 0,
-        'Y' : 1,
-        'Z' : 2, 
-        'A' : 3,
-        'B' : 4, 
-        }
-    self.g.LosePosition(codes)
-    self.assertEqual(expectedPosition, self.g.states.position)
-
-  def test_lose_position_minimal_codes(self):
-    self.g.states.position = {
-        'X' : 0,
-        'Y' : 1,
-        'Z' : 2,
-        'A' : 3,
-        'B' : 4,
-        }
-    expectedPosition = {
-        'X' : None,
-        'Y' : 1,
-        'Z' : 2,
-        'A' : 3,
-        'B' : 4,
-        }
-    codes = {'X':True}
-    self.g.LosePosition(codes)
-    self.assertEqual(expectedPosition, self.g.states.position)
-
-  def test_parse_out_axes(self):
-    codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True}
-    parsedAxes = self.g.ParseOutAxes(codes)
-    self.assertEqual(sorted(['X', 'Y', 'Z', 'A', 'B']), sorted(parsedAxes))
-
-  def test_parse_out_axes_extra_axes(self):
-    codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True, 'Q':True}
-    parsedAxes = self.g.ParseOutAxes(codes)
-    self.assertEqual(sorted(['X', 'Y', 'Z', 'A', 'B']), sorted(parsedAxes))
-
-  def test_parse_out_axes_no_axes(self):
-    codes = {}
-    parsedAxes = self.g.ParseOutAxes(codes)
-    self.assertEqual([], parsedAxes)
-
-  def test_parse_out_axes_minimal_axes(self):
-    codes = {'X':True}
-    parsedAxes = self.g.ParseOutAxes(codes)
-    self.assertEqual(['X'], parsedAxes)
+  def test_wait_for_toolhead(self):
+    codes = {'F':0}
+    cmd = s3g.host_action_command_dict['FIND_AXES_MAXIMUMS']
+    encodedAxes = 0
+    feedrate = 0
+    expectedPayload = [cmd ,encodedAxes, feedrate, self.g.states.findingTimeout]
+    self.g.FindAxesMaximum(codes, '')
+    self.inputstream.seek(0)
+    readPayload = self.d.ParseNextPayload()
+    self.assertEqual(readPayload, expectedPayload)
 
 if __name__ == "__main__":
   unittest.main()

@@ -88,7 +88,7 @@ class GcodeParser(object):
 #    elif isinstance(codes['P'], bool):
 #      raise InvalidCodeError
 #    self.offsetPosition[codes['P']] = {}
-#    for axis in self.ParseOutAxes(codes):
+#    for axis in ParseOutAxes(codes):
 #      self.offsetPosition[codes['P']][axis] = codes[axis]
 
   def MilimeterProgramming(self, codes):
@@ -124,10 +124,6 @@ class GcodeParser(object):
 #      for key in self.offsetPosition[self.toolhead]:
 #        self.position[key] += self.offsetPosition[self.toolhead][key]
 
-  def LosePosition(self, codes):
-    axes = self.ParseOutAxes(codes)
-    for axis in axes:
-      self.states.position[axis] = None
 
   def ExecuteLine(self, command):
     """
@@ -154,18 +150,6 @@ class GcodeParser(object):
       else:
         raise UnrecognizedCodeError
 
-  def ParseOutAxes(self, codes):
-    """Given a set of codes, returns a list of all present axes
-
-   @param dict codes: Codes parsed out of the gcode command
-    @return list: List of axes in codes
-    """
-    possibleAxes = ['X', 'Y', 'Z', 'A', 'B']
-    parsedAxes = []
-    for code in codes:
-      if code in possibleAxes:
-        parsedAxes.append(code)
-    return parsedAxes
 
 #  def GetPoint(self):
 #    return [
@@ -198,7 +182,7 @@ class GcodeParser(object):
 #    #Put all values in a hash table
 #    valTable = {}
 #    #For each code in codes thats an axis:
-#    for a in self.ParseOutAxes(codes):
+#    for a in ParseOutAxes(codes):
 #      #Try to append it to the appropriate list
 #      try:
 #        valTable[int(codes[a])].append(a.lower())
@@ -214,18 +198,18 @@ class GcodeParser(object):
     if isinstance(codes['F'], bool):
       raise CodeValueError  
     axes = []
-    for axis in self.ParseOutAxes(codes):
+    for axis in ParseOutAxes(codes):
       axes.append(axis.lower())
     self.s3g.FindAxesMaximums(axes, codes['F'], self.states.findingTimeout)
-    self.LosePosition(codes
-)
+    self.states.LosePosition(codes)
+
   def FindAxesMinimum(self, codes, comment):
     if not 'F' in codes:
       raise MissingCodeError
     elif isinstance(codes['F'], bool):
       raise CodeValueError
     axes = []
-    for axis in self.ParseOutAxes(codes):
+    for axis in ParseOutAxes(codes):
       axes.append(axis.lower())
     self.s3g.FindAxesMinimums(axes, codes['F'], self.states.findingTimeout)
-    self.LosePosition(codes) 
+    self.states.LosePosition(codes) 

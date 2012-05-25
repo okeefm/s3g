@@ -94,3 +94,17 @@ def CheckForExtraneousCodes(codes, allowed_codes):
 
   if len(difference) > 0:
     raise InvalidCodeError
+
+
+def ParseOutAxes(codes):
+  """Given a set of codes, returns a list of all present axes
+
+ @param dict codes: Codes parsed out of the gcode command
+  @return list: List of axes in codes
+  """
+  possibleAxes = ['X', 'Y', 'Z', 'A', 'B']
+  parsedAxes = []
+  for code in codes:
+    if code in possibleAxes:
+      parsedAxes.append(code)
+  return parsedAxes

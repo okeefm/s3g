@@ -196,8 +196,29 @@ class CheckForExtraneousCodesTests(unittest.TestCase):
     command = "G161 X Y Z F Q"
     self.assertRaises(s3g.InvalidCodeError, g.ExecuteLine, command)
 
-class ParseSampleGcodeFileTests(unittest.TestCase):
+class ParseOutAxesTests(unittest.TestCase):
+  def test_parse_out_axes(self):
+    codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True}
+    parsedAxes = s3g.ParseOutAxes(codes)
+    self.assertEqual(sorted(['X', 'Y', 'Z', 'A', 'B']), sorted(parsedAxes))
 
+  def test_parse_out_axes_extra_axes(self):
+    codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True, 'Q':True}
+    parsedAxes = s3g.ParseOutAxes(codes)
+    self.assertEqual(sorted(['X', 'Y', 'Z', 'A', 'B']), sorted(parsedAxes))
+
+  def test_parse_out_axes_no_axes(self):
+    codes = {}
+    parsedAxes = s3g.ParseOutAxes(codes)
+    self.assertEqual([], parsedAxes)
+
+  def test_parse_out_axes_minimal_axes(self):
+    codes = {'X':True}
+    parsedAxes = s3g.ParseOutAxes(codes)
+    self.assertEqual(['X'], parsedAxes)
+
+
+class ParseSampleGcodeFileTests(unittest.TestCase):
   def test_parse_files(self):
     # Terriable hack, to support running from the root or test directory.
     files = []
@@ -212,6 +233,7 @@ class ParseSampleGcodeFileTests(unittest.TestCase):
       with open(file) as lines:
         for line in lines:
           codes, comment = s3g.ParseLine(line)
+
 
  
 if __name__ == "__main__":
