@@ -23,9 +23,9 @@ class GcodeParser(object):
 #      55  : self.UseP1Offsets,
 #      90  : self.AbsoluteProgramming,
 #      92  : self.SetPosition,
-      130 : self.SetPotentiometers,
-      161 : [self.FindAxesMinimum,        'XYZF'],
-      162 : [self.FindAxesMaximum,        'XYZF'],
+      130 : [self.SetPotentiometerValues,      'XYZP'],
+      161 : [self.FindAxesMinimum,             'XYZF'],
+      162 : [self.FindAxesMaximum,             'XYZF'],
     }
 
     self.MCODE_INSTRUCTIONS = {
@@ -96,9 +96,6 @@ class GcodeParser(object):
     """
     pass
 
-
-
-
 #  def UpdateInternalPosition(self, codes):
 #    """Given a set of codes, sets the position and applies any offsets, if needed
 #    @param codes: The codes parsed out of the g/m command
@@ -123,7 +120,6 @@ class GcodeParser(object):
 #    if self.toolhead != None:
 #      for key in self.offsetPosition[self.toolhead]:
 #        self.position[key] += self.offsetPosition[self.toolhead][key]
-
 
   def ExecuteLine(self, command):
     """
@@ -150,52 +146,29 @@ class GcodeParser(object):
       else:
         raise UnrecognizedCodeError
 
+  def SetPotentiometerValues(self, codes, comment):
+    """Given a set of codes, sets the machine's potentiometer value to a specified value in the codes
 
-#  def GetPoint(self):
-#    return [
-#            self.position['X'], 
-#            self.position['Y'], 
-#            self.position['Z'],
-#           ]
-
-#  def GetExtendedPoint(self):
-#    return [
-#            self.position['X'], 
-#            self.position['Y'], 
-#            self.position['Z'], 
-#            self.position['A'], 
-#            self.position['B'],
-#           ]
-
-
-
-#  def PositionCode(self):
-#    """Gets the current extended position and sets the machine's position to be equal to the modified position
-#    """ 
-#    self.s3g.SetExtendedPosition(self.GetExtendedPoint()) 
-
-#  def SetPotentiometerValues(self, codes):
-#    """Given a set of codes, sets the machine's potentiometer value to a specified value in the codes
-#
-#    @param dict codes: Codes parsed out of the gcode command
-#    """
-#    #Put all values in a hash table
-#    valTable = {}
-#    #For each code in codes thats an axis:
-#    for a in ParseOutAxes(codes):
-#      #Try to append it to the appropriate list
-#      try:
-#        valTable[int(codes[a])].append(a.lower())
-#      #Never been encountered before, make a list
-#      except KeyError:
-#        valTable[int(codes[a])] = [a.lower()]
-#    for val in valTable:
-#      self.s3g.SetPotentiometerValue(valTable[val], val)
+    @param dict codes: Codes parsed out of the gcode command
+    """
+    for key in codes:
+      if IsCodeAFlag(codes, key):
+        raise CodeValueError
+    #Put all values in a hash table
+    valTable = {}
+    #For each code in codes thats an axis:
+    for a in ParseOutAxes(codes):
+      #Try to append it to the appropriate list
+      try:
+        valTable[codes[a]].append(a.lower())
+      #Never been encountered before, make a list
+      except KeyError:
+        valTable[codes[a]] = [a.lower()]
+    for val in valTable:
+      self.s3g.SetPotentiometerValue(valTable[val], val)
 
   def FindAxesMaximum(self, codes, command):
-    if not 'F' in codes:
-      raise MissingCodeError
-    if isinstance(codes['F'], bool):
+    if not CodePresentAndNonFlag(codes, ['F']):
       raise CodeValueError  
     axes = []
     for axis in ParseOutAxes(codes):
@@ -204,9 +177,7 @@ class GcodeParser(object):
     self.states.LosePosition(codes)
 
   def FindAxesMinimum(self, codes, comment):
-    if not 'F' in codes:
-      raise MissingCodeError
-    elif isinstance(codes['F'], bool):
+    if not CodePresentAndNonFlag(codes, ['F']):
       raise CodeValueError
     axes = []
     for axis in ParseOutAxes(codes):
@@ -217,4 +188,3 @@ class GcodeParser(object):
   def WaitForToolhead(self, codes, comment):
     # TODO: Test for codes
     self.s3g.WaitForToolReady(codes['T'], 100, codes['P'])
-

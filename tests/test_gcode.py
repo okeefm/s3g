@@ -54,17 +54,53 @@ class gcodeTests(unittest.TestCase):
     codes = {"G" : 162, 'F' : True}
     self.assertRaises(s3g.CodeValueError, self.g.FindAxesMaximum, codes, '')
 
-  def test_g_162_all_registers_accounted_for(self):
+  def test_g_162_all_codes_accounted_for(self):
     allRegs = 'XYZF'
     self.assertEqual(sorted(allRegs), sorted(self.g.GCODE_INSTRUCTIONS[162][1]))
 
-  def test_g_130_missing_p(self):
+  def test_set_potentiometer_values_no_codes(self):
     codes = {'G' : 130}
-    self.assertRaises(s3g.MissingCodeError, self.g.SetPotentiometerValues, codes, '')
+    self.g.SetPotentiometerValues(codes, '')
+    self.inputstream.seek(0)
+    payloads = self.d.ReadStream()
+    self.assertEqual(len(payloads), 0)
 
-  def test_g_130_p_is_flag(self):
-    codes = {'G' : 130, 'P' : True}
-    self.assertRaises(s3g.MissingCodeError, self.g.SetPotentiometerValues, codes, '')
+  def test_set_potentiometer_values_codes_are_flags(self):
+    codes = {'G' : 130, 'X' : True}
+    self.assertRaises(CodeValueError, self.SetPotentiometerValues, codes, '')
+
+  def test_set_potentiometer_values_one_axis(self):
+    codes = {'G' : 130, 'X' : 0}
+    cmd = s3g.host_action_command_dict['SET_POT_VALUE']
+    encodedAxes = s3g.EncodeAxes(['x'])
+    val = 0
+    expectedPayload = [cmd, encodedAxes, val]
+    self.g.SetPotentiometerValues(codes, '')
+    self.inputstream.seek(0)
+    readPayload = self.d.ParseNextPayload()
+    self.assertEqual(expectedPayload, readPayload)
+
+  def test_set_potentiometer_values_all_axes(self):
+    codes = {'X' : 0, 'Y' : 1, 'Z' : 2, 'A': 3, 'B' : 4} 
+    cmd = s3g.host_action_command_dict['SET_POT_VALUE']
+    axes = ['X', 'Y', 'Z', 'A', 'B']
+    values = [0, 1 ,2, 3, 4]
+    self.g.SetPotentiometerValues(codes, '')
+    self.inputstream.seek(0)
+    readPayloads = self.d.ReadStream() 
+    for readPayload, i in zip(readPayloads, range(5)):
+      expectedPayload = [cmd, s3g.EncodeAxes(axes[i]), values[i]]
+      self.assertEqual(expectedPayload, readPayload)
+
+  def test_set_potentiometer_values_all_codes_same(self):
+    codes = {'X' : 0, 'Y' : 0, 'Z' : 0, 'A' : 0, 'B' : 0}
+    cmd = s3g.host_action_command_dict['SET_POT_VALUE']
+    axes = s3g.EncodeAxes(['x', 'y', 'z', 'a', 'b'])
+    expectedPayload = [cmd, axes, 0]
+    self.g.SetPotentiometerValues(codes, '')
+    self.inputstream.seek(0)
+    readPayload = self.d.ParseNextPayload()
+    self.assertEqual(expectedPayload, readPayload)
 
   def test_find_axes_minimum(self):
     self.g.states.position = {

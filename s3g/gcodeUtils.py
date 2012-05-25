@@ -81,7 +81,6 @@ def ParseLine(line):
 
   return codes, comment
 
-
 def CheckForExtraneousCodes(codes, allowed_codes):
   """ Check that all of the codes are expected for this command.
 
@@ -95,7 +94,6 @@ def CheckForExtraneousCodes(codes, allowed_codes):
   if len(difference) > 0:
     raise InvalidCodeError
 
-
 def ParseOutAxes(codes):
   """Given a set of codes, returns a list of all present axes
 
@@ -108,3 +106,33 @@ def ParseOutAxes(codes):
     if code in possibleAxes:
       parsedAxes.append(code)
   return parsedAxes
+
+def IsCodePresent(codes, c):
+  """Given a code c, checks if that code is present in the codes parsed out of a gcode.  
+
+  @param char c: The code we are checking for
+  @param dict codes: The codes we parsed out of the gcode command
+  """ 
+  return c in codes
+
+def IsCodeAFlag(codes, c):
+  """Given a code c, checks to see if it is a flag or not.
+  If it is not present, a MissingCodeError is thrown
+
+  @param char c: The code we are checking
+  @param dict codes: The codes we parsed out of the gcode command
+  """
+  try:
+    return isinstance(codes[c], bool)
+  except KeyError:
+    raise MissingCodeError
+
+def CodePresentAndNonFlag(codes, c):
+  """Given a code c, checks to see if it is present and not a flag.
+  Returns true if both of those conditions are satisfied, false otherwise.
+  If the code is not present, will raise a MissingCodeError
+
+  @param char c: The code we are checking for
+  @param dict codes: The codes we parsed out of the gcode command
+  """
+  return IsCodePresent(codes, c) and not IsCodeAFlag(codes, c)

@@ -136,8 +136,7 @@ class HeatElementReadyError(ProtocolError):
   """
 
 class EEPROMMismatchError(ProtocolError):
-  """
-    An EEPROM mismatch error is raised when the length of the information written to the eeprom doesnt match the length of the information passed into WriteToEEPROM
+  """An EEPROM mismatch error is raised when the length of the information written to the eeprom doesnt match the length of the information passed into WriteToEEPROM
   """
   def __init__(self, value):
     self.value = value
