@@ -241,7 +241,7 @@ class UtilityFunctionTests(unittest.TestCase):
 
   def test_code_present_and_non_flag_missing_code(self):
     registers = {}
-    self.assertFalse(s3g.CodePresentAndNonFlag(registers, 'G'))
+    self.assertRaises(s3g.MissingCodeError, s3g.CodePresentAndNonFlag,registers, 'G')
 
   def test_code_present_and_non_flag_code_is_flag(self):
     registers = {'G' : True}

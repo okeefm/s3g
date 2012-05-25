@@ -135,4 +135,8 @@ def CodePresentAndNonFlag(codes, c):
   @param char c: The code we are checking for
   @param dict codes: The codes we parsed out of the gcode command
   """
-  return IsCodePresent(codes, c) and not IsCodeAFlag(codes, c)
+  if not IsCodePresent(codes, c):
+    raise MissingCodeError
+  elif IsCodeAFlag(codes, c):
+    return False
+  return True
