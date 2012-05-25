@@ -304,6 +304,10 @@ class GcodeParser(object):
 #      self.s3g.SetPotentiometerValue(valTable[val], val)
 
   def FindAxesMaximum(self, codes, command):
+    if not 'F' in codes:
+      raise MissingCodeError
+    if isinstance(codes['F'], bool):
+      raise CodeValueError  
     axes = []
     for axis in self.ParseOutAxes(codes):
       axes.append(axis.lower())
@@ -311,6 +315,10 @@ class GcodeParser(object):
     self.LosePosition(codes
 )
   def FindAxesMinimum(self, codes, comment):
+    if not 'F' in codes:
+      raise MissingCodeError
+    elif isinstance(codes['F'], bool):
+      raise CodeValueError
     axes = []
     for axis in self.ParseOutAxes(codes):
       axes.append(axis.lower())

@@ -211,11 +211,6 @@ class MissingCodeError(GcodeError):
   A Missing Code Error is raised if a compulsory code is missing
   """
 
-class UnrecognizedCodeError(GcodeError):
-  """
-  Unrecognized codes are thrown if the G or M command is not implemented.
-  """
-
 class LinearInterpolationError(GcodeError):
   """
   A G1 (Linear Interpolation) command can have either an E code defined or both
@@ -227,14 +222,15 @@ class ExtraneousCodeError(GcodeError):
   An extraneous code error is raised when a code is found in a command that doesn't support it.
   """
 
-class UnrecognizedGcodeError(GcodeError):
+class UnrecognizedCodeError(GcodeError):
   """
-  An UnrecognizedGcodeError is thrown when a gcode is parsed out that is not recognized
+  An UnrecognizedCodeError is thrown when a gcode is parsed out that is not recognized
   """
 
-class UnrecognizedMcodeError(GcodeError):
+class CodeValueError(GcodeError):
   """
-  An UnrecognizedMcodeError is thrown when an mcode is parsed out that is not recognized
+  A CodeValueError is thrown when a code has a value that is not what is expected
+  I.E. A movement command's F code is set to True
   """
 
 class StringTooLongError(Exception):

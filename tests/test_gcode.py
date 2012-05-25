@@ -217,17 +217,13 @@ class gcodeTests(unittest.TestCase):
     self.inputstream = None
     self.writer = None
 
-  def test_g_161_missing_feedrate(self):
-    command = "G161"
-    self.assertRaises(s3g.MissingRegisterError, self.g.ExecuteLine, command)
+  def test_find_axes_minimum_missing_feedrate(self):
+    codes = {'G' : 161}
+    self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMinimum, codes, '') 
 
   def test_g_161_feedrate_is_flag(self):
-    command = "G161 F"
-    self.assertRaises(s3g.InvalidRegisterError, self.g.ExecuteLine, command)
-
-  def test_g_161_overloaded_registers(self):
-    command = "G161 X Y Z A F0"
-    self.assertRaises(s3g.UnrecognizedGcodeError, self.g.ExecuteLine, command)
+    codes = {'G' : 161, 'F' : True}
+    self.assertRaises(s3g.CodeValueError, self.g.FindAxesMinimum, codes, '')
 
   def test_g_161_all_registers_accounted_for(self):
     """
@@ -236,6 +232,18 @@ class gcodeTests(unittest.TestCase):
     """
     allRegs = 'XYZF'
     self.assertEqual(sorted(allRegs), sorted(self.g.GCODE_INSTRUCTIONS[161][1]))
+
+  def test_g_162_missing_feedrate(self):
+    codes = {"G" : 162}
+    self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMaximum, codes, '')
+
+  def test_g_162_feedrate_is_flag(self):
+    codes = {"G" : 162, 'F' : True}
+    self.assertRaises(s3g.CodeValueError, self.g.FindAxesMaximum, codes, '')
+
+  def test_g_162_all_registers_accounted_for(self):
+    allRegs = 'XYZF'
+    self.assertEqual(sorted(allRegs), sorted(self.g.GCODE_INSTRUCTIONS[162][1]))
 
   def test_find_axes_minimum(self):
     self.g.states.position = {
