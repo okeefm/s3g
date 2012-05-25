@@ -153,7 +153,7 @@ class GcodeParser(object):
     """
     for key in codes:
       if IsCodeAFlag(codes, key):
-        raise CodeValueError
+        CodePresentAndNonFlag(codes, key)
     #Put all values in a hash table
     valTable = {}
     #For each code in codes thats an axis:
@@ -168,15 +168,13 @@ class GcodeParser(object):
       self.s3g.SetPotentiometerValue(valTable[val], val)
 
   def FindAxesMaximum(self, codes, command):
-    if not CodePresentAndNonFlag(codes, 'F'):
-      raise CodeValueError  
+    CodePresentAndNonFlag(codes, 'F')
     axes = ParseOutAxes(codes) 
     self.s3g.FindAxesMaximums(axes, codes['F'], self.states.findingTimeout)
     self.states.LosePosition(codes)
 
   def FindAxesMinimum(self, codes, comment):
-    if not CodePresentAndNonFlag(codes, 'F'):
-      raise CodeValueError
+    CodePresentAndNonFlag(codes, 'F')
     axes = ParseOutAxes(codes)
     self.s3g.FindAxesMinimums(axes, codes['F'], self.states.findingTimeout)
     self.states.LosePosition(codes) 

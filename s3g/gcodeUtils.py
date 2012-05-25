@@ -138,5 +138,5 @@ def CodePresentAndNonFlag(codes, c):
   if not IsCodePresent(codes, c):
     raise MissingCodeError
   elif IsCodeAFlag(codes, c):
-    return False
+    raise CodeValueError
   return True

@@ -62,7 +62,7 @@ class gcodeTests(unittest.TestCase):
     codes = {'G' : 161}
     self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMinimum, codes, '') 
 
-  def test_g_161_feedrate_is_flag(self):
+  def test_find_axes_minimum_feedrate_is_flag(self):
     codes = {'G' : 161, 'F' : True}
     self.assertRaises(s3g.CodeValueError, self.g.FindAxesMinimum, codes, '')
 
@@ -74,11 +74,11 @@ class gcodeTests(unittest.TestCase):
     allRegs = 'XYZF'
     self.assertEqual(sorted(allRegs), sorted(self.g.GCODE_INSTRUCTIONS[161][1]))
 
-  def test_g_162_missing_feedrate(self):
+  def test_find_Axes_maximum_missing_feedrate(self):
     codes = {"G" : 162}
     self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMaximum, codes, '')
 
-  def test_g_162_feedrate_is_flag(self):
+  def test_find_axes_maximum_feedrate_is_flag(self):
     codes = {"G" : 162, 'F' : True}
     self.assertRaises(s3g.CodeValueError, self.g.FindAxesMaximum, codes, '')
 
