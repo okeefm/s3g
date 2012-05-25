@@ -285,7 +285,6 @@ class gcodeTests(unittest.TestCase):
         }
     codes = {'X':True, 'Y':True, 'Z':True, 'F':0}
     cmd = s3g.host_action_command_dict['FIND_AXES_MAXIMUMS']
->>>>>>> Added some gcode functions, errors, tests
     encodedAxes = s3g.EncodeAxes(['x', 'y', 'z'])
     feedrate = 0
     expectedPayload = [cmd ,encodedAxes, feedrate, self.g.states.findingTimeout]
