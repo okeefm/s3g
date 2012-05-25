@@ -251,11 +251,6 @@ class UtilityFunctionTests(unittest.TestCase):
     registers = {'G' : 0}
     self.assertTrue(s3g.CodePresentAndNonFlag(registers, 'G'))
 
-
-class ParseSampleGcodeFileTests(unittest.TestCase):
->>>>>>> Updated gcode functions, tests
-
-
 class ParseSampleGcodeFileTests(unittest.TestCase):
   def test_parse_files(self):
     # Terriable hack, to support running from the root or test directory.
