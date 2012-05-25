@@ -237,7 +237,7 @@ class GcodeParser(object):
         self.GCODE_INSTRUCTIONS[codes['G']][0](codes, comment)
 
       else:
-        raise "Unrecognized gcode"
+        raise UnrecognizedCodeError
 
     else:
       if codes['M'] in self.MCODE_INSTRUCTIONS:
@@ -245,7 +245,7 @@ class GcodeParser(object):
         self.MCODE_INSTRUCTIONS[codes['M']][0](codes, comment)
 
       else:
-        raise "Unrecognized gcode"
+        raise UnrecognizedCodeError
 
     """
     # Update the state information    

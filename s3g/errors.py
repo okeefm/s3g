@@ -211,16 +211,21 @@ class MissingCodeError(GcodeError):
   A Missing Code Error is raised if a compulsory code is missing
   """
 
-class InvalidCodeError(GcodeError):
+class UnrecognizedCodeError(GcodeError):
   """
-  An Invalid Code error is raised if a code is not set to the correct value
-  I.E.: A P command needs to be an int, but is instead passed in as a flag
+  Unrecognized codes are thrown if the G or M command is not implemented.
   """
 
 class LinearInterpolationError(GcodeError):
   """
   A G1 (Linear Interpolation) command can have either an E code defined or both
   the A and B registers defined.  If both sets are defined, we throw this error.
+  """
+
+class InvalidCodeError(GcodeError):
+  """
+  An invalid code error is raised if a code is found that is not a roman character.
+  #TODO: add line number, code.
   """
 
 class StringTooLongError(Exception):
