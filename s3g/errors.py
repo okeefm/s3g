@@ -222,10 +222,9 @@ class LinearInterpolationError(GcodeError):
   the A and B registers defined.  If both sets are defined, we throw this error.
   """
 
-class InvalidCodeError(GcodeError):
+class ExtraneousCodeError(GcodeError):
   """
-  An invalid code error is raised if a code is found that is not a roman character.
-  #TODO: add line number, code.
+  An extraneous code error is raised when a code is found in a command that doesn't support it.
   """
 
 class StringTooLongError(Exception):

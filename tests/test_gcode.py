@@ -202,7 +202,7 @@ class gcodeStateTests(unittest.TestCase):
     """
     Tests to make sure G162 properly looses only those points passed in
     """
-    command = "G192 X"
+    command = "G162 X"
     self.g.ExecuteLine(command)
     for key in self.g.states:
       if key == 'X':
@@ -211,8 +211,8 @@ class gcodeStateTests(unittest.TestCase):
         self.assertTrue(self.g.states[key] != None)
 
   def test_g_162_state_overloaded_registers(self):
-    command = "G192 X Y Z A"
-    self.assertRaises(s3g.ExtraRegisterError, self.g.ExecuteLine, command)
+    command = "G162 X Y Z A"
+    self.assertRaises(s3g.ExtraneousCodeError, self.g.ExecuteLine, command)
 
   def test_g_162_state_all_registers_accounted_for(self):
     """
@@ -229,7 +229,7 @@ class gcodeS3gInterfaceTests(unittest.TestCase):
     self.r = s3g.s3g()
     self.inputstream = io.BytesIO()
     self.writer = s3g.FileWriter(self.inputstream)
-    self.r.writer = self.write
+    self.r.writer = self.writer
     self.d = s3g.FileReader()
     self.d.file = self.inputstream
    
@@ -259,7 +259,6 @@ class gcodeS3gInterfaceTests(unittest.TestCase):
 
   def test_send_g161_command(self):
     command = "G161"
-    self.gg
     
 
 class s3gInterfaceTestsDEPRECATED():
