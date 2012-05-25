@@ -6,19 +6,23 @@ sys.path.append(lib_path)
 import unittest
 import io
 import time
+import mock
 
 import s3g
 
 class gcodeTests(unittest.TestCase):
   def setUp(self):
+#    self.inputstream = io.BytesIO()
+#    self.writer = s3g.FileWriter(self.inputstream)
+#    self.r = s3g.s3g()
+#    self.r.writer = self.writer
+    self.mock = mock.Mock()
+
     self.g = s3g.GcodeParser()
-    self.r = s3g.s3g()
-    self.inputstream = io.BytesIO()
-    self.writer = s3g.FileWriter(self.inputstream)
-    self.r.writer = self.writer
-    self.d = s3g.FileReader()
-    self.d.file = self.inputstream
-    self.g.s3g = self.r
+#    self.g.s3g = self.r
+    self.g.s3g = self.mock
+   
+
  
   def tearDown(self):
     self.g = None
@@ -120,7 +124,7 @@ class gcodeTests(unittest.TestCase):
 
   def test_find_axes_maximum_no_axes(self):
     codes = {'F':0}
-    cmd = s3g.host_action_command_dict['FIND_AXES_MAXIMUMS']
+    cmd = s3g.host_action_command_dict['WAIT_FOR_TOOL_READY']
     encodedAxes = 0
     feedrate = 0
     expectedPayload = [cmd ,encodedAxes, feedrate, self.g.states.findingTimeout]
@@ -130,15 +134,16 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(readPayload, expectedPayload)
 
   def test_wait_for_toolhead(self):
-    codes = {'F':0}
-    cmd = s3g.host_action_command_dict['FIND_AXES_MAXIMUMS']
-    encodedAxes = 0
-    feedrate = 0
-    expectedPayload = [cmd ,encodedAxes, feedrate, self.g.states.findingTimeout]
-    self.g.FindAxesMaximum(codes, '')
-    self.inputstream.seek(0)
-    readPayload = self.d.ParseNextPayload()
-    self.assertEqual(readPayload, expectedPayload)
+    tool_index = 2
+    timeout = 3
+    delay = 100
+
+    codes = {'T':tool_index, 'P':timeout}
+
+    self.g.WaitForToolhead(codes, '')
+
+    self.mock.WaitForToolReady.assert_called_once_with(tool_index, delay, timeout)
+
 
 if __name__ == "__main__":
   unittest.main()

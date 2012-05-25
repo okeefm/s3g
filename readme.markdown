@@ -2,7 +2,14 @@
 
 The s3g module is designed to communicate with a Makerbot Printer using via s3g Packets.  The main objective of this module is to both transform certain actions (i.e. move-to-a-position, heat-up-a-toolhead) into packets of information to be sent and to decode packets of information received from a printer into human parsable formats.  
 
-To connect to a machine, you will also need to install the [pySerial module](http://pypi.python.org/pypi/pyserial).
+To connect to a machine, you will need the following module:
+
+* [pySerial](http://pypi.python.org/pypi/pyserial).
+
+To run the unit tests, you will need the following modules:
+
+* [Mock](http://pypi.python.org/pypi/mock)
+* [unittest2](http://pypi.python.org/pypi/unittest2) (Python 2.6 and earlier)
 
 ## Example: Connecting to a Replicator
 Import both the s3g module and pyserial:

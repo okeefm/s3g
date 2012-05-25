@@ -29,7 +29,7 @@ class GcodeParser(object):
     }
 
     self.MCODE_INSTRUCTIONS = {
-#       6   : self.WaitForToolhead,
+       6   : self.WaitForToolhead,
 #       18  : self.DisableAxes,
 #       70  : self.DisplayMessage,
 #       72  : self.PlaySong,
@@ -213,3 +213,8 @@ class GcodeParser(object):
       axes.append(axis.lower())
     self.s3g.FindAxesMinimums(axes, codes['F'], self.states.findingTimeout)
     self.states.LosePosition(codes) 
+
+  def WaitForToolhead(self, codes, comment):
+    # TODO: Test for codes
+    self.s3g.WaitForToolReady(codes['T'], 100, codes['P'])
+
