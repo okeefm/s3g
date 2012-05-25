@@ -98,7 +98,7 @@ def EncodeAxes(axes):
   bitfield = 0
 
   for axis in axes:
-    bitfield |= axes_map[axis]
+    bitfield |= axes_map[axis.lower()]
 
   return bitfield
 
