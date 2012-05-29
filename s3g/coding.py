@@ -109,7 +109,7 @@ def UnpackResponse(format, data):
   error if the unpacking fails.
   
   @param format Format string to use for unpacking
-  @param data Data to unpack, including a string if specified
+  @param data Data to unpack.  We _cannot_ unpack strings!
   @return list of values unpacked, if successful.
   """
 
@@ -128,12 +128,16 @@ def UnpackResponseWithString(format, data):
   @param data Data to unpack, including a string if specified
   @return list of values unpacked, if successful.
   """
+  #The +1 is for the null terminator of the string
   if (len(data) < struct.calcsize(format) + 1):
     raise ProtocolError("Not enough data received from machine, expected=%i, got=%i"%
       (struct.calcsize(format)+1,len(data))
     )
 
+  #Check for a null terminator on the string
+  elif (data[-1]) != 0:
+    raise ProtocolError("Expected null terminated string.")
+
   output = UnpackResponse(format, data[0:struct.calcsize(format)])
   output += data[struct.calcsize(format):],
-
   return output

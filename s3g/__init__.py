@@ -4,8 +4,8 @@ from s3g import *
 from abstractWriter import *
 from fileWriter import *
 from streamWriter import *
-from s3gStreamDecoder import *
-from s3gStreamDecoderRaw import *
+from fileReader import *
+from fileReaderRaw import *
 from constants import *
 from errors import *
 from crc import *

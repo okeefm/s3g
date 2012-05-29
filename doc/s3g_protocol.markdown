@@ -786,6 +786,17 @@ Payload
 
 Response (0 bytes)
 
+## 134 - Change Tool
+Instruct the host to select the given tool as active
+
+_Note: This is important to use on dual-head Replicators, because the machine needs to know the current toolhead in order to apply a calibration offset._
+
+Payload
+
+    uint8: Tool ID of the tool to switch to
+
+Response (0 bytes)
+
 ## 135 - Wait for tool ready: Wait until a tool is ready before proceeding
 This command halts machine motion until the specified toolhead reaches a ready state. A tool is ready when it's temperature is within range of the setpoint.
 
