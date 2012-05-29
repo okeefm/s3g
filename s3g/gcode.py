@@ -65,7 +65,7 @@ class GcodeParser(object):
 #      miliConstant = 1000
 #      self.s3g.Delay(codes['P']*(microConstant/miliConstant))
 
-  def AbsoluteProgramming(self, codes, comment):
+  def AbsoluteProgramming(self, codes, flags, comment):
     """Set the programming mode to absolute
     We are not implementing this command, so this is just a stub.
     """
@@ -83,12 +83,12 @@ class GcodeParser(object):
     """
 
     # Parse the line
-    codes, comment = ParseLine(command)
+    codes, flags, comment = ParseLine(command)
 
     if 'G' in codes:
       if codes['G'] in self.GCODE_INSTRUCTIONS:
         CheckForExtraneousCodes(codes, self.GCODE_INSTRUCTIONS[codes['G']][1])
-        self.GCODE_INSTRUCTIONS[codes['G']][0](codes, comment)
+        self.GCODE_INSTRUCTIONS[codes['G']][0](codes, flags, comment)
 
       else:
         raise UnrecognizedCodeError
@@ -96,12 +96,12 @@ class GcodeParser(object):
     else:
       if codes['M'] in self.MCODE_INSTRUCTIONS:
         CheckForExtraneousCodes(codes, self.GCODE_INSTRUCTIONS[codes['M']][1])
-        self.MCODE_INSTRUCTIONS[codes['M']][0](codes, comment)
+        self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
 
       else:
         raise UnrecognizedCodeError
 
-  def SetPotentiometerValues(self, codes, comment):
+  def SetPotentiometerValues(self, codes, flags, comment):
     """Given a set of codes, sets the machine's potentiometer value to a specified value in the codes
 
     @param dict codes: Codes parsed out of the gcode command
@@ -120,33 +120,33 @@ class GcodeParser(object):
     for val in valTable:
       self.s3g.SetPotentiometerValue(valTable[val], val)
 
-  def FindAxesMaximum(self, codes, command):
+  def FindAxesMaximum(self, codes, flags, command):
     self.state.LosePosition(codes)
     CodePresentAndNonFlag(codes, 'F')
     axes = ParseOutAxes(codes) 
     self.s3g.FindAxesMaximums(axes, codes['F'], self.state.findingTimeout)
 
-  def FindAxesMinimum(self, codes, comment):
+  def FindAxesMinimum(self, codes, flags, comment):
     self.state.LosePosition(codes) 
     CodePresentAndNonFlag(codes, 'F')
     axes = ParseOutAxes(codes)
     self.s3g.FindAxesMinimums(axes, codes['F'], self.state.findingTimeout)
 
-  def SetPosition(self, codes, comment):
+  def SetPosition(self, codes, flags, comment):
     AllAxesNotFlags(codes) 
     self.state.SetPosition(codes)
     self.s3g.SetExtendedPosition(self.state.GetPosition())
 
-  def UseP0Offsets(self, codes, comment):
+  def UseP0Offsets(self, codes, flags, comment):
     self.state.offset_register = 0
     self.state.toolhead = 0
 
-  def UseP1Offsets(self, codes, comment):
+  def UseP1Offsets(self, codes, flags, comment):
     self.state.offset_register = 1
     self.state.toolhead = 1
 
 
-  def WaitForToolhead(self, codes, comment):
+  def WaitForToolhead(self, codes, flags, comment):
     DELAY = 100  # As per the gcode protocol
 
     # Handle optional codes
@@ -160,6 +160,6 @@ class GcodeParser(object):
       raise MissingCodeError
 
 
-  def DisableAxes(self, codes, comment):
+  def DisableAxes(self, codes, flags, comment):
     self.s3g.ToggleAxes(ParseOutAxes(codes), False)
 

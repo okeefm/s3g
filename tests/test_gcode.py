@@ -17,14 +17,13 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.g = s3g.GcodeParser()
     self.g.s3g = self.mock
 
-
   def test_wait_for_toolhead_can_update_temperature(self):
     tool_index = 2
     timeout = 3
     delay = 100
 
     codes = {'T':tool_index, 'P':timeout}
-    self.g.WaitForToolhead(codes, '')
+    self.g.WaitForToolhead(codes, [], '')
     
     self.assertEquals(self.g.state.values['tool_index'], tool_index)
 
@@ -34,9 +33,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     delay = 100
 
     codes = {'T':tool_index}
-    self.assertRaises(s3g.MissingCodeError, self.g.WaitForToolhead, codes, '')
-    
-
+    self.assertRaises(s3g.MissingCodeError, self.g.WaitForToolhead, codes, [], '')
 
   def test_wait_for_toolhead(self):
     tool_index = 2
@@ -44,11 +41,9 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     delay = 100
 
     codes = {'T':tool_index, 'P':timeout}
-    self.g.WaitForToolhead(codes, '')
+    self.g.WaitForToolhead(codes, [], '')
 
     self.mock.WaitForToolReady.assert_called_once_with(tool_index, delay, timeout)
-
-
 
 
 class gcodeTests(unittest.TestCase):
@@ -75,7 +70,7 @@ class gcodeTests(unittest.TestCase):
 
   def test_use_91_offsets(self):
     codes = {}
-    self.g.UseP1Offsets(codes, '')
+    self.g.UseP1Offsets(codes, [], '')
     self.assertEqual(1, self.g.state.offset_register)
     self.assertEqual(1, self.g.state.toolhead)
 
@@ -85,7 +80,7 @@ class gcodeTests(unittest.TestCase):
 
   def test_use_90_offsets(self):
     codes = {}
-    self.g.UseP0Offsets(codes, '')
+    self.g.UseP0Offsets(codes, [], '')
     self.assertEqual(0, self.g.state.offset_register) 
     self.assertEqual(0, self.g.state.toolhead)
 
@@ -116,12 +111,12 @@ class gcodeTests(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
         ]
-    self.g.AbsoluteProgramming({}, "")
+    self.g.AbsoluteProgramming({}, [], "")
     self.assertEqual(oldState, newState)
 
   def test_set_position_flagged_register(self):
     codes = {'X' : True}
-    self.assertRaises(s3g.CodeValueError, self.g.SetPosition, codes, "")
+    self.assertRaises(s3g.CodeValueError, self.g.SetPosition, codes, [], "")
 
   def test_set_position_all_codes_accounted_for(self):
     codes = 'XYZAB'
@@ -135,7 +130,7 @@ class gcodeTests(unittest.TestCase):
         'A' : 3,
         'B' : 4,
         }
-    self.g.SetPosition(codes, '')
+    self.g.SetPosition(codes, [], '')
     self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.state.position)
     self.inputstream.seek(0)
     readPayload = self.d.ParseNextPayload()
@@ -145,11 +140,11 @@ class gcodeTests(unittest.TestCase):
 
   def test_find_axes_minimum_missing_feedrate(self):
     codes = {'G' : 161}
-    self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMinimum, codes, '') 
+    self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMinimum, codes, [], '') 
 
   def test_find_axes_minimum_feedrate_is_flag(self):
     codes = {'G' : 161, 'F' : True}
-    self.assertRaises(s3g.CodeValueError, self.g.FindAxesMinimum, codes, '')
+    self.assertRaises(s3g.CodeValueError, self.g.FindAxesMinimum, codes, [], '')
 
   def test_g_161_all_registers_accounted_for(self):
     """
@@ -161,11 +156,11 @@ class gcodeTests(unittest.TestCase):
 
   def test_find_Axes_maximum_missing_feedrate(self):
     codes = {"G" : 162}
-    self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMaximum, codes, '')
+    self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMaximum, codes, [], '')
 
   def test_find_axes_maximum_feedrate_is_flag(self):
     codes = {"G" : 162, 'F' : True}
-    self.assertRaises(s3g.CodeValueError, self.g.FindAxesMaximum, codes, '')
+    self.assertRaises(s3g.CodeValueError, self.g.FindAxesMaximum, codes, [], '')
 
   def test_g_162_all_codes_accounted_for(self):
     allRegs = 'XYZF'
@@ -173,14 +168,14 @@ class gcodeTests(unittest.TestCase):
 
   def test_set_potentiometer_values_no_codes(self):
     codes = {'G' : 130}
-    self.g.SetPotentiometerValues(codes, '')
+    self.g.SetPotentiometerValues(codes, [], '')
     self.inputstream.seek(0)
     payloads = self.d.ReadFile()
     self.assertEqual(len(payloads), 0)
 
   def test_set_potentiometer_values_codes_are_flags(self):
     codes = {'G' : 130, 'X' : True}
-    self.assertRaises(s3g.CodeValueError, self.g.SetPotentiometerValues, codes, '')
+    self.assertRaises(s3g.CodeValueError, self.g.SetPotentiometerValues, codes, [], '')
 
   def test_set_potentiometer_values_one_axis(self):
     codes = {'G' : 130, 'X' : 0}
@@ -188,7 +183,7 @@ class gcodeTests(unittest.TestCase):
     encodedAxes = s3g.EncodeAxes(['x'])
     val = 0
     expectedPayload = [cmd, encodedAxes, val]
-    self.g.SetPotentiometerValues(codes, '')
+    self.g.SetPotentiometerValues(codes, [], '')
     self.inputstream.seek(0)
     readPayload = self.d.ParseNextPayload()
     self.assertEqual(expectedPayload, readPayload)
@@ -198,7 +193,7 @@ class gcodeTests(unittest.TestCase):
     cmd = s3g.host_action_command_dict['SET_POT_VALUE']
     axes = ['X', 'Y', 'Z', 'A', 'B']
     values = [0, 1 ,2, 3, 4]
-    self.g.SetPotentiometerValues(codes, '')
+    self.g.SetPotentiometerValues(codes, [], '')
     self.inputstream.seek(0)
     readPayloads = self.d.ReadFile() 
     for readPayload, i in zip(readPayloads, range(5)):
@@ -210,7 +205,7 @@ class gcodeTests(unittest.TestCase):
     cmd = s3g.host_action_command_dict['SET_POT_VALUE']
     axes = s3g.EncodeAxes(['x', 'y', 'z', 'a', 'b'])
     expectedPayload = [cmd, axes, 0]
-    self.g.SetPotentiometerValues(codes, '')
+    self.g.SetPotentiometerValues(codes, [], '')
     self.inputstream.seek(0)
     readPayload = self.d.ParseNextPayload()
     self.assertEqual(expectedPayload, readPayload)
@@ -229,7 +224,7 @@ class gcodeTests(unittest.TestCase):
     feedrate = 0
     timeout = self.g.state.findingTimeout
     expectedPayload = [cmd, encodedAxes, feedrate, timeout]
-    self.g.FindAxesMinimum(codes, '')
+    self.g.FindAxesMinimum(codes, [], '')
     self.inputstream.seek(0)
     readPayload = self.d.ParseNextPayload()
     self.assertEqual(expectedPayload, readPayload)
@@ -248,7 +243,7 @@ class gcodeTests(unittest.TestCase):
     encodedAxes = 0
     feedrate = 0
     expectedPayload = [cmd, encodedAxes, feedrate, self.g.state.findingTimeout]
-    self.g.FindAxesMinimum(codes, '')
+    self.g.FindAxesMinimum(codes, [], '')
     self.inputstream.seek(0)
     readPayload = self.d.ParseNextPayload()
     self.assertEqual(readPayload, expectedPayload)
@@ -266,7 +261,7 @@ class gcodeTests(unittest.TestCase):
     encodedAxes = s3g.EncodeAxes(['x', 'y', 'z'])
     feedrate = 0
     expectedPayload = [cmd ,encodedAxes, feedrate, self.g.state.findingTimeout]
-    self.g.FindAxesMaximum(codes, '')
+    self.g.FindAxesMaximum(codes, [], '')
     self.inputstream.seek(0)
     readPayload = self.d.ParseNextPayload()
     self.assertEqual(expectedPayload, readPayload)
@@ -285,7 +280,7 @@ class gcodeTests(unittest.TestCase):
     encodedAxes = 0
     feedrate = 0
     expectedPayload = [cmd ,encodedAxes, feedrate, self.g.state.findingTimeout]
-    self.g.FindAxesMaximum(codes, '')
+    self.g.FindAxesMaximum(codes, [], '')
     self.inputstream.seek(0)
     readPayload = self.d.ParseNextPayload()
     self.assertEqual(readPayload, expectedPayload)

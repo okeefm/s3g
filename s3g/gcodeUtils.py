@@ -39,6 +39,7 @@ def ParseCommand(command):
   @return dict Dictionary of commands, and their values (if any)
   """
   codes = {}
+  flags = []
 
   pairs = command.split()
   for pair in pairs:
@@ -62,24 +63,24 @@ def ParseCommand(command):
 
     # If the code doesn't have a value, we consider it a flag, and set it to true.
     if len(pair) == 1:
-      codes[code] = True
+      flags.append(code)
 
     else:
       codes[code] = float(pair[1:])
 
-  return codes
+  return codes, flags
 
 def ParseLine(line):
   """
   Parse a line of gcode into a map of codes, and a comment field.
   @param string line line of gcode to parse
-  @return tuple containing an array of codes, and a comment string
+  @return tuple containing a dict of codes, a dict of flags, and a comment string
   """
 
   command, comment = ExtractComments(line)
-  codes = ParseCommand(command)
+  codes, flags = ParseCommand(command)
 
-  return codes, comment
+  return codes, flags, comment
 
 def CheckForExtraneousCodes(codes, allowed_codes):
   """ Check that all of the codes are expected for this command.
