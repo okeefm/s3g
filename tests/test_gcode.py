@@ -76,8 +76,8 @@ class gcodeTests(unittest.TestCase):
   def test_use_91_offsets(self):
     codes = {}
     self.g.UseP1Offsets(codes, '')
-    self.assertEqual(1, self.g.states.offset_register)
-    self.assertEqual(1, self.g.states.toolhead)
+    self.assertEqual(1, self.g.state.offset_register)
+    self.assertEqual(1, self.g.state.toolhead)
 
   def test_use_p0_offsets_all_codes_accounted_for(self):
     codes = ''
@@ -86,8 +86,8 @@ class gcodeTests(unittest.TestCase):
   def test_use_90_offsets(self):
     codes = {}
     self.g.UseP0Offsets(codes, '')
-    self.assertEqual(0, self.g.states.offset_register) 
-    self.assertEqual(0, self.g.states.toolhead)
+    self.assertEqual(0, self.g.state.offset_register) 
+    self.assertEqual(0, self.g.state.toolhead)
 
   def test_absolute_programming_all_codes_accounted_for(self):
     codes = ''
@@ -95,26 +95,26 @@ class gcodeTests(unittest.TestCase):
 
   def test_absolute_programming(self):
     oldState = [
-        self.g.states.position,
-        self.g.states.offsetPosition,
-        self.g.states.toolhead,
-        self.g.states.offset_register,
-        self.g.states.toolhead_speed,
-        self.g.states.toolhead_direction,
-        self.g.states.toolhead_enabled,
-        self.g.states.rapidFeedrate,
-        self.g.states.findingTimeout,
+        self.g.state.position,
+        self.g.state.offsetPosition,
+        self.g.state.tool_index,
+        self.g.state.offset_register,
+        self.g.state.tool_speed,
+        self.g.state.tool_direction,
+        self.g.state.tool_enabled,
+        self.g.state.rapidFeedrate,
+        self.g.state.findingTimeout,
         ]
     newState = [
-        self.g.states.position,
-        self.g.states.offsetPosition,
-        self.g.states.toolhead,
-        self.g.states.offset_register,
-        self.g.states.toolhead_speed,
-        self.g.states.toolhead_direction,
-        self.g.states.toolhead_enabled,
-        self.g.states.rapidFeedrate,
-        self.g.states.findingTimeout,     
+        self.g.state.position,
+        self.g.state.offsetPosition,
+        self.g.state.tool_index,
+        self.g.state.offset_register,
+        self.g.state.tool_speed,
+        self.g.state.tool_direction,
+        self.g.state.tool_enabled,
+        self.g.state.rapidFeedrate,
+        self.g.state.findingTimeout,     
         ]
     self.g.AbsoluteProgramming({}, "")
     self.assertEqual(oldState, newState)
@@ -136,7 +136,7 @@ class gcodeTests(unittest.TestCase):
         'B' : 4,
         }
     self.g.SetPosition(codes, '')
-    self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.states.position)
+    self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.state.position)
     self.inputstream.seek(0)
     readPayload = self.d.ParseNextPayload()
     expectedPayload = [s3g.host_action_command_dict['SET_EXTENDED_POSITION'], 0, 1, 2, 3, 4]

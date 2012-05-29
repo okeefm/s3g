@@ -121,29 +121,29 @@ class GcodeParser(object):
       self.s3g.SetPotentiometerValue(valTable[val], val)
 
   def FindAxesMaximum(self, codes, command):
-    self.states.LosePosition(codes)
+    self.state.LosePosition(codes)
     CodePresentAndNonFlag(codes, 'F')
     axes = ParseOutAxes(codes) 
     self.s3g.FindAxesMaximums(axes, codes['F'], self.state.findingTimeout)
 
   def FindAxesMinimum(self, codes, comment):
-    self.states.LosePosition(codes) 
+    self.state.LosePosition(codes) 
     CodePresentAndNonFlag(codes, 'F')
     axes = ParseOutAxes(codes)
-    self.s3g.FindAxesMinimums(axes, codes['F'], self.states.findingTimeout)
+    self.s3g.FindAxesMinimums(axes, codes['F'], self.state.findingTimeout)
 
   def SetPosition(self, codes, comment):
     AllAxesNotFlags(codes) 
-    self.states.SetPosition(codes)
-    self.s3g.SetExtendedPosition(self.states.GetPosition())
+    self.state.SetPosition(codes)
+    self.s3g.SetExtendedPosition(self.state.GetPosition())
 
   def UseP0Offsets(self, codes, comment):
-    self.states.offset_register = 0
-    self.states.toolhead = 0
+    self.state.offset_register = 0
+    self.state.toolhead = 0
 
   def UseP1Offsets(self, codes, comment):
-    self.states.offset_register = 1
-    self.states.toolhead = 1
+    self.state.offset_register = 1
+    self.state.toolhead = 1
 
 
   def WaitForToolhead(self, codes, comment):
