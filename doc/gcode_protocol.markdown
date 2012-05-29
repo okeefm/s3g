@@ -67,10 +67,13 @@ Both semicolon ; and parens () style comments are supported. If multiple comment
 * A closing paren that was not preceeded by an opening parenthesis is an error.
 
 ## Commands
-Each line must have at most one G or M code, and 0 or more other codes. Each code must be separated by whitespace. Codes should have a value attached to them. If the value contains a decimal place, it must use a period to demarcate this. Upper and lower case codes are accepted, but will be converted to uppercase.
+Each line must have at most one G or M code, 0 or more other codes, and 0 or more flags. Each code and flag must be separated by whitespace. Codes should have a value attached to them. If the value contains a decimal place, it must use a period to demarcate this. Upper and lower case codes and flag names are accepted, and will silently be converted to uppercase.
 
 ## Codes
-Codes can either 
+Codes are letter-value pairs that occur in a command. The meaning of each code is specific to the command being parsed. They differ from flags in that flags do not have a value associated with them.
+
+## Flags
+Flags are standalone letters that occur in a command. Flags are used to signal which parameters should be affected by a command. They are primarily used to enable or disable axes.
 
 # Supported G Codes
 

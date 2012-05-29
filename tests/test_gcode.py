@@ -258,7 +258,7 @@ class gcodeTests(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
         ]
-    self.g.MilimeterProgramming({}, flags, "")
+    self.g.MilimeterProgramming({}, [], "")
     self.assertEqual(oldState, newState)   
 
   def test_set_position_flagged_register(self):
