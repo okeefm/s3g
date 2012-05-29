@@ -36,23 +36,23 @@ Here is some vocabulary, that should be used when talking about the protocol:
 </tr>
 <tr>
  <td>Code</td>
- <td>A code is a roman charater followed by a value</td>
+ <td>Codes are letter-value pairs that occur in a command. The meaning of each code is specific to the command being parsed. They differ from flags in that flags do not have a value associated with them.</td>
  <td>T1</td>
 </tr>
 <tr>
  <td>Flag</td>
- <td>A code is a roman charater without a value; </td>
+ <td>Flags are standalone letters that occur in a command. Flags are used to signal which parameters should be affected by a command. They are primarily used to enable or disable axes.</td>
  <td>X</td>
 </tr>
 <tr>
  <td>Comment</td>
- <td>A comment is a user readable block of text that can be added to a </td>
- <td>(Happy comment)</td>
+ <td>A comment is a user readable block of text used to clarify what a section of code does. Comments are also used by some commands to specify a filename or message that should be displayed on a machine's interface LCD.
+ <td>(embedded comment) G1 ;This G1 is a comment</td>
 </tr>
 </table>
 
 ## References
-Supported cmmands were extracted from [representative gcode files](https://github.com/makerbot/s3g/tree/master/doc/gcode_samples), created in both Skeinforge and Miracle Grue.
+Supported commands were extracted from [gcode files](https://github.com/makerbot/s3g/tree/master/doc/gcode_samples) that were created in both Skeinforge and Miracle Grue.
 
 Hints about what the commands are expected to do were extracted from ReplicatorG's [gcode parser](https://github.com/makerbot/ReplicatorG/blob/master/src/replicatorg/app/gcode/GCodeParser.java).
 
@@ -65,15 +65,18 @@ Both semicolon ; and parens () style comments are supported. If multiple comment
 * Nested parentheses are accepted. The data inside of the nested parentheses are added to the comment, while the parentheses characters are not.
 * An unclosed opening parenthesis is accepted. Everything to the right of the parenthesis is treated as a comment.
 * A closing paren that was not preceeded by an opening parenthesis is an error.
+* Properly formatted comments are allowed at any place in a command.
 
 ## Commands
-Each line must have at most one G or M code, 0 or more other codes, and 0 or more flags. Each code and flag must be separated by whitespace. Codes should have a value attached to them. If the value contains a decimal place, it must use a period to demarcate this. Upper and lower case codes and flag names are accepted, and will silently be converted to uppercase.
+These are the rules used to parse commands:
 
-## Codes
-Codes are letter-value pairs that occur in a command. The meaning of each code is specific to the command being parsed. They differ from flags in that flags do not have a value associated with them.
+* Each line must have either a G or M code, 0 or more other codes, 0 or more flags, and 0 or more comment sections.
+* Comments are parsed and extracted before evaluating the codes and flags.
+* Each code and flag must be separated by whitespace.
+* If a code value contains a decimal place, it must use a period to demarcate this.
+* Upper and lower case codes and flag names are accepted, and will silently be converted to uppercase.
+* Each G and M code has a list of required and optional codes and flags. Codes and flags that are not supported by the G or M code are considered an error.
 
-## Flags
-Flags are standalone letters that occur in a command. Flags are used to signal which parameters should be affected by a command. They are primarily used to enable or disable axes.
 
 # Supported G Codes
 
@@ -106,44 +109,42 @@ We should only accept one form or the other.  A mixture will result in an error 
 
 XYZABF Form:
 
-  Registers
-
-       X: (code, optional) If present, new X axis position, in mm
-       Y: (code, optional) If present, new Y axis position, in mm
-       Z: (code, optional) If present, new Z axis position, in mm
-       A: (code, optional) If present, new A axis position, in mm
-       B: (code, optional) If present, new B axis position, in mm
-       F: (code, optional) Feedrate, in mm/min
-
-  S3g Output
-
-      QueueExtendedPoint(point, rate)
-
-  Parameters
-
-      point = [x, y, z, a, b]
-      rate = F
-
-XYZEF Form
+Registers
 
      X: (code, optional) If present, new X axis position, in mm
      Y: (code, optional) If present, new Y axis position, in mm
      Z: (code, optional) If present, new Z axis position, in mm
-     E: (code, optional) If present, speed of extrusion, in 
+     A: (code, optional) If present, new A axis position, in mm
+     B: (code, optional) If present, new B axis position, in mm
      F: (code, optional) Feedrate, in mm/min
 
+S3g Output
 
+    QueueExtendedPoint(point, rate)
 
-  S3g Output
+Parameters
 
-      QueueExtendedPoint(point, rate)
+    point = [x, y, z, a, b]
+    rate = F
 
-  Parameters
+XYZEF Form:
 
-      point = [x, y, z]
-      rate = F
+Registers
 
-    
+    X: (code, optional) If present, new X axis position, in mm
+    Y: (code, optional) If present, new Y axis position, in mm
+    Z: (code, optional) If present, new Z axis position, in mm
+    E: (code, optional) If present, speed of extrusion, in 
+    F: (code, optional) Feedrate, in mm/min
+
+S3g Output
+
+    QueueExtendedPoint(point, rate)
+
+Parameters
+
+    point = [x, y, z]
+    rate = F
 
 ## G4 - Dwell
 If a toolhead is not enabled, this command simply pauses motion for the specified time. If a toolhead is enabled, then this command extrudes at the current rate and direction for the specified time, but does not move the toolhead.
