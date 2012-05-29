@@ -197,6 +197,25 @@ class CheckForExtraneousCodesTests(unittest.TestCase):
     self.assertRaises(s3g.InvalidCodeError, g.ExecuteLine, command)
 
 class ParseOutAxesTests(unittest.TestCase):
+
+  def test_all_axes_not_flags_empty_codes(self):
+    codes = {}
+    self.assertTrue(s3g.AllAxesNotFlags(codes))
+
+  def test_all_axes_not_flags_one_flagged_code(self):
+    codes = {
+        'X' : True,
+        'Y' : 0,
+        }
+    self.assertRaises(s3g.CodeValueError, s3g.AllAxesNotFlags, codes)
+
+  def test_all_Axes_not_flags_no_flags(self):
+    codes = {
+        'X' : 0,
+        'Y' : 1,
+        }
+    self.assertTrue(s3g.AllAxesNotFlags(codes))
+
   def test_parse_out_axes(self):
     codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True}
     parsedAxes = s3g.ParseOutAxes(codes)

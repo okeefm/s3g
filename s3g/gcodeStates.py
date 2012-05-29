@@ -47,3 +47,23 @@ class GcodeStates(object):
     axes = ParseOutAxes(codes)
     for axis in axes:
       self.position[axis] = None
+
+  def SetPosition(self, codes):
+    for axis in ParseOutAxes(codes):
+        self.position[axis] = codes[axis]
+
+  def GetPosition(self):
+    """Gets a usable position to send to the machine by applying the applicable
+    offsetes.  The offsets applied are the ones that are in use by the machine
+    via G54/G55 command.  If no G54/G55 commands have been used, we apply no
+    offsets
+    @return list position: The current position of the machine
+    """
+    positionFormat = ['X', 'Y', 'Z', 'A', 'B']
+    curPosition = []
+    for axis in positionFormat:
+      if self.offset_register == None:
+        curPosition.append(self.position[axis])
+      else:
+        curPosition.append(self.position[axis] + self.offsetPosition[self.offset_register][axis])
+    return curPosition

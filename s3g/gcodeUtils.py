@@ -140,3 +140,9 @@ def CodePresentAndNonFlag(codes, c):
   elif IsCodeAFlag(codes, c):
     raise CodeValueError
   return True
+
+def AllAxesNotFlags(codes):
+  for axis in ParseOutAxes(codes):
+    if IsCodeAFlag(codes, axis):
+      raise CodeValueError
+  return True

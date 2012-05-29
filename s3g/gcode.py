@@ -22,7 +22,7 @@ class GcodeParser(object):
 #      54  : self.UseP0Offsets,
 #      55  : self.UseP1Offsets,
 #      90  : self.AbsoluteProgramming,
-#      92  : self.SetPosition,
+      92  : [self.SetPosition,                 'XYZAB'],
       130 : [self.SetPotentiometerValues,      'XYZP'],
       161 : [self.FindAxesMinimum,             'XYZF'],
       162 : [self.FindAxesMaximum,             'XYZF'],
@@ -151,9 +151,7 @@ class GcodeParser(object):
 
     @param dict codes: Codes parsed out of the gcode command
     """
-    for key in codes:
-      if IsCodeAFlag(codes, key):
-        CodePresentAndNonFlag(codes, key)
+    AllAxesNotFlags(codes) 
     #Put all values in a hash table
     valTable = {}
     #For each code in codes thats an axis:
@@ -168,17 +166,22 @@ class GcodeParser(object):
       self.s3g.SetPotentiometerValue(valTable[val], val)
 
   def FindAxesMaximum(self, codes, command):
+    self.states.LosePosition(codes)
     CodePresentAndNonFlag(codes, 'F')
     axes = ParseOutAxes(codes) 
     self.s3g.FindAxesMaximums(axes, codes['F'], self.states.findingTimeout)
-    self.states.LosePosition(codes)
 
   def FindAxesMinimum(self, codes, comment):
+    self.states.LosePosition(codes) 
     CodePresentAndNonFlag(codes, 'F')
     axes = ParseOutAxes(codes)
     self.s3g.FindAxesMinimums(axes, codes['F'], self.states.findingTimeout)
-    self.states.LosePosition(codes) 
 
   def WaitForToolhead(self, codes, comment):
     # TODO: Test for codes
     self.s3g.WaitForToolReady(codes['T'], 100, codes['P'])
+
+  def SetPosition(self, codes, comment):
+    AllAxesNotFlags(codes) 
+    self.states.SetPosition(codes)
+    self.s3g.SetExtendedPosition(self.states.GetPosition())

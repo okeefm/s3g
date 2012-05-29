@@ -58,6 +58,30 @@ class gcodeTests(unittest.TestCase):
     self.inputstream = None
     self.writer = None
 
+  def test_set_position_flagged_register(self):
+    codes = {'X' : True}
+    self.assertRaises(s3g.CodeValueError, self.g.SetPosition, codes, "")
+
+  def test_set_position_all_codes_accounted_for(self):
+    codes = 'XYZAB'
+    self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[92][1]))
+ 
+  def test_set_position(self):
+    codes = { 
+        'X' : 0,
+        'Y' : 1,
+        'Z' : 2,
+        'A' : 3,
+        'B' : 4,
+        }
+    self.g.SetPosition(codes, '')
+    self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.states.position)
+    self.inputstream.seek(0)
+    readPayload = self.d.ParseNextPayload()
+    expectedPayload = [s3g.host_action_command_dict['SET_EXTENDED_POSITION'], 0, 1, 2, 3, 4]
+    self.assertEqual(expectedPayload, readPayload)
+  
+
   def test_find_axes_minimum_missing_feedrate(self):
     codes = {'G' : 161}
     self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMinimum, codes, '') 
@@ -204,7 +228,6 @@ class gcodeTests(unittest.TestCase):
     self.inputstream.seek(0)
     readPayload = self.d.ParseNextPayload()
     self.assertEqual(readPayload, expectedPayload)
-
 
 if __name__ == "__main__":
   unittest.main()
