@@ -238,6 +238,12 @@ class UnspecifiedAxisLocationError(GcodeError):
   without specifying all 5 [x, y, z, a, b] axes
   """
 
+class NoToolIndexError(GcodeError):
+  """
+  A NoToolIndexError is thrown if a commad that requires a tool index
+  to be set is being executed without a tool index set.
+  """
+
 class StringTooLongError(Exception):
   """
   A stringTooLongError is raised when a string is parsed out of an s3g stream that longer

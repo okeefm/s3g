@@ -8,7 +8,7 @@ from errors import *
 
 class GcodeStates(object):
   def __init__(self):
-    self.position = {
+    self.position = {    #Position, In MM!!
         'X' : None,
         'Y' : None,
         'Z' : None,
@@ -39,6 +39,7 @@ class GcodeStates(object):
     self.tool_speed = None        #Current speed of the toolhead
     self.tool_direction = None    #Direction of the toolhead.  True : Forward False : Backwards
     self.tool_enabled = None
+    self.lastFeedrate = None
     self.rapidFeedrate = 300      #Feedrate used during rapid positoning
     self.findingTimeout = 60      #Timeout used when finding minimums/maximums
     self.xSPM = 94.139704         #Steps per milimeters on the x axis

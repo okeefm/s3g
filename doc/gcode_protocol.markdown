@@ -18,6 +18,7 @@ The interpreter state machine stores these states:
 * Toolhead RPM
 * Toolhead direction
 * Toolhead enable state
+* Last Feedrate Given (This is done because skeinforge has a weird quirk where it specified a feedrate on one line, then gives an E command on another without a feedrate)
 
 ## Definitions
 
@@ -134,7 +135,7 @@ Registers
     X: (code, optional) If present, new X axis position, in mm
     Y: (code, optional) If present, new Y axis position, in mm
     Z: (code, optional) If present, new Z axis position, in mm
-    E: (code, optional) If present, speed of extrusion, in 
+    E: (code, optional) If present, new A/B (depending on internal state machine) axis position, in mm 
     F: (code, optional) Feedrate, in mm/min
 
 S3g Output

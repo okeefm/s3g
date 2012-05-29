@@ -204,25 +204,7 @@ class CheckForExtraneousCodesTests(unittest.TestCase):
     s3g.CheckForExtraneousCodes(codes.keys(), allowed_codes)
 
 
-class ParseOutAxesTests(unittest.TestCase):
-
-  def test_all_axes_not_flags_empty_codes(self):
-    codes = {}
-    self.assertTrue(s3g.AllAxesNotFlags(codes))
-
-  def test_all_axes_not_flags_one_flagged_code(self):
-    codes = {
-        'X' : True,
-        'Y' : 0,
-        }
-    self.assertRaises(s3g.CodeValueError, s3g.AllAxesNotFlags, codes)
-
-  def test_all_Axes_not_flags_no_flags(self):
-    codes = {
-        'X' : 0,
-        'Y' : 1,
-        }
-    self.assertTrue(s3g.AllAxesNotFlags(codes))
+class UtilityFunctionTests(unittest.TestCase):
 
   def test_parse_out_axes(self):
     codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True}
@@ -243,40 +225,6 @@ class ParseOutAxesTests(unittest.TestCase):
     codes = {'X':True}
     parsedAxes = s3g.ParseOutAxes(codes)
     self.assertEqual(['X'], parsedAxes)
-
-class UtilityFunctionTests(unittest.TestCase):
-
-  def test_code_present_missing_register(self):
-    registers = {}
-    self.assertFalse(s3g.IsCodePresent(registers, 'G'))
-
-  def test_code_present(self):
-    registers = {'G' : True}
-    self.assertTrue(s3g.IsCodePresent(registers, 'G'))
-
-  def test_is_code_a_flag_missing_register(self):
-    registers = {}
-    self.assertRaises(s3g.MissingCodeError, s3g.IsCodeAFlag, registers, 'G')
-
-  def test_is_code_a_flag_not_a_flag(self):
-    registers = {'G' : 0}
-    self.assertFalse(s3g.IsCodeAFlag(registers, 'G'))
-
-  def test_is_code_a_flag(self):
-    registers = {'G' : True}
-    self.assertTrue(s3g.IsCodeAFlag(registers, 'G'))
-
-  def test_code_present_and_non_flag_missing_code(self):
-    registers = {}
-    self.assertRaises(s3g.MissingCodeError, s3g.CodePresentAndNonFlag,registers, 'G')
-
-  def test_code_present_and_non_flag_code_is_flag(self):
-    registers = {'G' : True}
-    self.assertRaises(s3g.CodeValueError,s3g.CodePresentAndNonFlag,registers, 'G')
-
-  def test_code_presetn_and_non_flag(self):
-    registers = {'G' : 0}
-    self.assertTrue(s3g.CodePresentAndNonFlag(registers, 'G'))
 
 class ParseSampleGcodeFileTests(unittest.TestCase):
   def test_parse_files(self):

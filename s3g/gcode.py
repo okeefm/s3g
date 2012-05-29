@@ -20,7 +20,7 @@ class GcodeParser(object):
 
     self.GCODE_INSTRUCTIONS = {
       0   : [self.RapidPositioning,            'XYZ',     ''],
-#      1   : [self.LinearInterpolation,         'XYZABF',  ''],
+      1   : [self.LinearInterpolation,        'XYZABEF',  ''],
 #      4   : self.Dwell,
       10  : [self.StoreOffsets,                'XYZP',    ''],
       21  : [self.MilimeterProgramming,        '',        ''],
@@ -179,3 +179,19 @@ class GcodeParser(object):
     """ Set the programming mode to milimeters
     """
     pass
+
+  def LinearInterpolation(self, codes, flags, comment):
+    if 'F' in codes:
+      self.state.lastFeedrate = codes['F']
+    feedrate = self.state.lastFeedrate
+    if 'E' in codes:
+      if 'A' in codes or 'B' in codes:
+        raise LinearInterpolationError
+      if self.state.tool_index == None:
+        raise NoToolIndexError
+      elif self.state.tool_index == 0:
+        self.state.position['A'] += codes['E']
+      elif self.state.tool_index == 1:
+        self.state.position['B'] += codes['E']
+    self.state.SetPosition(codes)
+    self.s3g.QueueExtendedPoint(self.state.GetPosition(), feedrate)

@@ -396,5 +396,179 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.g.FindAxesMaximums(codes, [], '')
     self.mock.FindAxesMaximums.assert_called_once_with(axes, feedrate, timeout)
 
+  def test_linear_interpolation_all_codes_accounted_for(self):
+    codes = 'XYZABEF'
+    flags = ''
+    self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[1][1]))
+    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[1][2])
+
+  def test_linear_interpolation_no_feedrate(self):
+    self.g.state.position = {
+        'X' : 0,
+        'Y' : 1,
+        'Z' : 2,
+        'A' : 3,
+        'B' : 4,
+        }
+    self.g.state.lastFeedrate = 50
+    self.g.state.tool_index = 0
+    codes = {
+        'E' : 5
+        }
+    self.g.LinearInterpolation(codes, [], '')
+    expectedPoint = [0, 1, 2, 8, 4]
+    spmList = [
+        self.g.state.xSPM,
+        self.g.state.ySPM,
+        self.g.state.zSPM,
+        self.g.state.aSPM,
+        self.g.state.bSPM,
+        ]
+    for i in range(len(expectedPoint)):
+      expectedPoint[i] *= spmList[i]
+    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, self.g.state.lastFeedrate)
+ 
+  def test_linaer_interpolation_e_and_a_codes_present(self):
+    codes = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'E' : 0,
+        'A' : 0,
+        'F' : 0,
+        }
+    self.assertRaises(s3g.LinearInterpolationError, self.g.LinearInterpolation, codes, [], '')
+
+  def test_linear_interpolation_e_and_b_codes_present(self):
+    codes = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'E' : 0,
+        'B' : 0,
+        'F' : 0,
+        }
+    self.assertRaises(s3g.LinearInterpolationError, self.g.LinearInterpolation, codes, [], '')
+
+  def test_linear_interpolation_e_and_a_and_b_present(self):
+    codes = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'E' : 0,
+        'A' : 0,
+        'B' : 0,
+        'F' : 0,
+        }
+    self.assertRaises(s3g.LinearInterpolationError, self.g.LinearInterpolation, codes, [], '')
+
+  def test_linear_interpolation_no_e_code(self):
+    self.g.state.position = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
+    codes = {
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        'A' : 4,
+        'B' : 5,
+        'F' : 0,
+        }
+    expectedPoint = [1, 2, 3, 4, 5]
+    spmList = [
+        self.g.state.xSPM,
+        self.g.state.ySPM,
+        self.g.state.zSPM,
+        self.g.state.aSPM,
+        self.g.state.bSPM,
+        ]
+    for i in range(len(expectedPoint)):
+      expectedPoint[i] *= spmList[i]
+    feedrate = 0
+    self.g.LinearInterpolation(codes, [], '')
+    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, feedrate)
+    expectedPosition = {
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        'A' : 4,
+        'B' : 5,
+        }
+    self.assertEqual(expectedPosition, self.g.state.position)
+
+  def test_linear_interpolation_e_code_no_toolhead(self):
+    codes = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'E' : 0,
+        'F' : 0,
+        }
+    self.assertRaises(s3g.NoToolIndexError, self.g.LinearInterpolation, codes, [], '')
+
+  def test_linear_interpolation_e_code(self):
+    self.g.state.position = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
+    self.g.state.tool_index = 0
+    codes = {
+        'X' : 1, 
+        'Y' : 2,
+        'Z' : 3,
+        'E' : 4,
+        'F' : 1,
+        }
+    self.g.LinearInterpolation(codes, [], '')
+    expectedPoint = [1, 2, 3, 4, 0]
+    spmList = [
+        self.g.state.xSPM,
+        self.g.state.ySPM,
+        self.g.state.zSPM,
+        self.g.state.aSPM,
+        self.g.state.bSPM,
+        ]
+    for i in range(len(expectedPoint)):
+      expectedPoint[i] *= spmList[i]
+    feedrate = 1
+    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, feedrate)
+
+  def test_linear_interpolation_a_and_b(self):
+    self.g.state.position = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
+    codes = {
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        'A' : 4,
+        'B' : 5,
+        'F' : 1,
+        }
+    self.g.LinearInterpolation(codes, [], '')
+    expectedPoint = [1, 2, 3, 4, 5]
+    spmList = [
+        self.g.state.xSPM,
+        self.g.state.ySPM,
+        self.g.state.zSPM,
+        self.g.state.aSPM,
+        self.g.state.bSPM,
+        ]
+    for i in range(len(expectedPoint)):
+      expectedPoint[i] *= spmList[i]
+    feedrate = 1
+    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, feedrate)
+
 if __name__ == "__main__":
   unittest.main()
