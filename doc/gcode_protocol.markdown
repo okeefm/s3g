@@ -96,7 +96,7 @@ S3g output
 
 Parameters
 
-    Point = If the extruder is configured as off, then the point will be the position currently 
+    point = If the extruder is configured as off, then the point will be the position currently 
     rate = 500
 
 ## G1 - Linear interpolation
@@ -172,65 +172,45 @@ Registers
     Y: (code) Y offset, in mm
     Z: (code) Z offset, in mm
 
-S3g Output
+S3g Output (none)
 
-    None
-
-Parameters
-
-    None
+Parameters (none)
 
 ## G21 - Programming in milimeters
 Instruct the machine that all distances are in milimeters. This command is ignored; the only coordinate system supported is mm.
 
 Registers (none)
 
-S3g Output
+S3g Output (none)
 
-    None
-
-Parameters
-
-    None
+Parameters (none)
 
 ## G54 - Use coordinage system from G10 P0 (toolhead 0?)
 Consider all future positions to be offset by the values stored in the position register P0.
 
 Registers (none)
 
-S3g Output
+S3g Output (none)
 
-    None
-
-Parameters
-
-    None
+Parameters (none)
 
 ## G55 - Use coordinage system from G10 P1 (toolhead 1?)
 Consider all future positions to be offset by the values stored in the position register P1.
 
 Registers (none)
 
-S3g Output
+S3g Output (none)
 
-    None
-
-Parameters
-
-    None
+Parameters (none)
 
 ## G90 - Absolute programming
 Instruct the machine that all distances are absolute. This command is ignored; the only programming mode is absolute.
 
 Registers (none)
 
-S3g Output
+S3g Output (none)
 
-    None
-
-Parameters
-
-    None
+Parameters (none)
 
 ## G92 - Position register: Set the specified axes positions to the given position
 Reset the current position of the specified axes to the given values.
@@ -249,7 +229,7 @@ S3g Output
 
 Parameters
 
-    Point = [x, y, z, a, b]
+    point = [x, y, z, a, b]
 
 ## G130 - Set digital potentiometer value
 Set the digital potentiometer value for the given axes. This is used to configure the current applied to each stepper axis. The value is specified as a value from 0-127; the mapping from current to potentimeter value is machine specific. (TODO: Specify what it is for the MightyBoard)
@@ -269,8 +249,8 @@ S3g Output
 Parameters
 
     For Each Set Of Different Pot Values:
-      Val = Value
-      Axes = Axes With The Same Value
+      val = Value
+      axes = Axes With The Same Value
 
 ## G161 - Home given axes to minimum
 Instruct the machine to home the specified axes to their minimum position.
@@ -288,9 +268,9 @@ S3g Output
 
 Parameters
 
-    Axes = List Of All Present Axes
-    Feedrate = F
-    Timeout = Hardcoded timeout of 60 seconds
+    axes = List Of All Present Axes
+    feedrate = F
+    timeout = Hardcoded timeout of 60 seconds
 
 ## G162 - Home given axes to maximum
 Instruct the machine to home the specified axes to their maximum position.
@@ -308,8 +288,8 @@ S3g Output
 
 Parameters
 
-    Axes = List Of All Present Axes
-    Feedrate = F
+    axes = List Of All Present Axes
+    feedrate = F
 
 # Supported M Codes
 
@@ -348,10 +328,11 @@ S3g Output
 
 Parameters
 
-    Axes = List Of All PresentAxes
+    axes = List Of All PresentAxes
 
 ## M70 - Display message on machine
 Instruct the machine to display a message on it's interface LCD.
+TODO: Should this generate multiple s3g calls for a long message?
 
 Registers
 
@@ -360,17 +341,17 @@ Registers
 
 S3g Output
 
-    DisplayMessage(row, col, message, timeout, clear existing flag, last in group flag, wait for button flag)
+    DisplayMessage(row, col, message, timeout, clear_existing, last_in_group, wait_for_button)
 
 Parameters
 
-    Row = 0
-    Col = 0
-    Message = Comment
-    Timeout = 0
-    Clear Existing Flag = True
-    Last In Group Flag= True
-    Wait For Button Flag= False
+    row = 0
+    col = 0
+    message = Comment
+    timeout = P
+    clear_existing = True
+    last_in_group = True
+    wait_for_button = False
 
 ## M72 - Play a tone or song
 Instruct the machine to play a preset song. Acceptable song IDs are machine specific.
@@ -407,26 +388,18 @@ Set the extruder direction to clockwise
 
 Registers (none)
 
-S3g Output
+S3g Output (none)
 
-    None
-
-Parameters
-
-    None
+Parameters (none)
 
 ## M102 - Turn extruder on, reverse
 Set the extruder direction to counter-clockwise
 
 Registers (none)
 
-S3g Output
+S3g Output (none)
 
-    None
-
-Parameters
-
-    None
+Parameters (none)
 
 ## M103 - Turn extruder off
 Disables the extruder motor
@@ -435,13 +408,9 @@ Registers
 
     T: (code, optional) If present, first change to the specified tool
 
-S3g Output
+S3g Output (none)
 
-    None
-
-Parameters
-
-    None
+Parameters (none)
 
 ## M104 - Set toolhead temperature
 Set the target temperature for the current toolhead
@@ -458,7 +427,7 @@ S3g Output
 Parameters
 
     tool_index = toolhead
-    Temperature = s
+    temperature = s
 
 ## M108 - Set extruder max speed
 Set the motor speed for the current toolhead
@@ -468,13 +437,9 @@ Registers
     R: (code) Motor speed, in RPM
     T: (code, optional) If present, first change to the specified tool
 
-S3g Output
-    
-    None
+S3g Output (none)
 
-Parameters
-
-    None
+Parameters (none)
 
 ## M109 - Set build platform temperature
 Sets the target temperature for the current build platform
@@ -491,7 +456,7 @@ S3g Output
 Parameters
 
     tool_index = 0
-    Temperature = S
+    temperature = S
 
 ## M132 - Load current home position from EEPROM
 Recalls current home position from the EEPROM and waits for the buffer to empty
