@@ -36,7 +36,6 @@ class GcodeStates(object):
     self.toolhead_speed = None    #Current speed of the toolhead
     self.toolhead_direction = None    #Direction of the toolhead.  True : Forward False : Backwards
     self.toolhead_enabled = None
-    self.s3g = None
     self.rapidFeedrate = 300    #Feedrate used during rapid positoning
     self.findingTimeout = 60    #Timeout used when finding minimums/maximums
     self.xSPM = 94.139704       #Steps per milimeters on the x axis

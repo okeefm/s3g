@@ -19,10 +19,10 @@ class GcodeParser(object):
 #      4   : self.Dwell,
 #      10  : self.StoreOffsets,
 #      21  : [self.MilimeterProgramming,   ['']],
-#      54  : self.UseP0Offsets,
-#      55  : self.UseP1Offsets,
-#      90  : self.AbsoluteProgramming,
-      92  : [self.SetPosition,                 'XYZAB'],
+      54  : [self.UseP0Offsets,                    ''],
+      55  : [self.UseP1Offsets,                    ''],
+      90  : [self.AbsoluteProgramming,             ''],
+      92  : [self.SetPosition,                'XYZAB'],
       130 : [self.SetPotentiometerValues,      'XYZP'],
       161 : [self.FindAxesMinimum,             'XYZF'],
       162 : [self.FindAxesMaximum,             'XYZF'],
@@ -43,16 +43,6 @@ class GcodeParser(object):
 #       132 : self.LoadPosition,
     }
 
-#  def RapidPositioning(self, codes):
-#    """Moves at a high speed to a specific point
-#
-#    @param dict codes: Codes parsed out of the gcode command
-#    """
-#    self.s3g.QueuePoint(self.GetPoint(), self.rapidFeedrate)
-#    pass
-
-#  def LinearInterpolation(self, codes):
-#    pass
 
 #  def Dwell(self, codes):
 #    """Can either delay all functionality of the machine, or have the machine
@@ -75,51 +65,16 @@ class GcodeParser(object):
 #      miliConstant = 1000
 #      self.s3g.Delay(codes['P']*(microConstant/miliConstant))
 
-#  def StoreOffsets(self, codes):
-#    """
-#    Given a set of codes, sets the offset assigned by P to be equal to 
-#    those axes in codes.  If the P code is missing, OR the code
-#    is considered a flag, we raise an exception.
-#
-#    @param dict codes: The codes that have been parsed out of the gcode
-#    """
-#    if 'P' not in codes:
-#      raise MissingCodeError
-#    elif isinstance(codes['P'], bool):
-#      raise InvalidCodeError
-#    self.offsetPosition[codes['P']] = {}
-#    for axis in ParseOutAxes(codes):
-#      self.offsetPosition[codes['P']][axis] = codes[axis]
+  def AbsoluteProgramming(self, codes, comment):
+    """Set the programming mode to absolute
+    We are not implementing this command, so this is just a stub.
+    """
+    pass
 
   def MilimeterProgramming(self, codes):
     """ Set the programming mode to milimeters
     """
     pass
-
-#  def UpdateInternalPosition(self, codes):
-#    """Given a set of codes, sets the position and applies any offsets, if needed
-#    @param codes: The codes parsed out of the g/m command
-#    """
-#    self.SetPosition(codes)
-#    self.ApplyNeededOffsetsToPosition(codes)
-
-#  def SetPosition(self, codes):
-#    """Given a set of codes, sets the state machine's position's applicable axes values to those in codes.  If a code is set as a flag, that code is disregarded
-#   
-#    @param dictionary codes: A set of codes that have updated point information
-#    """
-#    for key in codes:
-#      if key in self.position:
-#        if not isinstance(codes[key], bool):
-#          self.position[key] = codes[key]
-
-#  def ApplyNeededOffsetsToPosition(self):
-#    """Given a position, applies the applicable offsets to that position
-#    @param dict position: The position to apply offsets to
-#    """
-#    if self.toolhead != None:
-#      for key in self.offsetPosition[self.toolhead]:
-#        self.position[key] += self.offsetPosition[self.toolhead][key]
 
   def ExecuteLine(self, command):
     """
@@ -185,3 +140,11 @@ class GcodeParser(object):
     AllAxesNotFlags(codes) 
     self.states.SetPosition(codes)
     self.s3g.SetExtendedPosition(self.states.GetPosition())
+
+  def UseP0Offsets(self, codes, comment):
+    self.states.offset_register = 0
+    self.states.toolhead = 0
+
+  def UseP1Offsets(self, codes, comment):
+    self.states.offset_register = 1
+    self.states.toolhead = 1
