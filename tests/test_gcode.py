@@ -63,17 +63,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
     self.mock.WaitForToolReady.assert_called_once_with(tool_index, delay, timeout)
 
-
-class gcodeTests(unittest.TestCase):
-  def setUp(self):
-    self.g = s3g.GcodeParser()
-    self.mock = mock.Mock()
-    self.g.s3g = self.mock
- 
-  def tearDown(self):
-    self.g = None
-    self.mock = None
-
   def test_rapid_position_all_codes_accounted_for(self):
     codes = 'XYZ'
     flags = ''
@@ -317,18 +306,20 @@ class gcodeTests(unittest.TestCase):
     val = 0
     self.g.SetPotentiometerValues(codes, [], '')
     self.mock.SetPotentiometerValue.assert_called_once_with(axes, val)
-  """
+  
   def test_set_potentiometer_values_all_axes(self):
     codes = {'X' : 0, 'Y' : 1, 'Z' : 2, 'A': 3, 'B' : 4} 
+    expected = [
+        [['X'], 0],
+        [['Y'], 1],
+        [['Z'], 2],
+        [['A'], 3],
+        [['B'], 4],
+        ]
     cmd = s3g.host_action_command_dict['SET_POT_VALUE']
-    axes = ['X', 'Y', 'Z', 'A', 'B']
-    values = [0, 1 ,2, 3, 4]
     self.g.SetPotentiometerValues(codes, [], '')
-    self.inputstream.seek(0)
-    readPayloads = self.d.ReadFile() 
-    for readPayload, i in zip(readPayloads, range(5)):
-      expectedPayload = [cmd, s3g.EncodeAxes(axes[i]), values[i]]
-      self.assertEqual(expectedPayload, readPayload)"""
+    for i in range(len(expected)):
+      self.assertEqual(self.mock.mock_calls[i], mock.call.SetPotentiometerValue(expected[i][0], expected[i][1]))
 
   def test_set_potentiometer_values_all_codes_same(self):
     codes = {'X' : 0, 'Y' : 0, 'Z' : 0, 'A' : 0, 'B' : 0}
