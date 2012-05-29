@@ -21,16 +21,16 @@ class GcodeParser(object):
     self.GCODE_INSTRUCTIONS = {
       0   : [self.RapidPositioning,            'XYZ',     ''],
       1   : [self.LinearInterpolation,        'XYZABEF',  ''],
-#      4   : self.Dwell,
+      4   : [self.Dwell,                            'P',  ''],
       10  : [self.StoreOffsets,                'XYZP',    ''],
       21  : [self.MilimeterProgramming,        '',        ''],
       54  : [self.UseP0Offsets,                '',        ''],
       55  : [self.UseP1Offsets,                '',        ''],
       90  : [self.AbsoluteProgramming,         '',        ''],
       92  : [self.SetPosition,                 'XYZAB',   ''],
-      130 : [self.SetPotentiometerValues,      'XYZAB',    ''],
-      161 : [self.FindAxesMinimums,             'F',    'XYZ'],
-      162 : [self.FindAxesMaximums,             'F',    'XYZ'],
+      130 : [self.SetPotentiometerValues,      'XYZAB',   ''],
+      161 : [self.FindAxesMinimums,             'F',   'XYZ'],
+      162 : [self.FindAxesMaximums,             'F',   'XYZ'],
 }
 
     self.MCODE_INSTRUCTIONS = {
@@ -195,3 +195,8 @@ class GcodeParser(object):
         self.state.position['B'] += codes['E']
     self.state.SetPosition(codes)
     self.s3g.QueueExtendedPoint(self.state.GetPosition(), feedrate)
+
+  def Dwell(self, codes, flags, comment):
+    if 'P' not in codes:
+      raise MissingCodeError
+    self.s3g.Delay(codes['P'])

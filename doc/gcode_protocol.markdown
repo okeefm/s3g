@@ -156,17 +156,11 @@ Registers
 
 S3g Output
 
-    If toolenabled:
-      QueueExtendedPoint(point, feedrate)
-    else:
-      Delay(delay)
+    Delay(delay)
 
 Parameters
-    If toolenabled:
-      point = position[0:3]+updatedExtruderPosition
-      feedrate = tool_speed
-    else:
-      delay = P
+    
+    Delay = P
 
 ## G10 - Store offsets to position register
 Save the specified XYZ offsets to an offset register. When the register is activated by a G54 or G55 command, apply this offset to every position before sending it to the machine.

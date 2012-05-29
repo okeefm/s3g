@@ -570,5 +570,20 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     feedrate = 1
     self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, feedrate)
 
+  def test_dwell_all_codes_accounted_for(self):
+    codes = 'P'
+    flags = ''
+    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[4][1])
+    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[4][2])
+
+  def test_dwell_no_p(self):
+    codes = {}
+    self.assertRaises(s3g.MissingCodeError, self.g.Dwell, codes, [], '')
+
+  def test_dwell(self):
+    codes = {'P'  : 10}
+    self.g.Dwell(codes, [], '')
+    self.mock.Delay.assert_called_once_with(10)
+
 if __name__ == "__main__":
   unittest.main()
