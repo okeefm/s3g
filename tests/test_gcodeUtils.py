@@ -5,6 +5,7 @@ sys.path.append(lib_path)
 
 import glob
 import unittest
+import string
 
 import s3g
 
@@ -204,27 +205,29 @@ class CheckForExtraneousCodesTests(unittest.TestCase):
     s3g.CheckForExtraneousCodes(codes.keys(), allowed_codes)
 
 
-class UtilityFunctionTests(unittest.TestCase):
+class ParseOutAxesTests(unittest.TestCase):
+
+  def test_parse_out_axes_empty_set(self):
+    codes = {}
+    parsed_axes = s3g.ParseOutAxes(codes)
+    self.assertEqual([], parsed_axes)
+
+  def test_parse_out_axes_reject_non_axis(self):
+    non_axes = set(string.uppercase) - set('XYZAB')
+
+    for non_axis in non_axes:
+      parsed_axes = s3g.ParseOutAxes([non_axis])
+      self.assertEquals(parsed_axes, [])
+
+  def test_parse_out_axes_single_axis(self):
+    codes = {'X':True}
+    parsed_axes = s3g.ParseOutAxes(codes)
+    self.assertEqual(['X'], parsed_axes)
 
   def test_parse_out_axes(self):
     codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True}
     parsedAxes = s3g.ParseOutAxes(codes)
-    self.assertEqual(sorted(['X', 'Y', 'Z', 'A', 'B']), sorted(parsedAxes))
-
-  def test_parse_out_axes_extra_axes(self):
-    codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True, 'Q':True}
-    parsedAxes = s3g.ParseOutAxes(codes)
-    self.assertEqual(sorted(['X', 'Y', 'Z', 'A', 'B']), sorted(parsedAxes))
-
-  def test_parse_out_axes_no_axes(self):
-    codes = {}
-    parsedAxes = s3g.ParseOutAxes(codes)
-    self.assertEqual([], parsedAxes)
-
-  def test_parse_out_axes_minimal_axes(self):
-    codes = {'X':True}
-    parsedAxes = s3g.ParseOutAxes(codes)
-    self.assertEqual(['X'], parsedAxes)
+    self.assertEqual(['A', 'B', 'X', 'Y', 'Z'], parsedAxes)
 
 class ParseSampleGcodeFileTests(unittest.TestCase):
   def test_parse_files(self):
