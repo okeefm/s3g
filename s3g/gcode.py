@@ -75,7 +75,7 @@ class GcodeParser(object):
     """
     pass
 
-  def MilimeterProgramming(self, codes, comment):
+  def MilimeterProgramming(self, codes, flags, comment):
     """ Set the programming mode to milimeters
     """
     pass
@@ -100,8 +100,8 @@ class GcodeParser(object):
 
     else:
       if codes['M'] in self.MCODE_INSTRUCTIONS:
-        CheckForExtraneousCodes(codes.keys(), self.GCODE_INSTRUCTIONS[codes['M']][1])
-        CheckForExtraneousCodes(flags, self.GCODE_INSTRUCTIONS[codes['M']][2])
+        CheckForExtraneousCodes(codes.keys(), self.MCODE_INSTRUCTIONS[codes['M']][1])
+        CheckForExtraneousCodes(flags, self.MCODE_INSTRUCTIONS[codes['M']][2])
         self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
 
       else:

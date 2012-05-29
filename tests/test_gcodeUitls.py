@@ -203,15 +203,6 @@ class CheckForExtraneousCodesTests(unittest.TestCase):
     allowed_codes = 'XYZ'
     s3g.CheckForExtraneousCodes(codes.keys(), allowed_codes)
 
-  def test_check_extraneous_codes_gets_called(self):
-    g = s3g.GcodeParser()
-    command = "G161 X1 Y1 Z1 F1 Q1"
-    self.assertRaises(s3g.InvalidCodeError, g.ExecuteLine, command)
-
-  def test_check_extraneous_flags_gets_called(self):
-    g = s3g.GcodeParser()
-    command = "G161 X"
-    self.assertRaises(s3g.InvalidCodeError, g.ExecuteLine, command)
 
 class ParseOutAxesTests(unittest.TestCase):
 

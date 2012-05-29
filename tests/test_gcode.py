@@ -18,6 +18,22 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.g = s3g.GcodeParser()
     self.g.s3g = self.mock
 
+  def test_check_gcode_extraneous_codes_gets_called(self):
+    command = "G161 Q1" # Note: this assumes that G161 does not accept a Q code
+    self.assertRaises(s3g.InvalidCodeError, self.g.ExecuteLine, command)
+
+  def test_check_gcode_extraneous_flags_gets_called(self):
+    command = "G161 Q" # Note: this assumes that G161 does not accept a Q flag
+    self.assertRaises(s3g.InvalidCodeError, self.g.ExecuteLine, command)
+
+  def test_check_mcode_extraneous_codes_gets_called(self):
+    command = "M6 X4" # Note: This assumes that M6 does not accept an X code
+    self.assertRaises(s3g.InvalidCodeError, self.g.ExecuteLine, command)
+
+  def test_check_mcode_extraneous_flags_gets_called(self):
+    command = "M6 X" # Note: This assumes that M6 does not accept an X flag
+    self.assertRaises(s3g.InvalidCodeError, self.g.ExecuteLine, command)
+
   def test_wait_for_toolhead_can_update_temperature(self):
     tool_index = 2
     timeout = 3
@@ -35,6 +51,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
     codes = {'T':tool_index}
     self.assertRaises(s3g.MissingCodeError, self.g.WaitForToolhead, codes, [], '')
+
 
   def test_wait_for_toolhead(self):
     tool_index = 2
@@ -241,7 +258,7 @@ class gcodeTests(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
         ]
-    self.g.MilimeterProgramming({}, "")
+    self.g.MilimeterProgramming({}, flags, "")
     self.assertEqual(oldState, newState)   
 
   def test_set_position_flagged_register(self):
