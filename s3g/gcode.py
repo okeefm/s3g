@@ -36,16 +36,16 @@ class GcodeParser(object):
     self.MCODE_INSTRUCTIONS = {
        6   : [self.WaitForToolhead,            '',        ''],
        18  : [self.DisableAxes,                '',        ''],
-#       70  : self.DisplayMessage,            '',        ''],
-#       72  : self.PlaySong,            '',        ''],
-#       73  : self.SetBuildPercentage,            '',        ''],
-#       101 : self.ExtruderOnForward,            '',        ''],
-#       102 : self.ExtruderOnReverse,            '',        ''],
-#       103 : self.ExtruderOff,            '',        ''],
-#       104 : self.SetTooleadTemperature,            '',        ''],
-#       108 : self.SetExtruderSpeed,            '',        ''],
-#       109 : self.SetPlatforTemperature,            '',        ''],
-#       132 : self.LoadPosition,            '',        ''],
+       70  : [self.DisplayMessage,            '',        ''],
+       72  : [self.PlaySong,            '',        ''],
+       73  : [self.SetBuildPercentage,            '',        ''],
+#       101 : [self.ExtruderOnForward,            '',        ''],
+#       102 : [self.ExtruderOnReverse,            '',        ''],
+#       103 : [self.ExtruderOff,            '',        ''],
+#       104 : [self.SetTooleadTemperature,            '',        ''],
+#       108 : [self.SetExtruderSpeed,            '',        ''],
+#       109 : [self.SetPlatforTemperature,            '',        ''],
+#       132 : [self.LoadPosition,            '',        ''],
     }
 
 #  def Dwell(self, codes):
@@ -156,6 +156,41 @@ class GcodeParser(object):
 
   def DisableAxes(self, codes, flags, comment):
     self.s3g.ToggleAxes(ParseOutAxes(flags), False)
+
+  def DisplayMessage(self, codes, flags, comment):
+    row = 0 # As per the gcode protocol
+    col = 0 # As per the gcode protocol
+    clear_existing = True # As per the gcode protocol
+    last_in_group = True # As per the gcode protocol
+    wait_for_button = False # As per the gcode protocol
+
+    try:
+      self.s3g.DisplayMessage(
+        row,
+        col,
+        comment,
+        codes['P'],
+        clear_existing,
+        last_in_group,
+        wait_for_button,
+      )
+
+    except KeyError as e:
+      raise MissingCodeError
+
+  def PlaySong(self, codes, flags, comment):
+    try:
+      self.s3g.QueueSong(codes['P'])
+
+    except KeyError as e:
+      raise MissingCodeError
+
+  def SetBuildPercentage(self, codes, flags, comment):
+    try:
+      self.s3g.SetBuildPercent(codes['P'])
+
+    except KeyError as e:
+      raise MissingCodeError
 
   def StoreOffsets(self, codes, flags, comment):
     if 'X' not in codes or 'Y' not in codes or'Z' not in codes:

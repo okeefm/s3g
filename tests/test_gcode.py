@@ -13,7 +13,7 @@ import s3g
 
 class gcodeTestsMockedS3G(unittest.TestCase):
   def setUp(self):
-    self.mock = mock.Mock()
+    self.mock = mock.Mock(s3g.s3g)
 
     self.g = s3g.GcodeParser()
     self.g.s3g = self.mock
@@ -37,7 +37,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
   def test_wait_for_toolhead_can_update_temperature(self):
     tool_index = 2
     timeout = 3
-    delay = 100
+    delay = 100 # As specified in the gcode protocol
 
     codes = {'T':tool_index, 'P':timeout}
     self.g.WaitForToolhead(codes, [], '')
@@ -47,21 +47,74 @@ class gcodeTestsMockedS3G(unittest.TestCase):
   def test_wait_for_toolhead_missing_timeout(self):
     tool_index = 2
     timeout = 3
-    delay = 100
+    delay = 100 # As specified in the gcode protocol
 
     codes = {'T':tool_index}
-    self.assertRaises(s3g.MissingCodeError, self.g.WaitForToolhead, codes, [], '')
 
+    self.assertRaises(s3g.MissingCodeError, self.g.WaitForToolhead, codes, [], '')
 
   def test_wait_for_toolhead(self):
     tool_index = 2
     timeout = 3
-    delay = 100
+    delay = 100 # As specified in the gcode protocol
 
     codes = {'T':tool_index, 'P':timeout}
     self.g.WaitForToolhead(codes, [], '')
 
     self.mock.WaitForToolReady.assert_called_once_with(tool_index, delay, timeout)
+
+  def test_disable_axes(self):
+    flags = ['A','B','X','Y','Z']
+
+    self.g.DisableAxes({}, flags, '')
+    self.mock.ToggleAxes.assert_called_once_with(flags, False)
+
+  # TODO: test for missing timeout
+  def test_display_message(self):
+    row = 0 # As specified in the gcode protocol
+    col = 0 # As specified in the gcode protocol
+    message = 'ABCDEFG123'
+    timeout = 123
+    clear_existing = True # As specified in the gcode protocol
+    last_in_group = True # As specified in the gcode protocol
+    wait_for_button = False # As specified in the gcode protocol
+
+    codes = {'P' : timeout}
+    comment = message
+
+    self.g.DisplayMessage(codes, [], comment)
+    self.mock.DisplayMessage.assert_called_once_with(
+      row,
+      col,
+      message,
+      timeout,
+      clear_existing,
+      last_in_group,
+      wait_for_button)
+
+  def test_play_song_missing_song_id(self):
+    codes = {}
+
+    self.assertRaises(s3g.MissingCodeError, self.g.PlaySong, codes, [], '')
+
+  def test_play_song(self):
+    song_id = 2
+    codes = {'P' : song_id}
+
+    self.g.PlaySong(codes, [], '')
+    self.mock.QueueSong.assert_called_once_with(song_id)
+
+  def test_set_build_percentage_missing_percent(self):
+    codes = {}
+
+    self.assertRaises(s3g.MissingCodeError, self.g.SetBuildPercentage, codes, [], '')
+
+  def test_set_build_percentage(self):
+    build_percentage = 2
+    codes = {'P' : build_percentage}
+
+    self.g.SetBuildPercentage(codes, [], '')
+    self.mock.SetBuildPercent.assert_called_once_with(build_percentage)
 
   def test_rapid_position_all_codes_accounted_for(self):
     codes = 'XYZ'

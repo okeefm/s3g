@@ -650,7 +650,7 @@ class s3g(object):
       0x00
     )
 
-  def DisplayMessage(self, row, col, message, timeout, clearExisting, lastInGroup, waitForButton):
+  def DisplayMessage(self, row, col, message, timeout, clear_existing, last_in_group, wait_for_button):
     """
     Display a message to the screen
     @param int row: Row to draw the message at
@@ -658,23 +658,23 @@ class s3g(object):
     @param str message: Message to write to the screen
     @param int timeout: Amount of time to display the message for, in seconds. 
                    If 0, leave the message up indefinately.
-    @param boolean clearExisting: flag.  If True, This will clear the existing message buffer and timeout
-    @param boolean lastInGroup: flag.  If true, signifies that this message is the last in a group of messages
-    @param boolean waitForButton: flag.  If true, waits for a button to be pressed before clearing the screen
+    @param boolean clear_existing: If True, This will clear the existing message buffer and timeout
+    @param boolean last_in_group: If true, signifies that this message is the last in a group of messages
+    @param boolean wait_for_button: If true, waits for a button to be pressed before clearing the screen
     """
     bitField = 0
-    if clearExisting:
+    if clear_existing:
       bitField |= 0x01
-    if lastInGroup:
+    if last_in_group:
       bitField |= 0x02
-    if waitForButton:
+    if wait_for_button:
       bitField |= 0x04
     self.writer.BuildAndSendActionPayload(
       host_action_command_dict['DISPLAY_MESSAGE'], 
       bitField, 
       col, 
       row, 
-      timeout, 
+      timeout,
       message, 
       0x00
     )
