@@ -1003,7 +1003,8 @@ class S3gTests(unittest.TestCase):
 
   def test_get_motherboard_status(self):
     flags = {
-      'POWER_ERROR' : 1
+      'POWER_ERROR' : 1,
+      'HEAT_SHUTDOWN' : 1
     }
 
     response_payload = bytearray()
@@ -1209,9 +1210,13 @@ class S3gTests(unittest.TestCase):
   def test_get_tool_status(self):
     toolIndex = 0
     expectedDict = {
-      "ExtruderReady" : True,
-      "PlatformError" : True,
-      "ExtruderError" : True,
+      "ExtruderReady"         : True,
+      "ExtruderNotPluggedIn"  : True,
+      "ExtruderOverMaxTemp"   : True,
+      "ExtruderNotHeating"    : True,
+      "ExtruderDroppingTemp"  : True,
+      "PlatformError"         : True,
+      "ExtruderError"         : True,
     }
 
     response_payload = bytearray()

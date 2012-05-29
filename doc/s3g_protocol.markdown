@@ -680,8 +680,8 @@ Response
 </tr>
 <tr>
  <td>6</td>
- <td>N/A</td>
- <td></td>
+ <td>HEAT_SHUTDOWN</td>
+ <td>Heaters were shutdown after 20 minutes of inactivity</td>
 </tr>
 <tr>
  <td>5</td>
@@ -1279,6 +1279,7 @@ Response
 
     uint8: Bitfield containing status information (see below)
 
+DEPRECATED BITFIELD TABLE
 <table>
 <tr>
  <th>Bit</th>
@@ -1319,6 +1320,55 @@ Response
  <td>1</td>
  <td>N/A</td>
  <td></td>
+</tr>
+<tr>
+ <td>0</td>
+ <td>EXTRUDER_READY</td>
+ <td>The extruder has reached target temperature</td>
+</tr>
+</table>
+
+NEW BITFIELD TABLE
+<table>
+<tr>
+ <th>Bit</th>
+ <th>Name</th>
+ <th>Details</th>
+</tr>
+<tr>
+ <td>7</td>
+ <td>EXTRUDER_ERROR</td>
+ <td>An error was detected with the extruder heater (if the tool supports one). The extruder heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.</td>
+</tr>
+<tr>
+ <td>6</td>
+ <td>PLATFORM_ERROR</td>
+ <td>An error was detected with the platform heater (if the tool supports one). The platform heater will fail if an error is detected with the sensor (thermocouple) or if the temperature reading appears to be unreasonable.</td>
+</tr>
+<tr>
+<td>5</td>
+<td>N/A></td>
+<td></td>
+</tr>
+<tr>
+ <td>4</td>
+ <td>Temperature Dropping</td>
+ <td>Heater reached temperature but temperature subsequently dropped 30 degrees below target temp. </td>
+</tr>
+<tr>
+ <td>3</td>
+ <td>Not Heating</td>
+ <td>Heater is not heating up as expected, flagged if improper after heating for 40 seconds.</td>
+</tr>
+<tr>
+ <td>2</td>
+ <td>Software Cutoff</td>
+ <td>Temperature was recorded above maximum allowable.  Heater shutdown for safety.</td>
+</tr>
+<tr>
+ <td>1</td>
+ <td>Not Plugged In</td>
+ <td>The tool or platform is not plugged in.</td>
 </tr>
 <tr>
  <td>0</td>

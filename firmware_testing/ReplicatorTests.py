@@ -15,7 +15,10 @@ import os, sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import unittest2 as unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 import optparse
 import serial
@@ -142,7 +145,7 @@ class s3gSendReceiveTests(unittest.TestCase):
 
   def tearDown(self):
     self.s3g.file.close()
-    self.s3g. = None
+    self.s3g.file = None
 
   def test_ResetToFactoryReply(self):
     self.s3g.ResetToFactory()
@@ -324,8 +327,10 @@ class s3gFunctionTests(unittest.TestCase):
   def setUp(self):
     self.s3g = s3g.s3g()
     self.s3g.file = serial.Serial(options.serialPort, '115200', timeout=1)
+    self.s3g.writer = s3g.StreamWriter(self.s3g.file)
     self.s3g.SetExtendedPosition([0, 0, 0, 0, 0])
     self.s3g.AbortImmediately()
+    time.sleep(5)
 
   def tearDown(self):
     self.s3g.file.close()
@@ -750,28 +755,45 @@ class s3gFunctionTests(unittest.TestCase):
     time.sleep(5)
     self.assertEqual(pointToSet, self.s3g.GetExtendedPosition()[0])
  
+  def test_GetMotherboardStatus(self):
+    returnDic = self.s3g.GetMotherboardStatus()
+    self.assertFalse(returnDic["POWER_ERROR"])
+    self.assertFalse(returnDic["HEAT_SHUTDOWN"])
+    
+    #turn on extruder heater and wait 20 minutes
+    self.s3g.SetToolheadTemperature(0, 225)
+    time.sleep(20*60)
+    returnDic = self.s3g.GetMotherboardStatus()
+    self.assertTrue(returnDic["HEAT_SHUTDOWN"])
+    self.assertFalse(returnDic["POWER_ERROR"])
 
   def test_GetToolStatus(self):
     toolhead = 0
     returnDic = self.s3g.GetToolStatus(toolhead)
-    self.assertTrue(returnDic["EXTRUDER_READY"])
-    self.assertFalse(returnDic["PLATFORM_ERROR"])
-    self.assertFalse(returnDic["EXTRUDER_ERROR"])
+    print returnDic
+    self.assertFalse(returnDic["ExtruderReady"])
+    self.assertFalse(returnDic["ExtruderNotPluggedIn"])
+    self.assertFalse(returnDic["ExtruderOverMaxTemp"])
+    self.assertFalse(returnDic["ExtruderNotHeating" ])
+    self.assertFalse(returnDic["ExtruderDroppingTemp"])
+    self.assertFalse(returnDic["PlatformError"])
+    self.assertFalse(returnDic["ExtruderError"])
     self.s3g.SetToolheadTemperature(toolhead, 100)
     returnDic = self.s3g.GetToolStatus(toolhead)
-    self.assertEqual(returnDic["EXTRUDER_READY"], self.s3g.IsToolReady(toolhead))
+    self.assertEqual(returnDic["ExtruderReady"], self.s3g.IsToolReady(toolhead))
     raw_input("\nPlease unplug the platform!!  Press enter to continue.")
     self.s3g.file = serial.Serial(options.serialPort, '115200', timeout=1)
     self.s3g.SetPlatformTemperature(toolhead, 100)
     time.sleep(5)
     returnDic = self.s3g.GetToolStatus(toolhead)
-    self.assertTrue(returnDic["PLATFORM_ERROR"])
+    self.assertTrue(returnDic["PlatformError"])
     raw_input("\nPlease turn the bot off, plug in the platform and unplug extruder 0's thermocouple!! Press enter to continue.")
     self.s3g.file = serial.Serial(options.serialPort, '115200', timeout=1)
     self.s3g.SetToolheadTemperature(toolhead, 100)
     time.sleep(5)
     returnDic = self.s3g.GetToolStatus(toolhead)
-    self.assertTrue(returnDic["EXTRUDER_ERROR"])
+    self.assertTrue(returnDic["ExtruderError"])
+    self.assertTrue(returnDic["ExtruderNotPluggedIn"])
     raw_input("\nPlease turn the bot off and plug in the platform and Extruder 0's thermocouple!! Press enter to continue.")
  
   def test_GetPIDState(self):
@@ -797,7 +819,7 @@ class s3gFunctionTests(unittest.TestCase):
     raw_input("\nTesting WaitForButton timeout.  Please watch the interface board and note the time! Press enter to continue")
     self.s3g.WaitForButton('up', 5, True, False, False)
     obs = raw_input("\nDid the center button flash for about 5 seconds and stop? (y/n) ")
-    self.assertEqual(obs, 'y')
+    self.assertEqualG(obs, 'y')
     raw_inpit("\nTesting bot reset after tiemout.  Please watch/listen to verify if the replicator is resetting. Press enter to continue.")
     self.s3g.WaitForButton('up', 1, False, True, False)
     time.sleep(1)
@@ -918,6 +940,13 @@ if __name__ == '__main__':
   del sys.argv[1:]
   print "*****To do many of these tests, your printer must be reset immediately prior to execution.  If you haven't, please reset your robot and run these tests again!!!*****"
   print "*****Because We are going to be moving the axes around, you should probably move the gantry to the middle of the build area and the Z platform to about halfway!!!*****"
+
+  tests = unittest.TestSuite()
+  tests.addTest(s3gFunctionTests('test_GetMotherboardStatus'))
+
+  unittest.TextTestRunner(verbosity=2).run(tests)
+  
+  """
   commonTests = unittest.TestLoader().loadTestsFromTestCase(commonFunctionTests)
   packetTests = unittest.TestLoader().loadTestsFromTestCase(s3gPacketTests)
   sendReceiveTests = unittest.TestLoader().loadTestsFromTestCase(s3gSendReceiveTests)
@@ -927,3 +956,4 @@ if __name__ == '__main__':
   suites = [commonTests, packetTests, sendReceiveTests, functionTests, sdTests, ]
   for suite in suites[-1]:
     unittest.TextTestRunner(verbosity=2).run(suite)
+  """

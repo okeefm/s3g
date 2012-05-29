@@ -127,6 +127,7 @@ class s3g(object):
     Retrieve bits of information about the motherboard
     @return: A python dictionary of various flags and whether theywere set or not at reset
     POWER_ERRPR : An error was detected with the system power.
+    HEAT_SHUTDOWN : The heaters were shutdown because the bot was inactive for over 20 minutes
     """
     response = self.writer.BuildAndSendQueryPayload(host_query_command_dict['GET_MOTHERBOARD_STATUS'])
     
@@ -137,6 +138,7 @@ class s3g(object):
 
     flags = {
     'POWER_ERROR' : int(bitfield[7]),
+    'HEAT_SHUTDOWN' : int(bitfield[6]),
     }
     return flags
 
@@ -727,6 +729,10 @@ class s3g(object):
     @param int tool_index: The tool we would like to query for information
     @return A dictionary containing status information about the tool_index
       ExtruderReady : The extruder has reached target temp
+      ExtruderNotPluggedIn : The extruder thermocouple is not detected by the bot
+      ExturderOverMaxTemp : The temperature measured at the extruder is greater than max allowed
+      ExtruderNotHeating : In the first 40 seconds after target temp was set, the extruder is not heating up as expected
+      ExtruderDroppingTemp : After reaching and maintaining temperature, the extruder temp has dropped 30 degrees below target
       PlatformError: an error was detected with the platform heater (if the tool supports one).  
         The platform heater will fail if an error is detected with the sensor (thermocouple) 
         or if the temperature reading appears to be unreasonable.
@@ -735,14 +741,19 @@ class s3g(object):
         if the temperature reading appears to be unreasonable
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOL_STATUS'])
+
     [resonse_code, bitfield] = UnpackResponse('<BB', response)
 
     bitfield = DecodeBitfield8(bitfield)
 
     returnDict = {
-      "ExtruderReady" : bool(bitfield[0]),
-      "PlatformError" : bool(bitfield[6]),
-      "ExtruderError" : bool(bitfield[7]),
+      "ExtruderReady" : bool(int(bitfield[0])),
+      "ExtruderNotPluggedIn" : bool(int(bitfield[1])),
+      "ExtruderOverMaxTemp" : bool(int(bitfield[2])),
+      "ExtruderNotHeating" : bool(int(bitfield[3])),
+      "ExtruderDroppingTemp" : bool(int(bitfield[4])), 
+      "PlatformError" : bool(int(bitfield[6])),
+      "ExtruderError" : bool(int(bitfield[7])),
     }
     return returnDict
   

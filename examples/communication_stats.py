@@ -61,7 +61,8 @@ class CircleGenerator(object):
         self.radius = radius
         self.divisions = divisions
         self.velocity= velocity
-
+        
+        self.duration = 0
         self.last_target = None
 
     def GetNextPoint(self):
@@ -98,6 +99,8 @@ class CircleGenerator(object):
 
         return target, velocity
 
+
+"""
 r = s3g.s3g()
 
 r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
@@ -142,7 +145,7 @@ for test_state in test_states:
  
         try:
             queue_start_time = time.time()
-            r.QueueExtendedPoint(target, int(velocity))
+            r.QueuePoint(target, int(velocity))
             queue_times.append(time.time() - queue_start_time)
  
             command_count += 1
@@ -175,4 +178,6 @@ for test_state in test_states:
     )
 
 
+
 r.ToggleAxes(['x','y','z','a','b'],False)
+"""
