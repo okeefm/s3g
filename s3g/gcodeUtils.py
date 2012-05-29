@@ -86,11 +86,12 @@ def CheckForExtraneousCodes(codes, allowed_codes):
   """ Check that all of the codes are expected for this command.
 
   Throws an InvalidCodeError if an unexpected code was found
-  @codes dict 
+  @codes list of codes to check
+  @allowed_codes list of allowed codes
   """ 
   #TODO Change the way we add in G and M commands.  Its kinda...bad?
   allowed_codes += "GM"
-  difference = set(codes.keys()) - set(allowed_codes)
+  difference = set(codes) - set(allowed_codes)
 
   if len(difference) > 0:
     raise InvalidCodeError

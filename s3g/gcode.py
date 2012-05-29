@@ -13,34 +13,39 @@ class GcodeParser(object):
   def __init__(self):
     self.state = GcodeStates()
 
+    # Note: The datastructure looks like this:
+    # [0] : command name
+    # [1] : allowed codes
+    # [2] : allowed flags
+
     self.GCODE_INSTRUCTIONS = {
-#      0   : [self.RapidPositioning,      ['XYZ']],
-#      1   : [self.LinearInterpolation,   ['XYZABF']],
+#      0   : [self.RapidPositioning,            'XYZ',     ''],
+#      1   : [self.LinearInterpolation,         'XYZABF',  ''],
 #      4   : self.Dwell,
 #      10  : self.StoreOffsets,
-#      21  : [self.MilimeterProgramming,   ['']],
-      54  : [self.UseP0Offsets,                    ''],
-      55  : [self.UseP1Offsets,                    ''],
-      90  : [self.AbsoluteProgramming,             ''],
-      92  : [self.SetPosition,                'XYZAB'],
-      130 : [self.SetPotentiometerValues,      'XYZP'],
-      161 : [self.FindAxesMinimum,             'XYZF'],
-      162 : [self.FindAxesMaximum,             'XYZF'],
+#      21  : [self.MilimeterProgramming,        '',        ''],
+      54  : [self.UseP0Offsets,                '',        ''],
+      55  : [self.UseP1Offsets,                '',        ''],
+      90  : [self.AbsoluteProgramming,         '',        ''],
+      92  : [self.SetPosition,                 'XYZAB',   ''],
+      130 : [self.SetPotentiometerValues,      'XYZP',    ''],
+      161 : [self.FindAxesMinimum,             'XYZF',    ''],
+      162 : [self.FindAxesMaximum,             'XYZF',    ''],
     }
 
     self.MCODE_INSTRUCTIONS = {
-       6   : self.WaitForToolhead,
-       18  : self.DisableAxes,
-#       70  : self.DisplayMessage,
-#       72  : self.PlaySong,
-#       73  : self.SetBuildPercentage,
-#       101 : self.ExtruderOnForward,
-#       102 : self.ExtruderOnReverse,
-#       103 : self.ExtruderOff,
-#       104 : self.SetTooleadTemperature,
-#       108 : self.SetExtruderSpeed,
-#       109 : self.SetPlatforTemperature,
-#       132 : self.LoadPosition,
+       6   : [self.WaitForToolhead,            '',        ''],
+       18  : [self.DisableAxes,                '',        ''],
+#       70  : self.DisplayMessage,            '',        ''],
+#       72  : self.PlaySong,            '',        ''],
+#       73  : self.SetBuildPercentage,            '',        ''],
+#       101 : self.ExtruderOnForward,            '',        ''],
+#       102 : self.ExtruderOnReverse,            '',        ''],
+#       103 : self.ExtruderOff,            '',        ''],
+#       104 : self.SetTooleadTemperature,            '',        ''],
+#       108 : self.SetExtruderSpeed,            '',        ''],
+#       109 : self.SetPlatforTemperature,            '',        ''],
+#       132 : self.LoadPosition,            '',        ''],
     }
 
 
@@ -87,7 +92,8 @@ class GcodeParser(object):
 
     if 'G' in codes:
       if codes['G'] in self.GCODE_INSTRUCTIONS:
-        CheckForExtraneousCodes(codes, self.GCODE_INSTRUCTIONS[codes['G']][1])
+        CheckForExtraneousCodes(codes.keys(), self.GCODE_INSTRUCTIONS[codes['G']][1])
+        CheckForExtraneousCodes(flags, self.GCODE_INSTRUCTIONS[codes['G']][2])
         self.GCODE_INSTRUCTIONS[codes['G']][0](codes, flags, comment)
 
       else:
@@ -95,7 +101,8 @@ class GcodeParser(object):
 
     else:
       if codes['M'] in self.MCODE_INSTRUCTIONS:
-        CheckForExtraneousCodes(codes, self.GCODE_INSTRUCTIONS[codes['M']][1])
+        CheckForExtraneousCodes(codes.keys(), self.GCODE_INSTRUCTIONS[codes['M']][1])
+        CheckForExtraneousCodes(flags, self.GCODE_INSTRUCTIONS[codes['M']][2])
         self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
 
       else:

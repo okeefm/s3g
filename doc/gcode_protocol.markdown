@@ -40,6 +40,11 @@ Here is some vocabulary, that should be used when talking about the protocol:
  <td>T1</td>
 </tr>
 <tr>
+ <td>Flag</td>
+ <td>A code is a roman charater without a value; </td>
+ <td>X</td>
+</tr>
+<tr>
  <td>Comment</td>
  <td>A comment is a user readable block of text that can be added to a </td>
  <td>(Happy comment)</td>
@@ -74,9 +79,9 @@ Move to the specified position at the maximum feedrate.
 
 Registers
 
-    X: (optional) If present, new X axis position, in mm
-    Y: (optional) If present, new Y axis position, in mm
-    Z: (optional) If present, new Z axis position, in mm
+    X: (code, optional) If present, new X axis position, in mm
+    Y: (code, optional) If present, new Y axis position, in mm
+    Z: (code, optional) If present, new Z axis position, in mm
 
 S3g output
 
@@ -100,12 +105,12 @@ XYZABF Form:
 
   Registers
 
-       X: (optional) If present, new X axis position, in mm
-       Y: (optional) If present, new Y axis position, in mm
-       Z: (optional) If present, new Z axis position, in mm
-       A: (optional) If present, new A axis position, in mm
-       B: (optional) If present, new B axis position, in mm
-       F: (optional) Feedrate, in mm/min
+       X: (code, optional) If present, new X axis position, in mm
+       Y: (code, optional) If present, new Y axis position, in mm
+       Z: (code, optional) If present, new Z axis position, in mm
+       A: (code, optional) If present, new A axis position, in mm
+       B: (code, optional) If present, new B axis position, in mm
+       F: (code, optional) Feedrate, in mm/min
 
   S3g Output
 
@@ -118,11 +123,11 @@ XYZABF Form:
 
 XYZEF Form
 
-     X: (optional) If present, new X axis position, in mm
-     Y: (optional) If present, new Y axis position, in mm
-     Z: (optional) If present, new Z axis position, in mm
-     E: (optional) If present, speed of extrusion, in 
-     F: (optional) Feedrate, in mm/min
+     X: (code, optional) If present, new X axis position, in mm
+     Y: (code, optional) If present, new Y axis position, in mm
+     Z: (code, optional) If present, new Z axis position, in mm
+     E: (code, optional) If present, speed of extrusion, in 
+     F: (code, optional) Feedrate, in mm/min
 
 
 
@@ -142,7 +147,7 @@ If a toolhead is not enabled, this command simply pauses motion for the specifie
 
 Registers
 
-    P: Dwell time, in ms
+    P: (code) Dwell time, in ms
 
 S3g Output
 
@@ -163,10 +168,10 @@ Save the specified XYZ offsets to an offset register. When the register is activ
 
 Registers
 
-    P: Coordinate offset register to write to (0, 1)
-    X: X offset, in mm
-    Y: Y offset, in mm
-    Z: Z offset, in mm
+    P: (code) Coordinate offset register to write to (0, 1)
+    X: (code) X offset, in mm
+    Y: (code) Y offset, in mm
+    Z: (code) Z offset, in mm
 
 S3g Output
 
@@ -233,11 +238,11 @@ Reset the current position of the specified axes to the given values.
 
 Registers
 
-    X: (optional) If present, new X axis position, in mm
-    Y: (optional) If present, new Y axis position, in mm
-    Z: (optional) If present, new Z axis position, in mm
-    A: (optional) If present, new A axis position, in mm
-    B: (optional) If present, new B axis position, in mm
+    X: (code, optional) If present, new X axis position, in mm
+    Y: (code, optional) If present, new Y axis position, in mm
+    Z: (code, optional) If present, new Z axis position, in mm
+    A: (code, optional) If present, new A axis position, in mm
+    B: (code, optional) If present, new B axis position, in mm
 
 S3g Output
 
@@ -252,11 +257,11 @@ Set the digital potentiometer value for the given axes. This is used to configur
 
 Registers
 
-    X: (optional) If present, X axis potentimeter value
-    Y: (optional) If present, Y axis potentimeter value
-    Z: (optional) If present, Z axis potentimeter value
-    A: (optional) If present, A axis potentimeter value
-    B: (optional) If present, B axis potentimeter value
+    X: (code, optional) If present, X axis potentimeter value
+    Y: (code, optional) If present, Y axis potentimeter value
+    Z: (code, optional) If present, Z axis potentimeter value
+    A: (code, optional) If present, A axis potentimeter value
+    B: (code, optional) If present, B axis potentimeter value
 
 S3g Output
 
@@ -273,10 +278,10 @@ Instruct the machine to home the specified axes to their minimum position.
 
 Registers
 
-    F: (optional) Homing feedrate, in mm/min (TODO: Is this correct?)
-    X: (optional) If present, home the x axis to its minimum position
-    Y: (optional) If present, home the y axis to its minimum position
-    Z: (optional) If present, home the z axis to its minimum position
+    F: (code, optional) Homing feedrate, in mm/min (TODO: Is this correct?)
+    X: (flag, optional) If present, home the x axis to its minimum position
+    Y: (flag, optional) If present, home the y axis to its minimum position
+    Z: (flag, optional) If present, home the z axis to its minimum position
 
 S3g Output
 
@@ -293,10 +298,10 @@ Instruct the machine to home the specified axes to their maximum position.
 
 Registers
 
-    F: (optional) Homing feedrate, in mm/min (TODO: Is this corect?)
-    X: (optional) If present, home the x axis to its maximum position
-    Y: (optional) If present, home the y axis to its maximum position
-    Z: (optional) If present, home the z axis to its maximum position
+    F: (code, optional) Homing feedrate, in mm/min (TODO: Is this corect?)
+    X: (flag, optional) If present, home the x axis to its maximum position
+    Y: (flag, optional) If present, home the y axis to its maximum position
+    Z: (flag, optional) If present, home the z axis to its maximum position
 
 S3g Output
 
@@ -314,8 +319,8 @@ Instruct the machine to wait for the toolhead to reach its target temperature
 
 Registers
 
-    P: Maximum time to wait, in seconds (TODO: is this correct?)
-    T: (optional) If present, first change to the specified tool
+    P: (code) Maximum time to wait, in seconds (TODO: is this correct?)
+    T: (code, optional) If present, first change to the specified tool
 
 S3g Output
 
@@ -332,11 +337,11 @@ Instruct the machine to disable the stepper motors for the specifed axes.
 
 Registers
 
-    X: (optional) If present, disable the X axis stepper motor
-    Y: (optional) If present, disable the Y axis stepper motor
-    Z: (optional) If present, disable the Z axis stepper motor
-    A: (optional) If present, disable the A axis stepper motor
-    B: (optional) If present, disable the B axis stepper motor
+    X: (flag, optional) If present, disable the X axis stepper motor
+    Y: (flag, optional) If present, disable the Y axis stepper motor
+    Z: (flag, optional) If present, disable the Z axis stepper motor
+    A: (flag, optional) If present, disable the A axis stepper motor
+    B: (flag, optional) If present, disable the B axis stepper motor
 
 S3g Output
 
@@ -351,7 +356,7 @@ Instruct the machine to display a message on it's interface LCD.
 
 Registers
 
-    P: Time to display message for (TODO: Units?)
+    P: (code) Time to display message for (TODO: Units?)
     comment: Message to display
 
 S3g Output
@@ -373,7 +378,7 @@ Instruct the machine to play a preset song. Acceptable song IDs are machine spec
 
 Registers
 
-    P: ID of the song to play
+    P: (code) ID of the song to play
 
 S3g Output
 
@@ -388,7 +393,7 @@ Instruct the machine that the build has progressed to the specified percentage. 
 
 Registers
 
-   P: Build percentage (0 - 100)
+   P: (code) Build percentage (0 - 100)
 
 S3g Output
 
@@ -429,7 +434,7 @@ Disables the extruder motor
 
 Registers
 
-    T: (optional) If present, first change to the specified tool
+    T: (code, optional) If present, first change to the specified tool
 
 S3g Output
 
@@ -444,8 +449,8 @@ Set the target temperature for the current toolhead
 
 Registers
 
-    S: Temperature to set the toolhead to, in degrees C
-    T: (optional) If present, first change to the specified tool
+    S: (code) Temperature to set the toolhead to, in degrees C
+    T: (code, optional) If present, first change to the specified tool
 
 S3g Output
 
@@ -461,8 +466,8 @@ Set the motor speed for the current toolhead
 
 Registers
 
-    R: Motor speed, in RPM
-    T: (optional) If present, first change to the specified tool
+    R: (code) Motor speed, in RPM
+    T: (code, optional) If present, first change to the specified tool
 
 S3g Output
     
@@ -477,8 +482,8 @@ Sets the target temperature for the current build platform
 
 Registers
 
-    S: Temperature to set the platform to, in degrees C
-    T: (optional) If present, first change to the specified tool
+    S: (code) Temperature to set the platform to, in degrees C
+    T: (code, optional) If present, first change to the specified tool
 
 S3g Output
 

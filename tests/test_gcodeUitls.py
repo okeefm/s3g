@@ -176,36 +176,41 @@ class CheckForExtraneousCodesTests(unittest.TestCase):
   def test_extra_code_with_g_code(self):
     codes = {'G' : 0, 'X' : 0}
     allowed_codes = 'X'
-    s3g.CheckForExtraneousCodes(codes, allowed_codes)
+    s3g.CheckForExtraneousCodes(codes.keys(), allowed_codes)
 
   def test_extra_code_With_m_code(self):
     codes = {'M' : 0, 'X' : 0}
     allowed_codes = 'X'
-    s3g.CheckForExtraneousCodes(codes, allowed_codes)
+    s3g.CheckForExtraneousCodes(codes.keys(), allowed_codes)
   
   def test_extra_code_no_allowed_codes(self):
     codes = {'X' : 0}
     allowed_codes = ''
-    self.assertRaises(s3g.InvalidCodeError, s3g.CheckForExtraneousCodes, codes, allowed_codes)
+    self.assertRaises(s3g.InvalidCodeError, s3g.CheckForExtraneousCodes, codes.keys(), allowed_codes)
 
   def test_extra_code_some_allowed_codes(self):
     codes = {'X' : 0, 'A' : 2}
     allowed_codes = 'XYZ'
-    self.assertRaises(s3g.InvalidCodeError, s3g.CheckForExtraneousCodes, codes, allowed_codes)
+    self.assertRaises(s3g.InvalidCodeError, s3g.CheckForExtraneousCodes, codes.keys(), allowed_codes)
 
   def test_all_allowed_codes(self):
     codes = {'X' : 0, 'Y' : 2, 'Z' : 3}
     allowed_codes = 'XYZ'
-    s3g.CheckForExtraneousCodes(codes, allowed_codes)
+    s3g.CheckForExtraneousCodes(codes.keys(), allowed_codes)
 
   def test_fewer_than_all_allowed_codes(self):
     codes = {'X' : 0, 'Y' : 2}
     allowed_codes = 'XYZ'
-    s3g.CheckForExtraneousCodes(codes, allowed_codes)
+    s3g.CheckForExtraneousCodes(codes.keys(), allowed_codes)
 
   def test_check_extraneous_codes_gets_called(self):
     g = s3g.GcodeParser()
     command = "G161 X1 Y1 Z1 F1 Q1"
+    self.assertRaises(s3g.InvalidCodeError, g.ExecuteLine, command)
+
+  def test_check_extraneous_flags_gets_called(self):
+    g = s3g.GcodeParser()
+    command = "G161 X"
     self.assertRaises(s3g.InvalidCodeError, g.ExecuteLine, command)
 
 class ParseOutAxesTests(unittest.TestCase):
