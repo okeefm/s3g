@@ -7,6 +7,7 @@ import unittest
 import io
 import time
 import mock
+import copy
 
 import s3g
 
@@ -64,6 +65,105 @@ class gcodeTests(unittest.TestCase):
     self.inputstream = None
     self.writer = None
 
+  def test_rapid_position_flagged_code(self):
+    codes = {'X'  : True}
+    self.assertRaises(s3g.CodeValueError, self.g.RapidPositioning, codes, '')
+    
+  def test_rapid_position(self):
+    self.g.state.position = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        } 
+    codes = {
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        }
+    self.g.RapidPositioning(codes, '')
+    self.inputstream.seek(0)
+    expectedPayload = [s3g.host_action_command_dict['QUEUE_EXTENDED_POINT']]
+    positionInSteps = [1, 2, 3, 0, 0]
+    spmList = [
+        self.g.state.xSPM, 
+        self.g.state.ySPM, 
+        self.g.state.zSPM, 
+        self.g.state.aSPM, 
+        self.g.state.bSPM
+        ]
+    for i in range(len(spmList)):
+      positionInSteps[i] *= spmList[i]
+      positionInSteps[i] = int(positionInSteps[i])
+    for pos in positionInSteps:
+      expectedPayload.append(pos)
+    expectedPayload.append(self.g.state.rapidFeedrate)
+    readPayload = self.d.ParseNextPayload()    
+    self.assertEqual(expectedPayload, readPayload)
+ 
+  def test_store_offsets_all_codes_accounted_for(self):
+    codes = 'XYZP'
+    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[10][1])
+
+  def test_store_offsets_not_enough_codes(self):
+    codes = {
+        'X' : 0,
+        'Y' : 0,
+        'P' : 0,
+        }
+    self.assertRaises(s3g.MissingCodeError, self.g.StoreOffsets, codes, '')
+
+  def test_store_offsets_no_p(self):
+    codes = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        }
+    self.assertRaises(s3g.MissingCodeError, self.g.StoreOffsets, codes, '')
+
+  def test_store_offsets_p_is_flag(self):
+    codes = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'P' : True,
+        }
+    self.assertRaises(s3g.CodeValueError, self.g.StoreOffsets, codes, '')
+
+  def test_store_offsets(self):
+    self.g.state.offsetPosition[0] = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
+    codes = {
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        'P' : 0,
+        }
+    self.g.StoreOffsets(codes, '')
+    expectedOffsets = {
+        0: {
+            'X' : 1,
+            'Y' : 2,
+            'Z' : 3,
+            'A' : 0,
+            'B' : 0,
+            },
+        1:  {
+            'X' : 0,
+            'Y' : 0,
+            'Z' : 0,
+            'A' : 0,
+            'B' : 0,
+            }
+        }
+    self.assertEqual(expectedOffsets, self.g.state.offsetPosition)
+
   def test_use_p1_offsets_all_codes_accounted_for(self):
     codes = ''
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[55][1])
@@ -72,7 +172,7 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     self.g.UseP1Offsets(codes, [], '')
     self.assertEqual(1, self.g.state.offset_register)
-    self.assertEqual(1, self.g.state.toolhead)
+    self.assertEqual(1, self.g.state.tool_index)
 
   def test_use_p0_offsets_all_codes_accounted_for(self):
     codes = ''
@@ -82,7 +182,7 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     self.g.UseP0Offsets(codes, [], '')
     self.assertEqual(0, self.g.state.offset_register) 
-    self.assertEqual(0, self.g.state.toolhead)
+    self.assertEqual(0, self.g.state.tool_index)
 
   def test_absolute_programming_all_codes_accounted_for(self):
     codes = ''
@@ -114,6 +214,36 @@ class gcodeTests(unittest.TestCase):
     self.g.AbsoluteProgramming({}, [], "")
     self.assertEqual(oldState, newState)
 
+  def test_milimeter_programming_all_codes_accounted_for(self):
+    codes = ''
+    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[21][1])
+
+  def test_milimeter_programming(self):
+    oldState = [
+        self.g.state.position,
+        self.g.state.offsetPosition,
+        self.g.state.tool_index,
+        self.g.state.offset_register,
+        self.g.state.tool_speed,
+        self.g.state.tool_direction,
+        self.g.state.tool_enabled,
+        self.g.state.rapidFeedrate,
+        self.g.state.findingTimeout,
+        ]
+    newState = [
+        self.g.state.position,
+        self.g.state.offsetPosition,
+        self.g.state.tool_index,
+        self.g.state.offset_register,
+        self.g.state.tool_speed,
+        self.g.state.tool_direction,
+        self.g.state.tool_enabled,
+        self.g.state.rapidFeedrate,
+        self.g.state.findingTimeout,     
+        ]
+    self.g.MilimeterProgramming({}, "")
+    self.assertEqual(oldState, newState)   
+
   def test_set_position_flagged_register(self):
     codes = {'X' : True}
     self.assertRaises(s3g.CodeValueError, self.g.SetPosition, codes, [], "")
@@ -121,7 +251,7 @@ class gcodeTests(unittest.TestCase):
   def test_set_position_all_codes_accounted_for(self):
     codes = 'XYZAB'
     self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[92][1]))
- 
+
   def test_set_position(self):
     codes = { 
         'X' : 0,
@@ -134,10 +264,22 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.state.position)
     self.inputstream.seek(0)
     readPayload = self.d.ParseNextPayload()
-    expectedPayload = [s3g.host_action_command_dict['SET_EXTENDED_POSITION'], 0, 1, 2, 3, 4]
+    expectedPayload = [s3g.host_action_command_dict['SET_EXTENDED_POSITION']]
+    expectedPosition = [0, 1, 2, 3, 4]
+    spmList = [
+        self.g.state.xSPM, 
+        self.g.state.ySPM, 
+        self.g.state.zSPM, 
+        self.g.state.aSPM,
+        self.g.state.bSPM,
+        ]
+    for i in range(len(spmList)):
+      expectedPosition[i] *= spmList[i]
+      expectedPosition[i] = int(expectedPosition[i])
+    for pos in expectedPosition:
+      expectedPayload.append(pos)
     self.assertEqual(expectedPayload, readPayload)
   
-
   def test_find_axes_minimum_missing_feedrate(self):
     codes = {'G' : 161}
     self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMinimum, codes, [], '') 

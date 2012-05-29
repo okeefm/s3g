@@ -232,6 +232,12 @@ class CodeValueError(GcodeError):
   I.E. A movement command's F code is set to True
   """
 
+class UnspecifiedAxisLocationError(GcodeError):
+  """
+  An UnspecifiedLocationError is thrown when a movement command is attempted
+  without specifying all 5 [x, y, z, a, b] axes
+  """
+
 class StringTooLongError(Exception):
   """
   A stringTooLongError is raised when a string is parsed out of an s3g stream that longer

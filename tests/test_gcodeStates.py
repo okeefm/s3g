@@ -16,6 +16,31 @@ class s3gHelperFunctionTests(unittest.TestCase):
   def tearDown(self):
     self.g = None
 
+  def test_store_offsets(self):
+    self.g.offsetRegister = 0
+    codes = {
+        'P' : 0,
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        }
+    self.g.offsetPosition[0] = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        }
+    self.g.StoreOffset(codes)
+    expectedOffset = {
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        }
+    self.assertEqual(expectedOffset, self.g.offsetPosition[0])
+
+  def test_get_position_unspecified_axis_location(self):
+    self.g.position['X'] = None
+    self.assertRaises(s3g.UnspecifiedAxisLocationError, self.g.GetPosition)
+
   def test_get_position_no_offsets(self):
     self.g.position = {
         'X' : 0,
@@ -26,6 +51,15 @@ class s3gHelperFunctionTests(unittest.TestCase):
         }
     self.g.ofset_register = None
     expectedPosition = [0, 1, 2, 3, 4]
+    spmList = [
+        self.g.xSPM,
+        self.g.ySPM,
+        self.g.zSPM,
+        self.g.aSPM,
+        self.g.bSPM,
+        ]
+    for i in range(len(spmList)):
+      expectedPosition[i] *= spmList[i]
     self.assertEqual(expectedPosition, self.g.GetPosition())
 
   def test_get_position_with_offset(self):
@@ -45,6 +79,15 @@ class s3gHelperFunctionTests(unittest.TestCase):
         }
     self.g.offset_register = 0
     expectedPosition = [100, 201, 302, 403, 504]
+    spmList = [
+        self.g.xSPM,
+        self.g.ySPM,
+        self.g.zSPM,
+        self.g.aSPM,
+        self.g.bSPM,
+        ]
+    for i in range(len(spmList)):
+      expectedPosition[i] *= spmList[i]
     self.assertEqual(expectedPosition, self.g.GetPosition())
   def test_set_position_no_codes(self):
     self.g.position = {

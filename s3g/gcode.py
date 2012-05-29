@@ -19,19 +19,19 @@ class GcodeParser(object):
     # [2] : allowed flags
 
     self.GCODE_INSTRUCTIONS = {
-#      0   : [self.RapidPositioning,            'XYZ',     ''],
+      0   : [self.RapidPositioning,            'XYZ',     ''],
 #      1   : [self.LinearInterpolation,         'XYZABF',  ''],
 #      4   : self.Dwell,
-#      10  : self.StoreOffsets,
-#      21  : [self.MilimeterProgramming,        '',        ''],
+      10  : [self.StoreOffsets,                'XYZP'     ''],
+      21  : [self.MilimeterProgramming,        '',        ''],
       54  : [self.UseP0Offsets,                '',        ''],
       55  : [self.UseP1Offsets,                '',        ''],
       90  : [self.AbsoluteProgramming,         '',        ''],
       92  : [self.SetPosition,                 'XYZAB',   ''],
-      130 : [self.SetPotentiometerValues,      'XYZP',    ''],
-      161 : [self.FindAxesMinimum,             'XYZF',    ''],
-      162 : [self.FindAxesMaximum,             'XYZF',    ''],
-    }
+      130 : [self.SetPotentiometerValues,      'XYZAB',    ''],
+      161 : [self.FindAxesMinimum,             'XYZF',    'XYZ'],
+      162 : [self.FindAxesMaximum,             'XYZF',    'XYZ'],
+}
 
     self.MCODE_INSTRUCTIONS = {
        6   : [self.WaitForToolhead,            '',        ''],
@@ -47,7 +47,6 @@ class GcodeParser(object):
 #       109 : self.SetPlatforTemperature,            '',        ''],
 #       132 : self.LoadPosition,            '',        ''],
     }
-
 
 #  def Dwell(self, codes):
 #    """Can either delay all functionality of the machine, or have the machine
@@ -76,7 +75,7 @@ class GcodeParser(object):
     """
     pass
 
-  def MilimeterProgramming(self, codes):
+  def MilimeterProgramming(self, codes, comment):
     """ Set the programming mode to milimeters
     """
     pass
@@ -146,11 +145,11 @@ class GcodeParser(object):
 
   def UseP0Offsets(self, codes, flags, comment):
     self.state.offset_register = 0
-    self.state.toolhead = 0
+    self.state.tool_index = 0
 
   def UseP1Offsets(self, codes, flags, comment):
     self.state.offset_register = 1
-    self.state.toolhead = 1
+    self.state.tool_index = 1
 
 
   def WaitForToolhead(self, codes, flags, comment):
@@ -166,7 +165,17 @@ class GcodeParser(object):
     except KeyError as e:
       raise MissingCodeError
 
-
   def DisableAxes(self, codes, flags, comment):
     self.s3g.ToggleAxes(ParseOutAxes(codes), False)
 
+  def StoreOffsets(self, codes, comment):
+    if 'X' not in codes or 'Y' not in codes or 'Z' not in codes:
+      raise MissingCodeError
+    CodePresentAndNonFlag(codes,'P')
+    AllAxesNotFlags(codes)
+    self.state.StoreOffset(codes)
+
+  def RapidPositioning(self, codes, comment):
+    AllAxesNotFlags(codes)
+    self.state.SetPosition(codes)
+    self.s3g.QueueExtendedPoint(self.state.GetPosition(), self.state.rapidFeedrate)

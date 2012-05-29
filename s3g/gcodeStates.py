@@ -4,6 +4,7 @@ variables.
 """
 
 from gcodeUtils import *
+from errors import *
 
 class GcodeStates(object):
   def __init__(self):
@@ -43,7 +44,8 @@ class GcodeStates(object):
     self.xSPM = 94.139704         #Steps per milimeters on the x axis
     self.ySPM = 94.139704         #Steps per milimeters on the y axis
     self.zSPM = 400               #Steps per milimeters on the z axis
-
+    self.aSPM = 96.275          #Steps per milimeter on the A axis
+    self.bSPM = 96.275          #Steps per milimeter on the B axis
     self.values = {}
 
   def LosePosition(self, codes):
@@ -56,17 +58,35 @@ class GcodeStates(object):
         self.position[axis] = codes[axis]
 
   def GetPosition(self):
-    """Gets a usable position to send to the machine by applying the applicable
-    offsetes.  The offsets applied are the ones that are in use by the machine
-    via G54/G55 command.  If no G54/G55 commands have been used, we apply no
-    offsets
-    @return list position: The current position of the machine
+    """Gets a usable position in steps to send to the machine by applying 
+    the applicable offsetes.  The offsets applied are the ones that are in 
+    use by the machine via G54/G55 command.  If no G54/G55 commands have b
+    een used, we apply no offsets
+    @return list position: The current position of the machine in steps
     """
     positionFormat = ['X', 'Y', 'Z', 'A', 'B']
-    curPosition = []
+    returnPosition = []
     for axis in positionFormat:
-      if self.offset_register == None:
-        curPosition.append(self.position[axis])
+      if self.position[axis] == None:
+        raise UnspecifiedAxisLocationError
+      elif self.offset_register == None:
+        returnPosition.append(self.position[axis])
       else:
-        curPosition.append(self.position[axis] + self.offsetPosition[self.offset_register][axis])
-    return curPosition
+        returnPosition.append(self.position[axis] + self.offsetPosition[self.offset_register][axis])
+    spmList = [
+        self.xSPM,
+        self.ySPM,
+        self.zSPM,
+        self.aSPM,
+        self.bSPM,
+        ]
+    for i in range(len(spmList)):
+      returnPosition[i] *= spmList[i]
+    return returnPosition
+
+  def StoreOffset(self, codes):
+    """Given a set of codes with X, Y and Z offsets, plus a register 
+    to assign the offsets to, sets the offsets of a particular register
+    """
+    for axis in ParseOutAxes(codes):
+      self.offsetPosition[codes['P']][axis] = codes[axis] 
