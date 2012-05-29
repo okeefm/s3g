@@ -67,25 +67,19 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 class gcodeTests(unittest.TestCase):
   def setUp(self):
     self.g = s3g.GcodeParser()
-    self.inputstream = io.BytesIO()
-    self.writer = s3g.FileWriter(self.inputstream)
-    self.r = s3g.s3g()
-    self.r.writer = self.writer
-    self.g.s3g = self.r
-    self.d = s3g.FileReader()
-    self.d.file = self.inputstream
+    self.mock = mock.Mock()
+    self.g.s3g = self.mock
  
   def tearDown(self):
     self.g = None
-    self.r = None
-    self.d = None
-    self.inputstream = None
-    self.writer = None
+    self.mock = None
 
-  def test_rapid_position_flagged_code(self):
-    codes = {'X'  : True}
-    self.assertRaises(s3g.CodeValueError, self.g.RapidPositioning, codes, '')
-    
+  def test_rapid_position_all_codes_accounted_for(self):
+    codes = 'XYZ'
+    flags = ''
+    self.assertEqual(self.g.GCODE_INSTRUCTIONS[0][1], codes)
+    self.assertEqual(self.g.GCODE_INSTRUCTIONS[0][2], flags)
+
   def test_rapid_position(self):
     self.g.state.position = {
         'X' : 0,
@@ -99,10 +93,8 @@ class gcodeTests(unittest.TestCase):
         'Y' : 2,
         'Z' : 3,
         }
-    self.g.RapidPositioning(codes, '')
-    self.inputstream.seek(0)
-    expectedPayload = [s3g.host_action_command_dict['QUEUE_EXTENDED_POINT']]
-    positionInSteps = [1, 2, 3, 0, 0]
+    self.g.RapidPositioning(codes,[], '')
+    expectedPoint = [1, 2, 3, 0, 0]
     spmList = [
         self.g.state.xSPM, 
         self.g.state.ySPM, 
@@ -111,17 +103,14 @@ class gcodeTests(unittest.TestCase):
         self.g.state.bSPM
         ]
     for i in range(len(spmList)):
-      positionInSteps[i] *= spmList[i]
-      positionInSteps[i] = int(positionInSteps[i])
-    for pos in positionInSteps:
-      expectedPayload.append(pos)
-    expectedPayload.append(self.g.state.rapidFeedrate)
-    readPayload = self.d.ParseNextPayload()    
-    self.assertEqual(expectedPayload, readPayload)
+      expectedPoint[i] *= spmList[i]
+    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, self.g.state.rapidFeedrate)
  
   def test_store_offsets_all_codes_accounted_for(self):
     codes = 'XYZP'
+    flags = ''
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[10][1])
+    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[10][2])
 
   def test_store_offsets_not_enough_codes(self):
     codes = {
@@ -129,7 +118,7 @@ class gcodeTests(unittest.TestCase):
         'Y' : 0,
         'P' : 0,
         }
-    self.assertRaises(s3g.MissingCodeError, self.g.StoreOffsets, codes, '')
+    self.assertRaises(s3g.MissingCodeError, self.g.StoreOffsets, codes, [], '')
 
   def test_store_offsets_no_p(self):
     codes = {
@@ -137,16 +126,7 @@ class gcodeTests(unittest.TestCase):
         'Y' : 0,
         'Z' : 0,
         }
-    self.assertRaises(s3g.MissingCodeError, self.g.StoreOffsets, codes, '')
-
-  def test_store_offsets_p_is_flag(self):
-    codes = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'P' : True,
-        }
-    self.assertRaises(s3g.CodeValueError, self.g.StoreOffsets, codes, '')
+    self.assertRaises(s3g.MissingCodeError, self.g.StoreOffsets, codes, [],  '')
 
   def test_store_offsets(self):
     self.g.state.offsetPosition[0] = {
@@ -162,7 +142,7 @@ class gcodeTests(unittest.TestCase):
         'Z' : 3,
         'P' : 0,
         }
-    self.g.StoreOffsets(codes, '')
+    self.g.StoreOffsets(codes, [], '')
     expectedOffsets = {
         0: {
             'X' : 1,
@@ -183,9 +163,11 @@ class gcodeTests(unittest.TestCase):
 
   def test_use_p1_offsets_all_codes_accounted_for(self):
     codes = ''
+    flags = ''
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[55][1])
+    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[55][2])
 
-  def test_use_91_offsets(self):
+  def test_use_p1_offsets(self):
     codes = {}
     self.g.UseP1Offsets(codes, [], '')
     self.assertEqual(1, self.g.state.offset_register)
@@ -193,9 +175,11 @@ class gcodeTests(unittest.TestCase):
 
   def test_use_p0_offsets_all_codes_accounted_for(self):
     codes = ''
+    flags = ''
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[54][1])
+    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[55][2])
 
-  def test_use_90_offsets(self):
+  def test_use_p0_offsets(self):
     codes = {}
     self.g.UseP0Offsets(codes, [], '')
     self.assertEqual(0, self.g.state.offset_register) 
@@ -203,6 +187,7 @@ class gcodeTests(unittest.TestCase):
 
   def test_absolute_programming_all_codes_accounted_for(self):
     codes = ''
+    flags = ''
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[90][1])
 
   def test_absolute_programming(self):
@@ -233,7 +218,9 @@ class gcodeTests(unittest.TestCase):
 
   def test_milimeter_programming_all_codes_accounted_for(self):
     codes = ''
+    flags = ''
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[21][1])
+    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[21][2])
 
   def test_milimeter_programming(self):
     oldState = [
@@ -261,13 +248,11 @@ class gcodeTests(unittest.TestCase):
     self.g.MilimeterProgramming({}, [], "")
     self.assertEqual(oldState, newState)   
 
-  def test_set_position_flagged_register(self):
-    codes = {'X' : True}
-    self.assertRaises(s3g.CodeValueError, self.g.SetPosition, codes, [], "")
-
   def test_set_position_all_codes_accounted_for(self):
     codes = 'XYZAB'
+    flags = ''
     self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[92][1]))
+    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[92][2])
 
   def test_set_position(self):
     codes = { 
@@ -279,9 +264,6 @@ class gcodeTests(unittest.TestCase):
         }
     self.g.SetPosition(codes, [], '')
     self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.state.position)
-    self.inputstream.seek(0)
-    readPayload = self.d.ParseNextPayload()
-    expectedPayload = [s3g.host_action_command_dict['SET_EXTENDED_POSITION']]
     expectedPosition = [0, 1, 2, 3, 4]
     spmList = [
         self.g.state.xSPM, 
@@ -292,61 +274,50 @@ class gcodeTests(unittest.TestCase):
         ]
     for i in range(len(spmList)):
       expectedPosition[i] *= spmList[i]
-      expectedPosition[i] = int(expectedPosition[i])
-    for pos in expectedPosition:
-      expectedPayload.append(pos)
-    self.assertEqual(expectedPayload, readPayload)
+    self.mock.SetExtendedPosition.assert_called_once_with(expectedPosition)
   
   def test_find_axes_minimum_missing_feedrate(self):
     codes = {'G' : 161}
-    self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMinimum, codes, [], '') 
-
-  def test_find_axes_minimum_feedrate_is_flag(self):
-    codes = {'G' : 161, 'F' : True}
-    self.assertRaises(s3g.CodeValueError, self.g.FindAxesMinimum, codes, [], '')
-
-  def test_g_161_all_registers_accounted_for(self):
+    self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMinimums, codes, [], '') 
+  def test_find_axes_minimums_all_codes_accounted_for(self):
     """
     Tests to make sure that throwing all registers in a command doesnt raise an
     extra register error.
     """
-    allRegs = 'XYZF'
-    self.assertEqual(sorted(allRegs), sorted(self.g.GCODE_INSTRUCTIONS[161][1]))
+    codes = 'F'
+    flags = 'XYZ'
+    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[161][1])
+    self.assertEqual(sorted(flags), sorted(self.g.GCODE_INSTRUCTIONS[161][2]))
 
   def test_find_Axes_maximum_missing_feedrate(self):
     codes = {"G" : 162}
-    self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMaximum, codes, [], '')
+    self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMaximums, codes, [], '')
 
-  def test_find_axes_maximum_feedrate_is_flag(self):
-    codes = {"G" : 162, 'F' : True}
-    self.assertRaises(s3g.CodeValueError, self.g.FindAxesMaximum, codes, [], '')
+  def test_find_axes_maximums_all_codes_accounted_for(self):
+    codes = 'F'
+    flags = 'XYZ'
+    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[162][1])
+    self.assertEqual(sorted(flags), sorted(self.g.GCODE_INSTRUCTIONS[162][2]))
 
-  def test_g_162_all_codes_accounted_for(self):
-    allRegs = 'XYZF'
-    self.assertEqual(sorted(allRegs), sorted(self.g.GCODE_INSTRUCTIONS[162][1]))
+  def test_set_potentiometer_values_all_codes_accounted_for(self):
+    codes = 'XYZAB'
+    flags = ''
+    self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[130][1]))
+    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[130][2])
 
   def test_set_potentiometer_values_no_codes(self):
     codes = {'G' : 130}
     self.g.SetPotentiometerValues(codes, [], '')
-    self.inputstream.seek(0)
-    payloads = self.d.ReadFile()
-    self.assertEqual(len(payloads), 0)
-
-  def test_set_potentiometer_values_codes_are_flags(self):
-    codes = {'G' : 130, 'X' : True}
-    self.assertRaises(s3g.CodeValueError, self.g.SetPotentiometerValues, codes, [], '')
+    self.assertEqual(self.mock.mock_calls, [])
 
   def test_set_potentiometer_values_one_axis(self):
     codes = {'G' : 130, 'X' : 0}
     cmd = s3g.host_action_command_dict['SET_POT_VALUE']
-    encodedAxes = s3g.EncodeAxes(['x'])
+    axes = ['X']
     val = 0
-    expectedPayload = [cmd, encodedAxes, val]
     self.g.SetPotentiometerValues(codes, [], '')
-    self.inputstream.seek(0)
-    readPayload = self.d.ParseNextPayload()
-    self.assertEqual(expectedPayload, readPayload)
-
+    self.mock.SetPotentiometerValue.assert_called_once_with(axes, val)
+  """
   def test_set_potentiometer_values_all_axes(self):
     codes = {'X' : 0, 'Y' : 1, 'Z' : 2, 'A': 3, 'B' : 4} 
     cmd = s3g.host_action_command_dict['SET_POT_VALUE']
@@ -357,17 +328,14 @@ class gcodeTests(unittest.TestCase):
     readPayloads = self.d.ReadFile() 
     for readPayload, i in zip(readPayloads, range(5)):
       expectedPayload = [cmd, s3g.EncodeAxes(axes[i]), values[i]]
-      self.assertEqual(expectedPayload, readPayload)
+      self.assertEqual(expectedPayload, readPayload)"""
 
   def test_set_potentiometer_values_all_codes_same(self):
     codes = {'X' : 0, 'Y' : 0, 'Z' : 0, 'A' : 0, 'B' : 0}
-    cmd = s3g.host_action_command_dict['SET_POT_VALUE']
-    axes = s3g.EncodeAxes(['x', 'y', 'z', 'a', 'b'])
-    expectedPayload = [cmd, axes, 0]
     self.g.SetPotentiometerValues(codes, [], '')
-    self.inputstream.seek(0)
-    readPayload = self.d.ParseNextPayload()
-    self.assertEqual(expectedPayload, readPayload)
+    axes = ['X', 'Y', 'Z', 'A', 'B']
+    val = 0
+    self.mock.SetPotentiometerValue.called_once_with(axes, val)
 
   def test_find_axes_minimum(self):
     self.g.state.position = {
@@ -377,16 +345,14 @@ class gcodeTests(unittest.TestCase):
           'A' : 0,
           'B' : 0,
           }
-    codes = {'X':True, 'Y':True, 'Z':True, 'F':0}
+    codes = {'F':0}
+    flags = ['X', 'Y', 'Z']
     cmd = s3g.host_action_command_dict['FIND_AXES_MINIMUMS']
-    encodedAxes = s3g.EncodeAxes(['x', 'y', 'z'])
+    axes = flags
     feedrate = 0
     timeout = self.g.state.findingTimeout
-    expectedPayload = [cmd, encodedAxes, feedrate, timeout]
-    self.g.FindAxesMinimum(codes, [], '')
-    self.inputstream.seek(0)
-    readPayload = self.d.ParseNextPayload()
-    self.assertEqual(expectedPayload, readPayload)
+    self.g.FindAxesMinimums(codes, flags, '')
+    self.mock.FindAxesMinimums.assert_called_once_with(axes, feedrate, timeout)
     expectedPosition = {
         'X'   :   None,
         'Y'   :   None,
@@ -399,13 +365,11 @@ class gcodeTests(unittest.TestCase):
   def test_find_axes_minimum_no_axes(self):
     codes = {'F':0}
     cmd = s3g.host_action_command_dict['FIND_AXES_MINIMUMS']
-    encodedAxes = 0
+    axes = []
     feedrate = 0
-    expectedPayload = [cmd, encodedAxes, feedrate, self.g.state.findingTimeout]
-    self.g.FindAxesMinimum(codes, [], '')
-    self.inputstream.seek(0)
-    readPayload = self.d.ParseNextPayload()
-    self.assertEqual(readPayload, expectedPayload)
+    timeout = self.g.state.findingTimeout
+    self.g.FindAxesMinimums(codes, [], '')
+    self.mock.FindAxesMinimums.assert_called_once_with(axes, feedrate, timeout)
 
   def test_find_axes_maximum(self):
     self.g.state.position = {
@@ -415,15 +379,14 @@ class gcodeTests(unittest.TestCase):
         'A'   :   4,
         'B'   :   5
         }
-    codes = {'X':True, 'Y':True, 'Z':True, 'F':0}
+    codes = {'F':0}
+    flags = ['X', 'Y', 'Z']
     cmd = s3g.host_action_command_dict['FIND_AXES_MAXIMUMS']
-    encodedAxes = s3g.EncodeAxes(['x', 'y', 'z'])
+    axes = flags
     feedrate = 0
-    expectedPayload = [cmd ,encodedAxes, feedrate, self.g.state.findingTimeout]
-    self.g.FindAxesMaximum(codes, [], '')
-    self.inputstream.seek(0)
-    readPayload = self.d.ParseNextPayload()
-    self.assertEqual(expectedPayload, readPayload)
+    timeout = self.g.state.findingTimeout
+    self.g.FindAxesMaximums(codes, flags, '')
+    self.mock.FindAxesMaximums.assert_called_once_with(axes, feedrate, timeout)
     expectedPosition = {
         'X'   :   None,
         'Y'   :   None,
@@ -436,13 +399,11 @@ class gcodeTests(unittest.TestCase):
   def test_find_axes_maximum_no_axes(self):
     codes = {'F':0}
     cmd = s3g.host_action_command_dict['FIND_AXES_MAXIMUMS']
-    encodedAxes = 0
+    axes = []
     feedrate = 0
-    expectedPayload = [cmd ,encodedAxes, feedrate, self.g.state.findingTimeout]
-    self.g.FindAxesMaximum(codes, [], '')
-    self.inputstream.seek(0)
-    readPayload = self.d.ParseNextPayload()
-    self.assertEqual(readPayload, expectedPayload)
+    timeout = self.g.state.findingTimeout
+    self.g.FindAxesMaximums(codes, [], '')
+    self.mock.FindAxesMaximums.assert_called_once_with(axes, feedrate, timeout)
 
 if __name__ == "__main__":
   unittest.main()

@@ -22,15 +22,15 @@ class GcodeParser(object):
       0   : [self.RapidPositioning,            'XYZ',     ''],
 #      1   : [self.LinearInterpolation,         'XYZABF',  ''],
 #      4   : self.Dwell,
-      10  : [self.StoreOffsets,                'XYZP'     ''],
+      10  : [self.StoreOffsets,                'XYZP',    ''],
       21  : [self.MilimeterProgramming,        '',        ''],
       54  : [self.UseP0Offsets,                '',        ''],
       55  : [self.UseP1Offsets,                '',        ''],
       90  : [self.AbsoluteProgramming,         '',        ''],
       92  : [self.SetPosition,                 'XYZAB',   ''],
       130 : [self.SetPotentiometerValues,      'XYZAB',    ''],
-      161 : [self.FindAxesMinimum,             'XYZF',    'XYZ'],
-      162 : [self.FindAxesMaximum,             'XYZF',    'XYZ'],
+      161 : [self.FindAxesMinimums,             'F',    'XYZ'],
+      162 : [self.FindAxesMaximums,             'F',    'XYZ'],
 }
 
     self.MCODE_INSTRUCTIONS = {
@@ -69,17 +69,6 @@ class GcodeParser(object):
 #      miliConstant = 1000
 #      self.s3g.Delay(codes['P']*(microConstant/miliConstant))
 
-  def AbsoluteProgramming(self, codes, flags, comment):
-    """Set the programming mode to absolute
-    We are not implementing this command, so this is just a stub.
-    """
-    pass
-
-  def MilimeterProgramming(self, codes, flags, comment):
-    """ Set the programming mode to milimeters
-    """
-    pass
-
   def ExecuteLine(self, command):
     """
     Execute a line of gcode
@@ -112,7 +101,6 @@ class GcodeParser(object):
 
     @param dict codes: Codes parsed out of the gcode command
     """
-    AllAxesNotFlags(codes) 
     #Put all values in a hash table
     valTable = {}
     #For each code in codes thats an axis:
@@ -126,20 +114,23 @@ class GcodeParser(object):
     for val in valTable:
       self.s3g.SetPotentiometerValue(valTable[val], val)
 
-  def FindAxesMaximum(self, codes, flags, command):
-    self.state.LosePosition(codes)
-    CodePresentAndNonFlag(codes, 'F')
-    axes = ParseOutAxes(codes) 
-    self.s3g.FindAxesMaximums(axes, codes['F'], self.state.findingTimeout)
+  def FindAxesMaximums(self, codes, flags, command):
+    self.state.LosePosition(flags)
+    axes = ParseOutAxes(flags) 
+    try:
+      self.s3g.FindAxesMaximums(axes, codes['F'], self.state.findingTimeout)
+    except KeyError:
+      raise MissingCodeError
 
-  def FindAxesMinimum(self, codes, flags, comment):
-    self.state.LosePosition(codes) 
-    CodePresentAndNonFlag(codes, 'F')
-    axes = ParseOutAxes(codes)
-    self.s3g.FindAxesMinimums(axes, codes['F'], self.state.findingTimeout)
+  def FindAxesMinimums(self, codes, flags, comment):
+    self.state.LosePosition(flags) 
+    axes = ParseOutAxes(flags)
+    try:
+      self.s3g.FindAxesMinimums(axes, codes['F'], self.state.findingTimeout)
+    except KeyError:
+      raise MissingCodeError
 
   def SetPosition(self, codes, flags, comment):
-    AllAxesNotFlags(codes) 
     self.state.SetPosition(codes)
     self.s3g.SetExtendedPosition(self.state.GetPosition())
 
@@ -151,7 +142,6 @@ class GcodeParser(object):
     self.state.offset_register = 1
     self.state.tool_index = 1
 
-
   def WaitForToolhead(self, codes, flags, comment):
     DELAY = 100  # As per the gcode protocol
 
@@ -161,21 +151,31 @@ class GcodeParser(object):
 
     try:
       self.s3g.WaitForToolReady(self.state.values['tool_index'], DELAY, codes['P'])
-    
     except KeyError as e:
       raise MissingCodeError
 
   def DisableAxes(self, codes, flags, comment):
-    self.s3g.ToggleAxes(ParseOutAxes(codes), False)
+    self.s3g.ToggleAxes(ParseOutAxes(flags), False)
 
-  def StoreOffsets(self, codes, comment):
-    if 'X' not in codes or 'Y' not in codes or 'Z' not in codes:
+  def StoreOffsets(self, codes, flags, comment):
+    if 'X' not in codes or 'Y' not in codes or'Z' not in codes:
       raise MissingCodeError
-    CodePresentAndNonFlag(codes,'P')
-    AllAxesNotFlags(codes)
-    self.state.StoreOffset(codes)
+    try:
+      self.state.StoreOffset(codes)
+    except KeyError:
+      raise MissingCodeError
 
-  def RapidPositioning(self, codes, comment):
-    AllAxesNotFlags(codes)
+  def RapidPositioning(self, codes, flags, comment):
     self.state.SetPosition(codes)
     self.s3g.QueueExtendedPoint(self.state.GetPosition(), self.state.rapidFeedrate)
+
+  def AbsoluteProgramming(self, codes, flags, comment):
+    """Set the programming mode to absolute
+    We are not implementing this command, so this is just a stub.
+    """
+    pass
+
+  def MilimeterProgramming(self, codes, flags, comment):
+    """ Set the programming mode to milimeters
+    """
+    pass
