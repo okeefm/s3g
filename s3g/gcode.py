@@ -11,7 +11,7 @@ class GcodeParser(object):
   commands against an s3g machine.
   """
   def __init__(self):
-    self.states = GcodeStates()
+    self.state = GcodeStates()
 
     self.GCODE_INSTRUCTIONS = {
 #      0   : [self.RapidPositioning,      ['XYZ']],
@@ -30,7 +30,7 @@ class GcodeParser(object):
 
     self.MCODE_INSTRUCTIONS = {
        6   : self.WaitForToolhead,
-#       18  : self.DisableAxes,
+       18  : self.DisableAxes,
 #       70  : self.DisplayMessage,
 #       72  : self.PlaySong,
 #       73  : self.SetBuildPercentage,
@@ -124,17 +124,13 @@ class GcodeParser(object):
     self.states.LosePosition(codes)
     CodePresentAndNonFlag(codes, 'F')
     axes = ParseOutAxes(codes) 
-    self.s3g.FindAxesMaximums(axes, codes['F'], self.states.findingTimeout)
+    self.s3g.FindAxesMaximums(axes, codes['F'], self.state.findingTimeout)
 
   def FindAxesMinimum(self, codes, comment):
     self.states.LosePosition(codes) 
     CodePresentAndNonFlag(codes, 'F')
     axes = ParseOutAxes(codes)
     self.s3g.FindAxesMinimums(axes, codes['F'], self.states.findingTimeout)
-
-  def WaitForToolhead(self, codes, comment):
-    # TODO: Test for codes
-    self.s3g.WaitForToolReady(codes['T'], 100, codes['P'])
 
   def SetPosition(self, codes, comment):
     AllAxesNotFlags(codes) 
@@ -148,3 +144,22 @@ class GcodeParser(object):
   def UseP1Offsets(self, codes, comment):
     self.states.offset_register = 1
     self.states.toolhead = 1
+
+
+  def WaitForToolhead(self, codes, comment):
+    DELAY = 100  # As per the gcode protocol
+
+    # Handle optional codes
+    if 'T' in codes.keys():
+      self.state.values['tool_index'] = codes['T']
+
+    try:
+      self.s3g.WaitForToolReady(self.state.values['tool_index'], DELAY, codes['P'])
+    
+    except KeyError as e:
+      raise MissingCodeError
+
+
+  def DisableAxes(self, codes, comment):
+    self.s3g.ToggleAxes(ParseOutAxes(codes), False)
+
