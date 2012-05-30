@@ -34,10 +34,10 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     command = "M6 X" # Note: This assumes that M6 does not accept an X flag
     self.assertRaises(s3g.InvalidCodeError, self.g.ExecuteLine, command)
 
-  def test_wait_for_toolhead_can_update_temperature(self):
+
+  def test_wait_for_toolhead_can_update_toolhead(self):
     tool_index = 2
     timeout = 3
-    delay = 100 # As specified in the gcode protocol
 
     codes = {'T':tool_index, 'P':timeout}
     self.g.WaitForToolhead(codes, [], '')
@@ -46,8 +46,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_wait_for_toolhead_missing_timeout(self):
     tool_index = 2
-    timeout = 3
-    delay = 100 # As specified in the gcode protocol
 
     codes = {'T':tool_index}
 
@@ -68,6 +66,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
     self.g.DisableAxes({}, flags, '')
     self.mock.ToggleAxes.assert_called_once_with(flags, False)
+
 
   # TODO: test for missing timeout
   def test_display_message(self):
@@ -92,6 +91,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
       last_in_group,
       wait_for_button)
 
+
   def test_play_song_missing_song_id(self):
     codes = {}
 
@@ -104,6 +104,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.g.PlaySong(codes, [], '')
     self.mock.QueueSong.assert_called_once_with(song_id)
 
+
   def test_set_build_percentage_missing_percent(self):
     codes = {}
 
@@ -115,6 +116,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
     self.g.SetBuildPercentage(codes, [], '')
     self.mock.SetBuildPercent.assert_called_once_with(build_percentage)
+
 
   def test_rapid_position_all_codes_accounted_for(self):
     codes = 'XYZ'
@@ -147,6 +149,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     for i in range(len(spmList)):
       expectedPoint[i] *= spmList[i]
     self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, self.g.state.rapidFeedrate)
+
  
   def test_store_offsets_all_codes_accounted_for(self):
     codes = 'XYZP'

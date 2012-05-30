@@ -21,8 +21,8 @@ class GcodeParser(object):
 
     self.GCODE_INSTRUCTIONS = {
       0   : [self.RapidPositioning,            'XYZ',     ''],
-      1   : [self.LinearInterpolation,        'XYZABEF',  ''],
-      4   : [self.Dwell,                            'P',  ''],
+      1   : [self.LinearInterpolation,         'XYZABEF', ''],
+      4   : [self.Dwell,                       'P',       ''],
       10  : [self.StoreOffsets,                'XYZP',    ''],
       21  : [self.MilimeterProgramming,        '',        ''],
       54  : [self.UseP0Offsets,                '',        ''],
@@ -30,23 +30,23 @@ class GcodeParser(object):
       90  : [self.AbsoluteProgramming,         '',        ''],
       92  : [self.SetPosition,                 'XYZAB',   ''],
       130 : [self.SetPotentiometerValues,      'XYZAB',   ''],
-      161 : [self.FindAxesMinimums,             'F',   'XYZ'],
-      162 : [self.FindAxesMaximums,             'F',   'XYZ'],
+      161 : [self.FindAxesMinimums,            'F',       'XYZ'],
+      162 : [self.FindAxesMaximums,            'F',       'XYZ'],
 }
 
     self.MCODE_INSTRUCTIONS = {
-       6   : [self.WaitForToolhead,            '',        ''],
-       18  : [self.DisableAxes,                '',        ''],
-       70  : [self.DisplayMessage,            '',        ''],
-       72  : [self.PlaySong,            '',        ''],
-       73  : [self.SetBuildPercentage,            '',        ''],
-#       101 : [self.ExtruderOnForward,            '',        ''],
+       6   : [self.WaitForToolhead,            'PT',      ''],
+       18  : [self.DisableAxes,                '',        'XYZAB'],
+       70  : [self.DisplayMessage,             'P',       ''],
+       72  : [self.PlaySong,                   'P',       ''],
+       73  : [self.SetBuildPercentage,         'P',       ''],
+#       101 : [self.ExtruderOnForward,            '',       ''],
 #       102 : [self.ExtruderOnReverse,            '',        ''],
 #       103 : [self.ExtruderOff,            '',        ''],
-       104 : [self.SetToolheadTemperature,      'ST',      ''],
+       104 : [self.SetToolheadTemperature,     'ST',      ''],
 #       108 : [self.SetExtruderSpeed,            '',        ''],
-       109 : [self.SetPlatformTemperature,            'ST',        ''],
-       132 : [self.LoadPosition,            '',        ''],
+       109 : [self.SetPlatformTemperature,     'ST',      ''],
+       132 : [self.LoadPosition,               '',        ''],
     }
 
 #  def Dwell(self, codes):
