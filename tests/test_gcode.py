@@ -646,8 +646,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_dwell(self):
     codes = {'P'  : 10}
+    miliConstant = 1000
+    microConstant = 1000000
+    d = 10 * microConstant / miliConstant
     self.g.Dwell(codes, [], '')
-    self.mock.Delay.assert_called_once_with(10)
+    self.mock.Delay.assert_called_once_with(d)
 
   def test_set_toolhead_temperature_all_codes_accounted_for(self):
     codes = 'ST'

@@ -96,6 +96,10 @@ class GcodeParser(object):
       self.s3g.SetPotentiometerValue(valTable[val], val)
 
   def FindAxesMaximums(self, codes, flags, command):
+    """Moves the given axes in the position direction until a timeout
+    or endstop is reached
+    This function loses the state machine's position.
+    """
     self.state.LosePosition(flags)
     axes = ParseOutAxes(flags) 
     try:
@@ -104,6 +108,10 @@ class GcodeParser(object):
       raise MissingCodeError
 
   def FindAxesMinimums(self, codes, flags, comment):
+    """Moves the given axes in the negative direction until a timeout
+    or endstop is reached.
+    This function loses the state machine's position.
+    """
     self.state.LosePosition(flags) 
     axes = ParseOutAxes(flags)
     try:
@@ -112,18 +120,28 @@ class GcodeParser(object):
       raise MissingCodeError
 
   def SetPosition(self, codes, flags, comment):
+    """Explicitely sets the position of the state machine and bot
+    to the given point
+    """
     self.state.SetPosition(codes)
     self.s3g.SetExtendedPosition(self.state.GetPosition())
 
   def UseP0Offsets(self, codes, flags, comment):
+    """Sets the state machine to use the P0 offset.
+    """
     self.state.offset_register = 0
     self.state.tool_index = 0
 
   def UseP1Offsets(self, codes, flags, comment):
+    """Sets the state machine to use the P1 offset.
+    """
     self.state.offset_register = 1
     self.state.tool_index = 1
 
   def WaitForToolhead(self, codes, flags, comment):
+    """Given a toolhead and a timeout, waits for that toolhead
+    to reach its target temperature.
+    """
     DELAY = 100  # As per the gcode protocol
 
     # Handle optional codes
@@ -136,9 +154,13 @@ class GcodeParser(object):
       raise MissingCodeError
 
   def DisableAxes(self, codes, flags, comment):
+    """Disables a set of axes on the bot
+    """
     self.s3g.ToggleAxes(ParseOutAxes(flags), False)
 
   def DisplayMessage(self, codes, flags, comment):
+    """Given a comment, displays a message on the bot.
+    """
     row = 0 # As per the gcode protocol
     col = 0 # As per the gcode protocol
     clear_existing = True # As per the gcode protocol
@@ -160,6 +182,8 @@ class GcodeParser(object):
       raise MissingCodeError
 
   def PlaySong(self, codes, flags, comment):
+    """Plays a song as a certain register on the bot.
+    """
     try:
       self.s3g.QueueSong(codes['P'])
 
@@ -167,6 +191,8 @@ class GcodeParser(object):
       raise MissingCodeError
 
   def SetBuildPercentage(self, codes, flags, comment):
+    """Sets the build percentage to a certain percentage.
+    """
     try:
       self.s3g.SetBuildPercent(codes['P'])
 
@@ -174,6 +200,8 @@ class GcodeParser(object):
       raise MissingCodeError
 
   def StoreOffsets(self, codes, flags, comment):
+    """Given XYZ offsets, stores those offsets in the state machine.
+    """
     if 'X' not in codes or 'Y' not in codes or'Z' not in codes:
       raise MissingCodeError
     try:
@@ -182,6 +210,9 @@ class GcodeParser(object):
       raise MissingCodeError
 
   def RapidPositioning(self, codes, flags, comment):
+    """Using a preset rapid feedrate, moves the XYZ axes
+    to a specific location.
+    """
     self.state.SetPosition(codes)
     self.s3g.QueueExtendedPoint(self.state.GetPosition(), self.state.rapidFeedrate)
 
@@ -192,11 +223,19 @@ class GcodeParser(object):
     pass
 
   def MilimeterProgramming(self, codes, flags, comment):
-    """ Set the programming mode to milimeters
+    """
+    Set the programming mode to milimeters
+    This is a stub, since we dropped support for this function
     """
     pass
 
   def LinearInterpolation(self, codes, flags, comment):
+    """Movement command that has two flavors: E and AB commands.
+    E Commands require a preset toolhead to use, and simply increment
+    that toolhead's coordinate.
+    AB Commands increment the AB axes.
+    Having both E and A or B codes will throw errors.
+    """
     if 'F' in codes:
       feedrate = codes['F']
     elif self.state.lastFeedrate == None:
@@ -216,12 +255,23 @@ class GcodeParser(object):
     self.s3g.QueueExtendedPoint(self.state.GetPosition(), feedrate)
 
   def Dwell(self, codes, flags, comment):
+    """Pauses the machine for a specified amount of miliseconds
+    Because s3g takes in microseconds, we convert miliseconds into
+    microseconds and send it off.
+    """
     try:
-      self.s3g.Delay(codes['P'])
+      microConstant = 1000000
+      miliConstant = 1000
+      d = codes['P'] * microConstant/miliConstant
+      self.s3g.Delay(d)
     except KeyError:
       raise MissingCodeError
 
   def SetToolheadTemperature(self, codes, flags, comment):
+    """Sets the toolhead temperature for a specific toolhead to
+    a specific temperature.  We set the state's tool_idnex to be the
+    'T' code (if present) and use that tool_index when heating.
+    """
     if 'T' in codes:
       self.state.tool_index = codes['T']
     elif self.state.tool_index == None:
@@ -232,6 +282,10 @@ class GcodeParser(object):
       raise MissingCodeError
 
   def SetPlatformTemperature(self, codes, flags, comment):
+    """Sets the platform temperature for a specific toolhead to a specific 
+    temperature.  We set the state's tool_index to be the 'T' code (if present)
+    and use that tool_index when heating.
+    """
     if 'T' in codes:
       self.state.tool_index = codes['T']
     elif self.state.tool_index == None:
@@ -242,18 +296,32 @@ class GcodeParser(object):
       raise MissingCodeError
 
   def LoadPosition(self, codes, flags, comment):
+    """Loads the home positions for the XYZ axes from the eeprom
+    """
     axes = ['X', 'Y', 'Z']
     self.state.LosePosition(axes)
     self.s3g.RecallHomePositions(axes)
 
   def SetExtruderSpeed(self, codes, flags, comment):
+    """Sets the max extruder speed in RPM
+    This is a stub, since we dropped support for this function
+    """
     pass
 
   def ExtruderOff(self, codes, flags, comment):
+    """Turn the extruder off
+    This is a stub, since we dropped support for this function
+    """
     pass
 
   def ExtruderOnReverse(self, codes, flags, comment):
+    """Turn the extruder on turning backward
+    This is a stub, since we dropped support for this function
+    """
     pass
 
   def ExtruderOnForward(self, codes, flags, comment):
+    """Turn the extruder on turning forward
+    This is a stub, since we dropped support for this function
+    """
     pass
