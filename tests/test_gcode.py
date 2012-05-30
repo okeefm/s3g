@@ -176,7 +176,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     codes = {
         'X' : 0,
         'Y' : 0,
-        'P' : 0,
+        'P' : 1,
         }
     self.assertRaises(KeyError, self.g.StoreOffsets, codes, [], '')
 
@@ -200,7 +200,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'X' : 1,
         'Y' : 2,
         'Z' : 3,
-        'P' : 0,
+        'P' : 1,
         }
     self.g.StoreOffsets(codes, [], '')
     expectedOffsets = {
