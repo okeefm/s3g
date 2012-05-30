@@ -638,5 +638,59 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.g.Dwell(codes, [], '')
     self.mock.Delay.assert_called_once_with(10)
 
+  def test_set_toolhead_temperature_all_codes_accounted_for(self):
+    codes = 'ST'
+    flags = ''
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[104][1])
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[104][2])
+
+  def test_set_toolhead_temperature_no_s(self):
+    codes = {}
+    self.assertRaises(s3g.MissingCodeError, self.g.SetToolheadTemperature, codes, [], '')
+
+  def test_set_toolhead_temperature_no_t_no_set_tool_index(self):
+    codes = {'S'  : 100}
+    self.assertRaises(s3g.NoToolIndexError, self.g.SetToolheadTemperature, codes, [], '')
+
+  def test_set_toolhead_temperature_no_t_set_tool_index(self):
+    codes = {'S'  : 100}
+    self.g.state.tool_index = 0
+    self.g.SetToolheadTemperature(codes, [], '')
+    self.mock.SetToolheadTemperature.assert_called_once_with(self.g.state.tool_index, 100)
+
+  def test_set_toolhead_temperature_t_code_defined(self):
+    tool_index = 2
+    codes = {'S'  : 100, 'T' :  tool_index}
+    self.g.SetToolheadTemperature(codes, [], '')
+    self.mock.SetToolheadTemperature.assert_called_once_with(tool_index, 100)
+    self.assertEqual(tool_index, self.g.state.tool_index)
+
+  def test_set_platform_temperature_all_codes_accounted_for(self):
+    codes = 'ST'
+    flags = ''
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[109][1])
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[109][2])
+
+  def test_set_platform_temperature_no_s(self):
+    codes = {}
+    self.assertRaises(s3g.MissingCodeError, self.g.SetPlatformTemperature, codes, [], '')
+
+  def test_set_platform_temperature_no_t_no_set_toolhead(self):
+    codes = {'S'  : 100}
+    self.assertRaises(s3g.NoToolIndexError, self.g.SetPlatformTemperature, codes, [], '')
+
+  def test_set_platform_temperature_no_t_set_toolhead(self):
+    codes = {'S'  : 100}
+    self.g.state.tool_index = 2
+    self.g.SetPlatformTemperature(codes, [], '')
+    self.mock.SetPlatformTemperature.assert_called_once_with(self.g.state.tool_index, 100)
+
+  def test_set_platform_temperature_t_code_Defined(self):
+    tool_index = 2
+    codes = {'S'  : 100,  'T' : tool_index}
+    self.g.SetPlatformTemperature(codes, [], '')
+    self.mock.SetPlatformTemperature.assert_called_once_with(tool_index, 100)
+    self.assertEqual(tool_index, self.g.state.tool_index)
+
 if __name__ == "__main__":
   unittest.main()

@@ -43,9 +43,9 @@ class GcodeParser(object):
 #       101 : [self.ExtruderOnForward,            '',        ''],
 #       102 : [self.ExtruderOnReverse,            '',        ''],
 #       103 : [self.ExtruderOff,            '',        ''],
-#       104 : [self.SetTooleadTemperature,            '',        ''],
+       104 : [self.SetToolheadTemperature,      'ST',      ''],
 #       108 : [self.SetExtruderSpeed,            '',        ''],
-#       109 : [self.SetPlatforTemperature,            '',        ''],
+       109 : [self.SetPlatformTemperature,            'ST',        ''],
 #       132 : [self.LoadPosition,            '',        ''],
     }
 
@@ -236,3 +236,21 @@ class GcodeParser(object):
     if 'P' not in codes:
       raise MissingCodeError
     self.s3g.Delay(codes['P'])
+
+  def SetToolheadTemperature(self, codes, flags, comment):
+    if not 'S' in codes:
+      raise MissingCodeError
+    elif 'T' in codes:
+      self.state.tool_index = codes['T']
+    elif self.state.tool_index == None:
+      raise NoToolIndexError
+    self.s3g.SetToolheadTemperature(self.state.tool_index, codes['S'])
+
+  def SetPlatformTemperature(self, codes, flags, comment):
+    if not 'S' in codes:
+      raise MissingCodeError
+    elif 'T' in codes:
+      self.state.tool_index = codes['T']
+    elif self.state.tool_index == None:
+      raise NoToolIndexError
+    self.s3g.SetPlatformTemperature(self.state.tool_index, codes['S']) 
