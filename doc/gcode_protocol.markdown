@@ -19,6 +19,7 @@ The interpreter state machine stores these states:
 * Toolhead direction
 * Toolhead enable state
 * Last Feedrate Given (This is done because skeinforge has a weird quirk where it specified a feedrate on one line, then gives an E command on another without a feedrate)
+* Last Timeout Used for WaitForPlatform or WaitForToolhead
 
 ## Definitions
 
