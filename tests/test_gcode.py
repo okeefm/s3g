@@ -250,12 +250,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.position,
         self.g.state.offsetPosition,
         self.g.state.offset_register,
-        self.g.state.tool_speed,
-        self.g.state.tool_direction,
-        self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
-        self.g.state.lastFeedrate,
         self.g.state.values,
         ]
     self.g.AbsoluteProgramming({}, [], "")
@@ -263,12 +259,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.position,
         self.g.state.offsetPosition,
         self.g.state.offset_register,
-        self.g.state.tool_speed,
-        self.g.state.tool_direction,
-        self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
-        self.g.state.lastFeedrate,
         self.g.state.values,
         ]
     self.assertEqual(oldState, newState)
@@ -284,12 +276,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.position,
         self.g.state.offsetPosition,
         self.g.state.offset_register,
-        self.g.state.tool_speed,
-        self.g.state.tool_direction,
-        self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
-        self.g.state.lastFeedrate,
         self.g.state.values,
         ]
     self.g.MilimeterProgramming({}, [], "")
@@ -297,12 +285,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.position,
         self.g.state.offsetPosition,
         self.g.state.offset_register,
-        self.g.state.tool_speed,
-        self.g.state.tool_direction,
-        self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
-        self.g.state.lastFeedrate,
         self.g.state.values,
         ]
     self.assertEqual(oldState, newState)   
@@ -485,24 +469,40 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[1][2])
 
   def test_linear_interpolation_no_feedrate_no_last_feedrate_set(self):
-    codes = {}
-    self.assertRaises(s3g.MissingCodeError, self.g.LinearInterpolation, codes, [], '')
-
-  def test_linear_interpolation_no_feedrate_last_feedrate_set(self):
-    self.g.state.position = {
+    codes = {
         'X' : 0,
         'Y' : 1,
         'Z' : 2,
         'A' : 3,
         'B' : 4,
-        }
-    self.g.state.lastFeedrate = 50
-    self.g.state.values['tool_index'] = 0
-    codes = {
-        'E' : 5
-        }
-    self.g.LinearInterpolation(codes, [], '')
+    }
+    self.assertRaises(s3g.MissingCodeError, self.g.LinearInterpolation, codes, [], '')
+
+  def test_linear_interpolation_no_feedrate_last_feedrate_set(self):
+    feedrate = 50
+    tool_index = 0
+    extrusion_length = 5
+
+    initialPosition = [0, 1, 2, 3, 4]
     expectedPoint = [0, 1, 2, 8, 4]
+
+    self.g.state.position = {
+        'X' : initialPosition[0],
+        'Y' : initialPosition[1],
+        'Z' : initialPosition[2],
+        'A' : initialPosition[3],
+        'B' : initialPosition[4],
+        }
+
+    self.g.state.values['feedrate'] = feedrate
+    self.g.state.values['tool_index'] = tool_index
+
+    codes = {
+        'E' : extrusion_length
+        }
+
+    self.g.LinearInterpolation(codes, [], '')
+
     spmList = [
         self.g.state.xSPM,
         self.g.state.ySPM,
@@ -511,9 +511,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.bSPM,
         ]
 
+    # s3g works in steps, so we need to convert the expected position to steps
     for i in range(len(expectedPoint)):
       expectedPoint[i] *= spmList[i]
-    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, self.g.state.lastFeedrate)
+
+    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, feedrate)
  
   def test_linaer_interpolation_e_and_a_codes_present(self):
     codes = {
@@ -772,12 +774,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.position,
         self.g.state.offsetPosition,
         self.g.state.offset_register,
-        self.g.state.tool_speed,
-        self.g.state.tool_direction,
-        self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
-        self.g.state.lastFeedrate,
         self.g.state.values,
         ]
     self.g.ExtruderOnForward({}, [], "")
@@ -785,12 +783,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.position,
         self.g.state.offsetPosition,
         self.g.state.offset_register,
-        self.g.state.tool_speed,
-        self.g.state.tool_direction,
-        self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
-        self.g.state.lastFeedrate,
         self.g.state.values,
         ]
     self.assertEqual(oldState, newState)
@@ -806,12 +800,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.position,
         self.g.state.offsetPosition,
         self.g.state.offset_register,
-        self.g.state.tool_speed,
-        self.g.state.tool_direction,
-        self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
-        self.g.state.lastFeedrate,
         self.g.state.values,
         ]
     self.g.ExtruderOnReverse({}, [], "")
@@ -819,12 +809,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.position,
         self.g.state.offsetPosition,
         self.g.state.offset_register,
-        self.g.state.tool_speed,
-        self.g.state.tool_direction,
-        self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
-        self.g.state.lastFeedrate,
         self.g.state.values,
         ]
     self.assertEqual(oldState, newState)
@@ -840,12 +826,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.position,
         self.g.state.offsetPosition,
         self.g.state.offset_register,
-        self.g.state.tool_speed,
-        self.g.state.tool_direction,
-        self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
-        self.g.state.lastFeedrate,
         self.g.state.values,
         ]
     self.g.ExtruderOff({}, [], "")
@@ -853,12 +835,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.position,
         self.g.state.offsetPosition,
         self.g.state.offset_register,
-        self.g.state.tool_speed,
-        self.g.state.tool_direction,
-        self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
-        self.g.state.lastFeedrate,
         self.g.state.values,
         ]
     self.assertEqual(oldState, newState)
@@ -874,12 +852,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.position,
         self.g.state.offsetPosition,
         self.g.state.offset_register,
-        self.g.state.tool_speed,
-        self.g.state.tool_direction,
-        self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
-        self.g.state.lastFeedrate,
         self.g.state.values,
         ]
     self.g.SetExtruderSpeed({}, [], "")
@@ -887,12 +861,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.position,
         self.g.state.offsetPosition,
         self.g.state.offset_register,
-        self.g.state.tool_speed,
-        self.g.state.tool_direction,
-        self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
-        self.g.state.lastFeedrate,
         self.g.state.values,
         ]
     self.assertEqual(oldState, newState)

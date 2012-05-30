@@ -33,20 +33,18 @@ class GcodeStates(object):
                 },
         }
 
+    self.values = {}
 
     self.offset_register = None   #Curent offset register
-    self.tool_speed = None        #Current speed of the toolhead
-    self.tool_direction = None    #Direction of the toolhead.  True : Forward False : Backwards
-    self.tool_enabled = None
-    self.lastFeedrate = None
-    self.rapidFeedrate = 300      #Feedrate used during rapid positoning
     self.findingTimeout = 60      #Timeout used when finding minimums/maximums
+
+    self.rapidFeedrate = 300      #Feedrate used during rapid positoning
     self.xSPM = 94.139704         #Steps per milimeters on the x axis
     self.ySPM = 94.139704         #Steps per milimeters on the y axis
     self.zSPM = 400               #Steps per milimeters on the z axis
     self.aSPM = 96.275          #Steps per milimeter on the A axis
     self.bSPM = 96.275          #Steps per milimeter on the B axis
-    self.values = {}
+
 
   def LosePosition(self, codes):
     axes = ParseOutAxes(codes)

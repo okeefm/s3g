@@ -56,7 +56,7 @@ class GcodeParser(object):
     @param string command Gcode command to execute
     """
 
-    print '>>', command, '<<'
+    #print '>>', command, '<<'
     # Parse the line
     codes, flags, comment = ParseLine(command)
 
@@ -250,24 +250,42 @@ class GcodeParser(object):
     Having both E and A or B codes will throw errors.
     """
     if 'F' in codes:
-      feedrate = codes['F']
-    elif self.state.lastFeedrate == None:
-      raise MissingCodeError
-    else:
-      feedrate = self.state.lastFeedrate
+      self.state.values['feedrate'] = codes['F']
+
+    if 'X' in codes:
+      self.state.position['X'] = codes['X']
+    if 'Y' in codes:
+      self.state.position['Y'] = codes['Y']
+    if 'Z' in codes:
+      self.state.position['Z'] = codes['Z']
+    
 
     if 'E' in codes:
       if 'A' in codes or 'B' in codes:
         raise LinearInterpolationError
+
       if not 'tool_index' in self.state.values:
         raise NoToolIndexError
+
       elif self.state.values['tool_index'] == 0:
         self.state.position['A'] += codes['E']
+
       elif self.state.values['tool_index'] == 1:
         self.state.position['B'] += codes['E']
 
-    self.state.SetPosition(codes)
-    self.s3g.QueueExtendedPoint(self.state.GetPosition(), feedrate)
+    # TODO: Untested
+    else:
+      if 'A' in codes:
+        self.state.position['A'] = codes['A']
+      if 'B' in codes:
+        self.state.position['B'] = codes['B']
+
+
+    try:
+      self.s3g.QueueExtendedPoint(self.state.GetPosition(), self.state.values['feedrate'])
+
+    except KeyError:
+      raise MissingCodeError
 
   def Dwell(self, codes, flags, comment):
     """Pauses the machine for a specified amount of miliseconds
