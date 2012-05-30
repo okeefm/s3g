@@ -49,7 +49,6 @@ class GcodeParser(object):
        132 : [self.LoadPosition,               '',        ''],
     }
 
-
   def ExecuteLine(self, command):
     """
     Execute a line of gcode

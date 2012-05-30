@@ -388,6 +388,12 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     val = 0
     self.mock.SetPotentiometerValue.called_once_with(axes, val)
 
+  def test_find_axes_minimums(self):
+    codes = 'F'
+    flags = 'XYZ'
+    self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[161][1]))
+    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[161][2])
+
   def test_find_axes_minimum(self):
     self.g.state.position = {
           'X' : 0,
@@ -421,6 +427,12 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     timeout = self.g.state.findingTimeout
     self.g.FindAxesMinimums(codes, [], '')
     self.mock.FindAxesMinimums.assert_called_once_with(axes, feedrate, timeout)
+
+  def test_find_axes_maximums_all_codes_accounted_for(self):
+    codes = 'F'
+    flags = 'XYZ'
+    self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[162][1]))
+    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[162][2])
 
   def test_find_axes_maximum(self):
     self.g.state.position = {
