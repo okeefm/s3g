@@ -692,5 +692,31 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.mock.SetPlatformTemperature.assert_called_once_with(tool_index, 100)
     self.assertEqual(tool_index, self.g.state.tool_index)
 
+  def test_load_position_all_codes_accounted_for(self):
+    codes = ''
+    flags = ''
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[132][1])
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[132][2])
+
+  def test_load_position(self):
+    self.g.state.position = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
+    self.g.LoadPosition({}, [], '')
+    expectedPosition = {
+        'X' : None,
+        'Y' : None,
+        'Z' : None,
+        'A' : 0,
+        'B' : 0,
+        }
+    self.assertEqual(expectedPosition, self.g.state.position)
+    self.mock.RecallHomePositions.assert_called_once_with(['X', 'Y', 'Z'])    
+
+
 if __name__ == "__main__":
   unittest.main()

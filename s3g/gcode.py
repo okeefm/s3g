@@ -46,7 +46,7 @@ class GcodeParser(object):
        104 : [self.SetToolheadTemperature,      'ST',      ''],
 #       108 : [self.SetExtruderSpeed,            '',        ''],
        109 : [self.SetPlatformTemperature,            'ST',        ''],
-#       132 : [self.LoadPosition,            '',        ''],
+       132 : [self.LoadPosition,            '',        ''],
     }
 
 #  def Dwell(self, codes):
@@ -254,3 +254,8 @@ class GcodeParser(object):
     elif self.state.tool_index == None:
       raise NoToolIndexError
     self.s3g.SetPlatformTemperature(self.state.tool_index, codes['S']) 
+
+  def LoadPosition(self, codes, flags, comment):
+    axes = ['X', 'Y', 'Z']
+    self.state.LosePosition(axes)
+    self.s3g.RecallHomePositions(axes)
