@@ -12,6 +12,7 @@ class GcodeParser(object):
   """
   def __init__(self):
     self.state = GcodeStates()
+    self.s3g = None
 
     # Note: The datastructure looks like this:
     # [0] : command name
