@@ -206,7 +206,6 @@ class CheckForExtraneousCodesTests(unittest.TestCase):
 
 
 class ParseOutAxesTests(unittest.TestCase):
-
   def test_parse_out_axes_empty_set(self):
     codes = {}
     parsed_axes = s3g.ParseOutAxes(codes)
@@ -228,6 +227,21 @@ class ParseOutAxesTests(unittest.TestCase):
     codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True}
     parsedAxes = s3g.ParseOutAxes(codes)
     self.assertEqual(['A', 'B', 'X', 'Y', 'Z'], parsedAxes)
+
+class CalculateVectorMagnitude(unittest.TestCase):
+  def test_reject_non_5d_lists(self):
+    self.assertRaises(ValueError, s3g.CalculateVectorMagnitude, range(0,4))
+
+  def test_makes_good_results(self):
+    cases = [
+      [[0,0,0,0,0], 0],
+      [[1234.1,0,0,0,0], 1234.1],
+      [[1,-2,3,-4,5], pow(55,.5)],
+    ]
+
+    for case in cases:
+      self.assertEquals(case[1], s3g.CalculateVectorMagnitude(case[0]))
+
 
 #class ParseSampleGcodeFileTests(unittest.TestCase):
 #  def test_parse_files(self):

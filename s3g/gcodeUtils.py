@@ -77,7 +77,7 @@ def ParseCommand(command):
 def ParseLine(line):
   """
   Parse a line of gcode into a map of codes, and a comment field.
-  @param string line line of gcode to parse
+  @param string line: line of gcode to parse
   @return tuple containing a dict of codes, a dict of flags, and a comment string
   """
 
@@ -90,15 +90,15 @@ def CheckForExtraneousCodes(codes, allowed_codes):
   """ Check that all of the codes are expected for this command.
 
   Throws an InvalidCodeError if an unexpected code was found
-  @codes list of codes to check
-  @allowed_codes list of allowed codes
+  @param list codes: list of codes to check
+  @param list allowed_codes: list of allowed codes
   """ 
   #TODO Change the way we add in G and M commands.  Its kinda...bad?
   allowed_codes += "GM"
   difference = set(codes) - set(allowed_codes)
 
   if len(difference) > 0:
-    badCodes = ''
+    badCodes = '' # TODO: can this be stringified in a more straightforward manner?
     for code in difference:
       badCodes+=code
     gcode_error = InvalidCodeError()
@@ -114,4 +114,34 @@ def ParseOutAxes(codes):
   axesCodes = 'XYZAB'
   parsedAxes = set(axesCodes) & set(codes)
   return list(sorted(parsedAxes))
+
+def CalculateVectorMagnitude(vector):
+  """ Given a 5-dimensional vector represented as a list, calculate its magnitude
+  
+  @param list vector: A 5-dimesional vector
+  @return magnitude of the vector
+  """
+  if len(vector) != 5:
+    raise ValueError("Expected list of length 5, got length %i"%(len(vector)))
+
+  magnitude_squared = 0
+  for d in vector:
+    magnitude_squared += pow(d,2)
+
+  magnitude = pow(magnitude_squared, .5)
+
+  return magnitude
+
+def EvaluateMaximumFeedrates(movement_vector, velocity, max_velocity_vector):
+  """ Given a movement vecotr with a specified velocity, scale the velocity
+  so that it does not go over the maximum velocity of any single axis.
+
+  @param list movement_vector: Movement command
+  @param float velocity: Target velocity for the command
+  @param list max_velocity: Maximum velocity of each axis
+  """
+
+  magnitude = CalculateVectorMagnitude(movment_vector)
+
+  pass
 

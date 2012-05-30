@@ -15,6 +15,7 @@ class GcodeStates(object):
         'A' : None,
         'B' : None,
         }
+
     self.offsetPosition = {
         0   :   {
                 'X' : 0,
@@ -39,12 +40,24 @@ class GcodeStates(object):
     self.offset_register = None   #Curent offset register
     self.findingTimeout = 60      #Timeout used when finding minimums/maximums
 
-    self.rapidFeedrate = 300      #Feedrate used during rapid positoning
-    self.xSPM = 94.140         #Steps per milimeters on the x axis
-    self.ySPM = 94.140         #Steps per milimeters on the y axis
-    self.zSPM = 400               #Steps per milimeters on the z axis
-    self.aSPM = 96.275          #Steps per milimeter on the A axis
-    self.bSPM = 96.275          #Steps per milimeter on the B axis
+    # Feedrate to try when making rapid motions
+    self.rapidFeedrate = 300
+
+    # Maximum velocities for a machine, in mm/s
+    # TODO: something besides pull these numbers out of the air
+    self.maximum_velocity_x = 300
+    self.maximum_velocity_y = 300
+    self.maximum_velocity_z = 20
+    self.maximum_velocity_a = 27
+    self.maximum_velocity_b = 27
+
+    # Steps per milimeter conversions for a machine
+    # TODO: This only works for a replicator
+    self.xSPM = 94.140
+    self.ySPM = 94.140
+    self.zSPM = 400
+    self.aSPM = 96.275
+    self.bSPM = 96.275
 
 
   def LosePosition(self, axes):
@@ -81,6 +94,7 @@ class GcodeStates(object):
         returnPosition.append(self.position[axis])
       else:
         returnPosition.append(self.position[axis] + self.offsetPosition[self.offset_register][axis])
+
     spmList = [
         self.xSPM,
         self.ySPM,

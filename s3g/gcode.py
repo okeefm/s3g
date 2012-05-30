@@ -37,18 +37,18 @@ class GcodeParser(object):
 
     self.MCODE_INSTRUCTIONS = {
        6   : [self.WaitForToolhead,            'PT',      ''],
-       18  : [self.DisableAxes,          '',         'XYZAB'],
+       18  : [self.DisableAxes,                '',        'XYZAB'],
        70  : [self.DisplayMessage,             'P',       ''],
        72  : [self.PlaySong,                   'P',       ''],
        73  : [self.SetBuildPercentage,         'P',       ''],
        101 : [self.ExtruderOnForward,          '',        ''], #This command is explicitely ignored
        102 : [self.ExtruderOnReverse,          '',        ''], #This command is explicitely ignored
-       103 : [self.ExtruderOff,                'T',        ''],       #This command is explicitely ignored
+       103 : [self.ExtruderOff,                'T',       ''],       #This command is explicitely ignored
        104 : [self.SetToolheadTemperature,     'ST',      ''],
-       105 : [self.GetTemperature,                 '',     ''],
-       108 : [self.SetExtruderSpeed,           'RT',        ''],   #This command is explicitely ignored
+       105 : [self.GetTemperature,             '',        ''],
+       108 : [self.SetExtruderSpeed,           'RT',      ''],   #This command is explicitely ignored
        109 : [self.SetPlatformTemperature,     'ST',      ''],
-       132 : [self.LoadPosition,               '',   'XYZAB'],
+       132 : [self.LoadPosition,               '',        'XYZAB'],
     }
 
   def ExecuteLine(self, command):
@@ -283,6 +283,7 @@ class GcodeParser(object):
     for axis in ['X', 'Y', 'Z']:
       if axis in codes:
         self.state.position[axis] = codes[axis]
+
     if 'E' in codes:
       if 'A' in codes or 'B' in codes:
         gcode_error = ConflictingCodesError()
@@ -307,6 +308,7 @@ class GcodeParser(object):
         self.state.position['A'] = codes['A']
       if 'B' in codes:
         self.state.position['B'] = codes['B']
+
     try:
       feedrate = self.state.values['feedrate']
       self.s3g.QueueExtendedPoint(self.state.GetPosition(), feedrate)
