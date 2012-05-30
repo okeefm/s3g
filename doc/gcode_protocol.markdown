@@ -384,34 +384,6 @@ Parameters
 
     percent = P
 
-## M101 - Turn extruder on, forward
-Set the extruder direction to clockwise
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
-## M102 - Turn extruder on, reverse
-Set the extruder direction to counter-clockwise
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
-## M103 - Turn extruder off
-Disables the extruder motor
-
-Registers
-
-    T: (code, optional) If present, first change to the specified tool
-
-S3g Output (none)
-
-Parameters (none)
 
 ## M104 - Set toolhead temperature
 Set the target temperature for the current toolhead
@@ -429,18 +401,6 @@ Parameters
 
     tool_index = toolhead
     temperature = s
-
-## M108 - Set extruder max speed
-Set the motor speed for the current toolhead
-
-Registers
-
-    R: (code) Motor speed, in RPM
-    T: (code, optional) If present, first change to the specified tool
-
-S3g Output (none)
-
-Parameters (none)
 
 ## M109 - Set build platform temperature
 Sets the target temperature for the current build platform
@@ -477,4 +437,49 @@ S3g Output
 Parameters
 
     axes = [x, y, z, a, b]
+
+
+# Ignored M codes
+These codes will not cause an error if encountered, but do not get evaluated. This is because some skeining engines are buggy and produce them.
+
+## M101 - Turn extruder on, forward
+Set the extruder direction to clockwise
+
+Registers (none)
+
+S3g Output (none)
+
+Parameters (none)
+
+## M102 - Turn extruder on, reverse
+Set the extruder direction to counter-clockwise
+
+Registers (none)
+
+S3g Output (none)
+
+Parameters (none)
+
+## M103 - Turn extruder off
+Disables the extruder motor
+
+Registers
+
+    T: (code, optional) If present, first change to the specified tool
+
+S3g Output (none)
+
+Parameters (none)
+
+## M108 - Set extruder max speed
+Set the motor speed for the current toolhead
+
+Registers
+
+    R: (code) Motor speed, in RPM
+    T: (code, optional) If present, first change to the specified tool
+
+S3g Output (none)
+
+Parameters (none)
 
