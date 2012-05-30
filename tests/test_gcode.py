@@ -326,6 +326,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
   def test_find_axes_minimum_missing_feedrate(self):
     codes = {'G' : 161}
     self.assertRaises(KeyError, self.g.FindAxesMinimums, codes, [], '') 
+
   def test_find_axes_minimums_all_codes_accounted_for(self):
     """
     Tests to make sure that throwing all registers in a command doesnt raise an
@@ -409,9 +410,9 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.g.FindAxesMinimums(codes, flags, '')
     self.mock.FindAxesMinimums.assert_called_once_with(axes, feedrate, timeout)
     expectedPosition = {
-        'X'   :   0,
-        'Y'   :   0,
-        'Z'   :   0,
+        'X'   :   None,
+        'Y'   :   None,
+        'Z'   :   None,
         'A'   :   4,
         'B'   :   5,
         }
@@ -449,9 +450,9 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.g.FindAxesMaximums(codes, flags, '')
     self.mock.FindAxesMaximums.assert_called_once_with(axes, feedrate, timeout)
     expectedPosition = {
-        'X'   :   0,
-        'Y'   :   0,
-        'Z'   :   0,
+        'X'   :   None,
+        'Y'   :   None,
+        'Z'   :   None,
         'A'   :   4,
         'B'   :   5,
         }
@@ -758,11 +759,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         }
     self.g.LoadPosition({}, ['X', 'Y', 'Z', 'A', 'B'], '')
     expectedPosition = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'B' : 0,
+        'X' : None,
+        'Y' : None,
+        'Z' : None,
+        'A' : None, 
+        'B' : None,
         }
     self.assertEqual(expectedPosition, self.g.state.position)
     self.mock.RecallHomePositions.assert_called_once_with(sorted(['X', 'Y', 'Z', 'A', 'B']))    

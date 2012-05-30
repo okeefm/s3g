@@ -142,7 +142,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
     axes = ['X', 'Y', 'Z', 'A', 'B']
     self.g.LosePosition(axes)
     for key in self.g.position:
-      self.assertTrue(self.g.position[key] == 0)
+      self.assertTrue(self.g.position[key] == None)
 
   def test_lose_position_no_axes(self):
     self.g.position = {
@@ -165,14 +165,14 @@ class s3gHelperFunctionTests(unittest.TestCase):
 
   def test_lose_position_minimal_codes(self):
     self.g.position = {
-        'X' : -1,
+        'X' : 0,
         'Y' : 1,
         'Z' : 2,
         'A' : 3,
         'B' : 4,
         }
     expectedPosition = {
-        'X' : 0,
+        'X' : None,
         'Y' : 1,
         'Z' : 2,
         'A' : 3,
