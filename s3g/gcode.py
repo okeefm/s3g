@@ -37,7 +37,7 @@ class GcodeParser(object):
 
     self.MCODE_INSTRUCTIONS = {
        6   : [self.WaitForToolhead,            'PT',      ''],
-       18  : [self.DisableAxes,                '',        'XYZAB'],
+       18  : [self.DisableAxes,          '',         'XYZAB'],
        70  : [self.DisplayMessage,             'P',       ''],
        72  : [self.PlaySong,                   'P',       ''],
        73  : [self.SetBuildPercentage,         'P',       ''],
@@ -47,7 +47,7 @@ class GcodeParser(object):
        104 : [self.SetToolheadTemperature,     'ST',      ''],
        108 : [self.SetExtruderSpeed,           'RT',        ''],   #This command is explicitely ignored
        109 : [self.SetPlatformTemperature,     'ST',      ''],
-       132 : [self.LoadPosition,               '',        ''],
+       132 : [self.LoadPosition,               '',   'XYZAB'],
     }
 
   def ExecuteLine(self, command):
@@ -127,18 +127,31 @@ class GcodeParser(object):
     or endstop is reached
     This function loses the state machine's position.
     """
+    self.state.values['feedrate'] = codes['F']
     self.state.LosePosition(flags)
     axes = ParseOutAxes(flags) 
-    self.s3g.FindAxesMaximums(axes, codes['F'], self.state.findingTimeout)
+    try:
+      self.s3g.FindAxesMaximums(axes, self.state.values['feedrate'], self.state.findingTimeout)
+    except KeyError as e:
+      if e[0] == 'feedrate':
+        e = KeyError('F')
+      raise e
+
 
   def FindAxesMinimums(self, codes, flags, comment):
     """Moves the given axes in the negative direction until a timeout
     or endstop is reached.
     This function loses the state machine's position.
     """
+    self.state.values['feedrate'] = codes['F']
     self.state.LosePosition(flags) 
     axes = ParseOutAxes(flags)
-    self.s3g.FindAxesMinimums(axes, codes['F'], self.state.findingTimeout)
+    try:
+      self.s3g.FindAxesMinimums(axes, codes['F'], self.state.findingTimeout)
+    except KeyError as e:
+      if e[0] == 'feedrate':
+        e = KeyError('F')
+      raise e
 
   def SetPosition(self, codes, flags, comment):
     """Explicitely sets the position of the state machine and bot
@@ -305,13 +318,12 @@ class GcodeParser(object):
     """
     if 'T' in codes:
       self.state.values['tool_index'] = codes['T']
-
     self.s3g.SetPlatformTemperature(self.state.values['tool_index'], codes['S']) 
 
   def LoadPosition(self, codes, flags, comment):
     """Loads the home positions for the XYZ axes from the eeprom
     """
-    axes = ['X', 'Y', 'Z']
+    axes = ParseOutAxes(flags)
     self.state.LosePosition(axes)
     self.s3g.RecallHomePositions(axes)
 

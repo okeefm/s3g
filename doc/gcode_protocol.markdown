@@ -461,7 +461,13 @@ Parameters
 ## M132 - Load current home position from EEPROM
 Recalls current home position from the EEPROM and waits for the buffer to empty
 
-Registers (none)
+Registers
+
+    X:  (flag, optional) If present, loads the X offset from the EEPROM
+    Y:  (flag, optional) If present, loads the Y offset from the EEPROM
+    Z:  (flag, optional) If present, loads the Z offset from the EEPROM
+    A:  (flag, optional) If present, loads the A offset from the EEPROM
+    B:  (flag, optional) If present, loads the B offset from the EEPROM
 
 S3g Output
 
@@ -469,5 +475,5 @@ S3g Output
 
 Parameters
 
-    axes = [x, y, z]
+    axes = [x, y, z, a, b]
 

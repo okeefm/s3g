@@ -98,7 +98,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'B' : 4,
         }
     axes = {}
-    self.g.SetPosition(codes)
+    self.g.SetPosition(axes)
     self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.position)
 
   def test_set_position_minimal_axes(self):
@@ -108,8 +108,9 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'Z' : 2,
         'A' : 3,
         'B' : 4,
+        }
     axes = {'X' : -1}
-    self.g.SetPosition(codes)
+    self.g.SetPosition(axes)
     self.assertEqual({'X' : -1, 'Y' : 1, 'Z' : 2, 'A' : 3, 'B' : 4}, self.g.position)
 
   def test_set_position(self):
@@ -127,21 +128,21 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'A' : 8,
         'B' : 9, 
         }
-    self.g.SetPosition(codes)
+    self.g.SetPosition(axes)
     self.assertEqual({'X' : 5, 'Y' : 6, 'Z' : 7, 'A' : 8, 'B' : 9}, self.g.position)
 
   def test_lose_position(self):
     self.g.position = {
-          'X' : 0,
-          'Y' : 0,
-          'Z' : 0,
-          'A' : 0,
-          'B' : 0,
+          'X' : 1,
+          'Y' : 2,
+          'Z' : 3,
+          'A' : 4,
+          'B' : 5,
           }
     axes = ['X', 'Y', 'Z', 'A', 'B']
     self.g.LosePosition(axes)
     for key in self.g.position:
-      self.assertTrue(self.g.position[key] == None)
+      self.assertTrue(self.g.position[key] == 0)
 
   def test_lose_position_no_axes(self):
     self.g.position = {
@@ -164,14 +165,14 @@ class s3gHelperFunctionTests(unittest.TestCase):
 
   def test_lose_position_minimal_codes(self):
     self.g.position = {
-        'X' : 0,
+        'X' : -1,
         'Y' : 1,
         'Z' : 2,
         'A' : 3,
         'B' : 4,
         }
     expectedPosition = {
-        'X' : None,
+        'X' : 0,
         'Y' : 1,
         'Z' : 2,
         'A' : 3,

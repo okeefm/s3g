@@ -21,7 +21,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
   def test_check_gcode_errors_are_recorded_correctly(self):
     command = "G161 Q1" #NOTE: this assumes that G161 does not accept a Q code
     expectedValues = {
-        'LineNumber'  :   0,
+        'LineNumber'  :   1,
         'Command'     :   command,
         'InvalidCodes':   'Q',
         }
@@ -31,7 +31,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
       #to successfully complete
       self.assertTrue(False)
     except s3g.GcodeError as e:
-      print e
       self.assertEqual(expectedValues, e.values)
 
   def test_check_gcode_extraneous_codes_gets_called(self):
@@ -395,11 +394,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_find_axes_minimum(self):
     self.g.state.position = {
-          'X' : 0,
-          'Y' : 0,
-          'Z' : 0,
-          'A' : 0,
-          'B' : 0,
+          'X' : 1,
+          'Y' : 2,
+          'Z' : 3,
+          'A' : 4,
+          'B' : 5,
           }
     codes = {'F':0}
     flags = ['X', 'Y', 'Z']
@@ -410,11 +409,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.g.FindAxesMinimums(codes, flags, '')
     self.mock.FindAxesMinimums.assert_called_once_with(axes, feedrate, timeout)
     expectedPosition = {
-        'X'   :   None,
-        'Y'   :   None,
-        'Z'   :   None,
-        'A'   :   0,
-        'B'   :   0,
+        'X'   :   0,
+        'Y'   :   0,
+        'Z'   :   0,
+        'A'   :   4,
+        'B'   :   5,
         }
     self.assertEqual(expectedPosition, self.g.state.position)
 
@@ -450,9 +449,9 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.g.FindAxesMaximums(codes, flags, '')
     self.mock.FindAxesMaximums.assert_called_once_with(axes, feedrate, timeout)
     expectedPosition = {
-        'X'   :   None,
-        'Y'   :   None,
-        'Z'   :   None,
+        'X'   :   0,
+        'Y'   :   0,
+        'Z'   :   0,
         'A'   :   4,
         'B'   :   5,
         }
@@ -745,28 +744,28 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_load_position_all_codes_accounted_for(self):
     codes = ''
-    flags = ''
+    flags = 'XYZAB'
     self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[132][1])
-    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[132][2])
+    self.assertEqual(sorted(flags), sorted(self.g.MCODE_INSTRUCTIONS[132][2]))
 
   def test_load_position(self):
     self.g.state.position = {
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        'A' : 4,
+        'B' : 5,
+        }
+    self.g.LoadPosition({}, ['X', 'Y', 'Z', 'A', 'B'], '')
+    expectedPosition = {
         'X' : 0,
         'Y' : 0,
         'Z' : 0,
         'A' : 0,
         'B' : 0,
         }
-    self.g.LoadPosition({}, [], '')
-    expectedPosition = {
-        'X' : None,
-        'Y' : None,
-        'Z' : None,
-        'A' : 0,
-        'B' : 0,
-        }
     self.assertEqual(expectedPosition, self.g.state.position)
-    self.mock.RecallHomePositions.assert_called_once_with(['X', 'Y', 'Z'])    
+    self.mock.RecallHomePositions.assert_called_once_with(sorted(['X', 'Y', 'Z', 'A', 'B']))    
 
   def test_extruder_on_forward_all_codes_accounted_for(self):
     codes = ''

@@ -9,11 +9,11 @@ from errors import *
 class GcodeStates(object):
   def __init__(self):
     self.position = {    #Position, In MM!!
-        'X' : None,
-        'Y' : None,
-        'Z' : None,
-        'A' : None,
-        'B' : None,
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
         }
     self.offsetPosition = {
         0   :   {
@@ -51,7 +51,7 @@ class GcodeStates(object):
     @param list axes: A list of axes to lose
     """
     for axis in axes:
-      self.position[axis] = None
+      self.position[axis] = 0 
 
   def SetPosition(self, axes):
     """Given a dict of axes and positions, sets
