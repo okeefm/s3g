@@ -72,7 +72,9 @@ class GcodeStates(object):
     returnPosition = []
     for axis in positionFormat:
       if self.position[axis] == None:
-        raise UnspecifiedAxisLocationError
+        gcode_error = UnspecifiedAxisLocationError()
+        gcode_error.values['UnspecifiedAxis'] = axis
+        raise gcode_error
       elif self.offset_register == None:
         returnPosition.append(self.position[axis])
       else:
