@@ -31,6 +31,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
       #to successfully complete
       self.assertTrue(False)
     except s3g.GcodeError as e:
+      print e
       self.assertEqual(expectedValues, e.values)
 
   def test_check_gcode_extraneous_codes_gets_called(self):

@@ -88,6 +88,6 @@ class GcodeStates(object):
     @param int register: The register we modify
     @param list offsets: The offsets we apply
     """
-    axes = ['X','Y','Z','A','B']
+    axes = ['X','Y','Z','A','B']  
     for i in range(len(offsets)):
       self.offsetPosition[register][axes[i]] = offsets[i]

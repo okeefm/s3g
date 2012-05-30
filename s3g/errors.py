@@ -210,7 +210,10 @@ class GcodeError(ValueError):
   def __str__(self):
     returnStr = ''
     for key in self.values:
-      returnStr += key + ': ' + str(self.values[key]) + '\n'
+      v = str(self.values[key])
+      v = v.rstrip('\n')                  #Line commands have carriage returns
+      returnStr += key + ': ' + v + '; '
+    returnStr = returnStr.rstrip('; ')    #Remove final semicolon
     return returnStr
 
 class CommentError(GcodeError):
@@ -272,4 +275,10 @@ class NoToolIndexError(GcodeError):
   """
   A NoToolIndexError is thrown if a commad that requires a tool index
   to be set is being executed without a tool index set.
+  """
+
+class MissingCodeError(GcodeError):
+  """
+  A MissingCodeError is thrown if a command that requires a certain
+  code is missing that code.
   """

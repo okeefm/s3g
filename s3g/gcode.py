@@ -93,7 +93,7 @@ class GcodeParser(object):
         else:
           pass
     except KeyError as e:
-      gcode_error = GcodeError()
+      gcode_error = MissingCodeError()
       gcode_error.values['MissingCode'] = e[0]
       gcode_error.values['LineNumber'] = self.line_number
       gcode_error.values['Command'] = command
@@ -208,8 +208,10 @@ class GcodeParser(object):
 
   def StoreOffsets(self, codes, flags, comment):
     """Given XYZ offsets, stores those offsets in the state machine.
+    We subtract one from the 'P' code because skeining engines store 
+    designate P1 as the 0'th offset and P2 as the 1'th offset....dumb
     """
-    self.state.StoreOffset(codes['P'], [codes['X'], codes['Y'], codes['Z']])
+    self.state.StoreOffset(codes['P']-1, [codes['X'], codes['Y'], codes['Z']])
 
   def RapidPositioning(self, codes, flags, comment):
     """Using a preset rapid feedrate, moves the XYZ axes
