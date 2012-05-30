@@ -5,7 +5,9 @@ sys.path.append(lib_path)
 
 import s3g
 
-input_file = '../doc/gcode_samples/skeinforge_single_extrusion_snake.gcode'
+#input_file = '../doc/gcode_samples/skeinforge_single_extrusion_snake.gcode'
+#input_file = '../doc/gcode_samples/skeinforge_dual_extrusion_hilbert_cube.gcode'
+input_file = '../doc/gcode_samples/miracle_grue_single_extrusion.gcode'
 output_file = 'out.s3g'
 
 s = s3g.s3g()

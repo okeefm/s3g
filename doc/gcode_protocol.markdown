@@ -104,8 +104,9 @@ Parameters
 Move to the specified position at the current or specified feedrate.
 NB: There are two methods of forming the G1 command:
 
-    XYZABF: This gives explicit axes positions, in mm
-    XYZEF: This gives explicit axes positions for XYZ, then a new tool_speed.
+    XYZABF: This gives explicit axes positions for XYZAB, in mm
+    XYZE: This gives explicit axes positions for XYZ, and an E command which is mapped
+      to either A or B, depending on the current tool index being used.
 
 We should only accept one form or the other.  A mixture will result in an error being thrown.
 
@@ -217,8 +218,18 @@ S3g Output (none)
 
 Parameters (none)
 
+
 ## G92 - Position register: Set the specified axes positions to the given position
-Reset the current position of the specified axes to the given values.
+Sets the position of the state machine and the bot.
+NB: There are two methods of forming the G92 command:
+
+    XYZAB: This gives explicit axes positions for XYZAB, in mm
+    XYZE: This gives explicit axes positions for XYZ, and an E command which is mapped
+      to either A or B, depending on the current tool index being used.
+
+We should only accept one form or the other.  A mixture will result in an error being thrown.
+
+XYZAB Form:
 
 Registers
 
@@ -230,11 +241,29 @@ Registers
 
 S3g Output
 
-    SetExtendedPoint(point)
+    SetPosition(position)
 
 Parameters
 
-    point = [x, y, z, a, b]
+    position = [x, y, z, a, b]
+
+XYZE Form:
+
+Registers
+
+    X: (code, optional) If present, new X axis position, in mm
+    Y: (code, optional) If present, new Y axis position, in mm
+    Z: (code, optional) If present, new Z axis position, in mm
+    E: (code, optional) If present, new A/B (depending on internal state machine) axis position, in mm 
+
+S3g Output
+
+    SetPosition(position)
+
+Parameters
+
+    position = [x, y, z, a, b]
+
 
 ## G130 - Set digital potentiometer value
 Set the digital potentiometer value for the given axes. This is used to configure the current applied to each stepper axis. The value is specified as a value from 0-127; the mapping from current to potentimeter value is machine specific. (TODO: Specify what it is for the MightyBoard)
