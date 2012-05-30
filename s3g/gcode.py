@@ -13,7 +13,7 @@ class GcodeParser(object):
   def __init__(self):
     self.state = GcodeStates()
     self.s3g = None
-    self.line_number = 0
+    self.line_number = 1
 
     # Note: The datastructure looks like this:
     # [0] : command name
