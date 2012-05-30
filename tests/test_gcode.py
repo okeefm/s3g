@@ -830,10 +830,10 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(oldState, newState)
 
   def test_extruder_off_all_codes_accounted_for(self):
-    codes = ''
+    codes = 'T'
     flags = ''
     self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[103][1])
-    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[103][2])
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[103][2])
 
   def test_extruder_off(self):
     oldState = [
@@ -864,12 +864,12 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(oldState, newState)
 
   def test_set_extruder_speed_all_codes_accounted_for(self):
-    codes = ''
+    codes = 'TR'
     flags = ''
-    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[108][1])
-    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[108][2])
+    self.assertEqual(sorted(codes), sorted(self.g.MCODE_INSTRUCTIONS[108][1]))
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[108][2])
 
-  def test_set_extruder_speed(self):
+  def test_set_extruder_speed_no_t(self):
     oldState = [
         self.g.state.position,
         self.g.state.offsetPosition,
@@ -897,6 +897,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         ]
     self.assertEqual(oldState, newState)
 
+  def test_set_extruder_speed_t_code(self):
+    tool_index = 0
+    codes = {'T'  : tool_index}
+    self.g.SetExtruderSpeed(codes, [], "")
+    self.assertEqual(tool_index, self.g.state.tool_index)
 
 if __name__ == "__main__":
   unittest.main()

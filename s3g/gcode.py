@@ -43,9 +43,9 @@ class GcodeParser(object):
        73  : [self.SetBuildPercentage,         'P',       ''],
        101 : [self.ExtruderOnForward,          '',        ''], #This command is explicitely ignored
        102 : [self.ExtruderOnReverse,          '',        ''], #This command is explicitely ignored
-       103 : [self.ExtruderOff,                '',        ''],       #This command is explicitely ignored
+       103 : [self.ExtruderOff,                'T',        ''],       #This command is explicitely ignored
        104 : [self.SetToolheadTemperature,     'ST',      ''],
-       108 : [self.SetExtruderSpeed,           '',        ''],   #This command is explicitely ignored
+       108 : [self.SetExtruderSpeed,           'RT',        ''],   #This command is explicitely ignored
        109 : [self.SetPlatformTemperature,     'ST',      ''],
        132 : [self.LoadPosition,               '',        ''],
     }
@@ -318,10 +318,10 @@ class GcodeParser(object):
     self.s3g.RecallHomePositions(axes)
 
   def SetExtruderSpeed(self, codes, flags, comment):
-    """Sets the max extruder speed in RPM
-    This is a stub, since we dropped support for this function
+    """Sets the max extruder speed in RPM and tool_index to T
     """
-    pass
+    if 'T' in codes:
+      self.state.tool_index = codes['T']
 
   def ExtruderOff(self, codes, flags, comment):
     """Turn the extruder off
