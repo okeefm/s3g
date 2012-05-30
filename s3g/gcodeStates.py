@@ -35,7 +35,6 @@ class GcodeStates(object):
 
 
     self.offset_register = None   #Curent offset register
-    self.tool_index = None        #Current toolhead in use
     self.tool_speed = None        #Current speed of the toolhead
     self.tool_direction = None    #Direction of the toolhead.  True : Forward False : Backwards
     self.tool_enabled = None

@@ -226,7 +226,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     codes = {}
     self.g.UseP1Offsets(codes, [], '')
     self.assertEqual(1, self.g.state.offset_register)
-    self.assertEqual(1, self.g.state.tool_index)
+    self.assertEqual(1, self.g.state.values['tool_index'])
 
   def test_use_p0_offsets_all_codes_accounted_for(self):
     codes = ''
@@ -238,7 +238,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     codes = {}
     self.g.UseP0Offsets(codes, [], '')
     self.assertEqual(0, self.g.state.offset_register) 
-    self.assertEqual(0, self.g.state.tool_index)
+    self.assertEqual(0, self.g.state.values['tool_index'])
 
   def test_absolute_programming_all_codes_accounted_for(self):
     codes = ''
@@ -249,7 +249,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     oldState = [
         self.g.state.position,
         self.g.state.offsetPosition,
-        self.g.state.tool_index,
         self.g.state.offset_register,
         self.g.state.tool_speed,
         self.g.state.tool_direction,
@@ -257,12 +256,12 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
         self.g.state.lastFeedrate,
+        self.g.state.values,
         ]
     self.g.AbsoluteProgramming({}, [], "")
     newState = [
         self.g.state.position,
         self.g.state.offsetPosition,
-        self.g.state.tool_index,
         self.g.state.offset_register,
         self.g.state.tool_speed,
         self.g.state.tool_direction,
@@ -270,6 +269,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
         self.g.state.lastFeedrate,
+        self.g.state.values,
         ]
     self.assertEqual(oldState, newState)
 
@@ -283,7 +283,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     oldState = [
         self.g.state.position,
         self.g.state.offsetPosition,
-        self.g.state.tool_index,
         self.g.state.offset_register,
         self.g.state.tool_speed,
         self.g.state.tool_direction,
@@ -291,12 +290,12 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
         self.g.state.lastFeedrate,
+        self.g.state.values,
         ]
     self.g.MilimeterProgramming({}, [], "")
     newState = [
         self.g.state.position,
         self.g.state.offsetPosition,
-        self.g.state.tool_index,
         self.g.state.offset_register,
         self.g.state.tool_speed,
         self.g.state.tool_direction,
@@ -304,6 +303,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
         self.g.state.lastFeedrate,
+        self.g.state.values,
         ]
     self.assertEqual(oldState, newState)   
 
@@ -497,7 +497,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'B' : 4,
         }
     self.g.state.lastFeedrate = 50
-    self.g.state.tool_index = 0
+    self.g.state.values['tool_index'] = 0
     codes = {
         'E' : 5
         }
@@ -510,6 +510,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.aSPM,
         self.g.state.bSPM,
         ]
+
     for i in range(len(expectedPoint)):
       expectedPoint[i] *= spmList[i]
     self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, self.g.state.lastFeedrate)
@@ -604,7 +605,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'A' : 0,
         'B' : 0,
         }
-    self.g.state.tool_index = 0
+    self.g.state.values['tool_index'] = 0
     codes = {
         'X' : 1, 
         'Y' : 2,
@@ -686,24 +687,30 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_set_toolhead_temperature_no_t_no_set_tool_index(self):
     codes = {'S'  : 100}
-    self.assertRaises(s3g.NoToolIndexError, self.g.SetToolheadTemperature, codes, [], '')
+    self.assertRaises(s3g.MissingCodeError, self.g.SetToolheadTemperature, codes, [], '')
 
   def test_set_toolhead_temperature_no_t_set_tool_index(self):
-    codes = {'S'  : 100}
-    self.g.state.tool_index = 0
+    tool_index = 0
+    temperature = 100
+
+    codes = {'S'  : temperature}
+    self.g.state.values['tool_index'] = tool_index
     self.g.SetToolheadTemperature(codes, [], '')
-    self.mock.SetToolheadTemperature.assert_called_once_with(self.g.state.tool_index, 100)
+    self.mock.SetToolheadTemperature.assert_called_once_with(tool_index, temperature)
 
   def test_set_toolhead_temperature_t_code_defined(self):
     tool_index = 2
-    codes = {'S'  : 100, 'T' :  tool_index}
+    temperature = 100
+
+    codes = {'S'  : temperature, 'T' :  tool_index}
     self.g.SetToolheadTemperature(codes, [], '')
-    self.mock.SetToolheadTemperature.assert_called_once_with(tool_index, 100)
-    self.assertEqual(tool_index, self.g.state.tool_index)
+    self.mock.SetToolheadTemperature.assert_called_once_with(tool_index, temperature)
+    self.assertEqual(tool_index, self.g.state.values['tool_index'])
 
   def test_set_platform_temperature_all_codes_accounted_for(self):
     codes = 'ST'
     flags = ''
+
     self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[109][1])
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[109][2])
 
@@ -713,20 +720,21 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_set_platform_temperature_no_t_no_set_toolhead(self):
     codes = {'S'  : 100}
-    self.assertRaises(s3g.NoToolIndexError, self.g.SetPlatformTemperature, codes, [], '')
+    self.assertRaises(s3g.MissingCodeError, self.g.SetPlatformTemperature, codes, [], '')
 
   def test_set_platform_temperature_no_t_set_toolhead(self):
     codes = {'S'  : 100}
-    self.g.state.tool_index = 2
+
+    self.g.state.values['tool_index'] = 2
     self.g.SetPlatformTemperature(codes, [], '')
-    self.mock.SetPlatformTemperature.assert_called_once_with(self.g.state.tool_index, 100)
+    self.mock.SetPlatformTemperature.assert_called_once_with(self.g.state.values['tool_index'], 100)
 
   def test_set_platform_temperature_t_code_Defined(self):
     tool_index = 2
     codes = {'S'  : 100,  'T' : tool_index}
     self.g.SetPlatformTemperature(codes, [], '')
     self.mock.SetPlatformTemperature.assert_called_once_with(tool_index, 100)
-    self.assertEqual(tool_index, self.g.state.tool_index)
+    self.assertEqual(tool_index, self.g.state.values['tool_index'])
 
   def test_load_position_all_codes_accounted_for(self):
     codes = ''
@@ -763,7 +771,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     oldState = [
         self.g.state.position,
         self.g.state.offsetPosition,
-        self.g.state.tool_index,
         self.g.state.offset_register,
         self.g.state.tool_speed,
         self.g.state.tool_direction,
@@ -771,12 +778,12 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
         self.g.state.lastFeedrate,
+        self.g.state.values,
         ]
     self.g.ExtruderOnForward({}, [], "")
     newState = [
         self.g.state.position,
         self.g.state.offsetPosition,
-        self.g.state.tool_index,
         self.g.state.offset_register,
         self.g.state.tool_speed,
         self.g.state.tool_direction,
@@ -784,6 +791,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
         self.g.state.lastFeedrate,
+        self.g.state.values,
         ]
     self.assertEqual(oldState, newState)
 
@@ -797,7 +805,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     oldState = [
         self.g.state.position,
         self.g.state.offsetPosition,
-        self.g.state.tool_index,
         self.g.state.offset_register,
         self.g.state.tool_speed,
         self.g.state.tool_direction,
@@ -805,12 +812,12 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
         self.g.state.lastFeedrate,
+        self.g.state.values,
         ]
     self.g.ExtruderOnReverse({}, [], "")
     newState = [
         self.g.state.position,
         self.g.state.offsetPosition,
-        self.g.state.tool_index,
         self.g.state.offset_register,
         self.g.state.tool_speed,
         self.g.state.tool_direction,
@@ -818,6 +825,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
         self.g.state.lastFeedrate,
+        self.g.state.values,
         ]
     self.assertEqual(oldState, newState)
 
@@ -831,7 +839,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     oldState = [
         self.g.state.position,
         self.g.state.offsetPosition,
-        self.g.state.tool_index,
         self.g.state.offset_register,
         self.g.state.tool_speed,
         self.g.state.tool_direction,
@@ -839,12 +846,12 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
         self.g.state.lastFeedrate,
+        self.g.state.values,
         ]
     self.g.ExtruderOff({}, [], "")
     newState = [
         self.g.state.position,
         self.g.state.offsetPosition,
-        self.g.state.tool_index,
         self.g.state.offset_register,
         self.g.state.tool_speed,
         self.g.state.tool_direction,
@@ -852,6 +859,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
         self.g.state.lastFeedrate,
+        self.g.state.values,
         ]
     self.assertEqual(oldState, newState)
 
@@ -865,7 +873,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     oldState = [
         self.g.state.position,
         self.g.state.offsetPosition,
-        self.g.state.tool_index,
         self.g.state.offset_register,
         self.g.state.tool_speed,
         self.g.state.tool_direction,
@@ -873,12 +880,12 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
         self.g.state.lastFeedrate,
+        self.g.state.values,
         ]
     self.g.SetExtruderSpeed({}, [], "")
     newState = [
         self.g.state.position,
         self.g.state.offsetPosition,
-        self.g.state.tool_index,
         self.g.state.offset_register,
         self.g.state.tool_speed,
         self.g.state.tool_direction,
@@ -886,6 +893,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
         self.g.state.lastFeedrate,
+        self.g.state.values,
         ]
     self.assertEqual(oldState, newState)
 

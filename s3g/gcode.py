@@ -145,13 +145,13 @@ class GcodeParser(object):
     """Sets the state machine to use the P0 offset.
     """
     self.state.offset_register = 0
-    self.state.tool_index = 0
+    self.state.values['tool_index'] = 0
 
   def UseP1Offsets(self, codes, flags, comment):
     """Sets the state machine to use the P1 offset.
     """
     self.state.offset_register = 1
-    self.state.tool_index = 1
+    self.state.values['tool_index'] = 1
 
   def WaitForToolhead(self, codes, flags, comment):
     """Given a toolhead and a timeout, waits for that toolhead
@@ -255,15 +255,17 @@ class GcodeParser(object):
       raise MissingCodeError
     else:
       feedrate = self.state.lastFeedrate
+
     if 'E' in codes:
       if 'A' in codes or 'B' in codes:
         raise LinearInterpolationError
-      if self.state.tool_index == None:
+      if not 'tool_index' in self.state.values:
         raise NoToolIndexError
-      elif self.state.tool_index == 0:
+      elif self.state.values['tool_index'] == 0:
         self.state.position['A'] += codes['E']
-      elif self.state.tool_index == 1:
+      elif self.state.values['tool_index'] == 1:
         self.state.position['B'] += codes['E']
+
     self.state.SetPosition(codes)
     self.s3g.QueueExtendedPoint(self.state.GetPosition(), feedrate)
 
@@ -286,11 +288,11 @@ class GcodeParser(object):
     'T' code (if present) and use that tool_index when heating.
     """
     if 'T' in codes:
-      self.state.tool_index = codes['T']
-    elif self.state.tool_index == None:
-      raise NoToolIndexError
+      self.state.values['tool_index'] = codes['T']
+
     try: 
-      self.s3g.SetToolheadTemperature(self.state.tool_index, codes['S'])
+      self.s3g.SetToolheadTemperature(self.state.values['tool_index'], codes['S'])
+
     except KeyError:
       raise MissingCodeError
 
@@ -300,11 +302,11 @@ class GcodeParser(object):
     and use that tool_index when heating.
     """
     if 'T' in codes:
-      self.state.tool_index = codes['T']
-    elif self.state.tool_index == None:
-      raise NoToolIndexError
+      self.state.values['tool_index'] = codes['T']
+
     try:
-      self.s3g.SetPlatformTemperature(self.state.tool_index, codes['S']) 
+      self.s3g.SetPlatformTemperature(self.state.values['tool_index'], codes['S']) 
+
     except KeyError:
       raise MissingCodeError
 
