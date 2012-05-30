@@ -60,10 +60,10 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_wait_for_toolhead_missing_timeout(self):
     tool_index = 2
-
+    delay = 100
     codes = {'T':tool_index}
-
-    self.assertRaises(KeyError, self.g.WaitForToolhead, codes, [], '')
+    self.g.WaitForToolhead(codes, [], '')
+    self.mock.WaitForToolReady.assert_called_once_with(tool_index, delay, self.g.state.values['waiting_timeout'])
 
   def test_wait_for_toolhead(self):
     tool_index = 2
@@ -250,23 +250,9 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[90][1])
 
   def test_absolute_programming(self):
-    oldState = [
-        self.g.state.position,
-        self.g.state.offsetPosition,
-        self.g.state.offset_register,
-        self.g.state.rapidFeedrate,
-        self.g.state.findingTimeout,
-        self.g.state.values,
-        ]
+    oldState = copy.deepcopy(self.g.state.values)
     self.g.AbsoluteProgramming({}, [], "")
-    newState = [
-        self.g.state.position,
-        self.g.state.offsetPosition,
-        self.g.state.offset_register,
-        self.g.state.rapidFeedrate,
-        self.g.state.findingTimeout,     
-        self.g.state.values,
-        ]
+    newState = self.g.state.values
     self.assertEqual(oldState, newState)
 
   def test_milimeter_programming_all_codes_accounted_for(self):
@@ -276,24 +262,10 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[21][2])
 
   def test_milimeter_programming(self):
-    oldState = [
-        self.g.state.position,
-        self.g.state.offsetPosition,
-        self.g.state.offset_register,
-        self.g.state.rapidFeedrate,
-        self.g.state.findingTimeout,
-        self.g.state.values,
-        ]
+    oldState = copy.deepcopy(self.g.state.values)
     self.g.MilimeterProgramming({}, [], "")
-    newState = [
-        self.g.state.position,
-        self.g.state.offsetPosition,
-        self.g.state.offset_register,
-        self.g.state.rapidFeedrate,
-        self.g.state.findingTimeout,     
-        self.g.state.values,
-        ]
-    self.assertEqual(oldState, newState)   
+    newState = self.g.state.values
+    self.assertEqual(oldState, newState)
 
   def test_set_position_all_codes_accounted_for(self):
     codes = 'XYZAB'
@@ -322,20 +294,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     for i in range(len(spmList)):
       expectedPosition[i] *= spmList[i]
     self.mock.SetExtendedPosition.assert_called_once_with(expectedPosition)
-  
-  def test_find_axes_minimum_missing_feedrate(self):
-    codes = {'G' : 161}
-    self.assertRaises(KeyError, self.g.FindAxesMinimums, codes, [], '') 
-
-  def test_find_axes_minimums_all_codes_accounted_for(self):
-    """
-    Tests to make sure that throwing all registers in a command doesnt raise an
-    extra register error.
-    """
-    codes = 'F'
-    flags = 'XYZ'
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[161][1])
-    self.assertEqual(sorted(flags), sorted(self.g.GCODE_INSTRUCTIONS[161][2]))
 
   def test_find_Axes_maximum_missing_feedrate(self):
     codes = {"G" : 162}
@@ -387,6 +345,27 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     val = 0
     self.mock.SetPotentiometerValue.called_once_with(axes, val)
 
+  def test_find_axes_minimums_all_codes_accounted_for(self):
+    """
+    Tests to make sure that throwing all registers in a command doesnt raise an
+    extra register error.
+    """
+    codes = 'F'
+    flags = 'XYZ'
+    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[161][1])
+    self.assertEqual(sorted(flags), sorted(self.g.GCODE_INSTRUCTIONS[161][2]))
+
+  def test_find_axes_minimum_no_feedrate_state_feedrate_not_set(self):
+    flags = ['X']
+    self.assertRaises(KeyError, self.g.FindAxesMinimums, {}, flags, '') 
+
+  def test_find_axes_minimum_no_feedrate_state_feedrate_set(self):
+    feedrate = 1
+    self.g.state.values['feedrate'] = feedrate
+    flags = ['X']
+    self.g.FindAxesMinimums({}, flags, '')
+    self.mock.FindAxesMinimums.assert_called_once_with(flags, feedrate, self.g.state.findingTimeout)
+
   def test_find_axes_minimums(self):
     codes = 'F'
     flags = 'XYZ'
@@ -432,6 +411,17 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     flags = 'XYZ'
     self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[162][1]))
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[162][2])
+
+  def test_find_axes_maximums_no_feedrate_feedrate_not_set(self):
+    flags = ['X']
+    self.assertRaises(KeyError, self.g.FindAxesMaximums, {}, flags, '')
+
+  def test_find_axes_maximums_no_feedrate_feedrate_set(self):
+    feedrate = 1
+    self.g.state.values['feedrate'] = feedrate
+    flags = ['X']
+    self.g.FindAxesMaximums({}, flags, '')
+    self.mock.FindAxesMaximums.assert_called_once_with(flags, feedrate, self.g.state.findingTimeout)  
 
   def test_find_axes_maximum(self):
     self.g.state.position = {
@@ -479,7 +469,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'Y' : 1,
         'Z' : 2,
         'A' : 3,
-        'B' : 4,
     }
     self.assertRaises(KeyError, self.g.LinearInterpolation, codes, [], '')
 
@@ -489,7 +478,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     extrusion_length = 5
 
     initialPosition = [0, 1, 2, 3, 4]
-    expectedPoint = [0, 1, 2, 8, 4]
+    expectedPoint = [0, 1, 2, 5, 4]
 
     self.g.state.position = {
         'X' : initialPosition[0],
@@ -556,44 +545,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         }
     self.assertRaises(s3g.LinearInterpolationError, self.g.LinearInterpolation, codes, [], '')
 
-  def test_linear_interpolation_no_e_code(self):
-    self.g.state.position = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'B' : 0,
-        }
-    codes = {
-        'X' : 1,
-        'Y' : 2,
-        'Z' : 3,
-        'A' : 4,
-        'B' : 5,
-        'F' : 0,
-        }
-    expectedPoint = [1, 2, 3, 4, 5]
-    spmList = [
-        self.g.state.xSPM,
-        self.g.state.ySPM,
-        self.g.state.zSPM,
-        self.g.state.aSPM,
-        self.g.state.bSPM,
-        ]
-    for i in range(len(expectedPoint)):
-      expectedPoint[i] *= spmList[i]
-    feedrate = 0
-    self.g.LinearInterpolation(codes, [], '')
-    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, feedrate)
-    expectedPosition = {
-        'X' : 1,
-        'Y' : 2,
-        'Z' : 3,
-        'A' : 4,
-        'B' : 5,
-        }
-    self.assertEqual(expectedPosition, self.g.state.position)
-
   def test_linear_interpolation_e_code_no_toolhead(self):
     codes = {
         'X' : 0,
@@ -606,11 +557,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_linear_interpolation_e_code(self):
     self.g.state.position = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'B' : 0,
+        'X' : 5,
+        'Y' : 4,
+        'Z' : 3,
+        'A' : 2,
+        'B' : 1,
         }
     self.g.state.values['tool_index'] = 0
     codes = {
@@ -621,7 +572,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'F' : 1,
         }
     self.g.LinearInterpolation(codes, [], '')
-    expectedPoint = [1, 2, 3, 4, 0]
+    expectedPoint = [1, 2, 3, 4, 1]
     spmList = [
         self.g.state.xSPM,
         self.g.state.ySPM,
@@ -635,23 +586,61 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, feedrate)
 
   def test_linear_interpolation_a_and_b(self):
-    self.g.state.position = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
+    codes = {
         'A' : 0,
         'B' : 0,
+        'F' : 0,
+        }
+    self.assertRaises(s3g.LinearInterpolationError, self.g.LinearInterpolation, codes, [], '')
+
+  def test_linear_interpolation_a(self):
+    initialPosition = [5, 4, 3, 2, 1]
+    self.g.state.position = {
+        'X' : initialPosition[0],
+        'Y' : initialPosition[1],
+        'Z' : initialPosition[2],
+        'A' : initialPosition[3],
+        'B' : initialPosition[4],
         }
     codes = {
         'X' : 1,
         'Y' : 2,
         'Z' : 3,
         'A' : 4,
-        'B' : 5,
         'F' : 1,
         }
     self.g.LinearInterpolation(codes, [], '')
-    expectedPoint = [1, 2, 3, 4, 5]
+    expectedPoint = [1, 2, 3, 4, 1]
+    spmList = [
+        self.g.state.xSPM,
+        self.g.state.ySPM,
+        self.g.state.zSPM,
+        self.g.state.aSPM,
+        self.g.state.bSPM,
+        ]
+    for i in range(len(expectedPoint)):
+      expectedPoint[i] *= spmList[i]
+    feedrate = 1
+    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, feedrate)
+
+  def test_linear_interpolation_b(self):
+    initialPosition = [5, 4, 3, 2, 1]
+    self.g.state.position = {
+        'X' : initialPosition[0],
+        'Y' : initialPosition[1],
+        'Z' : initialPosition[2],
+        'A' : initialPosition[3],
+        'B' : initialPosition[4],
+        }
+    codes = {
+        'X' : 1,
+        'Y' : 2,
+        'Z' : 3,
+        'B' : 4,
+        'F' : 1,
+        }
+    self.g.LinearInterpolation(codes, [], '')
+    expectedPoint = [1, 2, 3, 2, 4]
     spmList = [
         self.g.state.xSPM,
         self.g.state.ySPM,
@@ -775,23 +764,9 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[101][2])
 
   def test_extruder_on_forward(self):
-    oldState = [
-        self.g.state.position,
-        self.g.state.offsetPosition,
-        self.g.state.offset_register,
-        self.g.state.rapidFeedrate,
-        self.g.state.findingTimeout,
-        self.g.state.values,
-        ]
+    oldState = copy.deepcopy(self.g.state.values)
     self.g.ExtruderOnForward({}, [], "")
-    newState = [
-        self.g.state.position,
-        self.g.state.offsetPosition,
-        self.g.state.offset_register,
-        self.g.state.rapidFeedrate,
-        self.g.state.findingTimeout,     
-        self.g.state.values,
-        ]
+    newState = self.g.state.values
     self.assertEqual(oldState, newState)
 
   def test_extruder_on_reverse_all_codes_accounted_for(self):
@@ -801,23 +776,9 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[102][2])
 
   def test_extruder_on_reverse(self):
-    oldState = [
-        self.g.state.position,
-        self.g.state.offsetPosition,
-        self.g.state.offset_register,
-        self.g.state.rapidFeedrate,
-        self.g.state.findingTimeout,
-        self.g.state.values,
-        ]
+    oldState = copy.deepcopy(self.g.state.values)
     self.g.ExtruderOnReverse({}, [], "")
-    newState = [
-        self.g.state.position,
-        self.g.state.offsetPosition,
-        self.g.state.offset_register,
-        self.g.state.rapidFeedrate,
-        self.g.state.findingTimeout,     
-        self.g.state.values,
-        ]
+    newState = self.g.state.values
     self.assertEqual(oldState, newState)
 
   def test_extruder_off_all_codes_accounted_for(self):
@@ -827,23 +788,9 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[103][2])
 
   def test_extruder_off(self):
-    oldState = [
-        self.g.state.position,
-        self.g.state.offsetPosition,
-        self.g.state.offset_register,
-        self.g.state.rapidFeedrate,
-        self.g.state.findingTimeout,
-        self.g.state.values,
-        ]
+    oldState = copy.deepcopy(self.g.state.values)
     self.g.ExtruderOff({}, [], "")
-    newState = [
-        self.g.state.position,
-        self.g.state.offsetPosition,
-        self.g.state.offset_register,
-        self.g.state.rapidFeedrate,
-        self.g.state.findingTimeout,     
-        self.g.state.values,
-        ]
+    newState = self.g.state.values
     self.assertEqual(oldState, newState)
 
   def test_set_extruder_speed_all_codes_accounted_for(self):
@@ -853,23 +800,9 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[108][2])
 
   def test_set_extruder_speed_no_t(self):
-    oldState = [
-        self.g.state.position,
-        self.g.state.offsetPosition,
-        self.g.state.offset_register,
-        self.g.state.rapidFeedrate,
-        self.g.state.findingTimeout,
-        self.g.state.values,
-        ]
+    oldState = copy.deepcopy(self.g.state.values)
     self.g.SetExtruderSpeed({}, [], "")
-    newState = [
-        self.g.state.position,
-        self.g.state.offsetPosition,
-        self.g.state.offset_register,
-        self.g.state.rapidFeedrate,
-        self.g.state.findingTimeout,     
-        self.g.state.values,
-        ]
+    newState = self.g.state.values
     self.assertEqual(oldState, newState)
 
   def test_set_extruder_speed_t_code(self):

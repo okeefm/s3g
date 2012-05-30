@@ -45,6 +45,7 @@ class GcodeParser(object):
        102 : [self.ExtruderOnReverse,          '',        ''], #This command is explicitely ignored
        103 : [self.ExtruderOff,                'T',        ''],       #This command is explicitely ignored
        104 : [self.SetToolheadTemperature,     'ST',      ''],
+       105 : [self.GetTemperature,                 '',     ''],
        108 : [self.SetExtruderSpeed,           'RT',        ''],   #This command is explicitely ignored
        109 : [self.SetPlatformTemperature,     'ST',      ''],
        132 : [self.LoadPosition,               '',   'XYZAB'],
@@ -81,7 +82,7 @@ class GcodeParser(object):
         else:
           gcode_error = UnrecognizedCodeError()
           gcode_error.values['UnrecognizedCode'] = codes['M']
-          raise gcode_Error
+          raise gcode_error
 
       # Not a G or M code, should we throw here?
       else:
@@ -127,11 +128,13 @@ class GcodeParser(object):
     or endstop is reached
     This function loses the state machine's position.
     """
-    self.state.values['feedrate'] = codes['F']
+    if 'F' in codes:
+      self.state.values['feedrate'] = codes['F']
     self.state.LosePosition(flags)
     axes = ParseOutAxes(flags) 
     try:
-      self.s3g.FindAxesMaximums(axes, self.state.values['feedrate'], self.state.findingTimeout)
+      feedrate = self.state.values['feedrate']
+      self.s3g.FindAxesMaximums(axes, feedrate, self.state.findingTimeout)
     except KeyError as e:
       if e[0] == 'feedrate':
         e = KeyError('F')
@@ -143,11 +146,13 @@ class GcodeParser(object):
     or endstop is reached.
     This function loses the state machine's position.
     """
-    self.state.values['feedrate'] = codes['F']
+    if 'F' in codes:
+      self.state.values['feedrate'] = codes['F']
     self.state.LosePosition(flags) 
     axes = ParseOutAxes(flags)
     try:
-      self.s3g.FindAxesMinimums(axes, codes['F'], self.state.findingTimeout)
+      feedrate = self.state.values['feedrate']
+      self.s3g.FindAxesMinimums(axes, feedrate, self.state.findingTimeout)
     except KeyError as e:
       if e[0] == 'feedrate':
         e = KeyError('F')
@@ -184,8 +189,9 @@ class GcodeParser(object):
     # Handle optional codes
     if 'T' in codes.keys():
       self.state.values['tool_index'] = codes['T']
-
-    self.s3g.WaitForToolReady(self.state.values['tool_index'], DELAY, codes['P'])
+    if 'P' in codes:
+      self.state.values['waiting_timeout'] = codes['P']
+    self.s3g.WaitForToolReady(int(self.state.values['tool_index']), DELAY, int(self.state.values['waiting_timeout']))
 
   def DisableAxes(self, codes, flags, comment):
     """Disables a set of axes on the bot
@@ -205,7 +211,7 @@ class GcodeParser(object):
         row,
         col,
         comment,
-        codes['P'],
+        int(codes['P']),
         clear_existing,
         last_in_group,
         wait_for_button,
@@ -214,7 +220,7 @@ class GcodeParser(object):
   def PlaySong(self, codes, flags, comment):
     """Plays a song as a certain register on the bot.
     """
-    self.s3g.QueueSong(codes['P'])
+    self.s3g.QueueSong(int(codes['P']))
 
   def SetBuildPercentage(self, codes, flags, comment):
     """Sets the build percentage to a certain percentage.
@@ -266,25 +272,31 @@ class GcodeParser(object):
       self.state.position['Z'] = codes['Z']
     if 'E' in codes:
       if 'A' in codes or 'B' in codes:
-        raise LinearInterpolationError
+        gcode_error = LinearInterpolationError()
+        gcode_error.values['Misc'] = 'A or B codes CANNOT be used in conjunction with an E code'
+        raise gcode_error
 
       if not 'tool_index' in self.state.values:
         raise NoToolIndexError
 
       elif self.state.values['tool_index'] == 0:
-        self.state.position['A'] += codes['E']
+        self.state.position['A'] = codes['E']
 
       elif self.state.values['tool_index'] == 1:
-        self.state.position['B'] += codes['E']
+        self.state.position['B'] = codes['E']
 
-    # TODO: Untested
+    elif 'A' in codes and 'B' in codes:
+      gcode_error = LinearInterpolationError()
+      gcode_error.values['Misc'] = 'A and B codes CANNOT be used in tandem.'
+      raise gcode_error
     else:
       if 'A' in codes:
         self.state.position['A'] = codes['A']
       if 'B' in codes:
         self.state.position['B'] = codes['B']
     try:
-      self.s3g.QueueExtendedPoint(self.state.GetPosition(), self.state.values['feedrate'])
+      feedrate = self.state.values['feedrate']
+      self.s3g.QueueExtendedPoint(self.state.GetPosition(), feedrate)
     except KeyError as e:
       if e[0] == 'feedrate': #A key error would return 'feedrate' as the missing key, when in
                              #respect to the executed command the 'F' command is the one missing.
@@ -309,7 +321,7 @@ class GcodeParser(object):
     """
     if 'T' in codes:
       self.state.values['tool_index'] = codes['T']
-    self.s3g.SetToolheadTemperature(self.state.values['tool_index'], codes['S'])
+    self.s3g.SetToolheadTemperature(int(self.state.values['tool_index']), int(codes['S']))
 
   def SetPlatformTemperature(self, codes, flags, comment):
     """Sets the platform temperature for a specific toolhead to a specific 
@@ -348,5 +360,12 @@ class GcodeParser(object):
   def ExtruderOnForward(self, codes, flags, comment):
     """Turn the extruder on turning forward
     This is a stub, since we dropped support for this function
+    """
+    pass
+
+  def GetTemperature(self, codes, flags, comment):
+    """This gets the temperature from a toolhead
+    We do not support this command, and only have a stub because
+    skeinforge likes to include it in its files
     """
     pass

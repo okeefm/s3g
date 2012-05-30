@@ -32,7 +32,9 @@ class GcodeStates(object):
                 },
         }
 
-    self.values = {}
+    self.values = {
+        'waiting_timeout'   :   60,
+        }
 
     self.offset_register = None   #Curent offset register
     self.findingTimeout = 60      #Timeout used when finding minimums/maximums
