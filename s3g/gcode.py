@@ -29,7 +29,7 @@ class GcodeParser(object):
       54  : [self.UseP0Offsets,                '',        ''],
       55  : [self.UseP1Offsets,                '',        ''],
       90  : [self.AbsoluteProgramming,         '',        ''],
-      92  : [self.SetPosition,                 'XYZAB',   ''],
+      92  : [self.SetPosition,                 'XYZABE',  ''],
       130 : [self.SetPotentiometerValues,      'XYZAB',   ''],
       161 : [self.FindAxesMinimums,            'F',       'XYZ'],
       162 : [self.FindAxesMaximums,            'F',       'XYZ'],
@@ -162,12 +162,28 @@ class GcodeParser(object):
     """Explicitely sets the position of the state machine and bot
     to the given point
     """
-    axes = {}
-    for axis in ParseOutAxes(codes):
-      axes[axis] = codes[axis] 
-    self.state.SetPosition(axes)
-    self.s3g.SetExtendedPosition(self.state.GetPosition())
+    for axis in ['X', 'Y', 'Z']:
+      if axis in codes:
+        self.state.position[axis] = codes[axis]
+    if 'E' in codes:
+      if 'A' in codes or 'B' in codes:
+        gcode_error = ConflictingCodesError()
+        gcode_error.values['ConflictingCodes'] = ['E', 'A', 'B']
+        raise gcode_error    
+      if not 'tool_index' in self.state.values:
+        raise NoToolIndexError
+      elif self.state.values['tool_index'] == 0:
+        self.state.position['A'] = codes['E']
+      elif self.state.values['tool_index'] == 1:
+        self.state.position['B'] = codes['E']
 
+    else:
+      if 'A' in codes:
+        self.state.position['A'] = codes['A']
+      if 'B' in codes:
+        self.state.position['B'] = codes['B']
+    self.s3g.SetExtendedPosition(self.state.GetPosition())
+      
   def UseP0Offsets(self, codes, flags, comment):
     """Sets the state machine to use the P0 offset.
     """
@@ -264,16 +280,13 @@ class GcodeParser(object):
     """
     if 'F' in codes:
       self.state.values['feedrate'] = codes['F']
-    if 'X' in codes:
-      self.state.position['X'] = codes['X']
-    if 'Y' in codes:
-      self.state.position['Y'] = codes['Y']
-    if 'Z' in codes:
-      self.state.position['Z'] = codes['Z']
+    for axis in ['X', 'Y', 'Z']:
+      if axis in codes:
+        self.state.position[axis] = codes[axis]
     if 'E' in codes:
       if 'A' in codes or 'B' in codes:
-        gcode_error = LinearInterpolationError()
-        gcode_error.values['Misc'] = 'A or B codes CANNOT be used in conjunction with an E code'
+        gcode_error = ConflictingCodesError()
+        gcode_error.values['ConflictingCodes'] = ['E', 'A', 'b']
         raise gcode_error
 
       if not 'tool_index' in self.state.values:
@@ -286,8 +299,8 @@ class GcodeParser(object):
         self.state.position['B'] = codes['E']
 
     elif 'A' in codes and 'B' in codes:
-      gcode_error = LinearInterpolationError()
-      gcode_error.values['Misc'] = 'A and B codes CANNOT be used in tandem.'
+      gcode_error = ConflictingCodesError()
+      gcode_error.values['ConflictingCodes'] = ['A', 'B']
       raise gcode_error
     else:
       if 'A' in codes:

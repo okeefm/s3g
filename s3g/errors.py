@@ -249,6 +249,13 @@ class LinearInterpolationError(GcodeError):
   the A and B registers defined.  If both sets are defined, we throw this error.
   """
 
+class ConflictingCodesError(GcodeError):
+  """
+  A ConflictingCodesError is thrown when two or more codes are present that are
+  not allowed to be together.
+  I.E. EAB codes are wrapped together in a G1 command
+  """
+
 class ExtraneousCodeError(GcodeError):
   """
   An extraneous code error is raised when a code is found in a command that doesn't support it.

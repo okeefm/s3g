@@ -268,12 +268,66 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(oldState, newState)
 
   def test_set_position_all_codes_accounted_for(self):
-    codes = 'XYZAB'
+    codes = 'XYZABE'
     flags = ''
     self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[92][1]))
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[92][2])
 
-  def test_set_position(self):
+  def test_set_position_a_and_e_codes(self):
+    codes = {
+        'A' : 0,
+        'E' : 0,
+        }
+    self.assertRaises(s3g.ConflictingCodesError, self.g.SetPosition, codes, [], '')
+
+  def test_set_position_b_and_e_codes(self):
+    codes = {
+        'B' : 0,
+        'E' : 0,
+        }
+    self.assertRaises(s3g.ConflictingCodesError, self.g.SetPosition, codes, [], '')
+
+  def test_set_position_a_and_b_and_e_codes(self):
+    codes = {
+        'A' : 0,
+        'B' : 0,
+        'E' : 0,
+        }
+    self.assertRaises(s3g.ConflictingCodesError, self.g.SetPosition, codes, [], '')
+
+  def test_set_position_e_code_no_tool_index(self):
+    codes = {
+        'E' : 0
+        }
+    self.assertRaises(s3g.NoToolIndexError, self.g.SetPosition, codes, [], '')
+
+  def test_set_position_e_code_tool_index_defined(self):
+    initialPosition = [1, 2, 3, 4, 5]
+    self.g.state.position = {
+        'X' : initialPosition[0],
+        'Y' : initialPosition[1],
+        'Z' : initialPosition[2],
+        'A' : initialPosition[3],
+        'B' : initialPosition[4],
+        }
+    self.g.state.values['tool_index'] = 0 
+    codes = {
+        'E' : -1,
+        }
+    expectedPosition = [1, 2, 3, -1, 5]
+    spmList = [
+        self.g.state.xSPM,
+        self.g.state.ySPM,
+        self.g.state.zSPM,
+        self.g.state.aSPM,
+        self.g.state.bSPM,
+        ]
+    for i in range(len(expectedPosition)):
+      expectedPosition[i] *= spmList[i]
+    self.g.SetPosition(codes, [], '')
+    self.mock.SetExtendedPosition.assert_called_once_with(expectedPosition)
+
+  def test_set_position_a_and_b_codes(self):
     codes = { 
         'X' : 0,
         'Y' : 1,
@@ -520,7 +574,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'A' : 0,
         'F' : 0,
         }
-    self.assertRaises(s3g.LinearInterpolationError, self.g.LinearInterpolation, codes, [], '')
+    self.assertRaises(s3g.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
 
   def test_linear_interpolation_e_and_b_codes_present(self):
     codes = {
@@ -531,7 +585,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'B' : 0,
         'F' : 0,
         }
-    self.assertRaises(s3g.LinearInterpolationError, self.g.LinearInterpolation, codes, [], '')
+    self.assertRaises(s3g.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
 
   def test_linear_interpolation_e_and_a_and_b_present(self):
     codes = {
@@ -543,7 +597,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'B' : 0,
         'F' : 0,
         }
-    self.assertRaises(s3g.LinearInterpolationError, self.g.LinearInterpolation, codes, [], '')
+    self.assertRaises(s3g.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
 
   def test_linear_interpolation_e_code_no_toolhead(self):
     codes = {
@@ -591,7 +645,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'B' : 0,
         'F' : 0,
         }
-    self.assertRaises(s3g.LinearInterpolationError, self.g.LinearInterpolation, codes, [], '')
+    self.assertRaises(s3g.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
 
   def test_linear_interpolation_a(self):
     initialPosition = [5, 4, 3, 2, 1]
