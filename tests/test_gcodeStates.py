@@ -17,19 +17,18 @@ class s3gHelperFunctionTests(unittest.TestCase):
     self.g = None
 
   def test_store_offsets(self):
-    self.g.offsetRegister = 0
-    codes = {
-        'P' : 0,
-        'X' : 1,
-        'Y' : 2,
-        'Z' : 3,
-        }
+    offset = 0
+    offsets = [1, 2, 3]
+
+  def test_store_offsets(self):
+    offset = 0
+    offsets = [1, 2, 3] 
     self.g.offsetPosition[0] = {
         'X' : 0,
         'Y' : 0,
         'Z' : 0,
         }
-    self.g.StoreOffset(codes)
+    self.g.StoreOffset(offset, offsets)
     expectedOffset = {
         'X' : 1,
         'Y' : 2,

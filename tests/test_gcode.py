@@ -18,6 +18,17 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.g = s3g.GcodeParser()
     self.g.s3g = self.mock
 
+  def test_check_gcode_errors_are_recorded_correctly(self):
+    command = "G161 Q1" #NOTE: this assumes that G161 does not accept a Q code
+    expectedError = "#0: G161 Q1"
+    try:
+      self.g.ExecuteLine(command)
+      #If we get to this point we want to fail, to show that this test was never able
+      #to successfully complete
+      self.assertTrue(False)
+    except s3g.GcodeError as e:
+      self.assertEqual(expectedError, str(e))
+
   def test_check_gcode_extraneous_codes_gets_called(self):
     command = "G161 Q1" # Note: this assumes that G161 does not accept a Q code
     self.assertRaises(s3g.InvalidCodeError, self.g.ExecuteLine, command)
@@ -33,7 +44,6 @@ class gcodeTestsMockedS3G(unittest.TestCase):
   def test_check_mcode_extraneous_flags_gets_called(self):
     command = "M6 X" # Note: This assumes that M6 does not accept an X flag
     self.assertRaises(s3g.InvalidCodeError, self.g.ExecuteLine, command)
-
 
   def test_wait_for_toolhead_can_update_toolhead(self):
     tool_index = 2

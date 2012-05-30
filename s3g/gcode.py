@@ -13,6 +13,7 @@ class GcodeParser(object):
   def __init__(self):
     self.state = GcodeStates()
     self.s3g = None
+    self.line_number = 0
 
     # Note: The datastructure looks like this:
     # [0] : command name
@@ -59,31 +60,37 @@ class GcodeParser(object):
     # Parse the line
     codes, flags, comment = ParseLine(command)
 
-    if 'G' in codes:
-      if codes['G'] in self.GCODE_INSTRUCTIONS:
-        CheckForExtraneousCodes(codes.keys(), self.GCODE_INSTRUCTIONS[codes['G']][1])
-        CheckForExtraneousCodes(flags, self.GCODE_INSTRUCTIONS[codes['G']][2])
-        self.GCODE_INSTRUCTIONS[codes['G']][0](codes, flags, comment)
+    try:
+      if 'G' in codes:
+        if codes['G'] in self.GCODE_INSTRUCTIONS:
+          CheckForExtraneousCodes(codes.keys(), self.GCODE_INSTRUCTIONS[codes['G']][1])
+          CheckForExtraneousCodes(flags, self.GCODE_INSTRUCTIONS[codes['G']][2])
+          self.GCODE_INSTRUCTIONS[codes['G']][0](codes, flags, comment)
 
+        else:
+          raise UnrecognizedCodeError
+
+      elif 'M' in codes:
+        if codes['M'] in self.MCODE_INSTRUCTIONS:
+          CheckForExtraneousCodes(codes.keys(), self.MCODE_INSTRUCTIONS[codes['M']][1])
+          CheckForExtraneousCodes(flags, self.MCODE_INSTRUCTIONS[codes['M']][2])
+          self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
+
+        else:
+          raise UnrecognizedCodeError
+
+      # Not a G or M code, should we throw here?
       else:
-        raise UnrecognizedCodeError
+        if len(codes) + len(flags) > 0:
+          raise ExtraneousCodeError
 
-    elif 'M' in codes:
-      if codes['M'] in self.MCODE_INSTRUCTIONS:
-        CheckForExtraneousCodes(codes.keys(), self.MCODE_INSTRUCTIONS[codes['M']][1])
-        CheckForExtraneousCodes(flags, self.MCODE_INSTRUCTIONS[codes['M']][2])
-        self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
-
-      else:
-        raise UnrecognizedCodeError
-
-    # Not a G or M code, should we throw here?
-    else:
-      if len(codes) + len(flags) > 0:
-        raise ExtraneousCodeError
-
-      else:
-        pass
+        else:
+          pass
+    except GcodeError as e:
+      e.command = command
+      e.line_number = self.line_number
+      raise e
+    self.line_number += 1
 
   def SetPotentiometerValues(self, codes, flags, comment):
     """Given a set of codes, sets the machine's potentiometer value to a specified value in the codes
@@ -210,11 +217,8 @@ class GcodeParser(object):
   def StoreOffsets(self, codes, flags, comment):
     """Given XYZ offsets, stores those offsets in the state machine.
     """
-    if 'X' not in codes or 'Y' not in codes or'Z' not in codes:
-      raise MissingCodeError
-
     try:
-      self.state.StoreOffset(codes)
+      self.state.StoreOffset(codes['P'], [codes['X'], codes['Y'], codes['Z']])
     except KeyError:
       raise MissingCodeError
 

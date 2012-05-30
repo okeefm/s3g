@@ -85,9 +85,12 @@ class GcodeStates(object):
       returnPosition[i] *= spmList[i]
     return returnPosition
 
-  def StoreOffset(self, codes):
-    """Given a set of codes with X, Y and Z offsets, plus a register 
-    to assign the offsets to, sets the offsets of a particular register
+  def StoreOffset(self, register, offsets):
+    """Given a register with offsets, sets a specific
+    register's offsets to the offsets passed in.
+    @param int register: The register we modify
+    @param list offsets: The offsets we apply
     """
-    for axis in ParseOutAxes(codes):
-      self.offsetPosition[codes['P']][axis] = codes[axis] 
+    axes = ['X','Y','Z','A','B']
+    for i in range(len(offsets)):
+      self.offsetPosition[register][axes[i]] = offsets[i]

@@ -204,6 +204,8 @@ class GcodeError(ValueError):
   """
   Gcode errrors are raised when the gcode parser encounters an invalid line
   """
+  def __str__(self):
+    return '#'+str(self.line_number) + ': ' + self.command
 
 class CommentError(GcodeError):
   """
@@ -237,10 +239,6 @@ class MissingCodeError(GcodeError):
   A missing code error is thrown when a gcode command is missing a required code
   or flag
   """
-  def __init__(self, code=''):
-     self.value = code
-  def __str__(self):
-    return str(self.value)
 
 class LinearInterpolationError(GcodeError):
   """
