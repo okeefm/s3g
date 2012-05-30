@@ -35,40 +35,20 @@ class GcodeParser(object):
 }
 
     self.MCODE_INSTRUCTIONS = {
-       6   : [self.WaitForToolhead,            'PT',      ''],
-       18  : [self.DisableAxes,                '',        'XYZAB'],
-       70  : [self.DisplayMessage,             'P',       ''],
-       72  : [self.PlaySong,                   'P',       ''],
-       73  : [self.SetBuildPercentage,         'P',       ''],
-#       101 : [self.ExtruderOnForward,            '',       ''],
-#       102 : [self.ExtruderOnReverse,            '',        ''],
-#       103 : [self.ExtruderOff,            '',        ''],
-       104 : [self.SetToolheadTemperature,     'ST',      ''],
-#       108 : [self.SetExtruderSpeed,            '',        ''],
-       109 : [self.SetPlatformTemperature,     'ST',      ''],
-       132 : [self.LoadPosition,               '',        ''],
+       6   : [self.WaitForToolhead,            '',        ''],
+       18  : [self.DisableAxes,                '',        ''],
+       70  : [self.DisplayMessage,            '',        ''],
+       72  : [self.PlaySong,            '',        ''],
+       73  : [self.SetBuildPercentage,            '',        ''],
+       101 : [self.ExtruderOnForward,            '',        ''], #This command is explicitely ignored
+       102 : [self.ExtruderOnReverse,            '',        ''], #This command is explicitely ignored
+       103 : [self.ExtruderOff,            '',        ''],       #This command is explicitely ignored
+       104 : [self.SetToolheadTemperature,      'ST',      ''],
+       108 : [self.SetExtruderSpeed,            '',        ''],   #This command is explicitely ignored
+       109 : [self.SetPlatformTemperature,            'ST',        ''],
+       132 : [self.LoadPosition,            '',        ''],
     }
 
-#  def Dwell(self, codes):
-#    """Can either delay all functionality of the machine, or have the machine
-#    sit in place while extruding at the current rate and direction.
-
-#    @param dict codes: Codes parsed out of the gcode command
-#    """
-#    if self.toolhead_enabled:
-#      if self.toolhead_direction:
-#        delta = self.toolhead_speed
-#      else:
-#        delta = -self.toolhead_speed
-#      startTime = time.time()
-#      while time.time() < startTime + codes['P']:
-#        self.position[self.toolheadDict[self.toolhead]] += delta
-#        RPS = self.toolhead_speed / 60.0
-#        RPMS = self.toolhead_speed / RPS
-#    else:
-#      microConstant = 1000000
-#      miliConstant = 1000
-#      self.s3g.Delay(codes['P']*(microConstant/miliConstant))
 
   def ExecuteLine(self, command):
     """
@@ -218,8 +198,11 @@ class GcodeParser(object):
 
   def LinearInterpolation(self, codes, flags, comment):
     if 'F' in codes:
-      self.state.lastFeedrate = codes['F']
-    feedrate = self.state.lastFeedrate
+      feedrate = codes['F']
+    elif self.state.lastFeedrate == None:
+      raise MissingCodeError
+    else:
+      feedrate = self.state.lastFeedrate
     if 'E' in codes:
       if 'A' in codes or 'B' in codes:
         raise LinearInterpolationError
@@ -233,29 +216,44 @@ class GcodeParser(object):
     self.s3g.QueueExtendedPoint(self.state.GetPosition(), feedrate)
 
   def Dwell(self, codes, flags, comment):
-    if 'P' not in codes:
+    try:
+      self.s3g.Delay(codes['P'])
+    except KeyError:
       raise MissingCodeError
-    self.s3g.Delay(codes['P'])
 
   def SetToolheadTemperature(self, codes, flags, comment):
-    if not 'S' in codes:
-      raise MissingCodeError
-    elif 'T' in codes:
+    if 'T' in codes:
       self.state.tool_index = codes['T']
     elif self.state.tool_index == None:
       raise NoToolIndexError
-    self.s3g.SetToolheadTemperature(self.state.tool_index, codes['S'])
+    try: 
+      self.s3g.SetToolheadTemperature(self.state.tool_index, codes['S'])
+    except KeyError:
+      raise MissingCodeError
 
   def SetPlatformTemperature(self, codes, flags, comment):
-    if not 'S' in codes:
-      raise MissingCodeError
-    elif 'T' in codes:
+    if 'T' in codes:
       self.state.tool_index = codes['T']
     elif self.state.tool_index == None:
       raise NoToolIndexError
-    self.s3g.SetPlatformTemperature(self.state.tool_index, codes['S']) 
+    try:
+      self.s3g.SetPlatformTemperature(self.state.tool_index, codes['S']) 
+    except KeyError:
+      raise MissingCodeError
 
   def LoadPosition(self, codes, flags, comment):
     axes = ['X', 'Y', 'Z']
     self.state.LosePosition(axes)
     self.s3g.RecallHomePositions(axes)
+
+  def SetExtruderSpeed(self, codes, flags, comment):
+    pass
+
+  def ExtruderOff(self, codes, flags, comment):
+    pass
+
+  def ExtruderOnReverse(self, codes, flags, comment):
+    pass
+
+  def ExtruderOnForward(self, codes, flags, comment):
+    pass

@@ -246,7 +246,9 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
+        self.g.state.lastFeedrate,
         ]
+    self.g.AbsoluteProgramming({}, [], "")
     newState = [
         self.g.state.position,
         self.g.state.offsetPosition,
@@ -257,8 +259,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
+        self.g.state.lastFeedrate,
         ]
-    self.g.AbsoluteProgramming({}, [], "")
     self.assertEqual(oldState, newState)
 
   def test_milimeter_programming_all_codes_accounted_for(self):
@@ -278,7 +280,9 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,
+        self.g.state.lastFeedrate,
         ]
+    self.g.MilimeterProgramming({}, [], "")
     newState = [
         self.g.state.position,
         self.g.state.offsetPosition,
@@ -289,8 +293,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.tool_enabled,
         self.g.state.rapidFeedrate,
         self.g.state.findingTimeout,     
+        self.g.state.lastFeedrate,
         ]
-    self.g.MilimeterProgramming({}, [], "")
     self.assertEqual(oldState, newState)   
 
   def test_set_position_all_codes_accounted_for(self):
@@ -458,7 +462,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[1][1]))
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[1][2])
 
-  def test_linear_interpolation_no_feedrate(self):
+  def test_linear_interpolation_no_feedrate_no_last_feedrate_set(self):
+    codes = {}
+    self.assertRaises(s3g.MissingCodeError, self.g.LinearInterpolation, codes, [], '')
+
+  def test_linear_interpolation_no_feedrate_last_feedrate_set(self):
     self.g.state.position = {
         'X' : 0,
         'Y' : 1,
@@ -648,7 +656,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[104][2])
 
   def test_set_toolhead_temperature_no_s(self):
-    codes = {}
+    codes = {'T'  : 2}
     self.assertRaises(s3g.MissingCodeError, self.g.SetToolheadTemperature, codes, [], '')
 
   def test_set_toolhead_temperature_no_t_no_set_tool_index(self):
@@ -675,7 +683,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[109][2])
 
   def test_set_platform_temperature_no_s(self):
-    codes = {}
+    codes = {'T'  : 2}
     self.assertRaises(s3g.MissingCodeError, self.g.SetPlatformTemperature, codes, [], '')
 
   def test_set_platform_temperature_no_t_no_set_toolhead(self):
@@ -719,6 +727,142 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         }
     self.assertEqual(expectedPosition, self.g.state.position)
     self.mock.RecallHomePositions.assert_called_once_with(['X', 'Y', 'Z'])    
+
+  def test_extruder_on_forward_all_codes_accounted_for(self):
+    codes = ''
+    flags = ''
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[101][1])
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[101][2])
+
+  def test_extruder_on_forward(self):
+    oldState = [
+        self.g.state.position,
+        self.g.state.offsetPosition,
+        self.g.state.tool_index,
+        self.g.state.offset_register,
+        self.g.state.tool_speed,
+        self.g.state.tool_direction,
+        self.g.state.tool_enabled,
+        self.g.state.rapidFeedrate,
+        self.g.state.findingTimeout,
+        self.g.state.lastFeedrate,
+        ]
+    self.g.ExtruderOnForward({}, [], "")
+    newState = [
+        self.g.state.position,
+        self.g.state.offsetPosition,
+        self.g.state.tool_index,
+        self.g.state.offset_register,
+        self.g.state.tool_speed,
+        self.g.state.tool_direction,
+        self.g.state.tool_enabled,
+        self.g.state.rapidFeedrate,
+        self.g.state.findingTimeout,     
+        self.g.state.lastFeedrate,
+        ]
+    self.assertEqual(oldState, newState)
+
+  def test_extruder_on_reverse_all_codes_accounted_for(self):
+    codes = ''
+    flags = ''
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[102][1])
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[102][2])
+
+  def test_extruder_on_reverse(self):
+    oldState = [
+        self.g.state.position,
+        self.g.state.offsetPosition,
+        self.g.state.tool_index,
+        self.g.state.offset_register,
+        self.g.state.tool_speed,
+        self.g.state.tool_direction,
+        self.g.state.tool_enabled,
+        self.g.state.rapidFeedrate,
+        self.g.state.findingTimeout,
+        self.g.state.lastFeedrate,
+        ]
+    self.g.ExtruderOnReverse({}, [], "")
+    newState = [
+        self.g.state.position,
+        self.g.state.offsetPosition,
+        self.g.state.tool_index,
+        self.g.state.offset_register,
+        self.g.state.tool_speed,
+        self.g.state.tool_direction,
+        self.g.state.tool_enabled,
+        self.g.state.rapidFeedrate,
+        self.g.state.findingTimeout,     
+        self.g.state.lastFeedrate,
+        ]
+    self.assertEqual(oldState, newState)
+
+  def test_extruder_off_all_codes_accounted_for(self):
+    codes = ''
+    flags = ''
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[103][1])
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[103][2])
+
+  def test_extruder_off(self):
+    oldState = [
+        self.g.state.position,
+        self.g.state.offsetPosition,
+        self.g.state.tool_index,
+        self.g.state.offset_register,
+        self.g.state.tool_speed,
+        self.g.state.tool_direction,
+        self.g.state.tool_enabled,
+        self.g.state.rapidFeedrate,
+        self.g.state.findingTimeout,
+        self.g.state.lastFeedrate,
+        ]
+    self.g.ExtruderOff({}, [], "")
+    newState = [
+        self.g.state.position,
+        self.g.state.offsetPosition,
+        self.g.state.tool_index,
+        self.g.state.offset_register,
+        self.g.state.tool_speed,
+        self.g.state.tool_direction,
+        self.g.state.tool_enabled,
+        self.g.state.rapidFeedrate,
+        self.g.state.findingTimeout,     
+        self.g.state.lastFeedrate,
+        ]
+    self.assertEqual(oldState, newState)
+
+  def test_set_extruder_speed_all_codes_accounted_for(self):
+    codes = ''
+    flags = ''
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[108][1])
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[108][2])
+
+  def test_set_extruder_speed(self):
+    oldState = [
+        self.g.state.position,
+        self.g.state.offsetPosition,
+        self.g.state.tool_index,
+        self.g.state.offset_register,
+        self.g.state.tool_speed,
+        self.g.state.tool_direction,
+        self.g.state.tool_enabled,
+        self.g.state.rapidFeedrate,
+        self.g.state.findingTimeout,
+        self.g.state.lastFeedrate,
+        ]
+    self.g.SetExtruderSpeed({}, [], "")
+    newState = [
+        self.g.state.position,
+        self.g.state.offsetPosition,
+        self.g.state.tool_index,
+        self.g.state.offset_register,
+        self.g.state.tool_speed,
+        self.g.state.tool_direction,
+        self.g.state.tool_enabled,
+        self.g.state.rapidFeedrate,
+        self.g.state.findingTimeout,     
+        self.g.state.lastFeedrate,
+        ]
+    self.assertEqual(oldState, newState)
 
 
 if __name__ == "__main__":
