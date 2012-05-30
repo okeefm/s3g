@@ -20,14 +20,18 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_check_gcode_errors_are_recorded_correctly(self):
     command = "G161 Q1" #NOTE: this assumes that G161 does not accept a Q code
-    expectedError = "#0: G161 Q1"
+    expectedValues = {
+        'LineNumber'  :   0,
+        'Command'     :   command,
+        'InvalidCodes':   'Q',
+        }
     try:
       self.g.ExecuteLine(command)
       #If we get to this point we want to fail, to show that this test was never able
       #to successfully complete
       self.assertTrue(False)
     except s3g.GcodeError as e:
-      self.assertEqual(expectedError, str(e))
+      self.assertEqual(expectedValues, e.values)
 
   def test_check_gcode_extraneous_codes_gets_called(self):
     command = "G161 Q1" # Note: this assumes that G161 does not accept a Q code
@@ -59,7 +63,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
     codes = {'T':tool_index}
 
-    self.assertRaises(s3g.MissingCodeError, self.g.WaitForToolhead, codes, [], '')
+    self.assertRaises(KeyError, self.g.WaitForToolhead, codes, [], '')
 
   def test_wait_for_toolhead(self):
     tool_index = 2
@@ -105,7 +109,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
   def test_play_song_missing_song_id(self):
     codes = {}
 
-    self.assertRaises(s3g.MissingCodeError, self.g.PlaySong, codes, [], '')
+    self.assertRaises(KeyError, self.g.PlaySong, codes, [], '')
 
   def test_play_song(self):
     song_id = 2
@@ -118,7 +122,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
   def test_set_build_percentage_missing_percent(self):
     codes = {}
 
-    self.assertRaises(s3g.MissingCodeError, self.g.SetBuildPercentage, codes, [], '')
+    self.assertRaises(KeyError, self.g.SetBuildPercentage, codes, [], '')
 
   def test_set_build_percentage(self):
     build_percentage = 2
@@ -173,7 +177,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'Y' : 0,
         'P' : 0,
         }
-    self.assertRaises(s3g.MissingCodeError, self.g.StoreOffsets, codes, [], '')
+    self.assertRaises(KeyError, self.g.StoreOffsets, codes, [], '')
 
   def test_store_offsets_no_p(self):
     codes = {
@@ -181,7 +185,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'Y' : 0,
         'Z' : 0,
         }
-    self.assertRaises(s3g.MissingCodeError, self.g.StoreOffsets, codes, [],  '')
+    self.assertRaises(KeyError, self.g.StoreOffsets, codes, [],  '')
 
   def test_store_offsets(self):
     self.g.state.offsetPosition[0] = {
@@ -321,7 +325,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
   
   def test_find_axes_minimum_missing_feedrate(self):
     codes = {'G' : 161}
-    self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMinimums, codes, [], '') 
+    self.assertRaises(KeyError, self.g.FindAxesMinimums, codes, [], '') 
   def test_find_axes_minimums_all_codes_accounted_for(self):
     """
     Tests to make sure that throwing all registers in a command doesnt raise an
@@ -334,7 +338,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_find_Axes_maximum_missing_feedrate(self):
     codes = {"G" : 162}
-    self.assertRaises(s3g.MissingCodeError, self.g.FindAxesMaximums, codes, [], '')
+    self.assertRaises(KeyError, self.g.FindAxesMaximums, codes, [], '')
 
   def test_find_axes_maximums_all_codes_accounted_for(self):
     codes = 'F'
@@ -476,7 +480,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'A' : 3,
         'B' : 4,
     }
-    self.assertRaises(s3g.MissingCodeError, self.g.LinearInterpolation, codes, [], '')
+    self.assertRaises(KeyError, self.g.LinearInterpolation, codes, [], '')
 
   def test_linear_interpolation_no_feedrate_last_feedrate_set(self):
     feedrate = 50
@@ -667,7 +671,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_dwell_no_p(self):
     codes = {}
-    self.assertRaises(s3g.MissingCodeError, self.g.Dwell, codes, [], '')
+    self.assertRaises(KeyError, self.g.Dwell, codes, [], '')
 
   def test_dwell(self):
     codes = {'P'  : 10}
@@ -685,11 +689,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_set_toolhead_temperature_no_s(self):
     codes = {'T'  : 2}
-    self.assertRaises(s3g.MissingCodeError, self.g.SetToolheadTemperature, codes, [], '')
+    self.assertRaises(KeyError, self.g.SetToolheadTemperature, codes, [], '')
 
   def test_set_toolhead_temperature_no_t_no_set_tool_index(self):
     codes = {'S'  : 100}
-    self.assertRaises(s3g.MissingCodeError, self.g.SetToolheadTemperature, codes, [], '')
+    self.assertRaises(KeyError, self.g.SetToolheadTemperature, codes, [], '')
 
   def test_set_toolhead_temperature_no_t_set_tool_index(self):
     tool_index = 0
@@ -718,11 +722,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_set_platform_temperature_no_s(self):
     codes = {'T'  : 2}
-    self.assertRaises(s3g.MissingCodeError, self.g.SetPlatformTemperature, codes, [], '')
+    self.assertRaises(KeyError, self.g.SetPlatformTemperature, codes, [], '')
 
   def test_set_platform_temperature_no_t_no_set_toolhead(self):
     codes = {'S'  : 100}
-    self.assertRaises(s3g.MissingCodeError, self.g.SetPlatformTemperature, codes, [], '')
+    self.assertRaises(KeyError, self.g.SetPlatformTemperature, codes, [], '')
 
   def test_set_platform_temperature_no_t_set_toolhead(self):
     codes = {'S'  : 100}

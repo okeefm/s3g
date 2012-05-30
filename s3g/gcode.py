@@ -68,7 +68,9 @@ class GcodeParser(object):
           self.GCODE_INSTRUCTIONS[codes['G']][0](codes, flags, comment)
 
         else:
-          raise UnrecognizedCodeError
+          gcode_error = UnrecognizedCodeError()
+          gcode_error.values['UnrecognizedCode'] = codes['M']
+          raise gcode_error
 
       elif 'M' in codes:
         if codes['M'] in self.MCODE_INSTRUCTIONS:
@@ -77,19 +79,29 @@ class GcodeParser(object):
           self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
 
         else:
-          raise UnrecognizedCodeError
+          gcode_error = UnrecognizedCodeError()
+          gcode_error.values['UnrecognizedCode'] = codes['M']
+          raise gcode_Error
 
       # Not a G or M code, should we throw here?
       else:
         if len(codes) + len(flags) > 0:
-          raise ExtraneousCodeError
+          gcode_error = ExtraneousCodeError()
+          gcode_error.values['Misc'] = 'This is probably a blank line'
+          raise gcode_error
 
         else:
           pass
-    except GcodeError as e:
-      e.command = command
-      e.line_number = self.line_number
-      raise e
+    except KeyError as e:
+      gcode_error = GcodeError()
+      gcode_error.values['MissingCode'] = e[0]
+      gcode_error.values['LineNumber'] = self.line_number
+      gcode_error.values['Command'] = command
+      raise gcode_error
+    except GcodeError as gcode_error:
+      gcode_error.values['Command'] = command
+      gcode_error.values['LineNumber'] = self.line_number
+      raise gcode_error
     self.line_number += 1
 
   def SetPotentiometerValues(self, codes, flags, comment):
@@ -117,10 +129,7 @@ class GcodeParser(object):
     """
     self.state.LosePosition(flags)
     axes = ParseOutAxes(flags) 
-    try:
-      self.s3g.FindAxesMaximums(axes, codes['F'], self.state.findingTimeout)
-    except KeyError:
-      raise MissingCodeError
+    self.s3g.FindAxesMaximums(axes, codes['F'], self.state.findingTimeout)
 
   def FindAxesMinimums(self, codes, flags, comment):
     """Moves the given axes in the negative direction until a timeout
@@ -129,10 +138,7 @@ class GcodeParser(object):
     """
     self.state.LosePosition(flags) 
     axes = ParseOutAxes(flags)
-    try:
-      self.s3g.FindAxesMinimums(axes, codes['F'], self.state.findingTimeout)
-    except KeyError:
-      raise MissingCodeError
+    self.s3g.FindAxesMinimums(axes, codes['F'], self.state.findingTimeout)
 
   def SetPosition(self, codes, flags, comment):
     """Explicitely sets the position of the state machine and bot
@@ -163,10 +169,7 @@ class GcodeParser(object):
     if 'T' in codes.keys():
       self.state.values['tool_index'] = codes['T']
 
-    try:
-      self.s3g.WaitForToolReady(self.state.values['tool_index'], DELAY, codes['P'])
-    except KeyError as e:
-      raise MissingCodeError
+    self.s3g.WaitForToolReady(self.state.values['tool_index'], DELAY, codes['P'])
 
   def DisableAxes(self, codes, flags, comment):
     """Disables a set of axes on the bot
@@ -182,8 +185,7 @@ class GcodeParser(object):
     last_in_group = True # As per the gcode protocol
     wait_for_button = False # As per the gcode protocol
 
-    try:
-      self.s3g.DisplayMessage(
+    self.s3g.DisplayMessage(
         row,
         col,
         comment,
@@ -193,34 +195,21 @@ class GcodeParser(object):
         wait_for_button,
       )
 
-    except KeyError as e:
-      raise MissingCodeError
-
   def PlaySong(self, codes, flags, comment):
     """Plays a song as a certain register on the bot.
     """
-    try:
-      self.s3g.QueueSong(codes['P'])
-
-    except KeyError as e:
-      raise MissingCodeError
+    self.s3g.QueueSong(codes['P'])
 
   def SetBuildPercentage(self, codes, flags, comment):
     """Sets the build percentage to a certain percentage.
     """
-    try:
-      self.s3g.SetBuildPercent(int(codes['P']))
+    self.s3g.SetBuildPercent(int(codes['P']))
 
-    except KeyError as e:
-      raise MissingCodeError
 
   def StoreOffsets(self, codes, flags, comment):
     """Given XYZ offsets, stores those offsets in the state machine.
     """
-    try:
-      self.state.StoreOffset(codes['P'], [codes['X'], codes['Y'], codes['Z']])
-    except KeyError:
-      raise MissingCodeError
+    self.state.StoreOffset(codes['P'], [codes['X'], codes['Y'], codes['Z']])
 
   def RapidPositioning(self, codes, flags, comment):
     """Using a preset rapid feedrate, moves the XYZ axes
@@ -251,15 +240,12 @@ class GcodeParser(object):
     """
     if 'F' in codes:
       self.state.values['feedrate'] = codes['F']
-
     if 'X' in codes:
       self.state.position['X'] = codes['X']
     if 'Y' in codes:
       self.state.position['Y'] = codes['Y']
     if 'Z' in codes:
       self.state.position['Z'] = codes['Z']
-    
-
     if 'E' in codes:
       if 'A' in codes or 'B' in codes:
         raise LinearInterpolationError
@@ -279,26 +265,24 @@ class GcodeParser(object):
         self.state.position['A'] = codes['A']
       if 'B' in codes:
         self.state.position['B'] = codes['B']
-
-
     try:
       self.s3g.QueueExtendedPoint(self.state.GetPosition(), self.state.values['feedrate'])
-
-    except KeyError:
-      raise MissingCodeError
+    except KeyError as e:
+      if e[0] == 'feedrate': #A key error would return 'feedrate' as the missing key, when in
+                             #respect to the executed command the 'F' command is the one missing.
+                             #So we remake the KeyError to report 'F' instead of 'feedrate'.
+        e = KeyError('F')
+      raise e
 
   def Dwell(self, codes, flags, comment):
     """Pauses the machine for a specified amount of miliseconds
     Because s3g takes in microseconds, we convert miliseconds into
     microseconds and send it off.
     """
-    try:
-      microConstant = 1000000
-      miliConstant = 1000
-      d = codes['P'] * microConstant/miliConstant
-      self.s3g.Delay(d)
-    except KeyError:
-      raise MissingCodeError
+    microConstant = 1000000
+    miliConstant = 1000
+    d = codes['P'] * microConstant/miliConstant
+    self.s3g.Delay(d)
 
   def SetToolheadTemperature(self, codes, flags, comment):
     """Sets the toolhead temperature for a specific toolhead to
@@ -307,12 +291,7 @@ class GcodeParser(object):
     """
     if 'T' in codes:
       self.state.values['tool_index'] = codes['T']
-
-    try: 
-      self.s3g.SetToolheadTemperature(self.state.values['tool_index'], codes['S'])
-
-    except KeyError:
-      raise MissingCodeError
+    self.s3g.SetToolheadTemperature(self.state.values['tool_index'], codes['S'])
 
   def SetPlatformTemperature(self, codes, flags, comment):
     """Sets the platform temperature for a specific toolhead to a specific 
@@ -322,11 +301,7 @@ class GcodeParser(object):
     if 'T' in codes:
       self.state.values['tool_index'] = codes['T']
 
-    try:
-      self.s3g.SetPlatformTemperature(self.state.values['tool_index'], codes['S']) 
-
-    except KeyError:
-      raise MissingCodeError
+    self.s3g.SetPlatformTemperature(self.state.values['tool_index'], codes['S']) 
 
   def LoadPosition(self, codes, flags, comment):
     """Loads the home positions for the XYZ axes from the eeprom

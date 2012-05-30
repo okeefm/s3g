@@ -47,14 +47,18 @@ def ParseCommand(command):
 
     # If the code is not a letter, this is an error.
     if not code.isalpha():
-      raise InvalidCodeError()
+      gcode_error = InvalidCodeError()
+      gcode_error.values['InvalidCode'] = code
+      raise gcode_error 
 
     # Force the code to be uppercase.
     code = code.upper()
 
     # If the code already exists, this is an error.
     if code in codes.keys():
-      raise RepeatCodeError()
+      gcode_error = RepeatCodeError()
+      gcode_error.values['RepeatedCode'] = code
+      raise gcode_error
 
     # Don't allow both G and M codes in the same line
     if ( code == 'G' and 'M' in codes.keys() ) or \
@@ -94,7 +98,12 @@ def CheckForExtraneousCodes(codes, allowed_codes):
   difference = set(codes) - set(allowed_codes)
 
   if len(difference) > 0:
-    raise InvalidCodeError
+    badCodes = ''
+    for code in difference:
+      badCodes+=code
+    gcode_error = InvalidCodeError()
+    gcode_error.values['InvalidCodes'] = code
+    raise gcode_error
 
 def ParseOutAxes(codes):
   """Given a list of codes, returns a list of all present axes

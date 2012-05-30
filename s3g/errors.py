@@ -204,8 +204,14 @@ class GcodeError(ValueError):
   """
   Gcode errrors are raised when the gcode parser encounters an invalid line
   """
+  def __init__(self):
+    self.values = {}
+
   def __str__(self):
-    return '#'+str(self.line_number) + ': ' + self.command
+    returnStr = ''
+    for key in self.values:
+      returnStr += key + ': ' + str(self.values[key]) + '\n'
+    return returnStr
 
 class CommentError(GcodeError):
   """
@@ -232,12 +238,6 @@ class MultipleCommandCodeError(GcodeError):
   A repeat code error is raised if both a g and m code are present on the same line
   line (for example: G0 M0)
   #TODO: add line number, code.
-  """
-
-class MissingCodeError(GcodeError):
-  """
-  A missing code error is thrown when a gcode command is missing a required code
-  or flag
   """
 
 class LinearInterpolationError(GcodeError):
