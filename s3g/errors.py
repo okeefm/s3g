@@ -173,6 +173,33 @@ class PointLengthError(ParameterError):
   A point length error is caused when a point's length is either too long or too short.
   """
 
+
+class StringTooLongError(Exception):
+  """
+  A stringTooLongError is raised when a string is parsed out of an s3g stream that longer
+  than the specified maximum payload length
+  """
+
+class S3gStreamError(Exception):
+  """
+  Raised when unexpected data is found while reading an s3g stream.
+  """
+
+class EndOfFileError(S3gStreamError):
+  """
+  An EndOfFileError is raised when the end of an s3g file is reached prematurely.
+  """
+
+class BadCommandError(S3gStreamError):
+  """
+  Bad data was found when decoding a command.
+  """
+  def __init__(self, command):
+    self.command = command
+
+  def __str__(self):
+    return repr(self.command)
+
 class GcodeError(ValueError):
   """
   Gcode errrors are raised when the gcode parser encounters an invalid line
@@ -207,8 +234,13 @@ class MultipleCommandCodeError(GcodeError):
 
 class MissingCodeError(GcodeError):
   """
-  A Missing Code Error is raised if a compulsory code is missing
+  A missing code error is thrown when a gcode command is missing a required code
+  or flag
   """
+  def __init__(self, code=''):
+     self.value = code
+  def __str__(self):
+    return str(self.value)
 
 class LinearInterpolationError(GcodeError):
   """
@@ -243,30 +275,3 @@ class NoToolIndexError(GcodeError):
   A NoToolIndexError is thrown if a commad that requires a tool index
   to be set is being executed without a tool index set.
   """
-
-class StringTooLongError(Exception):
-  """
-  A stringTooLongError is raised when a string is parsed out of an s3g stream that longer
-  than the specified maximum payload length
-  """
-
-class S3gStreamError(Exception):
-  """
-  Raised when unexpected data is found while reading an s3g stream.
-  """
-
-class EndOfFileError(S3gStreamError):
-  """
-  An EndOfFileError is raised when the end of an s3g file is reached prematurely.
-  """
-
-class BadCommandError(S3gStreamError):
-  """
-  Bad data was found when decoding a command.
-  """
-  def __init__(self, command):
-    self.command = command
-
-  def __str__(self):
-    return repr(self.command)
-

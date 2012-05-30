@@ -56,6 +56,7 @@ class GcodeParser(object):
     @param string command Gcode command to execute
     """
 
+    #print '>>', command, '<<'
     # Parse the line
     codes, flags, comment = ParseLine(command)
 
@@ -68,7 +69,7 @@ class GcodeParser(object):
       else:
         raise UnrecognizedCodeError
 
-    else:
+    elif 'M' in codes:
       if codes['M'] in self.MCODE_INSTRUCTIONS:
         CheckForExtraneousCodes(codes.keys(), self.MCODE_INSTRUCTIONS[codes['M']][1])
         CheckForExtraneousCodes(flags, self.MCODE_INSTRUCTIONS[codes['M']][2])
@@ -76,6 +77,14 @@ class GcodeParser(object):
 
       else:
         raise UnrecognizedCodeError
+
+    # Not a G or M code, should we throw here?
+    else:
+      if len(codes) + len(flags) > 0:
+        raise ExtraneousCodeError
+
+      else:
+        pass
 
   def SetPotentiometerValues(self, codes, flags, comment):
     """Given a set of codes, sets the machine's potentiometer value to a specified value in the codes
