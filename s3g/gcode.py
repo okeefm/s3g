@@ -120,7 +120,7 @@ class GcodeParser(object):
       except KeyError:
         valTable[codes[a]] = [a]
     for val in valTable:
-      self.s3g.SetPotentiometerValue(valTable[val], val)
+      self.s3g.SetPotentiometerValue(valTable[val], int(val))
 
   def FindAxesMaximums(self, codes, flags, command):
     """Moves the given axes in the position direction until a timeout
@@ -318,7 +318,7 @@ class GcodeParser(object):
     """
     if 'T' in codes:
       self.state.values['tool_index'] = codes['T']
-    self.s3g.SetPlatformTemperature(self.state.values['tool_index'], codes['S']) 
+    self.s3g.SetPlatformTemperature(int(self.state.values['tool_index']), int(codes['S']))
 
   def LoadPosition(self, codes, flags, comment):
     """Loads the home positions for the XYZ axes from the eeprom
