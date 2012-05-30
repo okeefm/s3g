@@ -111,6 +111,10 @@ We should only accept one form or the other.  A mixture will result in an error 
 
 XYZABF Form:
 
+NB: While we _can_ accept both A and B axes, because they both have their own
+unique offsets, we can only process one of these commands.  We will throw an
+error if receive both an A and B command.
+
 Registers
 
      X: (code, optional) If present, new X axis position, in mm
