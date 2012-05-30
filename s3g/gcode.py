@@ -35,18 +35,18 @@ class GcodeParser(object):
 }
 
     self.MCODE_INSTRUCTIONS = {
-       6   : [self.WaitForToolhead,            '',        ''],
-       18  : [self.DisableAxes,                '',        ''],
-       70  : [self.DisplayMessage,            '',        ''],
-       72  : [self.PlaySong,            '',        ''],
-       73  : [self.SetBuildPercentage,            '',        ''],
-       101 : [self.ExtruderOnForward,            '',        ''], #This command is explicitely ignored
-       102 : [self.ExtruderOnReverse,            '',        ''], #This command is explicitely ignored
-       103 : [self.ExtruderOff,            '',        ''],       #This command is explicitely ignored
-       104 : [self.SetToolheadTemperature,      'ST',      ''],
-       108 : [self.SetExtruderSpeed,            '',        ''],   #This command is explicitely ignored
-       109 : [self.SetPlatformTemperature,            'ST',        ''],
-       132 : [self.LoadPosition,            '',        ''],
+       6   : [self.WaitForToolhead,            'PT',      ''],
+       18  : [self.DisableAxes,                '',        'XYZAB'],
+       70  : [self.DisplayMessage,             'P',       ''],
+       72  : [self.PlaySong,                   'P',       ''],
+       73  : [self.SetBuildPercentage,         'P',       ''],
+       101 : [self.ExtruderOnForward,          '',        ''], #This command is explicitely ignored
+       102 : [self.ExtruderOnReverse,          '',        ''], #This command is explicitely ignored
+       103 : [self.ExtruderOff,                '',        ''],       #This command is explicitely ignored
+       104 : [self.SetToolheadTemperature,     'ST',      ''],
+       108 : [self.SetExtruderSpeed,           '',        ''],   #This command is explicitely ignored
+       109 : [self.SetPlatformTemperature,     'ST',      ''],
+       132 : [self.LoadPosition,               '',        ''],
     }
 
 
@@ -56,7 +56,7 @@ class GcodeParser(object):
     @param string command Gcode command to execute
     """
 
-    #print '>>', command, '<<'
+    print '>>', command, '<<'
     # Parse the line
     codes, flags, comment = ParseLine(command)
 
@@ -203,7 +203,7 @@ class GcodeParser(object):
     """Sets the build percentage to a certain percentage.
     """
     try:
-      self.s3g.SetBuildPercent(codes['P'])
+      self.s3g.SetBuildPercent(int(codes['P']))
 
     except KeyError as e:
       raise MissingCodeError
@@ -213,6 +213,7 @@ class GcodeParser(object):
     """
     if 'X' not in codes or 'Y' not in codes or'Z' not in codes:
       raise MissingCodeError
+
     try:
       self.state.StoreOffset(codes)
     except KeyError:
