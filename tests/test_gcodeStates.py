@@ -88,7 +88,8 @@ class s3gHelperFunctionTests(unittest.TestCase):
     for i in range(len(spmList)):
       expectedPosition[i] *= spmList[i]
     self.assertEqual(expectedPosition, self.g.GetPosition())
-  def test_set_position_no_codes(self):
+  
+  def test_set_position_no_axes(self):
     self.g.position = {
         'X' : 0,
         'Y' : 1,
@@ -96,19 +97,18 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'A' : 3,
         'B' : 4,
         }
-    codes = {}
+    axes = {}
     self.g.SetPosition(codes)
     self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.position)
 
-  def test_set_position_minimal_codes(self):
+  def test_set_position_minimal_axes(self):
     self.g.position = {
         'X' : 0, 
         'Y' : 1,
         'Z' : 2,
         'A' : 3,
         'B' : 4,
-        }    
-    codes = {'X' : -1}
+    axes = {'X' : -1}
     self.g.SetPosition(codes)
     self.assertEqual({'X' : -1, 'Y' : 1, 'Z' : 2, 'A' : 3, 'B' : 4}, self.g.position)
 
@@ -120,7 +120,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'A' : 3,
         'B' : 4,
         }
-    codes = {
+    axes = {
         'X' : 5,
         'Y' : 6,
         'Z' : 7,  
@@ -138,12 +138,12 @@ class s3gHelperFunctionTests(unittest.TestCase):
           'A' : 0,
           'B' : 0,
           }
-    codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True}
-    self.g.LosePosition(codes)
+    axes = ['X', 'Y', 'Z', 'A', 'B']
+    self.g.LosePosition(axes)
     for key in self.g.position:
       self.assertTrue(self.g.position[key] == None)
 
-  def test_lose_position_no_codes(self):
+  def test_lose_position_no_axes(self):
     self.g.position = {
         'X' : 0,
         'Y' : 1,
@@ -151,7 +151,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'A' : 3,
         'B' : 4,
         }
-    codes = {}
+    axes = []
     expectedPosition = {
         'X' : 0,
         'Y' : 1,
@@ -159,7 +159,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'A' : 3,
         'B' : 4, 
         }
-    self.g.LosePosition(codes)
+    self.g.LosePosition(axes)
     self.assertEqual(expectedPosition, self.g.position)
 
   def test_lose_position_minimal_codes(self):
@@ -177,8 +177,8 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'A' : 3,
         'B' : 4,
         }
-    codes = {'X':True}
-    self.g.LosePosition(codes)
+    axes = ['X']
+    self.g.LosePosition(axes)
     self.assertEqual(expectedPosition, self.g.position)
 
 if __name__ == "__main__":

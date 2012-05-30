@@ -144,7 +144,10 @@ class GcodeParser(object):
     """Explicitely sets the position of the state machine and bot
     to the given point
     """
-    self.state.SetPosition(codes)
+    axes = {}
+    for axis in ParseOutAxes(codes):
+      axes[axis] = codes[axis] 
+    self.state.SetPosition(axes)
     self.s3g.SetExtendedPosition(self.state.GetPosition())
 
   def UseP0Offsets(self, codes, flags, comment):
