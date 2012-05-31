@@ -228,11 +228,12 @@ class ParseOutAxesTests(unittest.TestCase):
     parsedAxes = s3g.ParseOutAxes(codes)
     self.assertEqual(['A', 'B', 'X', 'Y', 'Z'], parsedAxes)
 
-class ConvertDDASpeed(unittest.TestCase):
-  def test_calculate_vector_magnitude_reject_non_5d_lists(self):
+
+class CalculateVectorMagnitudeTests(unittest.TestCase):
+  def test_reject_non_5d_lists(self):
     self.assertRaises(s3g.PointLengthError, s3g.CalculateVectorMagnitude, range(0,4))
 
-  def test_calculate_vector_magnitude_makes_good_results(self):
+  def test_makes_good_results(self):
     cases = [
       [[0,0,0,0,0], 0],
       [[1234.1,0,0,0,0], 1234.1],
@@ -242,37 +243,38 @@ class ConvertDDASpeed(unittest.TestCase):
     for case in cases:
       self.assertEquals(case[1], s3g.CalculateVectorMagnitude(case[0]))
 
-  def test_calculate_vector_difference_reject_non_5d_list(self):
-    points = [
-        [range(4), range(5)],
-        [range(5), range(4)],
-        ]
-    for point in points:
-      self.assertRaises(s3g.PointLengthError, s3g.CalculateVectorDifference, point[0], point[1])
 
-  def test_calculate_vector_difference(self):
+class CalculateVectorDifferenceTests(unittest.TestCase):
+  def test_reject_non_5d_list(self):
+    self.assertRaises(s3g.PointLengthError, s3g.CalculateVectorDifference, range(4), range(5))
+
+  def test_reject_non_5d_list(self):
+    self.assertRaises(s3g.PointLengthError, s3g.CalculateVectorDifference, range(5), range(4))
+
+  def test_good_result(self):
     cases = [
-      [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]],
-      [[-1, -2, -3, -4, -5], [1, 2, 3, 4, 5], [2, 4, 6, 8, 10]],
-      [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [5, 5, 5, 5, 5]],
+      [[0, 0, 0, 0, 0],  [0, 0, 0, 0, 0],      [0, 0, 0, 0, 0]],
+      [[1, 2, 3, 4, 5],  [-1, -2, -3, -4, -5], [2, 4, 6, 8, 10]],
+      [[6, 7, 8, 9, 10], [1, 2, 3, 4, 5],      [5, 5, 5, 5, 5]],
     ]
 
     for case in cases:
       diff = s3g.CalculateVectorDifference(case[0], case[1])
       self.assertEqual(case[2], diff)
- 
-  def test_calculate_unit_vector_reject_non_5d_list(self):
+
+
+class CalculateUnitVectorMagnitudeTests(unittest.TestCase):
+  def test_reject_non_5d_list(self):
     self.assertRaises(s3g.PointLengthError, s3g.CalculateUnitVector, range(4))
  
-  def test_calculate_unit_vector_null_vector(self):
+  def test_null_vector(self):
     vector = [0,0,0,0,0]
     expected_unit_vector = [0,0,0,0,0]
 
     unit_vector = s3g.CalculateUnitVector(vector)
     self.assertEquals(expected_unit_vector, unit_vector)
  
-
-  def test_calculate_unit_vector_good_result(self):
+  def test_good_result(self):
     cases = [
       [[1, 0, 0, 0, 0], [1,0,0,0,0]],
       [[-1, 0, 0, 0, 0], [-1,0,0,0,0]],
@@ -283,36 +285,98 @@ class ConvertDDASpeed(unittest.TestCase):
       unit_vector = s3g.CalculateUnitVector(case[0])
       self.assertEqual(case[1], unit_vector)
 
-    
-  def test_find_longest_axis_reject_non_5d_list(self):
+
+class GetSafeFeedrateTests(unittest.TestCase):
+  def test_reject_non_5d_list(self):
+    self.assertRaises(s3g.PointLengthError, s3g.GetSafeFeedrate, range(4), range(5), 0)
+
+  def test_zero_displacement(self):
+    point = [0, 0, 0, 0, 0]
+    max_feedrates = [1, 1, 1, 1, 1]
+    feedrate = 1
+    self.assertRaises(ValueError, s3g.GetSafeFeedrate, point, max_feedrates, feedrate)
+
+  def test_negative_feedrate(self):
+    point = [0, 0, 0, 0, 0]
+    max_feedrates = [1, 1, 1, 1, 1]
+    feedrate = 1
+    self.assertRaises(ValueError, s3g.GetSafeFeedrate, point, max_feedrates, feedrate)
+
+  def test_zero_feedrate(self):
+    point = [1, 1, 1, 1, 1]
+    max_feedrates = [1, 1, 1, 1, 1]
+    feedrate = 0
+    self.assertRaises(ValueError, s3g.GetSafeFeedrate, point, max_feedrates, feedrate)
+
+  def test_good_result(self):
+    # Note: All of these cases use integers, and would fail if the float() casts
+    #       were to be remvoed from GetSafeFeedrate. Try it.
+    cases = [
+      [[1,  0, 0, 0, 0],    # Single axis: Move under the max feedrate
+       [10, 0, 0, 0, 0],
+       1, 1],
+      [[11, 0, 0, 0, 0],    # Single axis: Move at the max feedrate
+       [2,  0, 0, 0, 0],
+       2, 2],
+      [[-12,0, 0, 0, 0],    # Single axis: Move in negative direction at the max feedrate
+       [1,  0 ,0, 0, 0],
+       1, 1],
+      [[13, 0, 0, 0, 0],    # Single axis: Move faster than the max feedrate
+       [1,  0, 0, 0, 0],
+       10, 1],
+      [[1, -1, 1,-1, 1],    # Multi axis: Move in negative direction at the max feedrate
+       [1,  1, 1, 1, 1],
+       pow(5,.5), pow(5,.5)],
+      [[1, -2, 3,-4, 5],    # Multi axis: Move faster than the max feedrate
+       [1,  1, 1, 1, 1],
+       10, pow(55,.5)/5],
+    ]
+    for case in cases:
+      self.assertEquals(case[3], s3g.GetSafeFeedrate(case[0], case[1], case[2]))
+
+
+class ConvertMmToSteps(unittest.TestCase):
+  def test_reject_non_5d_list(self):
+    self.assertRaises(s3g.PointLengthError, s3g.ConvertMmToSteps, range(4), range(5))
+ 
+  def test_reject_non_5d_list(self):
+    self.assertRaises(s3g.PointLengthError, s3g.ConvertMmToSteps, range(5), range(4))
+
+  def test_good_result(self):
+    cases = [
+      [[0,0,0,0,0], [0,0,0,0,0], [0,0,0,0,0]],
+      [[1,-2,3,-4,5], [1,2,3,4,5], [1,-4,9,-16,25]]
+    ]
+
+    for case in cases:
+      self.assertEqual(case[2], s3g.ConvertMmToSteps(case[0], case[1]))
+
+
+# TODO: fix this test?
+class FindLongestAxisTests(unittest.TestCase):
+  def test_reject_non_5d_list(self):
     self.assertRaises(s3g.PointLengthError, s3g.FindLongestAxis, range(4))
 
-  def test_find_longest_axis(self):
+  def test_good_result(self):
     vector = [1, 2, 3, 4, 5]
     self.assertEqual(4, s3g.FindLongestAxis(vector))
-    # TODO: fix this test?
 
-  def test_point_mm_to_steps_unequal_lengths(self):
-    point = range(4)
-    self.assertRaises(s3g.PointLengthError, s3g.pointMMToSteps, point)
 
-  def test_point_mm_to_step_good_length(self):
-    expectedPoint = [94.140, 94.140, 400, 96.275, 96.275]
-    point = [1, 1, 1, 1, 1]
-    spmPoint = s3g.pointMMToSteps(point)
-    self.assertEqual(expectedPoint, spmPoint)
+class CalculateDDASpeedTests(unittest.TestCase):
+  # TODO: test forn non-5d points
 
-  def test_calculate_dda_speed(self):
+  def test_zero_move(self):
+    initial_position = [0,0,0,0,0]
+    target_position =  [0,0,0,0,0]
+    target_feedrate = 0
+    self.assertRaises(ValueError, s3g.CalculateDDASpeed, initial_position, target_position, target_feedrate)
+
+  def test_good_result(self):
     curPoint = [100, 0, 0, 0, 0]
     target = [200, 0, 0, 0, 0]
     feedrate = 200
     targetFeedrate = 30000000
     self.assertEqual(targetFeedrate, s3g.CalculateDDASpeed(feedrate, curPoint, target))
-
-  def test_get_Safe_feedrate_low_feedrate(self):
-    point = [0, 0, 0, 0, 0]
-    feedrate = 1
-    self.assertEqual(feedrate, s3g.GetSafeFeedrate(point, feedrate))
 
 
 #class ParseSampleGcodeFileTests(unittest.TestCase):

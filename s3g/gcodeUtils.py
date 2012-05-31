@@ -116,27 +116,29 @@ def ParseOutAxes(codes):
   parsedAxes = set(axesCodes) & set(codes)
   return list(sorted(parsedAxes))
 
-def CalculateVectorDifference(vector0, vector1):
-  """ Given two 5-dimensional vectors represented as lists, calculates their
-  different (vector1-vector0)
+def CalculateVectorDifference(minuend, subtrahend):
+  """ Given two 5d vectors represented as lists, calculates their
+  difference (minued - subtrahend)
 
-  @param list vector: A 5-dimensional vector
-  @return list different of vector0 and vector1
+  @param list minuend: 5D vector to be subracted from
+  @param list subtrahend: 5D vector to subtract from the minuend
+  @return list difference
   """
-  for vector in [vector0, vector1]:
-    if len(vector) != 5:
-      raise PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
-  delta = []
+  if len(minuend) != 5:
+    raise PointLengthError("Expected list of length 5, got length %i"%(len(minuend)))
+  if len(subtrahend) != 5:
+    raise PointLengthError("Expected list of length 5, got length %i"%(len(subtrahend)))
 
-  for m, n in zip(vector0, vector1):
-    delta.append(n-m)
+  difference = []
+  for m, s in zip(minuend, subtrahend):
+    difference.append(m - s)
 
-  return delta
+  return difference
 
 def CalculateVectorMagnitude(vector):
-  """ Given a 5-dimensional vector represented as a list, calculate its magnitude
+  """ Given a 5D vector represented as a list, calculate its magnitude
   
-  @param list vector: A 5-dimesional vector
+  @param list vector: A 5D vector
   @return magnitude of the vector
   """
   if len(vector) != 5:
@@ -150,11 +152,12 @@ def CalculateVectorMagnitude(vector):
 
   return magnitude
 
-def CalculateUnitVector(vector):
-  """ Calculate the unit vector of a given 5-dimensional vector
 
-  @param list vector: A 5-dimensional vector
-  @return list: The 5-dimensional equivalent of the vector
+def CalculateUnitVector(vector):
+  """ Calculate the unit vector of a given 5D vector
+
+  @param list vector: A 5D vector
+  @return list: The 5D equivalent of the vector
   """
   if len(vector) != 5:
     raise PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
@@ -171,10 +174,63 @@ def CalculateUnitVector(vector):
 
   return unitVector
 
-def FindLongestAxis(vector):
-  """ Determine the index of the longest axis in a 5-dimensional vector.
 
-  @param list vector: A 5-dimensional vector
+def GetSafeFeedrate(displacement_vector, max_feedrates, target_feedrate):
+  """Given a displacement vector and target feedrate, calculates the fastest safe feedrate
+
+  @param list displacement_vector: 5d Displacement vector to consider, in mm
+  @param list max_feedrates: Maximum feedrates for each axis, in mm
+  @param float target_feedrate: Target feedrate for the move, in mm/s
+  @return float Achievable movement feedrate, in mm/s
+  """
+
+  # Calculate the axis components of each vector
+  magnitude = CalculateVectorMagnitude(displacement_vector)
+
+  # TODO: What kind of error to throw here?
+  if magnitude == 0:
+    raise ValueError
+
+  if target_feedrate <= 0:
+    raise ValueError
+
+  actual_feedrate = target_feedrate
+
+  # Iterate through each axis that has a displacement
+  for axis_displacement, max_feedrate in zip(displacement_vector, max_feedrates):
+
+    axis_feedrate = float(target_feedrate)/magnitude*abs(axis_displacement)
+
+    if axis_feedrate > max_feedrate:
+      actual_feedrate = float(max_feedrate)/abs(axis_displacement)*magnitude
+
+  return actual_feedrate
+
+
+def ConvertMmToSteps(vector, steps_per_mm):
+  """ Convert a vector from mm to steps.
+
+  @param list vector: 5D vector, in mm
+  @param list steps_per_mm: 5D vector containing the 
+  @return list: 5D vector, in steps
+  """
+  if len(vector) != 5:
+    raise PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
+
+  if len(steps_per_mm) != 5:
+    raise PointLengthError("Expected list of length 5, got length %i"%(len(steps_per_mm)))
+
+  vector_steps = []
+  for axis_mm, step_per_mm in zip(vector, steps_per_mm):
+    vector_steps.append(axis_mm*step_per_mm)
+
+  return vector_steps
+
+
+def FindLongestAxis(vector):
+  """ Determine the index of the longest axis in a 5D vector.
+
+  @param list vector: A 5D vector
   @return int: The index of the longest vector
   """
   if len(vector) != 5:
@@ -185,78 +241,38 @@ def FindLongestAxis(vector):
 
   return max_value_index
 
-def FeedrateToDDA(delta, feedrate):
-  """Determine thDisplacement vector use for a given displacement vector and feedrate
-
-  @param list delta: Displacement vector two points in mm
-  @param int feedrate: Feedrate we want to calculate
-  """
-  spmPoint = [94.140, 94.140, 400, 96.275, 96.275]
-  usConst = 60000000.0 #us/min
-
-  deltaSteps = pointMMToSteps(delta)
-  masterSteps = FindLongestAxis(deltaSteps)
-
-  distance = CalculateVectorMagnitude(delta)
-
-  micros = distance / feedrate * usConst
-  step_delay = micros / masterSteps
-
-  return step_delay
  
-def CalculateDDASpeed(feedrate, vector1, vector2):
-  """Given two vectors (current and target, respectively) and a feedrate in mm/min, calculates the DDA (us/step) speed
-  @param int feedrate: The feedrate we want to move at
-  @param list vector1: The current point we are at
-  @param list vector2: The target point we are at
-  @return int ddaSpeed: The speed in us/step we move at
+def CalculateMove(initial_position, target_position, target_feedrate):
+  """ Given a 
+
+  @param initial_position: Starting position of the move, in mm
+  @param target_position: Target position to move to, in mm
+  @param target_feedrate: Requested feedrate, in mm/s (TODO: Is this correct)
+  @return float ddaSpeed: The speed in us/step we move at
   """
-  delta = CalculateVectorDifference(vector1, vector2)
 
-  if FindLongestAxis(delta) != 0:
-    feedrate = GetSafeFeedrate(delta, feedrate)
-    ddaSpeed = FeedrateToDDA(delta, feedrate)
+  # TODO: Move these out of here
+  max_feedrates = [
+    18000,
+    18000,
+    1170,
+    1600,
+    1600,
+  ]
 
-  else:
-    ddaSpeed = 0
+  # First, figure out where we are moving to. 
+  displacement_vector = CalculateVectorDifference(target_position, initial_position)
+
+  # Throw an error if we aren't moving anywhere
+  # TODO: Should we do something else here?
+  if CalculateVectorMagnitude(displacement_vector) == 0:
+    raise ValueError
+
+  # Now, correct the target speedrate to account for the maximum feedrate
+  actual_feedrate = GetSafeFeedrate(displacement_vector, max_feedrates, target_feedrate)
+
+  # Finally, convert the feedrate to a DDA speed
+  ddaSpeed = FeedrateToDDA(displacement_vector, feedrate)
 
   return ddaSpeed
-  
-    
-def GetSafeFeedrate(vector, feedrate):
-  """Given a point and a feedrate, calculates the safe feedrate to travel on.
-  @param list vector: Movement vector in mm that we use to find the safe feedrate
-  @param int feedrate: The current feedrate that may or may not be safe
-  @return int feedrate; The safe feedrate to move at
-  """
-  maxFeedrates = [
-      18000,
-      18000,
-      1170,
-      1600,
-      1600,
-      ]
-  if feedrate == 0:
-    for f in maxFeedrates:
-      feedrate = max(feedrate, f)
-    feedrate = max(feedrate, 1)
-  magnitude = CalculateVectorMagnitude(vector)
-  for v, mf in zip(vector, maxFeedrates):
-    if v != 0:
-      if feedrate * v / magnitude > mf: #Project feedrate onto each axis
-        feedrate = mf * magnitude / v
-  return feedrate
 
-def pointMMToSteps(point):
-  """Given a point in mm, calculates its value in steps 
-  @param list point: Point to convert to steps in mm
-  @param return steppedPoint: The point converted to steps
-  """
-  #Hard-coded step values for a replicator
-  spmPoint = [94.140, 94.140, 400, 96.275, 96.275]
-  if len(point) != len(spmPoint):
-    raise PointLengthError("Expected Point with length of %i, got %i"%(len(spmPoint), len(point)))
-  mmToSpm = []
-  for cor, spm in zip(point, spmPoint):
-    mmToSpm.append(cor*spm)
-  return mmToSpm 

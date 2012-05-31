@@ -312,10 +312,12 @@ class GcodeParser(object):
     try:
       feedrate = self.state.values['feedrate']
       self.s3g.QueueExtendedPoint(self.state.GetPosition(), feedrate)
+
     except KeyError as e:
-      if e[0] == 'feedrate': #A key error would return 'feedrate' as the missing key, when in
-                             #respect to the executed command the 'F' command is the one missing.
-                             #So we remake the KeyError to report 'F' instead of 'feedrate'.
+      if e[0] == 'feedrate': # A key error would return 'feedrate' as the missing key,
+                             # when in respect to the executed command the 'F' command
+                             # is the one missing. So we remake the KeyError to report
+                             # 'F' instead of 'feedrate'.
         e = KeyError('F')
       raise e
 
