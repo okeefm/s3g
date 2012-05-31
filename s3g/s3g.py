@@ -25,12 +25,7 @@ class s3g(object):
   def __init__(self):
     self.writer = None
 
-    self.logger = logging.getLogger('output_stats')
-    hdlr = logging.FileHandler('./output_stats')
-    formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-    hdlr.setFormatter(formatter)
-    self.logger.addHandler(hdlr)
-    self.logger.setLevel(logging.ERROR)
+    self.logger = logging.getLogger('s3g_output_stats')
 
     self.ExtendedPointLength = 5
     self.PointLength = 3
