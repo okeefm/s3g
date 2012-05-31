@@ -242,20 +242,24 @@ class ConvertDDASpeed(unittest.TestCase):
     for case in cases:
       self.assertEquals(case[1], s3g.CalculateVectorMagnitude(case[0]))
 
-  def test_calculate_motion_vector_reject_non_5d_list(self):
+  def test_calculate_vector_difference_reject_non_5d_list(self):
     points = [
         [range(4), range(5)],
         [range(5), range(4)],
         ]
     for point in points:
-      self.assertRaises(s3g.PointLengthError, s3g.CalculateMotionVector, point[0], point[1])
+      self.assertRaises(s3g.PointLengthError, s3g.CalculateVectorDifference, point[0], point[1])
 
-  def test_calculate_motion_vector_good_results(self):
-    point0 = [1, 2, 3, 4, 5]
-    point1 = [6, 7, 8, 9, 10]
-    expectedDif = [5, 5, 5, 5, 5]
-    dif = s3g.CalculateMotionVector(point0, point1)
-    self.assertEqual(expectedDif, dif)
+  def test_calculate_vector_difference(self):
+    cases = [
+      [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]],
+      [[-1, -2, -3, -4, -5], [1, 2, 3, 4, 5], [2, 4, 6, 8, 10]],
+      [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10], [5, 5, 5, 5, 5]],
+    ]
+
+    for case in cases:
+      diff = s3g.CalculateVectorDifference(case[0], case[1])
+      self.assertEqual(case[2], diff)
  
   def test_calculate_unit_vector_reject_non_5d_list(self):
     self.assertRaises(s3g.PointLengthError, s3g.CalculateUnitVector, range(4))

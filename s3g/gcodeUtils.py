@@ -116,7 +116,7 @@ def ParseOutAxes(codes):
   parsedAxes = set(axesCodes) & set(codes)
   return list(sorted(parsedAxes))
 
-def CalculateMotionVector(vector0, vector1):
+def CalculateVectorDifference(vector0, vector1):
   """ Given two 5-dimensional vectors represented as lists, calculates their
   different (vector1-vector0)
 
@@ -127,8 +127,10 @@ def CalculateMotionVector(vector0, vector1):
     if len(vector) != 5:
       raise PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
   delta = []
+
   for m, n in zip(vector0, vector1):
     delta.append(n-m)
+
   return delta
 
 def CalculateVectorMagnitude(vector):
@@ -184,7 +186,7 @@ def CalculateDDASpeed(feedrate, vector1, vector2):
   @param list vector2: The target point we are at
   @return int ddaSpeed: The speed in us/step we move at
   """
-  delta = CalculateMotionVector(vector1, vector2)
+  delta = CalculateVectorDifference(vector1, vector2)
   if FindLongestAxis(delta) != 0:
     feedreate = GetSafeFeedrate(delta, feedrate)
     ddaSpeed = FeedrateToDDA(delta, feedrate)
