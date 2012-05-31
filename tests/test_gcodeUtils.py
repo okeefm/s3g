@@ -362,21 +362,21 @@ class FindLongestAxisTests(unittest.TestCase):
     self.assertEqual(4, s3g.FindLongestAxis(vector))
 
 
-class CalculateDDASpeedTests(unittest.TestCase):
-  # TODO: test forn non-5d points
-
-  def test_zero_move(self):
-    initial_position = [0,0,0,0,0]
-    target_position =  [0,0,0,0,0]
-    target_feedrate = 0
-    self.assertRaises(ValueError, s3g.CalculateDDASpeed, initial_position, target_position, target_feedrate)
-
-  def test_good_result(self):
-    curPoint = [100, 0, 0, 0, 0]
-    target = [200, 0, 0, 0, 0]
-    feedrate = 200
-    targetFeedrate = 30000000
-    self.assertEqual(targetFeedrate, s3g.CalculateDDASpeed(feedrate, curPoint, target))
+#class CalculateDDASpeedTests(unittest.TestCase):
+#  # TODO: test forn non-5d points
+#
+#  def test_zero_move(self):
+#    initial_position = [0,0,0,0,0]
+#    target_position =  [0,0,0,0,0]
+#    target_feedrate = 0
+#    self.assertRaises(ValueError, s3g.CalculateDDASpeed, initial_position, target_position, target_feedrate)
+#
+#  def test_good_result(self):
+#    curPoint = [100, 0, 0, 0, 0]
+#    target = [200, 0, 0, 0, 0]
+#    feedrate = 200
+#    targetFeedrate = 30000000
+#    self.assertEqual(targetFeedrate, s3g.CalculateDDASpeed(feedrate, curPoint, target))
 
 
 #class ParseSampleGcodeFileTests(unittest.TestCase):
