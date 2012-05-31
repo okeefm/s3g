@@ -228,11 +228,11 @@ class ParseOutAxesTests(unittest.TestCase):
     parsedAxes = s3g.ParseOutAxes(codes)
     self.assertEqual(['A', 'B', 'X', 'Y', 'Z'], parsedAxes)
 
-class CalculateVectorMagnitude(unittest.TestCase):
-  def test_reject_non_5d_lists(self):
-    self.assertRaises(ValueError, s3g.CalculateVectorMagnitude, range(0,4))
+class ConvertDDASpeed(unittest.TestCase):
+  def test_calculate_vector_magnitude_reject_non_5d_lists(self):
+    self.assertRaises(s3g.PointLengthError, s3g.CalculateVectorMagnitude, range(0,4))
 
-  def test_makes_good_results(self):
+  def test_calculate_vector_magnitude_makes_good_results(self):
     cases = [
       [[0,0,0,0,0], 0],
       [[1234.1,0,0,0,0], 1234.1],
@@ -242,11 +242,64 @@ class CalculateVectorMagnitude(unittest.TestCase):
     for case in cases:
       self.assertEquals(case[1], s3g.CalculateVectorMagnitude(case[0]))
 
+  def test_calculate_motion_vector_reject_non_5d_list(self):
+    points = [
+        [range(4), range(5)],
+        [range(5), range(4)],
+        ]
+    for point in points:
+      self.assertRaises(s3g.PointLengthError, s3g.CalculateMotionVector, point[0], point[1])
+
+  def test_calculate_motion_vector_good_results(self):
+    point0 = [1, 2, 3, 4, 5]
+    point1 = [6, 7, 8, 9, 10]
+    expectedDif = [5, 5, 5, 5, 5]
+    dif = s3g.CalculateMotionVector(point0, point1)
+    self.assertEqual(expectedDif, dif)
+ 
+  def test_calculate_unit_vector_reject_non_5d_list(self):
+    self.assertRaises(s3g.PointLengthError, s3g.CalculateUnitVector, range(4))
+ 
+  def test_calculate_unit_vector_good_result(self):
+    p = [1, 2, 3, 4, 5]
+    pMag = s3g.CalculateVectorMagnitude(p)
+    expectedUnitP = []
+    for val in p:
+      expectedUnitP.append(val/pMag)
+    unitP = s3g.CalculateUnitVector(p)
+    self.assertEqual(expectedUnitP, unitP)
+    
+  def test_find_longest_axis(self):
+    vector = [1, 2, 3, 4, 5]
+    self.assertEqual(5, s3g.FindLongestAxis(vector))
+
+  def test_point_mm_to_steps_unequal_lengths(self):
+    point = range(4)
+    self.assertRaises(s3g.PointLengthError, s3g.pointMMToSteps, point)
+
+  def test_point_mm_to_step_good_length(self):
+    expectedPoint = [94.140, 94.140, 400, 96.275, 96.275]
+    point = [1, 1, 1, 1, 1]
+    spmPoint = s3g.pointMMToSteps(point)
+    self.assertEqual(expectedPoint, spmPoint)
+
+  def test_calculate_dda_speed(self):
+    curPoint = [100, 0, 0, 0, 0]
+    target = [200, 0, 0, 0, 0]
+    feedrate = 200
+    targetFeedrate = 30000000
+    self.assertEqual(targetFeedrate, s3g.CalculateDDASpeed(feedrate, curPoint, target))
+
+  def test_get_Safe_feedrate_low_feedrate(self):
+    point = [0, 0, 0, 0, 0]
+    feedrate = 1
+    self.assertEqual(feedrate, s3g.GetSafeFeedrate(point, feedrate))
+
 
 #class ParseSampleGcodeFileTests(unittest.TestCase):
 #  def test_parse_files(self):
 #    # Terriable hack, to support running from the root or test directory.
-#    files = []
+#    files = [t]
 #    path = '../doc/gcode_samples/'
 #    files += glob.glob(os.path.join(path, '*.gcode'))
 #    path = 'doc/gcode_samples/'
