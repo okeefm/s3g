@@ -264,18 +264,33 @@ class ConvertDDASpeed(unittest.TestCase):
   def test_calculate_unit_vector_reject_non_5d_list(self):
     self.assertRaises(s3g.PointLengthError, s3g.CalculateUnitVector, range(4))
  
+  def test_calculate_unit_vector_null_vector(self):
+    vector = [0,0,0,0,0]
+    expected_unit_vector = [0,0,0,0,0]
+
+    unit_vector = s3g.CalculateUnitVector(vector)
+    self.assertEquals(expected_unit_vector, unit_vector)
+ 
+
   def test_calculate_unit_vector_good_result(self):
-    p = [1, 2, 3, 4, 5]
-    pMag = s3g.CalculateVectorMagnitude(p)
-    expectedUnitP = []
-    for val in p:
-      expectedUnitP.append(val/pMag)
-    unitP = s3g.CalculateUnitVector(p)
-    self.assertEqual(expectedUnitP, unitP)
+    cases = [
+      [[1, 0, 0, 0, 0], [1,0,0,0,0]],
+      [[-1, 0, 0, 0, 0], [-1,0,0,0,0]],
+      [[1, -2, 3, -4, 5], [1/pow(55,.5),-2/pow(55,.5),3/pow(55,.5),-4/pow(55,.5),5/pow(55,.5)]],
+    ]
+
+    for case in cases:
+      unit_vector = s3g.CalculateUnitVector(case[0])
+      self.assertEqual(case[1], unit_vector)
+
     
+  def test_find_longest_axis_reject_non_5d_list(self):
+    self.assertRaises(s3g.PointLengthError, s3g.FindLongestAxis, range(4))
+
   def test_find_longest_axis(self):
     vector = [1, 2, 3, 4, 5]
-    self.assertEqual(5, s3g.FindLongestAxis(vector))
+    self.assertEqual(4, s3g.FindLongestAxis(vector))
+    # TODO: fix this test?
 
   def test_point_mm_to_steps_unequal_lengths(self):
     point = range(4)

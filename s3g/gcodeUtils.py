@@ -151,32 +151,57 @@ def CalculateVectorMagnitude(vector):
   return magnitude
 
 def CalculateUnitVector(vector):
+  """ Calculate the unit vector of a given 5-dimensional vector
+
+  @param list vector: A 5-dimensional vector
+  @return list: The 5-dimensional equivalent of the vector
+  """
   if len(vector) != 5:
     raise PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
-  unitVector = []
+
   magnitude = CalculateVectorMagnitude(vector)
+
+  # Check if this is a null vector
+  if magnitude == 0:
+    return [0,0,0,0,0]
+
+  unitVector = []
   for val in vector:
     unitVector.append(val/magnitude)
+
   return unitVector
 
 def FindLongestAxis(vector):
-  l = -sys.maxint
-  for v in vector:
-    l = max(l, v)
-  return l
+  """ Determine the index of the longest axis in a 5-dimensional vector.
+
+  @param list vector: A 5-dimensional vector
+  @return int: The index of the longest vector
+  """
+  if len(vector) != 5:
+    raise PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
+
+  max_value = max(vector)
+  max_value_index = vector.index(max_value)
+
+  return max_value_index
 
 def FeedrateToDDA(delta, feedrate):
-  """Convert a feedrate to a DDA speed
-  @param list delta: The difference between two points in mm
+  """Determine thDisplacement vector use for a given displacement vector and feedrate
+
+  @param list delta: Displacement vector two points in mm
   @param int feedrate: Feedrate we want to calculate
   """
   spmPoint = [94.140, 94.140, 400, 96.275, 96.275]
   usConst = 60000000.0 #us/min
+
   deltaSteps = pointMMToSteps(delta)
   masterSteps = FindLongestAxis(deltaSteps)
+
   distance = CalculateVectorMagnitude(delta)
+
   micros = distance / feedrate * usConst
   step_delay = micros / masterSteps
+
   return step_delay
  
 def CalculateDDASpeed(feedrate, vector1, vector2):
@@ -187,11 +212,14 @@ def CalculateDDASpeed(feedrate, vector1, vector2):
   @return int ddaSpeed: The speed in us/step we move at
   """
   delta = CalculateVectorDifference(vector1, vector2)
+
   if FindLongestAxis(delta) != 0:
-    feedreate = GetSafeFeedrate(delta, feedrate)
+    feedrate = GetSafeFeedrate(delta, feedrate)
     ddaSpeed = FeedrateToDDA(delta, feedrate)
+
   else:
     ddaSpeed = 0
+
   return ddaSpeed
   
     
