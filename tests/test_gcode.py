@@ -140,7 +140,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_rapid_position(self):
     initial_position = [1, 2, 3, 4, 5]
-    expected_position = [6, 7, 8, 9, 10]
+    expected_position = [6, 7, 8, 4, 5]
     self.g.state.position = {
         'X' : initial_position[0],
         'Y' : initial_position[1],
@@ -154,6 +154,8 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'Z' : expected_position[2],
         }
     self.g.RapidPositioning(codes,[], '')
+    rapid_feedrate = 1200     #This is the rapid feedrate baked into the gcode state machine
+    dda_speed = s3g.CalculateDDASpeed(initial_position, expected_position, rapid_feedrate)
     spmList = [
         self.g.state.xSPM, 
         self.g.state.ySPM, 
@@ -163,10 +165,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         ]
     for i in range(len(spmList)):
       expected_position[i] *= spmList[i]
-    rapid_feedrate = 1200     #This is the rapid feedrate baked into the gcode state machine
-    dda_speed = s3g.CalculateDDASpeed(initial_position, expected_position, rapid_feedrate)
-    self.mock.QueueExtendedPoint.assert_called_once_with(expected_position, dda_speed)
-
+    actual_params = self.mock.mock_calls[0][1]
+    tolerance = .1
+    for expected, actual in zip(expected_position, actual_params[0]):
+      self.assertTrue(abs(expected-actual) < tolerance)
+    self.assertTrue(abs(dda_speed - actual_params[1]) < tolerance)
  
   def test_store_offsets_all_codes_accounted_for(self):
     codes = 'XYZP'
@@ -560,7 +563,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         }
 
     self.g.LinearInterpolation(codes, [], '')
-
+    ddaFeedrate = s3g.CalculateDDASpeed(initialPosition, expectedPoint, feedrate)
     spmList = [
         self.g.state.xSPM,
         self.g.state.ySPM,
@@ -572,8 +575,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     # s3g works in steps, so we need to convert the expected position to steps
     for i in range(len(expectedPoint)):
       expectedPoint[i] *= spmList[i]
-    ddaFeedrate = s3g.CalculateDDASpeed(initialPosition, expectedPosition, feedrate)
-    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, ddaFeedrate)
+    actual_params = self.mock.mock_calls[0][1]
+    tolerance = .1
+    for expected, actual in zip(expectedPoint, actual_params[0]):
+      self.assertTrue(abs(expected-actual) < tolerance)
+    self.assertTrue(abs(ddaFeedrate-actual_params[1]) < tolerance) 
  
   def test_linaer_interpolation_e_and_a_codes_present(self):
     self.g.state.position = {
@@ -653,10 +659,10 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     expectedPoint = [1, 2, 3, 4, 1]
     self.g.state.position = {
         'X' : initialPosition[0],
-        'Y' : initialPosition[0],
-        'Z' : initialPosition[0],
-        'A' : initialPosition[0],
-        'B' : initialPosition[0],
+        'Y' : initialPosition[1],
+        'Z' : initialPosition[2],
+        'A' : initialPosition[3],
+        'B' : initialPosition[4],
         }
     self.g.state.values['tool_index'] = 0
     codes = {
@@ -667,6 +673,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'F' : feedrate,
         }
     self.g.LinearInterpolation(codes, [], '')
+    dda_speed = s3g.CalculateDDASpeed(initialPosition, expectedPoint, feedrate)
     spmList = [
         self.g.state.xSPM,
         self.g.state.ySPM,
@@ -676,8 +683,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         ]
     for i in range(len(expectedPoint)):
       expectedPoint[i] *= spmList[i]
-    dda_speed = s3g.CalculateDDASpeed(initialPosition, expectedPoint, feedrate)
-    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, feedrate)
+    actual_params = self.mock.mock_calls[0][1]
+    tolerance = .1
+    for expected, actual in zip(expectedPoint, actual_params[0]):
+      self.assertTrue(abs(expected-actual) < tolerance)
+    self.assertTrue(abs(dda_speed - actual_params[1]) < tolerance)
 
   def test_linear_interpolation_a_and_b(self):
     self.g.state.position = {
@@ -713,6 +723,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'F' : feedrate,
         }
     self.g.LinearInterpolation(codes, [], '')
+    dda_speed = s3g.CalculateDDASpeed(initialPosition, expected_position, feedrate) 
     spmList = [
         self.g.state.xSPM,
         self.g.state.ySPM,
@@ -720,10 +731,13 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         self.g.state.aSPM,
         self.g.state.bSPM,
         ]
-    for i in range(len(expected_point)):
-      expected_point[i] *= spmList[i]
-    dda_speed = s3g.CalculateDDASpeed(initialPosition, expected_position, feedrate) 
-    self.mock.QueueExtendedPoint.assert_called_once_with(expected_position, dda_speed)
+    for i in range(len(expected_position)):
+      expected_position[i] *= spmList[i]
+    actual_params = self.mock.mock_calls[0][1]
+    tolerance = .1
+    for expected, actual in zip(expected_position, actual_params[0]):
+      self.assertTrue(abs(expected-actual) < tolerance)
+    self.assertTrue(abs(dda_speed - actual_params[1]) < tolerance)
 
   def test_linear_interpolation_b(self):
     initial_position = [5, 4, 3, 2, 1]
@@ -754,7 +768,11 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     for i in range(len(expected_position)):
       expected_position[i] *= spmList[i]
     dda_speed = s3g.CalculateDDASpeed(initial_position, expected_position, feedrate)
-    self.mock.QueueExtendedPoint.assert_called_once_with(expected_position, dda_speed)
+    actual_params = self.mock.mock_calls[0][1]
+    tolerance = .1
+    for expected, actual in zip(expected_position, actual_params[0]):
+      self.assertTrue(abs(expected-actual) < tolerance)
+    self.assertTrue(abs(dda_speed - actual_params[1]))
 
   def test_dwell_all_codes_accounted_for(self):
     codes = 'P'

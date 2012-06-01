@@ -389,8 +389,9 @@ class CalculateDDASpeedTests(unittest.TestCase):
       [[0,0,0,0,0],   [1,1,1,0,0],   100, 1039230/400],        # Multiple axis, forward motion
     ]
 
+    tolerance = .1
     for case in cases:
-      self.assertEqual(case[3], s3g.CalculateDDASpeed(case[0], case[1], case[2]))
+      self.assertTrue(abs(case[3] - s3g.CalculateDDASpeed(case[0], case[1], case[2])) < tolerance)
 
 """
 [[9413,0,0,0,0) in 180000000 us (relative: 18)
