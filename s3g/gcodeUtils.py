@@ -135,6 +135,22 @@ def CalculateVectorDifference(minuend, subtrahend):
 
   return difference
 
+
+def MultiplyVector(factor_a, factor_b):
+  """ Given two 5d vectors represented as lists, calculates their product.
+
+  @param list factor_b: 5D vector
+  @param list factor_b: 5D vector
+  @return list product
+  """
+
+  product = []
+  for a, b in zip(factor_a, factor_b):
+    product.append(a*b)
+
+  return product 
+
+
 def CalculateVectorMagnitude(vector):
   """ Given a 5D vector represented as a list, calculate its magnitude
   
@@ -278,15 +294,15 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate):
   actual_feedrate = GetSafeFeedrate(displacement_vector, max_feedrates, target_feedrate)
 
   # Find the magnitude of the longest displacement axis. this axis has the most steps to move
-  
+  displacement_vector_steps = MultiplyVector(displacement_vector, steps_per_mm) 
 
-  longest_axis = FindLongestAxis(displacement_vector)
+  longest_axis = FindLongestAxis(displacement_vector_steps)
   fastest_feedrate = float(abs(displacement_vector[longest_axis]))/CalculateVectorMagnitude(displacement_vector)*actual_feedrate
-
-  print longest_axis, fastest_feedrate 
 
   # Now we know the feedrate of the fastest axis, in mm/s. Convert it to us/step. 
   dda_speed = 60*1000000/(fastest_feedrate*steps_per_mm[longest_axis])
+
+  print longest_axis, fastest_feedrate, dda_speed
 
   return dda_speed
 

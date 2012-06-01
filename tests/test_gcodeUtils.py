@@ -352,7 +352,6 @@ class ConvertMmToSteps(unittest.TestCase):
       self.assertEqual(case[2], s3g.ConvertMmToSteps(case[0], case[1]))
 
 
-# TODO: fix this test?
 class FindLongestAxisTests(unittest.TestCase):
   def test_reject_non_5d_list(self):
     self.assertRaises(s3g.PointLengthError, s3g.FindLongestAxis, range(4))
@@ -383,10 +382,11 @@ class CalculateDDASpeedTests(unittest.TestCase):
   def test_calculate_dda_speed_good_result(self):
     # TODO: These cases assume a replicator with specific steps_per_mm
     cases = [
-      [[0,0,0,0,0],   [1,1,1,0,0],   100, 1039230/100],
-      [[100,0,0,0,0], [200,0,0,0,0], 200, 30000000/9413.0],
-      [[200,0,0,0,0], [100,0,0,0,0], 200, 30000000/9413.0],
-      [[100,0,0,0,0], [200,0,0,0,0], 300, 20000000/9413.0],
+      [[100,0,0,0,0], [200,0,0,0,0], 200, 30000000/9413.0],    # Single axis, forward motion
+      [[0,100,0,0,0], [0,200,0,0,0], 300, 20000000/9413.0],
+      [[0,0,100,0,0], [0,0,200,0,0], 300, 20000000/40000.0],
+      [[200,0,0,0,0], [100,0,0,0,0], 200, 30000000/9413.0],    # Single axis, reverse motion
+      [[0,0,0,0,0],   [1,1,1,0,0],   100, 1039230/400],        # Multiple axis, forward motion
     ]
 
     for case in cases:
