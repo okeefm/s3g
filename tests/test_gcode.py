@@ -143,23 +143,6 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(self.g.GCODE_INSTRUCTIONS[0][1], codes)
     self.assertEqual(self.g.GCODE_INSTRUCTIONS[0][2], flags)
 
-  def test_rapid_position_vector_length_zero(self):
-    s3g.CalculateDDASpeed = mock.Mock(side_effect=ValueError)
-    for axis in self.g.state.position:
-      self.g.state.position[axis] = 0 
-    codes = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        }
-    self.assertRaises(  
-        s3g.VectorLengthZeroError, 
-        self.g.RapidPositioning, 
-        codes, 
-        [], 
-        ''
-        )
-
   def test_rapid_position(self):
     initial_position = [1, 2, 3, 4, 5]
     expected_position = [6, 7, 8, 4, 5]
@@ -560,25 +543,6 @@ class gcodeTests(unittest.TestCase):
         'A' : 3,
     }
     self.assertRaises(KeyError, self.g.LinearInterpolation, codes, [], '')
-
-  def test_linear_interpolation_vector_length_zero(self):
-    for axis in self.g.state.position:
-      self.g.state.position[axis] = 0
-    codes = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'F' : 10,
-        }
-    s3g.CalculateDDASpeed = mock.Mock(ValueError)
-    self.assertRaises(
-        s3g.VectorLengthZeroError,
-        self.g.LinearInterpolation,
-        codes,
-        [],
-        '',
-        )
 
   def test_linear_interpolation_no_feedrate_last_feedrate_set(self):
     feedrate = 50

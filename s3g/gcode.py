@@ -258,14 +258,11 @@ class GcodeParser(object):
     """
     current_point = self.state.GetPosition()
     self.state.SetPosition(codes)
-    try:
-        dda_speed = CalculateDDASpeed(
-          current_point, 
-          self.state.GetPosition(), 
-          self.state.rapidFeedrate,
-          )
-    except ValueError:
-      raise VectorLengthZeroError()
+    dda_speed = CalculateDDASpeed(
+      current_point, 
+      self.state.GetPosition(), 
+      self.state.rapidFeedrate,
+       )
     stepped_point = MultiplyVector(
         self.state.GetPosition(), 
         self.state.replicator_step_vector
@@ -326,14 +323,11 @@ class GcodeParser(object):
 
     try:
       feedrate = self.state.values['feedrate']
-      try:
-        dda_speed = CalculateDDASpeed(
-            current_position, 
-            self.state.GetPosition(), 
-            feedrate
-            )
-      except ValueError:
-        raise VectorLengthZeroError()
+      dda_speed = CalculateDDASpeed(
+          current_position, 
+          self.state.GetPosition(), 
+          feedrate
+          )
       stepped_point = MultiplyVector(
           self.state.GetPosition(), 
           self.state.replicator_step_vector

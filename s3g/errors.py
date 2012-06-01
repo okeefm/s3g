@@ -302,3 +302,8 @@ class VectorLengthZeroError(GcodeError):
   A VectorLengthZeroError is thrown when a DDA speec is calculated
   for a vector with length 0
   """
+
+class InvalidFeedrateError(GcodeError):
+  """
+  An InvalidFeedrateError is thrown when a feedrate <0 is given for a movement command
+  """

@@ -205,10 +205,10 @@ def GetSafeFeedrate(displacement_vector, max_feedrates, target_feedrate):
 
   # TODO: What kind of error to throw here?
   if magnitude == 0:
-    raise ValueError
+    raise VectorLengthZeroError()
 
   if target_feedrate <= 0:
-    raise ValueError
+    raise InvalidFeedrateError()
 
   actual_feedrate = target_feedrate
 
@@ -288,7 +288,7 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate):
   # Throw an error if we aren't moving anywhere
   # TODO: Should we do something else here?
   if CalculateVectorMagnitude(displacement_vector) == 0:
-    raise ValueError
+    raise VectorLengthZeroError
 
   # Now, correct the target speedrate to account for the maximum feedrate
   actual_feedrate = GetSafeFeedrate(displacement_vector, max_feedrates, target_feedrate)
