@@ -164,7 +164,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     for i in range(len(spmList)):
       expected_position[i] *= spmList[i]
     rapid_feedrate = 1200     #This is the rapid feedrate baked into the gcode state machine
-    dda_speed = CalculateDDASpeed(initial_position, expected_position, rapid_feedrate)
+    dda_speed = s3g.CalculateDDASpeed(initial_position, expected_position, rapid_feedrate)
     self.mock.QueueExtendedPoint.assert_called_once_with(expected_position, dda_speed)
 
  
@@ -572,7 +572,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     # s3g works in steps, so we need to convert the expected position to steps
     for i in range(len(expectedPoint)):
       expectedPoint[i] *= spmList[i]
-    ddaFeedrate = CalculateDDASpeed(initialPosition, expectedPosition, feedrate)
+    ddaFeedrate = s3g.CalculateDDASpeed(initialPosition, expectedPosition, feedrate)
     self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, ddaFeedrate)
  
   def test_linaer_interpolation_e_and_a_codes_present(self):
@@ -676,7 +676,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         ]
     for i in range(len(expectedPoint)):
       expectedPoint[i] *= spmList[i]
-    dda_speed = CalculateDDASpeed(initialPosition, expectedPoint, feedrate)
+    dda_speed = s3g.CalculateDDASpeed(initialPosition, expectedPoint, feedrate)
     self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, feedrate)
 
   def test_linear_interpolation_a_and_b(self):
@@ -722,7 +722,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         ]
     for i in range(len(expected_point)):
       expected_point[i] *= spmList[i]
-    dda_speed = CalculateDDASpeed(initialPosition, expected_position, feedrate) 
+    dda_speed = s3g.CalculateDDASpeed(initialPosition, expected_position, feedrate) 
     self.mock.QueueExtendedPoint.assert_called_once_with(expected_position, dda_speed)
 
   def test_linear_interpolation_b(self):
@@ -753,7 +753,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         ]
     for i in range(len(expected_position)):
       expected_position[i] *= spmList[i]
-    dda_speed = CalculateDDASpeed(initial_position, expected_position, feedrate)
+    dda_speed = s3g.CalculateDDASpeed(initial_position, expected_position, feedrate)
     self.mock.QueueExtendedPoint.assert_called_once_with(expected_position, dda_speed)
 
   def test_dwell_all_codes_accounted_for(self):
