@@ -21,16 +21,37 @@ class FileReader(object):
     data = self.file.read(count)
   
     if len(data) != count:
-      raise EndOfFileError
+      raise InsufficientDataError 
     
     return data 
 
+  def GetStringBytes(self):
+    """Get all bytes associated with a string
+    Assuming the next parameter is a null terminated string, 
+    we read bytes until we find that null terminator
+    and return the string.  If we read over the 
+    packet limit, we raise a StringTooLong error.
+    @return The bytes making up a null terminated string
+    """
+    b = ''
+    while True:
+      b += self.ReadBytes(1)
+      if len(b) > maximum_payload_length:
+        raise StringTooLongError
+      elif b[-1] == '\x00':
+        return b
+
   def GetNextCommand(self):
     """Assuming the file pointer is at a command, gets the next command number
+    If ReadBytes raises an InsufficientDataError (indicating no more information
+    if available in the file), we throw an EndOfFileError
 
     @return int The command number
     """
-    cmd = ord(self.ReadBytes(1))
+    try:
+      cmd = ord(self.ReadBytes(1))
+    except InsufficientDataError:
+      raise EndOfFileError
 
     # TODO: Break the tool action commands out of here
     if (not cmd in slave_action_command_dict.values()) and \
@@ -39,25 +60,22 @@ class FileReader(object):
 
     return cmd
 
-  def ParseOutParameters(self, cmd):
+  def ParseOutParameters(self, formatString):
     """Reads and decodes a certain number of bytes using a specific format string
     from the input s3g file
    
-    @param int cmd The command's parameters we are trying to parse out 
+    @param string formatString: The format string we will unpack from the file 
     @return list objects unpacked from the input s3g file
     """
-    formatString = commandFormats[cmd]
     returnParams = []
     for formatter in formatString:
       if formatter == 's':
         b = self.GetStringBytes()
         formatString = '<'+str(len(b))+formatter
       else:
-        b = self.GetBytes(formatter)
+        b = self.ReadBytes(struct.calcsize(formatter))
         formatString = '<'+formatter
       returnParams.append(self.ParseParameter(formatString, b))
-    if cmd == host_action_command_dict['TOOL_ACTION_COMMAND']:
-      returnParams.extend(self.ParseOutParameters(returnParams[1]))
     return returnParams
 
   def ParseParameter(self, formatString, bytes):
@@ -73,35 +91,23 @@ class FileReader(object):
       returnParam = returnParam[:-1]
     return returnParam
 
-  def GetStringBytes(self):
-    """Get all bytes associated with a string
-    Assuming the next parameter is a null terminated string, 
-    we read bytes until we find that null terminator
-    and return the string.  If we read over the 
-    packet limit, we raise a StringTooLong error.
-    @return The bytes making up a null terminated string
-    """
-    b = ''
-    while True:
-      readByte = self.ReadBytes(1)
-      b += readByte
-      if len(b) > maximum_payload_length:
-        raise StringTooLongError
-      elif b[-1] == '\x00':
-        return b
+  def ParseHostAction(self, cmd):
+    try:
+      return self.ParseOutParameters(hostFormats[cmd])
+    except KeyError:
+      raise BadCommandError(cmd)
 
-  def GetBytes(self, formatter):
-    """Given a formatter, we read in a certain amount of bytes
-    
-    @param string formatter: The format string we use to diving the number
-    of bytes we read in
-    @return string bytes: The correct number of bytes read in
-    """
-    b = ''
-    for i in range(structFormats[formatter]):
-      b+= self.ReadBytes(1)
-    return b
-
+  def ParseToolAction(self, cmd):
+    if cmd != host_action_command_dict['TOOL_ACTION_COMMAND']:
+      raise NotToolActionCmdError
+    data = []
+    data.extend(self.ParseOutParameters(hostFormats[cmd]))
+    slaveCmd = data[1]
+    try:
+      data.extend(self.ParseOutParameters(slaveFormats[slaveCmd]))
+    except KeyError:
+      raise BadCommandError(slaveCmd)
+    return data
 
   def ParseNextPayload(self):
     """Gets the next command and returns the parsed commands and associated parameters
@@ -109,41 +115,11 @@ class FileReader(object):
     @return list: a list of the cmd and  all information associated with that command
     """
     cmd = self.GetNextCommand()
-
-    parameters = self.ParseOutParameters(cmd)
-    return [cmd] + parameters
-
-#  def ParseNextPacket(self):
-#    """
-#    Assuming the file pointer is at the beginning of a packet, we parse out the information from that packet
-#    @return parsed packet from the file 
-#    """
-#    readHeader = self.ReadBytes(1)
-#    readHeader = self.ParseParameter('<B', readHeader)
-#
-#    length = self.ReadBytes(1)
-#    length = self.ParseParameter('<B', length)
-#
-#    payload = self.ParseNextPayload()
-#
-#    crc = self.ReadBytes(1)
-#    crc = self.ParseParameter('<B', crc)
-#
-#    return self.PackagePacket(readHeader, length, payload, crc)
-
-#  def PackagePacket(self, *args):
-#    """Packages all args into a single list
-#
-#    @param args: Arguments to be packaged
-#    @return package: A single non-nested list comprised of all arguments
-#    """
-#    package = []
-#    for arg in args:
-#      try:
-#        package.extend(arg)
-#      except TypeError:
-#        package.append(arg)
-#    return package
+    if cmd == host_action_command_dict['TOOL_ACTION_COMMAND']:
+      params = self.ParseToolAction(cmd)
+    else:
+      params = self.ParseHostAction(cmd)
+    return [cmd] + params 
 
   def ReadFile(self):
     """Reads from an s3g file until it cant read anymore

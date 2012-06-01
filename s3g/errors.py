@@ -138,10 +138,6 @@ class HeatElementReadyError(ProtocolError):
 class EEPROMMismatchError(ProtocolError):
   """An EEPROM mismatch error is raised when the length of the information written to the eeprom doesnt match the length of the information passed into WriteToEEPROM
   """
-  def __init__(self, value):
-    self.value = value
-  def __str__(self):
-    return str(self.value)
 
 class ParameterError(ValueError):
   """
@@ -173,21 +169,32 @@ class PointLengthError(ParameterError):
   A point length error is caused when a point's length is either too long or too short.
   """
 
-
-class StringTooLongError(Exception):
-  """
-  A stringTooLongError is raised when a string is parsed out of an s3g stream that longer
-  than the specified maximum payload length
-  """
-
 class S3gStreamError(Exception):
   """
   Raised when unexpected data is found while reading an s3g stream.
   """
 
+class InsufficientDataError(S3gStreamError):
+  """
+  An insufficientDataError is thrown when there isnt enough data to read in relative to
+  a given format string.
+  """
+
+class StringTooLongError(S3gStreamError):
+  """
+  A StringTooLongError is raised when a string being read is longer than the maximum
+  payload size
+  """
+
 class EndOfFileError(S3gStreamError):
   """
   An EndOfFileError is raised when the end of an s3g file is reached prematurely.
+  """
+
+class NotToolActionCmdError(S3gStreamError):
+  """
+  A NotToolActionCmdError is thrown when an action command is passed in into 
+  ParseToolAction that is not a ToolActionCommand
   """
 
 class BadCommandError(S3gStreamError):

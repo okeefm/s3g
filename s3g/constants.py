@@ -107,7 +107,7 @@ timeout_length = .5
 s3g_version = 100
 max_tool_index = 127
 
-commandFormats = {
+hostFormats = {
     129     :     ['i', 'i', 'i', 'i'], #"QUEUE POINT", 
     130     :     ['i', 'i', 'i'], #"SET POSITION", 
     131     :     ['B', 'I', 'H'], #"FIND AXES MINIMUMS", 
@@ -115,7 +115,7 @@ commandFormats = {
     133     :     ['I'], #"DELAY", 
     134     :     ['B'], # CHANGE TOOL,
     135     :     ['B', 'H', 'H'], #"WAIT FOR TOOL READY", 
-    136     :     ['B', 'B', 'B'], #"TOOL ACTION COMMAND", Tool action command will need to have an additional list concatonated onto this one, since the 2nd index is another command
+    136     :     ['B', 'B', 'B'], #"TOOL ACTION COMMAND", 
     137     :     ['B'], #"ENABLE AXES", 
     139     :     ['i', 'i', 'i', 'i', 'i', 'I'],#"QUEUE EXTENDED POINT", 
     140     :     ['i', 'i', 'i', 'i', 'i'], #"SET EXTENDED POSITION", 
@@ -133,6 +133,8 @@ commandFormats = {
     152     :     ['B'], #"RESET TO FACTORY", 
     153     :     ['I', 's'], #"BUILD START NOTIFICATION", 
     154     :     [], #"BUILD END NOTIFICATION"
+}
+slaveFormats = {
     1       :     [], #"INIT"
     3       :     ['h'], #"SET TOOLHEAD TARGET TEMP", 
     6       :     ['I'], #"SET MOTOR 1 SPED RPM", 
