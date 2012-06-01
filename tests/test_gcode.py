@@ -528,6 +528,17 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[1][1]))
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[1][2])
 
+  def test_linear_interpolation_no_point_feedrate(self):
+    feedrate = 405
+    for axis in self.g.state.position:
+      self.g.state.position[axis] = 0
+    curPosition = self.g.state.position
+    codes = {'F':feedrate}
+    self.g.LinearInterpolation(codes, [], '')
+    self.assertEqual(curPosition, self.g.state.position)
+    self.assertEqual(feedrate, self.g.state.values['feedrate'])
+
+
   def test_linear_interpolation_no_feedrate_no_last_feedrate_set(self):
     self.g.state.position ={
         'X' : 0,

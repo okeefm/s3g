@@ -22,7 +22,6 @@ G130 X0 Y0 A0 B0 (Lower stepper Vrefs while heating)
 M6 T0 (wait for toolhead, and HBP to reach temperature)
 M6 T1 (wait for toolhead, and HBP to reach temperature)
 G130 X127 Y127 A127 B127 (Set Stepper motor Vref to defaults)
-G0 X112 Y-73     (Position Nozzle)
 G0 Z0.5          (Position Height)
 G1 E4 F50.0      (Create Anchor)
 G92 E0

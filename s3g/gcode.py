@@ -99,6 +99,8 @@ class GcodeParser(object):
       gcode_error.values['LineNumber'] = self.line_number
       gcode_error.values['Command'] = command
       raise gcode_error
+    except VectorLengthZeroError:
+      pass
     except GcodeError as gcode_error:
       gcode_error.values['Command'] = command
       gcode_error.values['LineNumber'] = self.line_number
@@ -289,58 +291,59 @@ class GcodeParser(object):
     AB Commands increment the AB axes.
     Having both E and A or B codes will throw errors.
     """
-    current_position = self.state.GetPosition()
     if 'F' in codes:
       self.state.values['feedrate'] = codes['F']
-    for axis in ['X', 'Y', 'Z']:
-      if axis in codes:
-        self.state.position[axis] = codes[axis]
+    if len(ParseOutAxes(codes)) > 0 or 'E' in codes:
+      current_position = self.state.GetPosition()
+      for axis in ['X', 'Y', 'Z']:
+        if axis in codes:
+          self.state.position[axis] = codes[axis]
 
-    if 'E' in codes:
-      if 'A' in codes or 'B' in codes:
+      if 'E' in codes:
+        if 'A' in codes or 'B' in codes:
+          gcode_error = ConflictingCodesError()
+          gcode_error.values['ConflictingCodes'] = ['E', 'A', 'b']
+          raise gcode_error
+
+        if not 'tool_index' in self.state.values:
+          raise NoToolIndexError
+
+        elif self.state.values['tool_index'] == 0:
+          self.state.position['A'] = codes['E']
+
+        elif self.state.values['tool_index'] == 1:
+          self.state.position['B'] = codes['E']
+
+      elif 'A' in codes and 'B' in codes:
         gcode_error = ConflictingCodesError()
-        gcode_error.values['ConflictingCodes'] = ['E', 'A', 'b']
+        gcode_error.values['ConflictingCodes'] = ['A', 'B']
         raise gcode_error
+      else:
+        if 'A' in codes:
+          self.state.position['A'] = codes['A']
+        if 'B' in codes:
+          self.state.position['B'] = codes['B']
 
-      if not 'tool_index' in self.state.values:
-        raise NoToolIndexError
+      try :
+        feedrate = self.state.values['feedrate']
+        dda_speed = CalculateDDASpeed(
+            current_position, 
+            self.state.GetPosition(), 
+            feedrate
+            )
+        stepped_point = MultiplyVector(
+            self.state.GetPosition(), 
+            self.state.replicator_step_vector
+            )
+        self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
 
-      elif self.state.values['tool_index'] == 0:
-        self.state.position['A'] = codes['E']
-
-      elif self.state.values['tool_index'] == 1:
-        self.state.position['B'] = codes['E']
-
-    elif 'A' in codes and 'B' in codes:
-      gcode_error = ConflictingCodesError()
-      gcode_error.values['ConflictingCodes'] = ['A', 'B']
-      raise gcode_error
-    else:
-      if 'A' in codes:
-        self.state.position['A'] = codes['A']
-      if 'B' in codes:
-        self.state.position['B'] = codes['B']
-
-    try:
-      feedrate = self.state.values['feedrate']
-      dda_speed = CalculateDDASpeed(
-          current_position, 
-          self.state.GetPosition(), 
-          feedrate
-          )
-      stepped_point = MultiplyVector(
-          self.state.GetPosition(), 
-          self.state.replicator_step_vector
-          )
-      self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
-
-    except KeyError as e:
-      if e[0] == 'feedrate': # A key error would return 'feedrate' as the missing key,
+      except KeyError as e:
+        if e[0] == 'feedrate': # A key error would return 'feedrate' as the missing key,
                              # when in respect to the executed command the 'F' command
                              # is the one missing. So we remake the KeyError to report
                              # 'F' instead of 'feedrate'.
-        e = KeyError('F')
-      raise e
+          e = KeyError('F')
+        raise e
 
   def Dwell(self, codes, flags, comment):
     """Pauses the machine for a specified amount of miliseconds
