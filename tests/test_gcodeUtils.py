@@ -358,26 +358,55 @@ class FindLongestAxisTests(unittest.TestCase):
     self.assertRaises(s3g.PointLengthError, s3g.FindLongestAxis, range(4))
 
   def test_good_result(self):
-    vector = [1, 2, 3, 4, 5]
-    self.assertEqual(4, s3g.FindLongestAxis(vector))
+    cases = [
+      [[0,0,0,0,0],    0],
+      [[1,0,0,0,0],    0],
+      [[-1,0,0,0,0],   0],
+      [[1,-2,3,-4,5],  4],
+      [[-1,2,-3,4,-5], 4],
+    ]
+
+    for case in cases:
+      self.assertEqual(case[1], s3g.FindLongestAxis(case[0]))
 
 
-#class CalculateDDASpeedTests(unittest.TestCase):
-#  # TODO: test forn non-5d points
-#
-#  def test_zero_move(self):
-#    initial_position = [0,0,0,0,0]
-#    target_position =  [0,0,0,0,0]
-#    target_feedrate = 0
-#    self.assertRaises(ValueError, s3g.CalculateDDASpeed, initial_position, target_position, target_feedrate)
-#
-#  def test_good_result(self):
-#    curPoint = [100, 0, 0, 0, 0]
-#    target = [200, 0, 0, 0, 0]
-#    feedrate = 200
-#    targetFeedrate = 30000000
-#    self.assertEqual(targetFeedrate, s3g.CalculateDDASpeed(feedrate, curPoint, target))
+class CalculateDDASpeedTests(unittest.TestCase):
+  # TODO: test forn non-5d points
 
+  def test_zero_move(self):
+    initial_position = [0,0,0,0,0]
+    target_position =  [0,0,0,0,0]
+    target_feedrate = 0
+
+    self.assertRaises(ValueError, s3g.CalculateDDASpeed, initial_position, target_position, target_feedrate)
+
+  def test_good_result(self):
+    # TODO: These cases assume a replicator with specific steps_per_mm
+    cases = [
+      [[0,0,0,0,0],   [1,1,1,0,0],   100, 1039230/100],
+      [[100,0,0,0,0], [200,0,0,0,0], 200, 30000000/9413.0],
+      [[200,0,0,0,0], [100,0,0,0,0], 200, 30000000/9413.0],
+      [[100,0,0,0,0], [200,0,0,0,0], 300, 20000000/9413.0],
+    ]
+
+    for case in cases:
+      self.assertEqual(case[3], s3g.CalculateDDASpeed(case[0], case[1], case[2]))
+
+"""
+[[9413,0,0,0,0) in 180000000 us (relative: 18)
+[[18828,0,0,0,0) in 30000000 us (relative: 18)
+[[28242,0,0,0,0) in 20000000 us (relative: 18)
+[[37656,0,0,0,0) in 15000000 us (relative: 18)
+[[47070,0,0,0,0) in 12000000 us (relative: 18)
+[[56484,0,0,0,0) in 10000000 us (relative: 18)
+[[65898,0,0,0,0) in 8571428 us (relative: 18)
+[[75311,0,0,0,0) in 7500000 us (relative: 18)
+[[84726,0,0,0,0) in 6666666 us (relative: 18)
+[[94140,0,0,0,0) in 6000000 us (relative: 18)
+[[103554,0,0,0,0) in 3000000 us (relative: 18)
+[[112967,0,0,0,0) in 2000000 us (relative: 18)
+[[122382,0,0,0,0) in 1500000 us (relative: 18)
+"""
 
 #class ParseSampleGcodeFileTests(unittest.TestCase):
 #  def test_parse_files(self):

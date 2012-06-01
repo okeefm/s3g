@@ -236,14 +236,17 @@ def FindLongestAxis(vector):
   if len(vector) != 5:
     raise PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
 
-  max_value = max(vector)
-  max_value_index = vector.index(max_value)
+  max_value_index = 0
+  for i in range (1,5):
+    if abs(vector[i]) > abs(vector[max_value_index]):
+      max_value_index = i
 
   return max_value_index
 
- 
-def CalculateMove(initial_position, target_position, target_feedrate):
-  """ Given a 
+
+def CalculateDDASpeed(initial_position, target_position, target_feedrate):
+  """ Given an initial position, target position, and target feedrate, calculate an achievable
+  travel speed.
 
   @param initial_position: Starting position of the move, in mm
   @param target_position: Target position to move to, in mm
@@ -260,6 +263,9 @@ def CalculateMove(initial_position, target_position, target_feedrate):
     1600,
   ]
 
+  steps_per_mm = [94.130, 94.130, 400, 96.275, 96.275]
+
+
   # First, figure out where we are moving to. 
   displacement_vector = CalculateVectorDifference(target_position, initial_position)
 
@@ -271,8 +277,16 @@ def CalculateMove(initial_position, target_position, target_feedrate):
   # Now, correct the target speedrate to account for the maximum feedrate
   actual_feedrate = GetSafeFeedrate(displacement_vector, max_feedrates, target_feedrate)
 
-  # Finally, convert the feedrate to a DDA speed
-  ddaSpeed = FeedrateToDDA(displacement_vector, feedrate)
+  # Find the magnitude of the longest displacement axis. this axis has the most steps to move
+  
 
-  return ddaSpeed
+  longest_axis = FindLongestAxis(displacement_vector)
+  fastest_feedrate = float(abs(displacement_vector[longest_axis]))/CalculateVectorMagnitude(displacement_vector)*actual_feedrate
+
+  print longest_axis, fastest_feedrate 
+
+  # Now we know the feedrate of the fastest axis, in mm/s. Convert it to us/step. 
+  dda_speed = 60*1000000/(fastest_feedrate*steps_per_mm[longest_axis])
+
+  return dda_speed
 
