@@ -58,7 +58,7 @@ class GcodeStates(object):
     self.zSPM = 400
     self.aSPM = 96.275
     self.bSPM = 96.275
-    replicator_step_vector = [
+    self.replicator_step_vector = [
         self.xSPM, 
         self.ySPM, 
         self.zSPM,
