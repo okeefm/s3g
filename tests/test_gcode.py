@@ -11,12 +11,17 @@ import copy
 
 import s3g
 
-class gcodeTestsMockedS3G(unittest.TestCase):
+class gcodeTests(unittest.TestCase):
   def setUp(self):
+    reload(s3g)
     self.mock = mock.Mock(s3g.s3g)
 
     self.g = s3g.GcodeParser()
     self.g.s3g = self.mock
+
+  def tearDown(self):
+    self.mock = None
+    self.g = None
 
   def test_check_gcode_errors_are_recorded_correctly(self):
     command = "G161 Q1" #NOTE: this assumes that G161 does not accept a Q code
@@ -137,6 +142,23 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     flags = ''
     self.assertEqual(self.g.GCODE_INSTRUCTIONS[0][1], codes)
     self.assertEqual(self.g.GCODE_INSTRUCTIONS[0][2], flags)
+
+  def test_rapid_position_vector_length_zero(self):
+    s3g.CalculateDDASpeed = mock.Mock(side_effect=ValueError)
+    for axis in self.g.state.position:
+      self.g.state.position[axis] = 0 
+    codes = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        }
+    self.assertRaises(  
+        s3g.VectorLengthZeroError, 
+        self.g.RapidPositioning, 
+        codes, 
+        [], 
+        ''
+        )
 
   def test_rapid_position(self):
     initial_position = [1, 2, 3, 4, 5]
@@ -538,6 +560,25 @@ class gcodeTestsMockedS3G(unittest.TestCase):
         'A' : 3,
     }
     self.assertRaises(KeyError, self.g.LinearInterpolation, codes, [], '')
+
+  def test_linear_interpolation_vector_length_zero(self):
+    for axis in self.g.state.position:
+      self.g.state.position[axis] = 0
+    codes = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'F' : 10,
+        }
+    s3g.CalculateDDASpeed = mock.Mock(ValueError)
+    self.assertRaises(
+        s3g.VectorLengthZeroError,
+        self.g.LinearInterpolation,
+        codes,
+        [],
+        '',
+        )
 
   def test_linear_interpolation_no_feedrate_last_feedrate_set(self):
     feedrate = 50

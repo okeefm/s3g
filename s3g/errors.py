@@ -296,3 +296,9 @@ class MissingCodeError(GcodeError):
   A MissingCodeError is thrown if a command that requires a certain
   code is missing that code.
   """
+
+class VectorLengthZeroError(GcodeError):
+  """
+  A VectorLengthZeroError is thrown when a DDA speec is calculated
+  for a vector with length 0
+  """
