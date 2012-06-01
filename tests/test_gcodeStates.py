@@ -50,15 +50,6 @@ class s3gHelperFunctionTests(unittest.TestCase):
         }
     self.g.ofset_register = None
     expectedPosition = [0, 1, 2, 3, 4]
-    spmList = [
-        self.g.xSPM,
-        self.g.ySPM,
-        self.g.zSPM,
-        self.g.aSPM,
-        self.g.bSPM,
-        ]
-    for i in range(len(spmList)):
-      expectedPosition[i] *= spmList[i]
     self.assertEqual(expectedPosition, self.g.GetPosition())
 
   def test_get_position_with_offset(self):
@@ -78,15 +69,6 @@ class s3gHelperFunctionTests(unittest.TestCase):
         }
     self.g.offset_register = 0
     expectedPosition = [100, 201, 302, 403, 504]
-    spmList = [
-        self.g.xSPM,
-        self.g.ySPM,
-        self.g.zSPM,
-        self.g.aSPM,
-        self.g.bSPM,
-        ]
-    for i in range(len(spmList)):
-      expectedPosition[i] *= spmList[i]
     self.assertEqual(expectedPosition, self.g.GetPosition())
   
   def test_set_position_no_axes(self):

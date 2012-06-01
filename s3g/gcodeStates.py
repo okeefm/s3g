@@ -41,7 +41,7 @@ class GcodeStates(object):
     self.findingTimeout = 60      #Timeout used when finding minimums/maximums
 
     # Feedrate to try when making rapid motions
-    self.rapidFeedrate = 300
+    self.rapidFeedrate = 1200
 
     # Maximum velocities for a machine, in mm/s
     # TODO: something besides pull these numbers out of the air
@@ -58,8 +58,14 @@ class GcodeStates(object):
     self.zSPM = 400
     self.aSPM = 96.275
     self.bSPM = 96.275
-
-
+    replicator_step_vector = [
+        self.xSPM, 
+        self.ySPM, 
+        self.zSPM,
+        self.aSPM,
+        self.bSPM,
+        ]
+  
   def LosePosition(self, axes):
     """Given a set of axes, loses the position of
     those axes.
@@ -94,16 +100,6 @@ class GcodeStates(object):
         returnPosition.append(self.position[axis])
       else:
         returnPosition.append(self.position[axis] + self.offsetPosition[self.offset_register][axis])
-
-    spmList = [
-        self.xSPM,
-        self.ySPM,
-        self.zSPM,
-        self.aSPM,
-        self.bSPM,
-        ]
-    for i in range(len(spmList)):
-      returnPosition[i] *= spmList[i]
     return returnPosition
 
   def StoreOffset(self, register, offsets):

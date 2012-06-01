@@ -182,7 +182,8 @@ class GcodeParser(object):
         self.state.position['A'] = codes['A']
       if 'B' in codes:
         self.state.position['B'] = codes['B']
-    self.s3g.SetExtendedPosition(self.state.GetPosition())
+    stepped_position = MultiplyVector(self.state.GetPosition(), self.state.replicator_step_vector)
+    self.s3g.SetExtendedPosition(stepped_position)
       
   def UseP0Offsets(self, codes, flags, comment):
     """Sets the state machine to use the P0 offset.
@@ -255,8 +256,18 @@ class GcodeParser(object):
     """Using a preset rapid feedrate, moves the XYZ axes
     to a specific location.
     """
+    current_point = self.state.GetPosition()
     self.state.SetPosition(codes)
-    self.s3g.QueueExtendedPoint(self.state.GetPosition(), self.state.rapidFeedrate)
+    dda_speed = CalculateDDASpeed(
+        current_point, 
+        self.state.GetPosition(), 
+        self.state.rapidFeedrate
+        )
+    stepped_point = MultiplyVector(
+        self.state.GetPosition(), 
+        self.state.replicator_step_vector
+        )
+    self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
 
   def AbsoluteProgramming(self, codes, flags, comment):
     """Set the programming mode to absolute
@@ -278,6 +289,7 @@ class GcodeParser(object):
     AB Commands increment the AB axes.
     Having both E and A or B codes will throw errors.
     """
+    current_position = self.state.GetPosition()
     if 'F' in codes:
       self.state.values['feedrate'] = codes['F']
     for axis in ['X', 'Y', 'Z']:
@@ -311,7 +323,16 @@ class GcodeParser(object):
 
     try:
       feedrate = self.state.values['feedrate']
-      self.s3g.QueueExtendedPoint(self.state.GetPosition(), feedrate)
+      dda_speed = CalculateDDASpeed(
+          current_position, 
+          self.state.GetPosition(), 
+          feedrate
+          )
+      stepped_point = MultiplyVector(
+          self.state.GetPosition(), 
+          self.state.replicator_step_vector
+          )
+      self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
 
     except KeyError as e:
       if e[0] == 'feedrate': # A key error would return 'feedrate' as the missing key,
