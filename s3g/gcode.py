@@ -142,7 +142,6 @@ class GcodeParser(object):
         e = KeyError('F')
       raise e
 
-
   def FindAxesMinimums(self, codes, flags, comment):
     """Moves the given axes in the negative direction until a timeout
     or endstop is reached.

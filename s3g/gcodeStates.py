@@ -34,7 +34,7 @@ class GcodeStates(object):
         }
 
     self.values = {
-        'waiting_timeout'   :   60,
+        'waiting_timeout'   :  8*60,
         }
 
     self.offset_register = None   #Curent offset register
