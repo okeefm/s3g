@@ -36,6 +36,8 @@ class FileReader(object):
     b = ''
     while True:
       b += self.ReadBytes(1)
+      if b == '':   #We just read in an empty string, so we ran out of data
+        raise InsufficientDataError
       if len(b) > maximum_payload_length:
         raise StringTooLongError
       elif b[-1] == '\x00':
@@ -132,7 +134,6 @@ class FileReader(object):
       while True:
         payload = self.ParseNextPayload()
         payloads.append(payload)
-
     # TODO: We aren't catching partial packets at the end of files here.
     except EndOfFileError:
       return payloads

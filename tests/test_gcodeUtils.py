@@ -380,7 +380,7 @@ class CalculateDDASpeedTests(unittest.TestCase):
 
     self.assertRaises(ValueError, s3g.CalculateDDASpeed, initial_position, target_position, target_feedrate)
 
-  def test_good_result(self):
+  def test_calculate_dda_speed_good_result(self):
     # TODO: These cases assume a replicator with specific steps_per_mm
     cases = [
       [[0,0,0,0,0],   [1,1,1,0,0],   100, 1039230/100],

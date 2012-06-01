@@ -47,16 +47,7 @@ class FileReaderTestsWithS3g(unittest.TestCase):
   def tearDown(self):
     self.r = None
     self.d = None
-  
-  def test_ParseParameter(self):
-    cases = [
-    [256, s3g.EncodeUint32(256), '<i'],
-    ['asdf', array.array('B', 'asdf'),  '<4s'],
-    ['asdf', array.array('B', 'asdf\x00'), '<5s'],
-    ]
-    for case in cases:
-      self.assertEqual(case[0], self.d.ParseParameter(case[2], case[1]))
-
+ 
   def test_ReadFile(self):
     point = [1, 2, 3, 4, 5]
     duration = 42
@@ -77,64 +68,6 @@ class FileReaderTestsWithS3g(unittest.TestCase):
     for readCmd, cmd in zip([payloads[0][0], payloads[1][0], payloads[2][0]], cmdNumbers):
       self.assertEqual(readCmd, cmd)
 
-class ParseFileTests(unittest.TestCase):
-  def setUp(self):
-    self.r = s3g.s3g()
-    self.inputstream = io.BytesIO()
-    self.writer = s3g.FileWriter(self.inputstream)
-    self.r.writer = self.writer
-    self.d = s3g.FileReader()
-    self.d.file = self.inputstream
-
-  def tearDown(self):
-    self.writer = None
-    self.inputstream = None
-    self.r = None 
- 
-  def test_parse_tool_action_bad_hot_cmd(self):
-    cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
-    self.assertRaises(s3g.NotToolActionCmdError, self.d.ParseToolAction, cmd)
-        
-  def test_parse_tool_action_unknown_tool_action_command(self):
-    cmd = s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
-    toWrite = bytearray()
-    toWrite.append(0)
-    toWrite.append(255) #Unknown Command
-    toWrite.append(0) #Lenth
-    self.inputstream.write(toWrite)
-    self.inputstream.seek(0)
-    self.assertRaises(s3g.BadCommandError, self.d.ParseToolAction, cmd)
-
-  def test_parse_tool_action(self):
-    cmd = s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
-    toolId = 2
-    actionCmd = s3g.slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP']
-    length = 2
-    temp = 100
-    expectedData = [toolId, actionCmd, length, temp]
-    self.r.SetToolheadTemperature(toolId, temp)
-    self.inputstream.seek(0) 
-    self.d.ReadBytes(1)
-    data = self.d.ParseToolAction(cmd)
-    self.assertEqual(expectedData, data)
-
-  def test_parse_host_action_bad_command(self):
-    cmd = 255
-    self.assertRaises(s3g.BadCommandError, self.d.ParseHostAction, cmd)
-
-  def test_parse_host_action(self):
-    cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT']
-    point = [1, 2, 3, 4, 5]
-    feedrate = 500
-    expectedData = []
-    expectedData.extend(point)
-    expectedData.append(feedrate)
-    self.r.QueueExtendedPoint(point, feedrate)
-    self.inputstream.seek(0)
-    self.d.ReadBytes(1)
-    data = self.d.ParseHostAction(cmd)
-    self.assertEqual(expectedData, data)
- 
 class MockTests(unittest.TestCase):
   def setUp(self):
     self.inputstream = io.BytesIO()
@@ -145,6 +78,11 @@ class MockTests(unittest.TestCase):
   def tearDown(self):
     self.d = None
     self.mock = None
+
+  def test_get_string_always_read_empty_string(self):
+    b = ''
+    self.d.ReadBytes = mock.Mock(return_value=b)
+    self.assertRaises(s3g.InsufficientDataError, self.d.GetStringBytes)
 
   def test_get_string_bytes_string_too_long(self):
     b = 'a'
@@ -195,6 +133,19 @@ class MockTests(unittest.TestCase):
     expectedPayloads = []
     self.assertEqual(expectedPayloads, self.d.ReadFile())
 
+  def test_read_file_good_data(self):
+    expected_data = [1, 2, 3, 4, 5]
+    parse_next_payload_data = [1, 2, 3, 4, 5]
+    parse_next_payload_data.reverse()
+    def parse_next_payload_side_effect(*args):
+      try:
+        return parse_next_payload_data.pop()
+      except:
+        raise s3g.EndOfFileError
+    self.d.ParseNextPayload = mock.Mock(side_effect=parse_next_payload_side_effect)
+    data = self.d.ReadFile()
+    self.assertEqual(expected_data, data)
+
   def test_get_next_command_no_commands_left(self):
     self.d.ReadBytes = self.mock.ReadBytes
     self.mock.ReadBytes.side_effect = s3g.InsufficientDataError
@@ -228,10 +179,6 @@ class MockTests(unittest.TestCase):
     data = self.d.ParseOutParameters(formatString)
     expectedData = []
     self.assertEqual(expectedData, data)
-
-  def test_parse_out_parameters_bad_formatter(self):
-    formatString = 'z'
-    self.assertRaises(struct.error, self.d.ParseOutParameters, formatString)
 
   def test_parse_out_parameters_string(self):
     formatString = 's'
@@ -276,6 +223,61 @@ class MockTests(unittest.TestCase):
 
     data = self.d.ParseOutParameters(formatString)
     self.assertEqual(expected_data, data)
+
+  def test_parse_parameter_bad_format_string(self):
+    formatString = 'z'
+    self.assertRaises(struct.error, self.d.ParseParameter, formatString, '')
+ 
+  def test_parse_parameter(self):
+    cases = [
+    [256, s3g.EncodeUint32(256), '<i'],
+    ['asdf', array.array('B', 'asdf'),  '<4s'],
+    ['asdf', array.array('B', 'asdf\x00'), '<5s'],
+    ]
+    for case in cases:
+      self.assertEqual(case[0], self.d.ParseParameter(case[2], case[1]))
+
+  def test_parse_tool_action_bad_hot_cmd(self):
+    cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
+    self.assertRaises(s3g.NotToolActionCmdError, self.d.ParseToolAction, cmd)
+        
+  def test_parse_tool_action_unknown_tool_action_command(self):
+    cmd = s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
+    data = [0, 255, 0]
+    self.d.ParseOutParameters = mock.Mock(return_value=data)
+    self.assertRaises(s3g.BadCommandError, self.d.ParseToolAction, cmd)
+
+  def test_parse_tool_action(self):
+    cmd = s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
+    toolId = 2
+    actionCmd = s3g.slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP']
+    length = 2
+    temp = 100
+    data = [
+        [toolId, actionCmd, length,],
+        [temp,],
+        ]
+    data.reverse()
+    def parse_out_parameters_side_effect(*args):
+      return data.pop()
+    self.d.ParseOutParameters = mock.Mock(side_effect = parse_out_parameters_side_effect)
+    expectedData = [toolId, actionCmd, length, temp]
+    data = self.d.ParseToolAction(cmd)
+    self.assertEqual(expectedData, data)
+
+  def test_parse_host_action_bad_command(self):
+    cmd = 255
+    self.assertRaises(s3g.BadCommandError, self.d.ParseHostAction, cmd)
+
+  def test_parse_host_action(self):
+    cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT']
+    point = [1, 2, 3, 4, 5]
+    feedrate = 500
+    data = point + [feedrate]
+    self.d.ParseOutParameters = mock.Mock(return_value=data)
+    expectedData = point + [feedrate]
+    data = self.d.ParseHostAction(cmd)
+    self.assertEqual(expectedData, data)
 
 if __name__ == "__main__":
   unittest.main()

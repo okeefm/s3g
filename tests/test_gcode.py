@@ -521,6 +521,13 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[1][2])
 
   def test_linear_interpolation_no_feedrate_no_last_feedrate_set(self):
+    self.g.state.position ={
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
     codes = {
         'X' : 0,
         'Y' : 1,
@@ -569,6 +576,13 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, ddaFeedrate)
  
   def test_linaer_interpolation_e_and_a_codes_present(self):
+    self.g.state.position = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
     codes = {
         'X' : 0,
         'Y' : 0,
@@ -580,6 +594,13 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertRaises(s3g.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
 
   def test_linear_interpolation_e_and_b_codes_present(self):
+    self.g.state.position = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
     codes = {
         'X' : 0,
         'Y' : 0,
@@ -591,6 +612,13 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertRaises(s3g.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
 
   def test_linear_interpolation_e_and_a_and_b_present(self):
+    self.g.state.position = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
     codes = {
         'X' : 0,
         'Y' : 0,
@@ -603,6 +631,13 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.assertRaises(s3g.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
 
   def test_linear_interpolation_e_code_no_toolhead(self):
+    self.g.state.position = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
     codes = {
         'X' : 0,
         'Y' : 0,
@@ -645,6 +680,13 @@ class gcodeTestsMockedS3G(unittest.TestCase):
     self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, feedrate)
 
   def test_linear_interpolation_a_and_b(self):
+    self.g.state.position = {
+        'X' : 0,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
     codes = {
         'A' : 0,
         'B' : 0,
@@ -685,7 +727,7 @@ class gcodeTestsMockedS3G(unittest.TestCase):
 
   def test_linear_interpolation_b(self):
     initial_position = [5, 4, 3, 2, 1]
-    expecetd_position = [1, 2, 3, 2, 4]
+    expected_position = [1, 2, 3, 2, 4]
     feedrate = 1
     self.g.state.position = {
         'X' : initial_position[0],
