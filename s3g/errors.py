@@ -98,7 +98,7 @@ class TransmissionError(IOError):
 
 class ExtendedStopError(Exception):
   """
-  An extended stop error is thrown if there was a problem executing an extended stop on the machinea.
+  An extended stop error is thrown if there was a problem executing an extended stop on the machine.
   """
   def __str__(self):
     return 'ExtendedStop'

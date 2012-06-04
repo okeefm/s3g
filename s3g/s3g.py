@@ -3,7 +3,6 @@ import struct
 import time
 import logging
 
-# TODO: Do these go in their own namespace?
 from constants import *
 from errors import *
 from crc import *
@@ -155,8 +154,8 @@ class s3g(object):
     )
 
     [response_code, extended_stop_response] = UnpackResponse('<BB', response)
-    # TODO: can this be anything besides 1?
-    if extended_stop_response == 1:
+
+    if extended_stop_response != 0:
       raise ExtendedStopError
 
   def WaitForPlatformReady(self, tool_index, delay, timeout):
@@ -468,7 +467,6 @@ class s3g(object):
      x, y, z, a, b,
      endstop_states] = UnpackResponse('<BiiiiiH', response)
 
-    # TODO: fix the endstop bit encoding, it doesn't make sense.
     return [x, y, z, a, b], endstop_states
 
   def QueuePoint(self, point, rate):
@@ -588,7 +586,7 @@ class s3g(object):
       action is taken after timeout
     @param boolean ready_on_timeout: Bot changes to the ready state after tiemout
     @param boolean reset_on_timeout: Resets the bot on timeout
-    @param boolean clear_screen: Clears the screen on buttonPress
+    @param boolean clear_screen: Clears the screen on button press
     """
     if button == 'center':
       button = 0x01
@@ -842,6 +840,7 @@ class s3g(object):
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['IS_TOOL_READY'])
     [response_code, ready] = UnpackResponse('<BB', response)
+
     isReady = False
     if ready == 1:
       isReady = True
@@ -849,6 +848,7 @@ class s3g(object):
       isReady = False
     else:
       raise HeatElementReadyError(ready)
+
     return isReady
 
   def ReadFromToolheadEEPROM(self, tool_index, offset, length):

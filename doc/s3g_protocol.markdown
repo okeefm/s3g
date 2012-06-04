@@ -320,15 +320,15 @@ An axes bitfield structure is used to represent a selection of axes.
 </tr>
 <tr>
  <td>7</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>6</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>5</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>4</td>
@@ -583,27 +583,27 @@ Response
 </tr>
 <tr>
  <td>15</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>14</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>13</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>12</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>11</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>10</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>9</td>
@@ -656,7 +656,8 @@ Payload
 
 Response
 
-    int8: 0 If the command terminated normally, 1 if there was an error
+    int8: 0 (reserved for future use)
+
 
 ## 23 - Get motherboard status
 Retrieve some status information from the motherboard
@@ -705,12 +706,12 @@ Response
 </tr>
 <tr>
  <td>1</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
  <td></td>
 </tr>
 <tr>
  <td>0</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
  <td></td>
 </tr>
 </table>
@@ -840,11 +841,11 @@ Response (0 bytes)
 </tr>
 <tr>
  <td>6</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>5</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>4</td>
@@ -962,7 +963,7 @@ Payload
     uint8: green 
     uint8: blue
     uint8: blink rate (0-255 valid)
-    uint8: N/A (reserved for future use)
+    uint8: 0 (reserved for future use)
 
 Response (0 bytes)
 
@@ -973,7 +974,7 @@ Payload
 
     uint16: frequency
     uint16: buzz length in ms
-    uint8: N/A (reserved for future use)
+    uint8: 0 (reserved for future use)
 
 Response (0 bytes)
 
@@ -996,11 +997,11 @@ Button field
 </tr>
 <tr>
  <td>7</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>6</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>5</td>
@@ -1036,23 +1037,23 @@ Options Field
 </tr>
 <tr>
  <td>7</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>6</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>5</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>4</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>3</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
 <td>2</td>
@@ -1099,23 +1100,23 @@ Response (0 bytes)
 </tr>
 <tr>
  <td>7</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>6</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>5</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>4</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
  <td>3</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
 </tr>
 <tr>
 <td>2</td>
@@ -1137,7 +1138,7 @@ Set the percent done for the current build. This value will be displayed on the 
 Payload
  
     uint8: percent (0-100)
-    uint8: N/A (reserved for future use)
+    uint8: 0 (reserved for future use) (reserved for future use)
 
 Response (0 bytes)
 
@@ -1157,7 +1158,7 @@ Calls a factory reset on the eeprom. Resets all values to their "factory" settin
 
 Payload
 
-    uint8: N/A (reserved for future use)
+    uint8: 0 (reserved for future use)
 
 Response (0 bytes)
 
@@ -1329,7 +1330,7 @@ DEPRECATED BITFIELD TABLE
 </tr>
 <tr>
  <td>1</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
  <td></td>
 </tr>
 <tr>
@@ -1358,7 +1359,7 @@ NEW BITFIELD TABLE
 </tr>
 <tr>
 <td>5</td>
-<td>N/A></td>
+<td>0 (reserved for future use)></td>
 <td></td>
 </tr>
 <tr>
@@ -1451,32 +1452,32 @@ Response (0 bytes)
 </tr>
 <tr>
  <td>7</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
  <td></td>
 </tr>
 <tr>
  <td>6</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
  <td></td>
 </tr>
 <tr>
  <td>5</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
  <td></td>
 </tr>
 <tr>
  <td>4</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
  <td></td>
 </tr>
 <tr>
  <td>3</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
  <td></td>
 </tr>
 <tr>
  <td>2</td>
- <td>N/A</td>
+ <td>0 (reserved for future use)</td>
  <td></td>
 </tr>
 <tr>

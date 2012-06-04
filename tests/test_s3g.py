@@ -413,7 +413,7 @@ class S3gTests(unittest.TestCase):
 
   def test_wait_for_button(self):
     button = 0x10
-    options = 0x02 + 0x04 # TODO: Explain what these mean
+    options = 0x02 + 0x04 # Reset on timeout, Clear screen
     timeout = 0
 
     response_payload = bytearray()
@@ -493,7 +493,7 @@ class S3gTests(unittest.TestCase):
 
     self.r.DisplayMessage(row, col, message, timeout, clear_existing, last_in_group, wait_for_button)
     
-    expectedBitfield = 0x01+0x02+0x04 # TODO: Explain this
+    expectedBitfield = 0x01+0x02+0x04 # Clear existing, last in group, wait for button
 
     packet = bytearray(self.inputstream.getvalue())
     payload = s3g.DecodePacket(packet)
@@ -1041,13 +1041,21 @@ class S3gTests(unittest.TestCase):
     payload = s3g.DecodePacket(packet)
     self.assertEqual(payload[0], s3g.host_query_command_dict['GET_MOTHERBOARD_STATUS'])    
 
+  def test_extended_stop_error(self):
+    response_payload = bytearray()
+    response_payload.append(s3g.response_code_dict['SUCCESS'])
+    response_payload.append(1)
+    self.outputstream.write(s3g.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+
+    self.assertRaises(s3g.ExtendedStopError, self.r.ExtendedStop, True, True)
 
   def test_extended_stop(self):
     expected_states = [
       [False, False, 0x00],
-      [True, False, 0x01],
-      [False, True, 0x02],
-      [True, True, 0x03],
+      [True,  False, 0x01],
+      [False, True,  0x02],
+      [True,  True,  0x03],
     ]
 
     for expected_state in expected_states:
@@ -1065,15 +1073,6 @@ class S3gTests(unittest.TestCase):
 
       self.assertEqual(payload[0], s3g.host_query_command_dict['EXTENDED_STOP'])
       self.assertEqual(payload[1], expected_state[2])
-
-  def test_extended_stop_error(self):
-    response_payload = bytearray()
-    response_payload.append(s3g.response_code_dict['SUCCESS'])
-    response_payload.append(1)
-    self.outputstream.write(s3g.EncodePayload(response_payload))
-    self.outputstream.seek(0)
-
-    self.assertRaises(s3g.ExtendedStopError, self.r.ExtendedStop, True, True)
 
   def test_get_pid_state(self):
     expectedDict = {
