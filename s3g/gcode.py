@@ -59,9 +59,10 @@ class GcodeParser(object):
 
     #print '>>', command, '<<'
     # Parse the line
-    codes, flags, comment = ParseLine(command)
 
     try:
+      codes, flags, comment = ParseLine(command)
+
       if 'G' in codes:
         if codes['G'] in self.GCODE_INSTRUCTIONS:
           CheckForExtraneousCodes(codes.keys(), self.GCODE_INSTRUCTIONS[codes['G']][1])
