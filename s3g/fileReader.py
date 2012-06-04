@@ -97,7 +97,7 @@ class FileReader(object):
     try:
       return self.ParseOutParameters(hostFormats[cmd])
     except KeyError:
-      raise BadCommandError(cmd)
+      raise BadHostCommandError(cmd)
 
   def ParseToolAction(self, cmd):
     if cmd != host_action_command_dict['TOOL_ACTION_COMMAND']:
@@ -108,7 +108,7 @@ class FileReader(object):
     try:
       data.extend(self.ParseOutParameters(slaveFormats[slaveCmd]))
     except KeyError:
-      raise BadCommandError(slaveCmd)
+      raise BadSlaveCommandError(slaveCmd)
     return data
 
   def ParseNextPayload(self):

@@ -245,7 +245,7 @@ class MockTests(unittest.TestCase):
     cmd = s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
     data = [0, 255, 0]
     self.d.ParseOutParameters = mock.Mock(return_value=data)
-    self.assertRaises(s3g.BadCommandError, self.d.ParseToolAction, cmd)
+    self.assertRaises(s3g.BadSlaveCommandError, self.d.ParseToolAction, cmd)
 
   def test_parse_tool_action(self):
     cmd = s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
@@ -267,7 +267,7 @@ class MockTests(unittest.TestCase):
 
   def test_parse_host_action_bad_command(self):
     cmd = 255
-    self.assertRaises(s3g.BadCommandError, self.d.ParseHostAction, cmd)
+    self.assertRaises(s3g.BadHostCommandError, self.d.ParseHostAction, cmd)
 
   def test_parse_host_action(self):
     cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT']

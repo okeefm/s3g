@@ -207,6 +207,18 @@ class BadCommandError(S3gStreamError):
   def __str__(self):
     return repr(self.command)
 
+class BadSlaveCommandError(BadCommandError):
+  """
+  A BadSlaveCommandError is thrown when a slave command is encountered that we
+  do not know about
+  """
+
+class BadHostCommandError(BadCommandError):
+  """
+  A BadHostCommandError is thrown when a host command is encountered that we
+  do not know about
+  """
+
 class GcodeError(ValueError):
   """
   Gcode errrors are raised when the gcode parser encounters an invalid line
