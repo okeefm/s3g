@@ -125,6 +125,7 @@ class EncoderTests(unittest.TestCase):
 
   def test_encode_axes(self):
     cases = [
+      [['X', 'Y', 'Z', 'A', 'B'], 0x1F],
       [['x','y','z','a','b'], 0x1F],
       [['x'],                 0x01],
       [['y'],                 0x02],

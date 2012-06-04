@@ -44,13 +44,6 @@ class fileReaderRawTests(unittest.TestCase):
     packaged = self.d.PackagePacket(a, b, l, c)
     self.assertEqual(expectedPackage, packaged)
 
-  def test_GetCommandFormat(self):
-    expectedFormatString = ['i', 'i', 'i', 'i']
-    cmd = bytearray()
-    cmd.append('\x81')
-    formatString = self.d.GetCommandFormat(cmd)
-    self.assertEqual(expectedFormatString, formatString)
-
   def test_ParseParameter(self):
     b = bytearray()
     b.extend('asdf')
