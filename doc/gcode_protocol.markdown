@@ -516,3 +516,42 @@ S3g Output (none)
 
 Parameters (none)
 
+## M133 - Wait For Toolhead
+Tells the bot to wait for a certain toolhead
+
+Registers
+
+    T: (code, optional) If present, the extruder to wait for.  If no toolhead specified,
+        uses the gcode state machine's current toolhead.
+    P: (code, optional) If present, sets the time limit that we wait for.  If no timeout
+        specified, uses the gcode state machine's default timeout.
+
+S3g Output
+
+    WaitForPlatformReady(tool_index, delay, timeout)
+
+Parameters
+
+    tool_index = T
+    delay = gcodeStateMachine's default delay value
+    timeout = P
+
+## M134 - Wait For Platform
+Tells the bot to wait for a certain platform
+
+Registers
+
+    T: (code, optional) If present, the platform to wait for.  If no platform specified,
+        uses the gcode state machine's current platform.
+    P: (code, optional) If present, sets the time limit that we wait for.  If no timeout
+        sepcified, uses the gcode state machine's default timeout.
+
+S3g Output
+
+    WaitForPlatformReady(tool_index, delay, timeout)
+
+Parameters
+
+    tool_index = T
+    delay = gcodeStateMachine's default delay value
+    timeout = P
