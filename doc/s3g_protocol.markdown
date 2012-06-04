@@ -1273,7 +1273,7 @@ Response
     int16: Target temperature, in Celsius
 
 ## 35 - Is build platform ready?
-Query the build platform to determine if it has reached target temperature. Note that this only queries the toolhead, not the build platform.
+Query the build platform to determine if it has reached target temperature. Note that this only queries the build platform, not the toolhead.
 
 Payload (0 bytes)
 
