@@ -63,6 +63,12 @@ class gcodeTests(unittest.TestCase):
     
     self.assertEquals(self.g.state.values['tool_index'], tool_index)
 
+  def test_wait_for_toolhead_missing_t_code_no_toolhead_set(self):
+    codes = {}
+    flags = []
+    comments = ''
+    self.assertRaises(s3g.NoToolIndexError, self.g.WaitForToolhead, codes, flags, comments)
+
   def test_wait_for_toolhead_missing_timeout(self):
     tool_index = 2
     delay = 100
@@ -947,6 +953,126 @@ class gcodeTests(unittest.TestCase):
     codes = {'T'  : tool_index}
     self.g.SetExtruderSpeed(codes, [], "")
     self.assertEqual(tool_index, self.g.state.tool_index)
+
+  def test_wait_for_tool_ready_all_codes_accounted_for(self):
+    codes = 'PT'
+    flags = ''
+    self.assertEqual(sorted(codes), sorted(self.g.MCODE_INSTRUCTIONS[133][1]))
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[133][2])
+
+  def test_wait_for_tool_ready_no_p_or_t_codes(self):
+    tool_index = 2
+    self.g.state.values['tool_index'] = tool_index
+    codes = {}
+    flags = []
+    comment = ''
+    self.g.WaitForToolReady(codes, flags, comment)
+    self.mock.WaitForToolReady.assert_called_once_with(tool_index, s3g.waiting_delay, self.g.state.values['waiting_timeout'])
+
+  def test_wait_for_tool_read_no_p_or_t_codes_no_set_toolhead(self):
+    codes = {}
+    flags = []
+    comments = ''
+    self.assertRaises(s3g.NoToolIndexError, self.g.WaitForToolReady, codes, flags, comments)
+
+  def test_wait_for_tool_ready_no_p_code(self):
+    tool_index = 2
+    codes = {'T'  : tool_index}
+    flags = []
+    comment = ''
+    self.g.WaitForToolReady(codes, flags, comment)
+    self.mock.WaitForToolReady.assert_called_once_with(tool_index, s3g.waiting_delay, self.g.state.values['waiting_timeout'])
+    self.assertEqual(tool_index, self.g.state.values['tool_index'])
+
+  def test_wait_for_tool_ready_no_t_code(self):
+    tool_index = 2
+    self.g.state.values['tool_index'] = tool_index
+    timeout = 42
+    codes = {'P' : timeout}
+    flags = []
+    comment = ''
+    self.g.WaitForToolReady(codes, flags, comment)
+    self.mock.WaitForToolReady.assert_called_once_with(tool_index, s3g.waiting_delay, timeout)
+
+  def test_wait_for_tool_ready(self):
+    tool_index = 2
+    timeout = 42
+    codes = {
+        'T' : tool_index,
+        'P' : timeout,
+        }
+    flags = []
+    comments = ''
+    self.g.WaitForToolReady(codes, flags, comments)
+    self.mock.WaitForToolReady.assert_called_once_with(tool_index, s3g.waiting_delay, timeout)
+    self.assertEqual(tool_index, self.g.state.values['tool_index'])
+
+  def test_wait_for_platform_ready_all_codes_accounted_for(self):
+    codes = 'PT'
+    flags = ''
+    self.assertEqual(sorted(codes), sorted(self.g.MCODE_INSTRUCTIONS[134][1]))
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[134][2])
+
+  def test_wait_for_platform_no_p_or_t_codes(self):
+    self.g.state.values['platform_index'] = 2
+    codes = {}
+    flags = []
+    comments = ''
+    self.g.WaitForPlatformReady(codes, flags, comments)
+    self.mock.WaitForPlatformReady.assert_called_once_with(
+        self.g.state.values['platform_index'],
+        s3g.waiting_delay,
+        self.g.state.values['waiting_timeout']
+        )
+
+  def test_wait_for_platform_no_p_or_t_codes_no_defined_platform_index(self):
+    codes = {}
+    flags = []
+    comments = ''
+    self.assertRaises(s3g.NoPlatformIndexError, self.g.WaitForPlatformReady, codes, flags, comments)
+
+  def test_wait_for_platform_no_p_code_defines(self):
+    platform_index = 2
+    codes = {'T'  : platform_index}
+    flags = []
+    comments = ''
+    self.g.WaitForPlatformReady(codes, flags, comments)
+    self.mock.WaitForPlatformReady.assert_called_once_with(
+        platform_index,
+        s3g.waiting_delay,
+        self.g.state.values['waiting_timeout']
+        )
+    self.assertEqual(self.g.state.values['platform_index'], platform_index)
+
+  def test_wait_for_platform_no_t_code_defined(self):
+    timeout = 42
+    self.g.state.values['platform_index'] = 2
+    codes = {'P'  : timeout}
+    flags = []
+    comments = ''
+    self.g.WaitForPlatformReady(codes, flags, comments)
+    self.mock.WaitForPlatformReady.assert_called_once_with(
+        self.g.state.values['platform_index'],
+        s3g.waiting_delay,
+        timeout
+        )
+
+  def test_wait_for_platform_all_codes_defined(self):
+    timeout = 42
+    platform_index = 2
+    codes = {
+        'T' : platform_index,
+        'P' : timeout,
+        }
+    flags = []
+    comments = ''
+    self.g.WaitForPlatformReady(codes, flags, comments)
+    self.mock.WaitForPlatformReady.assert_called_once_with(
+        platform_index,
+        s3g.waiting_delay,
+        timeout,
+        )
+    self.assertEqual(self.g.state.values['platform_index'], platform_index)
 
 if __name__ == "__main__":
   unittest.main()

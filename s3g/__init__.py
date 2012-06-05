@@ -7,6 +7,7 @@ from streamWriter import *
 from fileReader import *
 from fileReaderRaw import *
 from constants import *
+from gcodeConstants import *
 from errors import *
 from crc import *
 from coding import *

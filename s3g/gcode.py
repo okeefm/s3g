@@ -3,6 +3,7 @@
 from gcodeStates import *
 from gcodeUtils import *
 from errors import *
+from gcodeConstants import *
 import time
 
 class GcodeParser(object):
@@ -49,6 +50,8 @@ class GcodeParser(object):
        108 : [self.SetExtruderSpeed,           'RT',      ''],   #This command is explicitely ignored
        109 : [self.SetPlatformTemperature,     'ST',      ''],
        132 : [self.LoadPosition,               '',        'XYZAB'],
+       133 : [self.WaitForToolReady,       'PT',      ''],
+       134 : [self.WaitForPlatformReady,       'PT',      ''],
     }
 
   def ExecuteLine(self, command):
@@ -199,18 +202,52 @@ class GcodeParser(object):
     self.state.offset_register = 1
     self.state.values['tool_index'] = 1
 
+  def WaitForToolReady(self, codes, flags, comment):
+    """
+    Waits for a toolhead for some amount of time.  If either of 
+    these codes are not defined (T and P respectively), the 
+    default values in the gcode state is used.
+    """
+    if 'T' in codes:
+      self.state.values['tool_index'] = codes['T']
+    elif 'tool_index' not in self.state.values:
+      raise NoToolIndexError
+    if 'P' in codes:
+      timeout = codes['P']
+    else:
+      timeout = self.state.values['waiting_timeout']
+    self.s3g.WaitForToolReady(int(self.state.values['tool_index']), waiting_delay, int(timeout))
+
+  def WaitForPlatformReady(self, codes, flags, comment):
+    """
+    Waits for a platform for some amount of time.  If either
+    of these codes are not defined (T and P respectively), the
+    default vaules in the gcode state is used.
+    """
+    if 'T' in codes:
+      self.state.values['platform_index'] = codes['T']
+    elif 'platform_index' not in self.state.values:
+      raise NoPlatformIndexError
+    if 'P' in codes:
+      timeout = codes['P']
+    else:
+      timeout = self.state.values['waiting_timeout']
+    self.s3g.WaitForPlatformReady(int(self.state.values['platform_index']), waiting_delay, int(timeout))
+
   def WaitForToolhead(self, codes, flags, comment):
     """Given a toolhead and a timeout, waits for that toolhead
     to reach its target temperature.
     """
-    DELAY = 100  # As per the gcode protocol
-
     # Handle optional codes
     if 'T' in codes.keys():
       self.state.values['tool_index'] = codes['T']
+    elif 'tool_index' not in self.state.values:
+      raise NoToolIndexError
     if 'P' in codes:
-      self.state.values['waiting_timeout'] = codes['P']
-    self.s3g.WaitForToolReady(int(self.state.values['tool_index']), DELAY, int(self.state.values['waiting_timeout']))
+      timeout = codes['P']
+    else:
+      timeout = self.state.values['waiting_timeout']
+    self.s3g.WaitForToolReady(int(self.state.values['tool_index']), waiting_delay, int(timeout))
 
   def DisableAxes(self, codes, flags, comment):
     """Disables a set of axes on the bot

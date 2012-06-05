@@ -303,6 +303,12 @@ class NoToolIndexError(GcodeError):
   to be set is being executed without a tool index set.
   """
 
+class NoPlatformIndexError(GcodeError):
+  """
+  A NoPlatformIndexError is thrown if a command that requires a platform
+  index to be set is being executed without a platform index set.
+  """
+
 class MissingCodeError(GcodeError):
   """
   A MissingCodeError is thrown if a command that requires a certain
