@@ -15,14 +15,11 @@ class StreamWriter(AbstractWriter):
     self.total_overflows = 0
 
   # TODO: test me
-  def BuildAndSendQueryPayload(self, *args):
-    payload = bytearray()
-    AddObjToPayload(payload, args)
+  def BuildAndSendQueryPayload(self, payload):
     return self.SendCommand(payload)
 
   # TODO: test me
-  def BuildAndSendActionPayload(self, *args):
-    payload = BuildPayload(args)
+  def BuildAndSendActionPayload(self, payload):
     self.SendCommand(payload)
 
   def SendCommand(self, payload):

@@ -2,8 +2,11 @@ import os
 import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
+
 import io
+import struct
 import unittest
+
 import s3g
 
 class StreamWriterTests(unittest.TestCase):
@@ -46,7 +49,7 @@ class StreamWriterTests(unittest.TestCase):
     self.inputstream.seek(0)
     for i in range (0, s3g.max_retry_count):
       for byte in expected_packet:
-        assert byte == ord(self.inputstream.read(1))
+        self.assertEquals(byte, ord(self.inputstream.read(1)))
 
   def test_send_packet_many_bad_responses(self):
     """
@@ -66,12 +69,12 @@ class StreamWriterTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    assert response_payload == self.w.SendPacket(packet)
+    self.assertEquals(response_payload, self.w.SendPacket(packet))
 
     self.inputstream.seek(0)
     for i in range (0, s3g.max_retry_count - 1):
       for byte in expected_packet:
-        assert byte == ord(self.inputstream.read(1))
+        self.assertEquals(byte, ord(self.inputstream.read(1)))
 
   def test_send_packet(self):
     """
@@ -86,39 +89,56 @@ class StreamWriterTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    assert response_payload == self.w.SendPacket(packet)
-    assert s3g.EncodePayload(payload) == self.inputstream.getvalue()
+    self.assertEquals(response_payload, self.w.SendPacket(packet))
+    self.assertEquals(s3g.EncodePayload(payload), self.inputstream.getvalue())
 
   # TODO: Test timing based errors- can we send half a response, get it to re-send, then send a regular response?
 
   def test_build_and_send_action_payload(self):
-    cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
+    command = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
     point = [1, 2, 3, 4, 5]
     duration = 42
     relativeAxes = 0
-    payload = s3g.BuildPayload([cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), relativeAxes])
+    expected_payload = s3g.BuildPayload([command, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), relativeAxes])
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.w.BuildAndSendActionPayload([cmd, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), relativeAxes])
+    payload = struct.pack(
+      '<BiiiiiIB',
+      command,
+      point[0], point[1], point[2], point[3], point[4],
+      duration,
+      relativeAxes,
+    )
+      
 
-    assert s3g.EncodePayload(payload) == self.inputstream.getvalue()
+    self.w.BuildAndSendActionPayload(payload)
+
+    self.assertEquals(s3g.EncodePayload(expected_payload), self.inputstream.getvalue())
 
   def test_build_and_send_query_payload_with_null_terminated_string(self):
     cmd = s3g.host_query_command_dict['GET_NEXT_FILENAME']
     flag = 0x01
     payload = s3g.BuildPayload([cmd, flag])
     filename = 'asdf\x00'
+
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
     response_payload.append(s3g.sd_error_dict['SUCCESS'])
     response_payload.extend(filename)
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
-    self.assertEqual(response_payload, self.w.BuildAndSendQueryPayload([cmd, flag]))
+
+    payload = struct.pack(
+      '<bb',
+      cmd,
+      flag,
+    )
+    self.assertEqual(response_payload, self.w.BuildAndSendQueryPayload(payload))
+
     self.assertEqual(s3g.EncodePayload(payload), self.inputstream.getvalue())
     
 
@@ -126,7 +146,7 @@ class StreamWriterTests(unittest.TestCase):
     cmd = s3g.host_query_command_dict['GET_VERSION']
     s3gVersion = 123
     botVersion = 456
-    payload = s3g.BuildPayload([cmd, s3g.EncodeUint16(s3gVersion)])
+    expected_payload = s3g.BuildPayload([cmd, s3g.EncodeUint16(s3gVersion)])
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
@@ -134,8 +154,14 @@ class StreamWriterTests(unittest.TestCase):
     self.outputstream.write(s3g.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    assert response_payload == self.w.BuildAndSendQueryPayload([cmd, s3g.EncodeUint16(s3gVersion)])
-    assert s3g.EncodePayload(payload) == self.inputstream.getvalue()
+    payload = struct.pack(
+      '<bH',
+      cmd,
+      s3gVersion,
+    )
+
+    self.assertEquals(response_payload, self.w.BuildAndSendQueryPayload(payload))
+    self.assertEquals(s3g.EncodePayload(expected_payload), self.inputstream.getvalue())
     
 
 if __name__ == "__main__":

@@ -18,7 +18,6 @@ class FileWriter(AbstractWriter):
     """
     self.file = file
 
-  def BuildAndSendActionPayload(self, *args):
-    payload = BuildPayload(args)
+  def BuildAndSendActionPayload(self, payload):
     self.file.write(bytes(payload))
 

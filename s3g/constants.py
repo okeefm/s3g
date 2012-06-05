@@ -50,6 +50,7 @@ host_action_command_dict = {
   'BUILD_END_NOTIFICATION'    : 154,
 }
 
+# TODO: Change name to tool
 slave_query_command_dict = {
   'GET_VERSION'                : 0,
   'GET_TOOLHEAD_TEMP'          : 2,
