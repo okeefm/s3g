@@ -223,27 +223,6 @@ def GetSafeFeedrate(displacement_vector, max_feedrates, target_feedrate):
 
   return actual_feedrate
 
-
-def ConvertMmToSteps(vector, steps_per_mm):
-  """ Convert a vector from mm to steps.
-
-  @param list vector: 5D vector, in mm
-  @param list steps_per_mm: 5D vector containing the 
-  @return list: 5D vector, in steps
-  """
-  if len(vector) != 5:
-    raise PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
-
-  if len(steps_per_mm) != 5:
-    raise PointLengthError("Expected list of length 5, got length %i"%(len(steps_per_mm)))
-
-  vector_steps = []
-  for axis_mm, step_per_mm in zip(vector, steps_per_mm):
-    vector_steps.append(axis_mm*step_per_mm)
-
-  return vector_steps
-
-
 def FindLongestAxis(vector):
   """ Determine the index of the longest axis in a 5D vector.
 
@@ -259,7 +238,6 @@ def FindLongestAxis(vector):
       max_value_index = i
 
   return max_value_index
-
 
 def CalculateDDASpeed(initial_position, target_position, target_feedrate):
   """ Given an initial position, target position, and target feedrate, calculate an achievable
@@ -280,7 +258,7 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate):
     1600,
   ]
 
-  steps_per_mm = [94.130, 94.130, 400, 96.275, 96.275]
+  steps_per_mm = [94.130, 94.130, 400, -96.275, 96.275]
 
 
   # First, figure out where we are moving to. 
