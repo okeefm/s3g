@@ -21,12 +21,14 @@ M132 X Y Z A B (Recall stored home offsets for XYZAB axis)
 (**** end homing ****)
 G92 X112 Y73 Z0 A0 B0
 G1 X112 Y-73 Z150 F3300.0 (move to waiting position)
+
 G130 X0 Y0 A0 B0 (Lower stepper Vrefs while heating)
-M109 S100 T0 (set HBP temperature)
-M6 T0 (wait for toolhead, and HBP to reach temperature)
-M104 S220 T0 (set extruder temperature)
-M6 T0 (wait for toolhead, and HBP to reach temperature)
+M109 S100 T0 (set platform temperature)
+M134 T0 (wait for platform to reach temperature)
+M104 S220 T0 (set extruder 0 temperature)
+M133 T0 (wait for extruder 0 to reach temperature)
 G130 X127 Y127 A127 B127 (Set Stepper motor Vref to defaults)
+
 M108 R3.0 T0
 G0 Z0.2      (Position Height)
 G1 A2.0      (Create Anchor)

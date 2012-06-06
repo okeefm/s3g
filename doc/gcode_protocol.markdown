@@ -329,6 +329,7 @@ Parameters
 
 ## M6 - Wait for toolhead to reach temperature
 Instruct the machine to wait for the toolhead to reach its target temperature
+TODO: Should this command be depricated?
 
 Registers
 
@@ -471,6 +472,41 @@ Parameters
 
     axes = [x, y, z, a, b]
 
+## M133 - Wait For Toolhead
+Instruct the machine to wait for the toolhead to reach its target temperature
+
+Registers
+
+    T: (code, optional) If present, the extruder to wait for.
+    P: (code, optional) If present, sets the time limit that we wait for.
+
+S3g Output
+
+    WaitForPlatformReady(tool_index, delay, timeout)
+
+Parameters
+
+    tool_index = T
+    delay = 100
+    timeout = P
+
+## M134 - Wait For Platform
+Instruct the machine to wait for the platform to reach its target temperature
+
+Registers
+
+    T: (code, optional) If present, the platform to wait for.
+    P: (code, optional) If present, sets the time limit that we wait for.
+
+S3g Output
+
+    WaitForPlatformReady(tool_index, delay, timeout)
+
+Parameters
+
+    tool_index = T
+    delay = 100
+    timeout = P
 
 # Ignored M codes
 These codes will not cause an error if encountered, but do not get evaluated. This is because some skeining engines are buggy and produce them.
@@ -516,42 +552,3 @@ S3g Output (none)
 
 Parameters (none)
 
-## M133 - Wait For Toolhead
-Tells the bot to wait for a certain toolhead
-
-Registers
-
-    T: (code, optional) If present, the extruder to wait for.  If no toolhead specified,
-        uses the gcode state machine's current toolhead.
-    P: (code, optional) If present, sets the time limit that we wait for.  If no timeout
-        specified, uses the gcode state machine's default timeout.
-
-S3g Output
-
-    WaitForPlatformReady(tool_index, delay, timeout)
-
-Parameters
-
-    tool_index = T
-    delay = gcodeStateMachine's default delay value
-    timeout = P
-
-## M134 - Wait For Platform
-Tells the bot to wait for a certain platform
-
-Registers
-
-    T: (code, optional) If present, the platform to wait for.  If no platform specified,
-        uses the gcode state machine's current platform.
-    P: (code, optional) If present, sets the time limit that we wait for.  If no timeout
-        sepcified, uses the gcode state machine's default timeout.
-
-S3g Output
-
-    WaitForPlatformReady(tool_index, delay, timeout)
-
-Parameters
-
-    tool_index = T
-    delay = gcodeStateMachine's default delay value
-    timeout = P

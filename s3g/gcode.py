@@ -50,7 +50,7 @@ class GcodeParser(object):
        108 : [self.SetExtruderSpeed,           'RT',      ''],   #This command is explicitely ignored
        109 : [self.SetPlatformTemperature,     'ST',      ''],
        132 : [self.LoadPosition,               '',        'XYZAB'],
-       133 : [self.WaitForToolReady,       'PT',      ''],
+       133 : [self.WaitForToolReady,           'PT',      ''],
        134 : [self.WaitForPlatformReady,       'PT',      ''],
     }
 
@@ -212,10 +212,12 @@ class GcodeParser(object):
       self.state.values['tool_index'] = codes['T']
     elif 'tool_index' not in self.state.values:
       raise NoToolIndexError
+
     if 'P' in codes:
       timeout = codes['P']
     else:
       timeout = self.state.values['waiting_timeout']
+
     self.s3g.WaitForToolReady(int(self.state.values['tool_index']), waiting_delay, int(timeout))
 
   def WaitForPlatformReady(self, codes, flags, comment):
