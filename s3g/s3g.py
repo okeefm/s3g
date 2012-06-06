@@ -41,7 +41,7 @@ class s3g(object):
       s3g_version,
     )
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
 
     [response_code, version] = UnpackResponse('<BH', response)
 
@@ -59,7 +59,7 @@ class s3g(object):
     payload += filename
     payload += '\x00'
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
 
     [response_code, sd_response_code] = UnpackResponse('<BB', response)
     if sd_response_code != sd_error_dict['SUCCESS']:
@@ -75,7 +75,7 @@ class s3g(object):
       host_query_command_dict['END_CAPTURE'],
     )
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
     
     [response_code, sdResponse] = UnpackResponse('<BI', response)
     return sdResponse
@@ -90,7 +90,7 @@ class s3g(object):
     )
 
     # TODO: mismatch here.
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
 
   def IsFinished(self):
@@ -102,7 +102,7 @@ class s3g(object):
       host_query_command_dict['IS_FINISHED'],
     )
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
     
     [response_code, isFinished] = UnpackResponse('<B?', response)
     return isFinished
@@ -117,7 +117,7 @@ class s3g(object):
     )
 
     # TODO: mismatch here.
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def Pause(self):
     """
@@ -129,7 +129,7 @@ class s3g(object):
     )
 
     # TODO: mismatch here.
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def GetCommunicationStats(self):
     """
@@ -140,7 +140,7 @@ class s3g(object):
       host_query_command_dict['GET_COMMUNICATION_STATS'],
     )
      
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
 
     [response_code,
      packetsReceived,
@@ -170,7 +170,7 @@ class s3g(object):
       host_query_command_dict['GET_MOTHERBOARD_STATUS'],
     )
   
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
     
 
     [response_code, bitfield] = UnpackResponse('<BB', response)
@@ -202,7 +202,7 @@ class s3g(object):
       bitfield,
     )
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
 
     [response_code, extended_stop_response] = UnpackResponse('<BB', response)
 
@@ -226,7 +226,7 @@ class s3g(object):
       timeout
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
     
   def WaitForToolReady(self, tool_index, delay, timeout):
     """
@@ -245,7 +245,7 @@ class s3g(object):
       timeout
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def Delay(self, delay):
     """
@@ -258,7 +258,7 @@ class s3g(object):
       delay
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def ChangeTool(self, tool_index):
     """
@@ -271,7 +271,7 @@ class s3g(object):
       tool_index
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def ToggleAxes(self, axes, enable):
     """
@@ -290,7 +290,7 @@ class s3g(object):
       axes_bitfield
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
 
   def QueueExtendedPointNew(self, position, duration, relative_axes):
@@ -314,7 +314,7 @@ class s3g(object):
       EncodeAxes(relative_axes)
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
   
   def StoreHomePositions(self, axes):
     """
@@ -327,7 +327,7 @@ class s3g(object):
       EncodeAxes(axes)
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def SetPotentiometerValue(self, axes, value):
     """
@@ -342,7 +342,7 @@ class s3g(object):
       value
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
     
 
   def SetBeep(self, frequency, duration):
@@ -359,7 +359,7 @@ class s3g(object):
       0x00
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def SetRGBLED(self, r, g, b, blink):
     """
@@ -379,7 +379,7 @@ class s3g(object):
       0x00
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def RecallHomePositions(self, axes):
     """
@@ -392,7 +392,7 @@ class s3g(object):
       EncodeAxes(axes)
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def Init(self):
     """
@@ -403,7 +403,7 @@ class s3g(object):
       host_query_command_dict['INIT']
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def ToolQuery(self, tool_index, command, tool_payload = None):
     """
@@ -427,7 +427,7 @@ class s3g(object):
     if tool_payload != None:
        payload += tool_payload
 
-    return self.writer.BuildAndSendQueryPayload(payload)
+    return self.writer.SendQueryPayload(payload)
 
   def ReadFromEEPROM(self, offset, length):
     """
@@ -446,7 +446,7 @@ class s3g(object):
       length
     )
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
 
     return response[1:]
 
@@ -468,7 +468,7 @@ class s3g(object):
 
     payload += data
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
 
     if response[1] != len(data):
       raise EEPROMMismatchError(response[1])
@@ -483,7 +483,7 @@ class s3g(object):
       host_query_command_dict['GET_AVAILABLE_BUFFER_SIZE'],
     )
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
     [response_code, buffer_size] = UnpackResponse('<BI', response)
 
     return buffer_size
@@ -499,7 +499,7 @@ class s3g(object):
       host_query_command_dict['GET_POSITION']
     )
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
     [response_code, x, y, z, axes_bits] = UnpackResponse('<BiiiB', response)
 
     return [x, y, z], axes_bits
@@ -514,7 +514,7 @@ class s3g(object):
       host_query_command_dict['ABORT_IMMEDIATELY']
     )
 
-    resposne = self.writer.BuildAndSendQueryPayload(payload)
+    resposne = self.writer.SendQueryPayload(payload)
 
   def PlaybackCapture(self, filename):
     """
@@ -529,7 +529,7 @@ class s3g(object):
     payload += filename
     payload += '\x00'
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
 
     [response_code, sd_response_code] = UnpackResponse('<BB', response)
 
@@ -553,7 +553,7 @@ class s3g(object):
       flag,
     )
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
    
     [response_code, sd_response_code, filename] = UnpackResponseWithString('<BB', response)
 
@@ -572,7 +572,7 @@ class s3g(object):
       host_query_command_dict['GET_BUILD_NAME']
     )
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
     [response_code, filename] = UnpackResponseWithString('<B', response)
 
     return filename
@@ -588,7 +588,7 @@ class s3g(object):
       host_query_command_dict['GET_EXTENDED_POSITION'],
     )
 
-    response = self.writer.BuildAndSendQueryPayload(payload)
+    response = self.writer.SendQueryPayload(payload)
   
     [response_code,
      x, y, z, a, b,
@@ -613,7 +613,7 @@ class s3g(object):
       rate
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def SetPosition(self, position):
     """
@@ -629,7 +629,7 @@ class s3g(object):
       position[0], position[1], position[2],
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def FindAxesMinimums(self, axes, rate, timeout):
     """
@@ -647,7 +647,7 @@ class s3g(object):
       timeout
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
   
   def FindAxesMaximums(self, axes, rate, timeout):
     """
@@ -665,7 +665,7 @@ class s3g(object):
       timeout
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def ToolActionCommand(self, tool_index, command, tool_payload = ''):
     """
@@ -688,7 +688,7 @@ class s3g(object):
     if tool_payload != '':
       payload += tool_payload
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def QueueExtendedPoint(self, position, rate):
     """
@@ -706,7 +706,7 @@ class s3g(object):
       rate
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def SetExtendedPosition(self, position):
     """
@@ -722,7 +722,7 @@ class s3g(object):
       position[0], position[1], position[2], position[3], position[4],
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def WaitForButton(self, button, timeout, ready_on_timeout, reset_on_timeout, clear_screen):
     """
@@ -764,7 +764,7 @@ class s3g(object):
       optionsField
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def ResetToFactory(self):
     """
@@ -776,7 +776,7 @@ class s3g(object):
       0x00
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def QueueSong(self, song_id):
     """
@@ -789,7 +789,7 @@ class s3g(object):
       song_id
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def SetBuildPercent(self, percent):
     """
@@ -803,7 +803,7 @@ class s3g(object):
       0x00
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def DisplayMessage(self, row, col, message, timeout, clear_existing, last_in_group, wait_for_button):
     """
@@ -837,7 +837,7 @@ class s3g(object):
     payload += message
     payload += '\x00'
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def BuildStartNotification(self, command_count, build_name):
     """
@@ -854,7 +854,7 @@ class s3g(object):
     payload += build_name
     payload += '\x00'
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def BuildEndNotification(self):
     """
@@ -865,7 +865,7 @@ class s3g(object):
       host_action_command_dict['BUILD_END_NOTIFICATION']
     )
 
-    self.writer.BuildAndSendActionPayload(payload)
+    self.writer.SendActionPayload(payload)
 
   def GetToolheadVersion(self, tool_index):
     """

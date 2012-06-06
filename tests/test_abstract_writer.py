@@ -11,11 +11,11 @@ class AbstractWriterTests(unittest.TestCase):
 
   def test_build_and_send_action_payload_raises(self):
     payload = ''
-    self.assertRaises(NotImplementedError,self.w.BuildAndSendActionPayload, payload)
+    self.assertRaises(NotImplementedError,self.w.SendActionPayload, payload)
 
   def test_build_and_send_query_payload_raises(self):
     payload = ''
-    self.assertRaises(NotImplementedError,self.w.BuildAndSendQueryPayload, payload)
+    self.assertRaises(NotImplementedError,self.w.SendQueryPayload, payload)
 
 if __name__ == "__main__":
   unittest.main()

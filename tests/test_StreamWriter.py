@@ -115,7 +115,7 @@ class StreamWriterTests(unittest.TestCase):
     )
       
 
-    self.w.BuildAndSendActionPayload(payload)
+    self.w.SendActionPayload(payload)
 
     self.assertEquals(s3g.EncodePayload(expected_payload), self.inputstream.getvalue())
 
@@ -137,7 +137,7 @@ class StreamWriterTests(unittest.TestCase):
       cmd,
       flag,
     )
-    self.assertEqual(response_payload, self.w.BuildAndSendQueryPayload(payload))
+    self.assertEqual(response_payload, self.w.SendQueryPayload(payload))
 
     self.assertEqual(s3g.EncodePayload(payload), self.inputstream.getvalue())
     
@@ -160,7 +160,7 @@ class StreamWriterTests(unittest.TestCase):
       s3gVersion,
     )
 
-    self.assertEquals(response_payload, self.w.BuildAndSendQueryPayload(payload))
+    self.assertEquals(response_payload, self.w.SendQueryPayload(payload))
     self.assertEquals(s3g.EncodePayload(expected_payload), self.inputstream.getvalue())
     
 
