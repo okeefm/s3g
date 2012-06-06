@@ -9,16 +9,6 @@ from crc import *
 from coding import *
 from packet import *
 
-def BuildPayload(args):
-  """Given a set of arguments, puts them inside a payload and returns said payload
-
-  @param list args: List of arguemnts to add to a payload
-  @return bytearray payload: The payload to be encoded and sent
-  """
-  payload = bytearray()
-  AddObjToPayload(payload, args)
-  return payload
-
 
 class s3g(object):
   def __init__(self):

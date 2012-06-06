@@ -22,23 +22,3 @@ class FileReaderRaw(FileReader):
 
     return commandFormats[hashableCmd]
 
-  def ParseParameter(self, formatString, bytes):
-    """Because we always want the raw data pulled out of the file we are reading, we override the super's ParseParameter function with our own that just takes the bytes and throws them into a byte array
-
-    @param formatString: The format we want to unpack the bytes in
-    @param bytes: The bytes that were just read in
-    @return The bytes that were passed in wrapped in a bytearray
-    """
-    returnBytes = bytearray()
-    coding.AddObjToPayload(returnBytes, bytes)
-    return returnBytes
-
-  def PackagePacket(self, *args):
-    """Packages all args into a single bytearray.
-
-    @param bytearray args: A list of args, all of them bytearrays
-    @return bytearray package: A collated bytearray comprised of all args
-    """
-    package = bytearray()
-    coding.AddObjToPayload(package, args)
-    return package

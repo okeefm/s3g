@@ -27,19 +27,6 @@ class S3gTests(unittest.TestCase):
     self.inputstream = None
     self.file = None
 
-  def test_build_payload(self):
-    toAdd = ["a", "b", "c", "d", [1, 2, 3], [4, 5, 6]]
-    expectedPayload = bytearray()
-    for l in [toAdd[0:4],toAdd[-2], toAdd[-1]]:
-      expectedPayload.extend(l)
-    payload = s3g.BuildPayload(toAdd)
-    self.assertEqual(expectedPayload, payload)
-
-  def test_build_payload_empty(self):
-    expectedPayload = bytearray()
-    payload = s3g.BuildPayload([])
-    self.assertEqual(expectedPayload, payload)
-
   def test_get_version(self):
     version = 0x5DD5
 

@@ -24,7 +24,7 @@ class s3gFileWriterTests(unittest.TestCase):
 
   def test_build_and_send_action_payload(self):
     data = 'abcde'
-    expected_payload = s3g.BuildPayload(data)
+    expected_payload = bytearray(data)
 
     self.w.SendActionPayload(data)
 

@@ -9,29 +9,6 @@ import struct
 
 class EncoderTests(unittest.TestCase):
 
-  def test_add_obj_to_payload_empty(self):
-    payload = bytearray()
-    s3g.AddObjToPayload(payload, [])
-    for i, j in zip(payload, bytearray()):
-      self.assertEqual(i, j)
-
-  def test_add_obj_to_payload(self):
-    toAdd = ['a', 'b', 'c', 'd']
-    nestedLoop = [1, 2, 3, 4, toAdd]
-    expected = bytearray()
-    for i in toAdd:
-      expected.append(i)
-    for j in nestedLoop[:-1]:
-      expected.append(j)
-    for k in nestedLoop[-1]:
-      expected.append(k)
-
-    payload = bytearray()
-    s3g.AddObjToPayload(payload, ['a', 'b', 'c', 'd', nestedLoop])
-    for i, j in zip(payload, expected):
-      self.assertEqual(i, j) 
- 
-
   def test_decode_bitfield8(self):
     field1 = 0
     vals1 = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80]

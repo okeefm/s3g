@@ -99,7 +99,13 @@ class StreamWriterTests(unittest.TestCase):
     point = [1, 2, 3, 4, 5]
     duration = 42
     relativeAxes = 0
-    expected_payload = s3g.BuildPayload([command, [s3g.EncodeInt32(cor) for cor in point], s3g.EncodeUint32(duration), relativeAxes])
+    expected_payload = struct.pack(
+      '<BiiiiiIB',
+      command,
+      point[0], point[1], point[2], point[3], point[4],
+      duration,
+      relativeAxes
+    )
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])
@@ -122,7 +128,11 @@ class StreamWriterTests(unittest.TestCase):
   def test_build_and_send_query_payload_with_null_terminated_string(self):
     cmd = s3g.host_query_command_dict['GET_NEXT_FILENAME']
     flag = 0x01
-    payload = s3g.BuildPayload([cmd, flag])
+    payload = struct.pack(
+      '<BB',
+      cmd,
+      flag
+    )
     filename = 'asdf\x00'
 
     response_payload = bytearray()
@@ -146,7 +156,11 @@ class StreamWriterTests(unittest.TestCase):
     cmd = s3g.host_query_command_dict['GET_VERSION']
     s3gVersion = 123
     botVersion = 456
-    expected_payload = s3g.BuildPayload([cmd, s3g.EncodeUint16(s3gVersion)])
+    expected_payload = struct.pack(
+      '<bH',
+      cmd,
+      s3gVersion
+    )
 
     response_payload = bytearray()
     response_payload.append(s3g.response_code_dict['SUCCESS'])

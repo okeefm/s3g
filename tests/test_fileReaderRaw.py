@@ -28,29 +28,6 @@ class fileReaderRawTests(unittest.TestCase):
     self.outputstream = None
     self.inputstream = None
 
-  def test_PackagePacket(self):
-    a = bytearray()
-    a.append('a')
-    b = bytearray()
-    b.append('b')
-    l = bytearray()
-    for i in [1, 2, 3, 4]:
-      l.append(i)
-    c = bytearray()
-    c.append('c')
-    expectedPackage = bytearray()
-    for val in ['a', 'b', 1, 2, 3, 4, 'c']:
-      expectedPackage.append(val)
-    packaged = self.d.PackagePacket(a, b, l, c)
-    self.assertEqual(expectedPackage, packaged)
-
-  def test_ParseParameter(self):
-    b = bytearray()
-    b.extend('asdf')
-    b.append('\x00')
-    a = array.array('B', b)
-    returnBytes = self.d.ParseParameter('<5s', a)
-    self.assertEqual(returnBytes, b)
 
 #  def test_ParseNextPacket(self):
 #    response_payload = bytearray()
