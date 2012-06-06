@@ -2,12 +2,9 @@
 An s3gFileDecoder that returns unmodified payloads from the file
 """
 
-import coding
 import struct
 import array
-
 from fileReader import *
-from constants import *
 
 class FileReaderRaw(FileReader):
 

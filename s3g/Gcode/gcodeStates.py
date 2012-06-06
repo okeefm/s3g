@@ -4,7 +4,7 @@ variables.
 """
 
 from gcodeUtils import *
-from errors import *
+from gcodeErrors import *
 
 class GcodeStates(object):
   def __init__(self):

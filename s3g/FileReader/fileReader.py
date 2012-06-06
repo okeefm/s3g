@@ -4,8 +4,9 @@ A file parser that decodes an s3g file
 
 import struct
 
-from errors import *
-from constants import *
+from fileReaderErrors import *
+from fileReaderConstants import *
+from .. import constants
 
 class FileReader(object):
 
@@ -38,7 +39,7 @@ class FileReader(object):
       b += self.ReadBytes(1)
       if b == '':   #We just read in an empty string, so we ran out of data
         raise InsufficientDataError
-      if len(b) > maximum_payload_length:
+      if len(b) > constants.maximum_payload_length:
         raise StringTooLongError
       elif b[-1] == '\x00':
         return b
@@ -56,8 +57,8 @@ class FileReader(object):
       raise EndOfFileError
 
     # TODO: Break the tool action commands out of here
-    if (not cmd in slave_action_command_dict.values()) and \
-       (not cmd in host_action_command_dict.values()):
+    if (not cmd in constants.slave_action_command_dict.values()) and \
+       (not cmd in constants.host_action_command_dict.values()):
       raise BadCommandError(cmd)
 
     return cmd
@@ -100,7 +101,7 @@ class FileReader(object):
       raise BadHostCommandError(cmd)
 
   def ParseToolAction(self, cmd):
-    if cmd != host_action_command_dict['TOOL_ACTION_COMMAND']:
+    if cmd != constants.host_action_command_dict['TOOL_ACTION_COMMAND']:
       raise NotToolActionCmdError
     data = []
     data.extend(self.ParseOutParameters(hostFormats[cmd]))
@@ -117,7 +118,7 @@ class FileReader(object):
     @return list: a list of the cmd and  all information associated with that command
     """
     cmd = self.GetNextCommand()
-    if cmd == host_action_command_dict['TOOL_ACTION_COMMAND']:
+    if cmd == constants.host_action_command_dict['TOOL_ACTION_COMMAND']:
       params = self.ParseToolAction(cmd)
     else:
       params = self.ParseHostAction(cmd)

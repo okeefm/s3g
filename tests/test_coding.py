@@ -4,8 +4,8 @@ lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
 import unittest
-import s3g
 import struct
+from s3g import Encoder, errors
 
 class EncoderTests(unittest.TestCase):
 
@@ -14,23 +14,23 @@ class EncoderTests(unittest.TestCase):
     vals1 = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80]
     for val in vals1:
       field1 |= val
-    self.assertTrue(s3g.DecodeBitfield8(field1), [1, 1, 1, 1, 1, 1, 1, 1])
+    self.assertTrue(Encoder.DecodeBitfield8(field1), [1, 1, 1, 1, 1, 1, 1, 1])
     field2 = 0
     vals2 = [0x01, 0x04, 0x10, 0x40]
     for val in vals2:
       field2 |= val
-    self.assertTrue(s3g.DecodeBitfield8(field2), [1, 0, 1, 0, 1, 0, 1, 0])
+    self.assertTrue(Encoder.DecodeBitfield8(field2), [1, 0, 1, 0, 1, 0, 1, 0])
     field3 = 0
     vals3 = [0x01, 0x02]
     for val in vals3:
       field3 |= val
-    self.assertTrue(s3g.DecodeBitfield8(field3), [1, 1, 0, 0, 0, 0, 0, 0, 0])
-    self.assertTrue(s3g.DecodeBitfield8(0), [0, 0, 0, 0, 0, 0, 0, 0])
+    self.assertTrue(Encoder.DecodeBitfield8(field3), [1, 1, 0, 0, 0, 0, 0, 0, 0])
+    self.assertTrue(Encoder.DecodeBitfield8(0), [0, 0, 0, 0, 0, 0, 0, 0])
 
   def test_decode_bitfield8_pathogenic(self):
     field = 0
     field |= 0x80 + 0x80
-    self.assertRaises(TypeError, s3g.DecodeBitfield8, field)
+    self.assertRaises(TypeError, Encoder.DecodeBitfield8, field)
 
 
   def test_encode_int32(self):
@@ -40,7 +40,7 @@ class EncoderTests(unittest.TestCase):
       [2147483647,   '\xFF\xFF\xFF\x7F'],
     ]
     for case in cases:
-      assert s3g.EncodeInt32(case[0]) == case[1]
+      assert Encoder.EncodeInt32(case[0]) == case[1]
     
   def test_encode_uint32(self):
     cases = [
@@ -49,7 +49,7 @@ class EncoderTests(unittest.TestCase):
       [4294967295,   '\xFF\xFF\xFF\xFF'],
     ]
     for case in cases:
-      assert s3g.EncodeUint32(case[0]) == case[1]
+      assert Encoder.EncodeUint32(case[0]) == case[1]
 
   def test_encode_uint16(self):
     cases = [
@@ -58,7 +58,7 @@ class EncoderTests(unittest.TestCase):
       [65535,   '\xFF\xFF'],
     ]
     for case in cases:
-      assert s3g.EncodeUint16(case[0]) == case[1]
+      assert Encoder.EncodeUint16(case[0]) == case[1]
 
   def test_decode_int32(self):
     cases = [
@@ -67,7 +67,7 @@ class EncoderTests(unittest.TestCase):
       [16,      '\x10\x00\x00\x00'],
     ]
     for case in cases:
-      self.assertEqual(case[0], s3g.DecodeInt32(case[1]))
+      self.assertEqual(case[0], Encoder.DecodeInt32(case[1]))
 
   def test_decode_int32_bytearray(self):
     cases = [
@@ -76,7 +76,7 @@ class EncoderTests(unittest.TestCase):
       [16,      '\x10\x00\x00\x00'],
     ]
     for case in cases:
-      self.assertEqual(case[0], s3g.DecodeInt32(case[1]))
+      self.assertEqual(case[0], Encoder.DecodeInt32(case[1]))
 
   def test_decode_uint16(self):
     cases = [
@@ -85,7 +85,7 @@ class EncoderTests(unittest.TestCase):
       [65535,   '\xFF\xFF'],
     ]
     for case in cases:
-      self.assertEqual(s3g.DecodeUint16(case[1]), case[0])
+      self.assertEqual(Encoder.DecodeUint16(case[1]), case[0])
 
   def test_decode_uint16_bytearray(self):
     byteArrayCases = [
@@ -94,11 +94,11 @@ class EncoderTests(unittest.TestCase):
       [65535,   bytearray('\xff\xff')],
     ]
     for case in byteArrayCases:
-      self.assertEqual(s3g.DecodeUint16(case[1]), case[0])
+      self.assertEqual(Encoder.DecodeUint16(case[1]), case[0])
 
   def test_decode_uint16_pathological_fail(self):
     failCase = [0, bytearray('\x00\x00\x00')]
-    self.assertRaises(struct.error, s3g.DecodeUint16, failCase[1])
+    self.assertRaises(struct.error, Encoder.DecodeUint16, failCase[1])
 
   def test_encode_axes(self):
     cases = [
@@ -112,25 +112,25 @@ class EncoderTests(unittest.TestCase):
       [[],                    0x00],
     ]
     for case in cases:
-      assert s3g.EncodeAxes(case[0]) == case[1]
+      assert Encoder.EncodeAxes(case[0]) == case[1]
 
   def test_unpack_response_no_format(self):
     b = bytearray()
     b.extend('abcde')
-    self.assertRaises(s3g.ProtocolError,s3g.UnpackResponse,'',b)
+    self.assertRaises(errors.ProtocolError,Encoder.UnpackResponse,'',b)
 
   def test_unpack_response_short_data(self):
     b = bytearray()
     b.extend('abc')
-    self.assertRaises(s3g.ProtocolError,s3g.UnpackResponse,'<I',b)
+    self.assertRaises(errors.ProtocolError,Encoder.UnpackResponse,'<I',b)
 
   def test_unpack_response(self):
     expected_data = [1,'a','b','c']
     b = bytearray()
-    b.extend(s3g.EncodeUint32(1))
+    b.extend(Encoder.EncodeUint32(1))
     for data in expected_data[1:]:
       b.append(data)
-    data = s3g.UnpackResponse('<Iccc',b)
+    data = Encoder.UnpackResponse('<Iccc',b)
     for i in range(0, len(expected_data)):
       assert(data[i] == expected_data[i])
 
@@ -138,30 +138,30 @@ class EncoderTests(unittest.TestCase):
     expected_string = '\x00'
     b = bytearray()
     b.append(expected_string)
-    data = s3g.UnpackResponseWithString('', b)
+    data = Encoder.UnpackResponseWithString('', b)
     self.assertEqual(expected_string, data[0])
 
   def test_unpack_response_with_string_no_format(self):
     expected_string = 'abcde\x00'
     b = bytearray()
     b.extend(expected_string)
-    data = s3g.UnpackResponseWithString('',b)
+    data = Encoder.UnpackResponseWithString('',b)
     assert(len(data) == 1)
     assert data[0] == expected_string
 
   def test_unpack_response_with_string_missing_string(self):
     b = bytearray()
     b.extend('abcd')
-    self.assertRaises(s3g.ProtocolError,s3g.UnpackResponseWithString,'<I',b)
+    self.assertRaises(errors.ProtocolError,Encoder.UnpackResponseWithString,'<I',b)
 
   def test_unpack_response_with_string(self):
     expected_data = [1, 'a', 'b', 'c', 'ABCDE\x00']
     b = bytearray()
-    b.extend(s3g.EncodeUint32(1))
+    b.extend(Encoder.EncodeUint32(1))
     for data in expected_data[1:-1]:
       b.append(data)
     b.extend(expected_data[-1])
-    data = s3g.UnpackResponseWithString('<Iccc',b)
+    data = Encoder.UnpackResponseWithString('<Iccc',b)
     for expected, d in zip(expected_data, data):
       self.assertEqual(expected, d)
 
@@ -169,7 +169,7 @@ class EncoderTests(unittest.TestCase):
     expected_data = 'ABCDE'
     b = bytearray()
     b.extend(expected_data)
-    self.assertRaises(s3g.ProtocolError, s3g.UnpackResponseWithString, '', b)
+    self.assertRaises(errors.ProtocolError, Encoder.UnpackResponseWithString, '', b)
 
 if __name__ == "__main__":
   unittest.main()

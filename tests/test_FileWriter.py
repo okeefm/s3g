@@ -6,14 +6,14 @@ sys.path.append(lib_path)
 import unittest
 import io
 
-import s3g
+from s3g import Writer
 
 
 class s3gFileWriterTests(unittest.TestCase):
   def setUp(self):
 
     self.inputstream = io.BytesIO()
-    self.w = s3g.FileWriter(self.inputstream)
+    self.w = Writer.FileWriter(self.inputstream)
 
   def tearDown(self):
     self.w = None

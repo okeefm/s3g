@@ -2,7 +2,7 @@
 
 from gcodeStates import *
 from gcodeUtils import *
-from errors import *
+from gcodeErrors import *
 from gcodeConstants import *
 import time
 
