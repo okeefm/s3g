@@ -1,7 +1,7 @@
-__all__ = ['parser', 'gcodeConstants', 'gcodeStates', 'gcodeUtils', 'gcodeErrors']
+__all__ = ['parser', 'constants', 'states', 'utils', 'errors']
 
 from parser import *
-from gcodeConstants import *
-from gcodeStates import *
-from gcodeUtils import *
-from gcodeErrors import *
+from constants import *
+from states import *
+from utils import *
+from errors import *

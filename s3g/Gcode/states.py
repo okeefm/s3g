@@ -3,8 +3,8 @@ A state machine for the gcode parser which keeps track of certain
 variables.
 """
 
-from gcodeUtils import *
-from gcodeErrors import *
+from utils import *
+from errors import *
 
 class GcodeStates(object):
   def __init__(self):

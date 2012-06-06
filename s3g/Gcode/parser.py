@@ -1,9 +1,9 @@
 # Gcode parser, 
 
-from gcodeStates import *
-from gcodeUtils import *
-from gcodeErrors import *
-from gcodeConstants import *
+from states import *
+from utils import *
+from errors import *
+from constants import *
 import time
 
 class GcodeParser(object):

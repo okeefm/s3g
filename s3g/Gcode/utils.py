@@ -1,4 +1,4 @@
-from gcodeErrors import *
+from errors import *
 from .. import errors
 import sys
 
