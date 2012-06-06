@@ -4,6 +4,7 @@ Control an s3g device (Makerbot, etc) using osc!
 Requires these modules:
 * pySerial: http://pypi.python.org/pypi/pyserial
 * pyOSC: https://trac.v2.nl/wiki/pyOSC
+
 """
 
 # To use this example without installing s3g, we need this hack:
@@ -28,11 +29,13 @@ parser.add_option("-o", "--oscport", dest="oscport",
 (options, args) = parser.parse_args()
 
 
-r = s3g.s3g()
 rLock = threading.Lock()
+r = s3g.s3g()
 
-r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
+file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
+r.writer = s3g.Writer.StreamWriter(file)
 
+# TODO: Remove this hack.
 r.velocity = 1600
 
 def velocity_handler(addr, tags, stuff, source):

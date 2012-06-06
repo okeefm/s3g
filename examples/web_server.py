@@ -33,8 +33,8 @@ parser.add_option("-o", "--httpport", dest="httpport",
 
 if __name__ == '__main__':
     r = s3g.s3g()
- 
-    r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
+    file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
+    r.writer = s3g.Writer.StreamWriter(file)
  
     tool_0_temp_data = []
     tool_1_temp_data = []

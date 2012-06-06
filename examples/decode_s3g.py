@@ -1,6 +1,5 @@
 """
-Decode an s3g file into comamnds and registers.
-
+Decode an s3g file into commands and registers.
 """
 
 import os, sys
@@ -15,7 +14,7 @@ parser.add_option("-f", "--filename", dest="filename",
                   help="File name of the s3g file to parse")
 (options, args) = parser.parse_args()
 
-reader = s3g.FileReader()
+reader = s3g.FileReader.FileReader()
 reader.file = open(options.filename)
 payloads = reader.ReadFile()
 for payload in payloads:
