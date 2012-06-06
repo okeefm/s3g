@@ -872,8 +872,10 @@ class s3g(object):
     Get the firmware version number of the specified toolhead
     @return double Version number
     """
-    payload = bytearray()
-    AddObjToPayload(payload, EncodeUint16(s3g_version))
+    payload = struct.pack(
+      '<H',
+      s3g_version
+    )
    
     response = self.ToolQuery(tool_index,slave_query_command_dict['GET_VERSION'], payload)
     [response_code, version] = UnpackResponse('<BH', response)
@@ -939,8 +941,11 @@ class s3g(object):
     @param int tool_index: The tool that will be set
     @param int theta: angle to set the servo to
     """
-    payload = bytearray()
-    AddObjToPayload(payload, theta)
+    payload = struct.pack(
+      '<B',
+      theta
+    )
+
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_SERVO_1_POSITION'], payload)
 
   def ToolheadAbort(self, tool_index):
@@ -948,7 +953,7 @@ class s3g(object):
     Used to terminate a build during printing.  Disables any engaged heaters and motors
     @param int tool_index: the tool which is to be aborted
     """
-    self.ToolActionCommand(tool_index, slave_action_command_dict['ABORT'], bytearray())
+    self.ToolActionCommand(tool_index, slave_action_command_dict['ABORT'])
 
   def ToolheadPause(self, tool_index):
     """
@@ -965,13 +970,17 @@ class s3g(object):
     @param boolean toggle: The enable/disable flag.  If true, will turn the motor on.  If false, disables the motor.
     @param boolean direction: If true, sets the motor to turn clockwise.  If false, sets the motor to turn counter-clockwise
     """
-    payload = bytearray()
     bitfield = 0
     if toggle:
       bitfield |= 0x01
     if direction:
       bitfield |= 0x02
-    AddObjToPayload(payload, bitfield)
+
+    payload = struct.pack(
+      '<B',
+      bitfield,
+    )
+
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_MOTOR_1'], payload)
 
   def SetMotor1SpeedRPM(self, tool_index, duration):
@@ -980,8 +989,11 @@ class s3g(object):
     @param int tool_index : The tool's motor that will be set
     @param int duration : Durtation of each rotation, in microseconds
     """
-    payload = bytearray()
-    AddObjToPayload(payload, EncodeUint32(duration))
+    payload = struct.pack(
+      '<I',
+      duration
+    )
+
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_MOTOR_1_SPEED_RPM'], payload)
 
   def GetMotor1Speed(self, tool_index):
@@ -1034,10 +1046,11 @@ class s3g(object):
     if length > maximum_payload_length - 1:
       raise EEPROMLengthError(length)
 
-    payload = bytearray()
-    AddObjToPayload(payload,
-                         [EncodeUint16(offset),
-                          length])
+    payload = struct.pack(
+      '<HB',
+      offset,
+      length
+    )
 
     response = self.ToolQuery(tool_index, slave_query_command_dict['READ_FROM_EEPROM'], payload)
 
@@ -1054,13 +1067,13 @@ class s3g(object):
     if len(data) > maximum_payload_length - 6:
       raise EEPROMLengthError(len(data))
 
-    payload = bytearray()
-    AddObjToPayload(
-      payload, 
-      [EncodeUint16(offset),
+    payload = struct.pack(
+      '<HB',
+      offset,
       len(data),
-      data]
     )
+
+    payload += data
 
     response = self.ToolQuery(tool_index, slave_query_command_dict['WRITE_TO_EEPROM'], payload)
 
@@ -1116,6 +1129,7 @@ class s3g(object):
       isReady = False
     else:
       raise HeatElementReadyError(ready)
+
     return isReady
 
   def ToggleFan(self, tool_index, state):
@@ -1124,12 +1138,11 @@ class s3g(object):
     @param int tool_index: Toolhead Index
     @param boolean state: If True, turn the fan on, otherwise off.
     """
-
-    payload = bytearray()
     if state == True:
-      AddObjToPayload(payload, 0x01)
+      payload = '\x01'
     else:
-      AddObjToPayload(payload, 0x00)
+      payload = '\x00'
+
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_FAN'], payload)
 
   def ToggleValve(self, tool_index, state):
@@ -1139,11 +1152,10 @@ class s3g(object):
     @param boolean state: If True, turn the valvue on, otherwise off.
     """
 
-    payload = bytearray()
     if state == True:
-      AddObjToPayload(payload, 0x01)
+      payload = '\x01'
     else:
-      AddObjToPayload(payload, 0x00)
+      payload = '\x00'
 
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_VALVE'], payload)
 
@@ -1164,8 +1176,11 @@ class s3g(object):
     @param int tool_index: Toolhead Index
     @param int Temperature: Temperature to heat up to in Celcius
     """
-    payload = bytearray()
-    AddObjToPayload(payload, EncodeUint16(temperature))
+    payload = struct.pack(
+      '<H',
+      temperature
+    )
+
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP'], payload)
 
 
@@ -1175,6 +1190,9 @@ class s3g(object):
     @param int tool_index: Platform Index
     @param int Temperature: Temperature to heat up to in Celcius
     """
-    payload = bytearray()
-    AddObjToPayload(payload, EncodeUint16(temperature))
+    payload = struct.pack(
+      '<H',
+      temperature
+    )
+
     self.ToolActionCommand(tool_index, slave_action_command_dict['SET_PLATFORM_TEMP'], payload)
