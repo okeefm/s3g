@@ -19,12 +19,13 @@ parser.add_option("-f", "--filename", dest="filename",
 
 file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 r = s3g.s3g()
-r.writer = s3g.StreamWriter(file)
+r.writer = s3g.Writer.StreamWriter(file)
 
-parser = s3g.GcodeParser()
+parser = s3g.Gcode.GcodeParser()
+parser.state.values["build_name"] = 'test'
 parser.s3g = r
 
 with open(options.filename) as f:
   for line in f:
-    print line
+    print line,
     parser.ExecuteLine(line)
