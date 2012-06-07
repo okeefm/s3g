@@ -6,7 +6,8 @@ class PacketDecodeError(Exception):
   are potentially recoverable.
   """
   def __init__(self, value):
-     self.value = value
+    self.value = value
+    self.__name__= 'PacketDecodeError'     
   def __str__(self):
     return str(self.value)
 
@@ -18,6 +19,7 @@ class PacketLengthError(PacketDecodeError):
     self.length = length
     self.expected_length = expected_length
     self.value = {'LENGTH': self.length, 'EXPECTED LENGTH':self.expected_length}
+    self.__name__ = 'PacketLengthError'
 
 class PacketLengthFieldError(PacketDecodeError):
   """
@@ -27,6 +29,7 @@ class PacketLengthFieldError(PacketDecodeError):
     self.length = length
     self.expected_length = expected_length
     self.value = {'LENGTH':self.length, 'EXPECTED LENGTH':self.expected_length}
+    self.__name__ = 'PacketLengthFieldError'
 
 class PacketHeaderError(PacketDecodeError):
   """
@@ -36,6 +39,7 @@ class PacketHeaderError(PacketDecodeError):
     self.header = header
     self.expected_header = expected_header
     self.value = {'HEADER':self.header, 'EXPECTED HEADER':self.expected_header}
+    self.__name__ = 'PacketHeaderError'
 
 class PacketCRCError(PacketDecodeError):
   """
@@ -45,7 +49,7 @@ class PacketCRCError(PacketDecodeError):
     self.crc = crc
     self.expected_crc = expected_crc
     self.value = {'CRC':self.crc, 'EXPECTED CRC':self.expected_crc}
-
+    self.__name__ = 'PacketCRCError'
 
 class ResponseError(Exception):
   """
@@ -69,6 +73,31 @@ class RetryError(ResponseError):
   """
   def __init__(self, value):
     self.value = value
+    self.__name__ = 'RetryError'
+
+class CRCMismatchError(ResponseError):
+  """
+  Signifies a bad crc code was received by the bot
+  """
+  def __init__(self, value):
+    self.value = value
+    self.__name__ = 'CRCMismatchError'
+
+class DownstreamTimeoutError(ResponseError):
+  """
+  Signifiees the machine cannot communicate with the tool
+  due to a communication timeout.
+  """
+  def __init__(self, value):
+    self.value = value
+
+class ToolLockError(ResponseError):
+  """
+  Signifies the machine cannot communicate with the tool
+  due to the tool being locked
+  """
+  def __init__(self, value):
+    self.value = value
 
 class BuildCancelledError(ResponseError):
   """
@@ -85,6 +114,7 @@ class TimeoutError(ResponseError):
     self.data_length = data_length
     self.decoder_state = decoder_state
     self.value = {'DATA LENGTH':self.data_length, 'DECODER STATE':self.decoder_state}
+    self.__name__ = 'TimeoutError'
 
   def __str__(self):
     return str(self.value)
@@ -95,7 +125,7 @@ class TransmissionError(IOError):
   This error is non-recoverable without resetting the state of the machine.
   """
   def __str__(self):
-    return 'TransmissionError'
+    return 'TransmissionError causes by: ', self.received_errors
 
 class ExtendedStopError(Exception):
   """

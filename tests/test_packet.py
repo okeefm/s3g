@@ -124,9 +124,9 @@ class PacketStreamDecoderTests(unittest.TestCase):
     cases = [
       ['GENERIC_ERROR',          errors.RetryError],
       ['ACTION_BUFFER_OVERFLOW', errors.BufferOverflowError],
-      ['CRC_MISMATCH',           errors.RetryError],
-      ['DOWNSTREAM_TIMEOUT',     errors.TransmissionError],
-      ['TOOL_LOCK_TIMEOUT',      errors.TransmissionError],
+      ['CRC_MISMATCH',           errors.CRCMismatchError],
+      ['DOWNSTREAM_TIMEOUT',     errors.DownstreamTimeoutError],
+      ['TOOL_LOCK_TIMEOUT',      errors.ToolLockError],
       ['CANCEL_BUILD',           errors.BuildCancelledError],
     ]
 

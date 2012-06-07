@@ -58,13 +58,13 @@ def CheckResponseCode(response_code):
     raise errors.BufferOverflowError()
 
   elif response_code == constants.response_code_dict['CRC_MISMATCH']:
-    raise errors.RetryError('CRC mismatch error reported by toolhead, try sending packet again')
+    raise errors.CRCMismatchError('CRC mismatch error reported by toolhead, try sending packet again')
 
   elif response_code == constants.response_code_dict['DOWNSTREAM_TIMEOUT']:
-    raise errors.TransmissionError('Downstream (tool network) timout, cannot communicate with tool')
+    raise errors.DownstreamTimeoutError('Downstream (tool network) timout, cannot communicate with tool')
 
   elif response_code == constants.response_code_dict['TOOL_LOCK_TIMEOUT']:
-    raise errors.TransmissionError('Tool lock timeout, cannot communicate with tool.')
+    raise errors.ToolLockError('Tool lock timeout, cannot communicate with tool.')
 
   elif response_code == constants.response_code_dict['CANCEL_BUILD']:
     raise errors.BuildCancelledError()
