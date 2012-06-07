@@ -58,6 +58,8 @@ Supported commands were extracted from [gcode files](https://github.com/makerbot
 
 Hints about what the commands are expected to do were extracted from ReplicatorG's [gcode parser](https://github.com/makerbot/ReplicatorG/blob/master/src/replicatorg/app/gcode/GCodeParser.java).
 
+State machine diagram for the way both [gcodes](https://github.com/makerbot/s3g/tree/master/doc/GcodeStateMachine.png) and [mcodes](https://github.com/makerbot/s3g/tree/master/doc/GcodeStateMachine.png) are processed.
+
 # Parser
 
 ## Comments
