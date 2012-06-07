@@ -64,12 +64,6 @@ class UnrecognizedCodeError(GcodeError):
   An UnrecognizedCodeError is thrown when a gcode is parsed out that is not recognized
   """
 
-class CodeValueError(GcodeError):
-  """
-  A CodeValueError is thrown when a code has a value that is not what is expected
-  I.E. A movement command's F code is set to True
-  """
-
 class UnspecifiedAxisLocationError(GcodeError):
   """
   An UnspecifiedLocationError is thrown when a movement command is attempted
@@ -80,12 +74,6 @@ class NoToolIndexError(GcodeError):
   """
   A NoToolIndexError is thrown if a commad that requires a tool index
   to be set is being executed without a tool index set.
-  """
-
-class NoPlatformIndexError(GcodeError):
-  """
-  A NoPlatformIndexError is thrown if a command that requires a platform
-  index to be set is being executed without a platform index set.
   """
 
 class MissingCodeError(GcodeError):
@@ -103,4 +91,15 @@ class VectorLengthZeroError(GcodeError):
 class InvalidFeedrateError(GcodeError):
   """
   An InvalidFeedrateError is thrown when a feedrate <0 is given for a movement command
+  """
+
+class BadPercentageError(GcodeError):
+  """
+  A BadPercentageError is thrown when a set build percent command is received with an invalid percentage.
+  """
+
+class NoBuildNameError(GcodeError):
+  """
+  A NoBuildNameError is thrown when a build is
+  started without a build name set
   """

@@ -111,3 +111,9 @@ class GcodeStates(object):
     axes = ['X','Y','Z','A','B']  
     for i in range(len(offsets)):
       self.offsetPosition[register][axes[i]] = offsets[i]
+
+  def SetBuildName(self, build_name):
+    if not isinstance(build_name, str):
+      raise TypeError
+    else:
+      self.values['build_name'] = build_name

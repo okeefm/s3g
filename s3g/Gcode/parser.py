@@ -229,7 +229,7 @@ class GcodeParser(object):
     if 'T' in codes:
       self.state.values['platform_index'] = codes['T']
     elif 'platform_index' not in self.state.values:
-      raise NoPlatformIndexError
+      raise NoToolIndexError
     if 'P' in codes:
       timeout = codes['P']
     else:
@@ -283,8 +283,20 @@ class GcodeParser(object):
   def SetBuildPercentage(self, codes, flags, comment):
     """Sets the build percentage to a certain percentage.
     """
-    self.s3g.SetBuildPercent(int(codes['P']))
+    percentage = codes['P']
 
+    if percentage > 100 or percentage < 0:
+      raise BadPercentageError
+
+    self.s3g.SetBuildPercent(percentage)
+
+    # Side effect: If the build percentage is 0 or 100, then also send a build start or build end notification.
+    # TODO: Should this be called first? is order of operations important?
+    if 0 == percentage:
+      self.BuildStartNotification()
+
+    elif 100 == percentage:
+      self.BuildEndNotification()
 
   def StoreOffsets(self, codes, flags, comment):
     """Given XYZ offsets, stores those offsets in the state machine.
@@ -424,6 +436,23 @@ class GcodeParser(object):
     """
     if 'T' in codes:
       self.state.tool_index = codes['T']
+
+  def BuildStartNotification(self):
+    """
+    Sends a build start notification command to the machine.
+    """
+    try:
+      self.s3g.BuildStartNotification(0, self.state.values['build_name'])
+    except KeyError:
+      raise NoBuildNameError
+
+  def BuildEndNotification(self):
+    """
+    Sends a build end notification command to the machine
+    """
+    self.state.values['build_name'] = None
+
+    self.s3g.BuildEndNotification()
 
   def ExtruderOff(self, codes, flags, comment):
     """Turn the extruder off

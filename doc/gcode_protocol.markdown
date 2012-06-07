@@ -404,9 +404,7 @@ Parameter
     song_id = P
 
 ## M73 - Set build percentage
-Instruct the machine that the build has progressed to the specified percentage. The machine is expected to display this on it's interface board.
-This command will also send build start and end notifications to the machine, depending on the build percentage.  A build percentage of 0
-will send a BuildStartNotification, and a build percent of 100 will send a BuildEndNotification.
+Instruct the machine that the build has progressed to the specified percentage. The machine is expected to display this on it's interface board. If the percentage is exactly 0, then a Build Start Notification is sent. If the percentage is exactly 100, then a Build End notification is sent.
 
 Registers
 
@@ -424,6 +422,28 @@ S3g Output
 Parameters
 
     percent = P
+
+If Build percentage is exactly 0, the following command is also sent:
+
+Registers (none)
+
+S3g Output
+
+    BuildStartNotification(build name)
+
+Parameters
+
+    build name
+
+If Build percentage is exactly 100, the following command is also sent:
+
+Registers (none)
+
+S3g Output
+
+    BuildEndNotification()
+
+Parameters (none)
 
 
 ## M104 - Set toolhead temperature

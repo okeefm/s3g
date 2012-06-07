@@ -164,5 +164,15 @@ class s3gHelperFunctionTests(unittest.TestCase):
     self.g.LosePosition(axes)
     self.assertEqual(expectedPosition, self.g.position)
 
+  def test_set_build_name(self):
+    build_name = 'test'
+    self.g.SetBuildName(build_name)
+    self.assertEqual(self.g.values['build_name'], build_name)
+
+  def test_set_build_name_non_string(self):
+    build_name = 9
+    self.assertRaises(TypeError, self.g.SetBuildName, build_name)
+
+
 if __name__ == "__main__":
   unittest.main()
