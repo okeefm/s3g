@@ -83,22 +83,6 @@ class CRCMismatchError(ResponseError):
     self.value = value
     self.__name__ = 'CRCMismatchError'
 
-class DownstreamTimeoutError(ResponseError):
-  """
-  Signifiees the machine cannot communicate with the tool
-  due to a communication timeout.
-  """
-  def __init__(self, value):
-    self.value = value
-
-class ToolLockError(ResponseError):
-  """
-  Signifies the machine cannot communicate with the tool
-  due to the tool being locked
-  """
-  def __init__(self, value):
-    self.value = value
-
 class BuildCancelledError(ResponseError):
   """
   Signifies the cancellation of a build
@@ -126,6 +110,22 @@ class TransmissionError(IOError):
   """
   def __str__(self):
     return 'TransmissionError causes by: ', self.received_errors
+
+class DownstreamTimeoutError(TransmissionError):
+  """
+  Signifiees the machine cannot communicate with the tool
+  due to a communication timeout.
+  """
+  def __init__(self, value):
+    self.value = value
+
+class ToolLockError(TransmissionError):
+  """
+  Signifies the machine cannot communicate with the tool
+  due to the tool being locked
+  """
+  def __init__(self, value):
+    self.value = value
 
 class ExtendedStopError(Exception):
   """
