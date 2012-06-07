@@ -1,4 +1,3 @@
-
 class AbstractWriter(object):
 
   def SendActionPayload(self, payload):

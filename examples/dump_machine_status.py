@@ -28,7 +28,7 @@ parser.add_option("-d", "--dumpeeprom", dest="dump_eeprom",
 
 file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 r = s3g.s3g()
-r.writer = s3g.StreamWriter(file)
+r.writer = s3g.Writer.StreamWriter(file)
 
 print "firmware version: %i"%(r.GetVersion())
 print "build name: %s"%(r.GetBuildName())

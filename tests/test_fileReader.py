@@ -13,7 +13,7 @@ import s3g
 
 class FileReaderTestsInputStream(unittest.TestCase):
   def setUp(self):
-    self.d = s3g.FileReader()
+    self.d = s3g.FileReader.FileReader()
 
     self.inputstream = io.BytesIO()
     self.d.file = self.inputstream
@@ -26,7 +26,7 @@ class FileReaderTestsInputStream(unittest.TestCase):
     self.d.ReadBytes(0)
 
   def test_ReadBytes_too_little_data(self):
-    self.assertRaises(s3g.InsufficientDataError, self.d.ReadBytes, 1)
+    self.assertRaises(s3g.FileReader.InsufficientDataError, self.d.ReadBytes, 1)
 
   def test_ReadBytes_enough_data(self):
     data = '1234567890'
@@ -39,9 +39,9 @@ class FileReaderTestsWithS3g(unittest.TestCase):
     self.r = s3g.s3g()
     self.inputstream = io.BytesIO() # File that we will send responses on
 
-    self.r.writer = s3g.FileWriter(self.inputstream)
+    self.r.writer = s3g.Writer.FileWriter(self.inputstream)
 
-    self.d = s3g.FileReader()
+    self.d = s3g.FileReader.FileReader()
     self.d.file = self.inputstream
 
   def tearDown(self):
@@ -71,7 +71,7 @@ class FileReaderTestsWithS3g(unittest.TestCase):
 class MockTests(unittest.TestCase):
   def setUp(self):
     self.inputstream = io.BytesIO()
-    self.d = s3g.FileReader()
+    self.d = s3g.FileReader.FileReader()
     self.d.file = self.inputstream
     self.mock = mock.Mock()
 
@@ -82,12 +82,12 @@ class MockTests(unittest.TestCase):
   def test_get_string_always_read_empty_string(self):
     b = ''
     self.d.ReadBytes = mock.Mock(return_value=b)
-    self.assertRaises(s3g.InsufficientDataError, self.d.GetStringBytes)
+    self.assertRaises(s3g.FileReader.InsufficientDataError, self.d.GetStringBytes)
 
   def test_get_string_bytes_string_too_long(self):
     b = 'a'
     self.d.ReadBytes = mock.Mock(return_value=b)
-    self.assertRaises(s3g.StringTooLongError, self.d.GetStringBytes)
+    self.assertRaises(s3g.FileReader.StringTooLongError, self.d.GetStringBytes)
 
   def test_get_string_bytes_empty_string(self):
     b = '\x00'
@@ -129,7 +129,7 @@ class MockTests(unittest.TestCase):
     self.assertEqual(expectedResponse, response)
   
   def test_read_file_end_of_file(self):
-    self.d.ReadBytes = mock.Mock(side_effect=s3g.InsufficientDataError)
+    self.d.ReadBytes = mock.Mock(side_effect=s3g.FileReader.InsufficientDataError)
     expectedPayloads = []
     self.assertEqual(expectedPayloads, self.d.ReadFile())
 
@@ -141,22 +141,22 @@ class MockTests(unittest.TestCase):
       try:
         return parse_next_payload_data.pop()
       except:
-        raise s3g.EndOfFileError
+        raise s3g.FileReader.EndOfFileError
     self.d.ParseNextPayload = mock.Mock(side_effect=parse_next_payload_side_effect)
     data = self.d.ReadFile()
     self.assertEqual(expected_data, data)
 
   def test_get_next_command_no_commands_left(self):
     self.d.ReadBytes = self.mock.ReadBytes
-    self.mock.ReadBytes.side_effect = s3g.InsufficientDataError
-    self.assertRaises(s3g.EndOfFileError, self.d.GetNextCommand)
+    self.mock.ReadBytes.side_effect = s3g.FileReader.InsufficientDataError
+    self.assertRaises(s3g.FileReader.EndOfFileError, self.d.GetNextCommand)
 
   def test_get_next_command_bad_command(self):
     command = bytearray() # Assume that 0xff is not a valid command
     command.append(0xFF)
     self.d.ReadBytes = mock.Mock(return_value=command)
 
-    self.assertRaises(s3g.BadCommandError, self.d.GetNextCommand)
+    self.assertRaises(s3g.FileReader.BadCommandError, self.d.GetNextCommand)
 
   def test_get_next_command_host_action_command(self):
     cmd = s3g.host_action_command_dict['QUEUE_POINT']
@@ -195,7 +195,7 @@ class MockTests(unittest.TestCase):
     expected_data = [1, 2, 3]
     read_bytes_side_effect_data = []
     for data in expected_data:
-      read_bytes_side_effect_data.append([s3g.EncodeUint32(data)])
+      read_bytes_side_effect_data.append([s3g.Encoder.EncodeUint32(data)])
     read_bytes_side_effect_data.reverse()
     def read_bytes_side_effect(*args):
       return read_bytes_side_effect_data.pop()  
@@ -214,7 +214,7 @@ class MockTests(unittest.TestCase):
   def test_parse_out_parameters_strings_and_ints(self):
     formatString = 'sI'
     expected_data = ['asdf', 1]
-    self.d.ReadBytes = mock.Mock(return_value=s3g.EncodeUint32(expected_data[1]))
+    self.d.ReadBytes = mock.Mock(return_value=s3g.Encoder.EncodeUint32(expected_data[1]))
     self.d.GetStringBytes = mock.Mock(return_value=expected_data[0]+'\x00')
 
     parse_parameter_side_effect_data = [expected_data[1], expected_data[0]]
@@ -230,7 +230,7 @@ class MockTests(unittest.TestCase):
  
   def test_parse_parameter(self):
     cases = [
-    [256, s3g.EncodeUint32(256), '<i'],
+    [256, s3g.Encoder.EncodeUint32(256), '<i'],
     ['asdf', array.array('B', 'asdf'),  '<4s'],
     ['asdf', array.array('B', 'asdf\x00'), '<5s'],
     ]
@@ -239,13 +239,13 @@ class MockTests(unittest.TestCase):
 
   def test_parse_tool_action_bad_hot_cmd(self):
     cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
-    self.assertRaises(s3g.NotToolActionCmdError, self.d.ParseToolAction, cmd)
+    self.assertRaises(s3g.FileReader.NotToolActionCmdError, self.d.ParseToolAction, cmd)
         
   def test_parse_tool_action_unknown_tool_action_command(self):
     cmd = s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
     data = [0, 255, 0]
     self.d.ParseOutParameters = mock.Mock(return_value=data)
-    self.assertRaises(s3g.BadSlaveCommandError, self.d.ParseToolAction, cmd)
+    self.assertRaises(s3g.FileReader.BadSlaveCommandError, self.d.ParseToolAction, cmd)
 
   def test_parse_tool_action(self):
     cmd = s3g.host_action_command_dict['TOOL_ACTION_COMMAND']
@@ -267,7 +267,7 @@ class MockTests(unittest.TestCase):
 
   def test_parse_host_action_bad_command(self):
     cmd = 255
-    self.assertRaises(s3g.BadHostCommandError, self.d.ParseHostAction, cmd)
+    self.assertRaises(s3g.FileReader.BadHostCommandError, self.d.ParseHostAction, cmd)
 
   def test_parse_host_action(self):
     cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT']

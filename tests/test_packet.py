@@ -3,78 +3,78 @@ import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import s3g
 import unittest
+from s3g import Encoder, errors, constants
 
 class PacketEncodeTests(unittest.TestCase):
   def test_reject_oversize_payload(self):
     payload = bytearray()
-    for i in range (0, s3g.maximum_payload_length + 1):
+    for i in range (0, constants.maximum_payload_length + 1):
       payload.append(i)
-    self.assertRaises(s3g.PacketLengthError,s3g.EncodePayload,payload)
+    self.assertRaises(errors.PacketLengthError,Encoder.EncodePayload,payload)
 
   def test_packet_length(self):
     payload = 'abcd'
-    packet = s3g.EncodePayload(payload)
+    packet = Encoder.EncodePayload(payload)
     assert len(packet) == len(payload) + 3
 
   def test_packet_header(self):
     payload = 'abcd'
-    packet = s3g.EncodePayload(payload)
+    packet = Encoder.EncodePayload(payload)
 
-    assert packet[0] == s3g.header
+    assert packet[0] == constants.header
 
   def test_packet_length_field(self):
     payload = 'abcd'
-    packet = s3g.EncodePayload(payload)
+    packet = Encoder.EncodePayload(payload)
     assert packet[1] == len(payload)
 
   def test_packet_crc(self):
     payload = 'abcd'
-    packet = s3g.EncodePayload(payload)
-    assert packet[6] == s3g.CalculateCRC(payload);
+    packet = Encoder.EncodePayload(payload)
+    assert packet[6] == Encoder.CalculateCRC(payload);
 
 
 class PacketDecodeTests(unittest.TestCase):
   def test_undersize_packet(self):
     packet = bytearray('abc')
-    self.assertRaises(s3g.PacketLengthError,s3g.DecodePacket,packet)
+    self.assertRaises(errors.PacketLengthError,Encoder.DecodePacket,packet)
     
   def test_wrong_header(self):
     packet = bytearray('abcd')
-    self.assertRaises(s3g.PacketHeaderError,s3g.DecodePacket,packet)
+    self.assertRaises(errors.PacketHeaderError,Encoder.DecodePacket,packet)
 
   def test_bad_packet_length_field(self):
     packet = bytearray()
-    packet.append(s3g.header)
+    packet.append(constants.header)
     packet.append(5)
     packet.extend('ab')
-    self.assertRaises(s3g.PacketLengthFieldError,s3g.DecodePacket,packet)
+    self.assertRaises(errors.PacketLengthFieldError,Encoder.DecodePacket,packet)
 
   def test_bad_crc(self):
     packet = bytearray()
-    packet.append(s3g.header)
+    packet.append(constants.header)
     packet.append(1)
     packet.extend('a')
-    packet.append(s3g.CalculateCRC('a')+1)
-    self.assertRaises(s3g.PacketCRCError,s3g.DecodePacket,packet)
+    packet.append(Encoder.CalculateCRC('a')+1)
+    self.assertRaises(errors.PacketCRCError,Encoder.DecodePacket,packet)
 
   def test_got_payload(self):
     expected_payload = bytearray('abcde')
 
     packet = bytearray()
-    packet.append(s3g.header)
+    packet.append(constants.header)
     packet.append(len(expected_payload))
     packet.extend(expected_payload)
-    packet.append(s3g.CalculateCRC(expected_payload))
+    packet.append(Encoder.CalculateCRC(expected_payload))
 
-    payload = s3g.DecodePacket(packet)
+    payload = Encoder.DecodePacket(packet)
     assert payload == expected_payload
 
 
 class PacketStreamDecoderTests(unittest.TestCase):
   def setUp(self):
-    self.s = s3g.PacketStreamDecoder()
+    self.s = Encoder.PacketStreamDecoder()
 
   def tearDown(self):
     self.s = None
@@ -85,95 +85,95 @@ class PacketStreamDecoderTests(unittest.TestCase):
     assert self.s.expected_length == 0
 
   def test_reject_bad_header(self):
-    self.assertRaises(s3g.PacketHeaderError,self.s.ParseByte,0x00)
+    self.assertRaises(errors.PacketHeaderError,self.s.ParseByte,0x00)
     assert self.s.state == 'WAIT_FOR_HEADER'
 
   def test_accept_header(self):
-    self.s.ParseByte(s3g.header)
+    self.s.ParseByte(constants.header)
     assert self.s.state == 'WAIT_FOR_LENGTH'
 
   def test_reject_bad_size(self):
-    self.s.ParseByte(s3g.header)
-    self.assertRaises(s3g.PacketLengthFieldError,self.s.ParseByte,s3g.maximum_payload_length+1)
+    self.s.ParseByte(constants.header)
+    self.assertRaises(errors.PacketLengthFieldError,self.s.ParseByte,constants.maximum_payload_length+1)
 
   def test_accept_size(self):
-    self.s.ParseByte(s3g.header)
-    self.s.ParseByte(s3g.maximum_payload_length)
+    self.s.ParseByte(constants.header)
+    self.s.ParseByte(constants.maximum_payload_length)
     assert(self.s.state == 'WAIT_FOR_DATA')
-    assert(self.s.expected_length == s3g.maximum_payload_length)
+    assert(self.s.expected_length == constants.maximum_payload_length)
 
   def test_accepts_data(self):
-    self.s.ParseByte(s3g.header)
-    self.s.ParseByte(s3g.maximum_payload_length)
-    for i in range (0, s3g.maximum_payload_length):
+    self.s.ParseByte(constants.header)
+    self.s.ParseByte(constants.maximum_payload_length)
+    for i in range (0, constants.maximum_payload_length):
       self.s.ParseByte(i)
 
-    assert(self.s.expected_length == s3g.maximum_payload_length)
-    for i in range (0, s3g.maximum_payload_length):
+    assert(self.s.expected_length == constants.maximum_payload_length)
+    for i in range (0, constants.maximum_payload_length):
       assert(self.s.payload[i] == i)
 
   def test_reject_bad_crc(self):
     payload = 'abcde'
-    self.s.ParseByte(s3g.header)
+    self.s.ParseByte(constants.header)
     self.s.ParseByte(len(payload))
     for i in range (0, len(payload)):
       self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.PacketCRCError,self.s.ParseByte,s3g.CalculateCRC(payload)+1)
+    self.assertRaises(errors.PacketCRCError,self.s.ParseByte,Encoder.CalculateCRC(payload)+1)
 
   def test_reject_response_generic_error(self):
     cases = [
-      ['GENERIC_ERROR',          s3g.RetryError],
-      ['ACTION_BUFFER_OVERFLOW', s3g.BufferOverflowError],
-      ['CRC_MISMATCH',           s3g.RetryError],
-      ['DOWNSTREAM_TIMEOUT',     s3g.TransmissionError],
-      ['TOOL_LOCK_TIMEOUT',      s3g.TransmissionError],
-      ['CANCEL_BUILD',           s3g.BuildCancelledError],
+      ['GENERIC_ERROR',          errors.RetryError],
+      ['ACTION_BUFFER_OVERFLOW', errors.BufferOverflowError],
+      ['CRC_MISMATCH',           errors.RetryError],
+      ['DOWNSTREAM_TIMEOUT',     errors.TransmissionError],
+      ['TOOL_LOCK_TIMEOUT',      errors.TransmissionError],
+      ['CANCEL_BUILD',           errors.BuildCancelledError],
     ]
 
     for case in cases:
-      self.s = s3g.PacketStreamDecoder()
+      self.s = Encoder.PacketStreamDecoder()
 
       payload = bytearray()
-      payload.append(s3g.response_code_dict[case[0]])
+      payload.append(constants.response_code_dict[case[0]])
 
-      self.s.ParseByte(s3g.header)
+      self.s.ParseByte(constants.header)
       self.s.ParseByte(len(payload))
       for i in range (0, len(payload)):
         self.s.ParseByte(payload[i])
-      self.assertRaises(case[1], s3g.CheckResponseCode, payload[0])
+      self.assertRaises(case[1], Encoder.CheckResponseCode, payload[0])
 
   def test_reject_response_unknown_error_code(self):
     payload = bytearray()
     payload.append(0xFF)  # Note: We assume that 0xFF is not a valid error code.
 
-    self.s.ParseByte(s3g.header)
+    self.s.ParseByte(constants.header)
     self.s.ParseByte(len(payload))
     for i in range (0, len(payload)):
       self.s.ParseByte(payload[i])
-    self.assertRaises(s3g.ProtocolError, s3g.CheckResponseCode, payload[0])
+    self.assertRaises(errors.ProtocolError, Encoder.CheckResponseCode, payload[0])
 
   def test_accept_packet(self):
     payload = bytearray()
-    payload.append(s3g.response_code_dict['SUCCESS'])
+    payload.append(constants.response_code_dict['SUCCESS'])
     payload.extend('abcde')
-    self.s.ParseByte(s3g.header)
+    self.s.ParseByte(constants.header)
     self.s.ParseByte(len(payload))
     for i in range (0, len(payload)):
       self.s.ParseByte(payload[i])
-    self.s.ParseByte(s3g.CalculateCRC(payload))
+    self.s.ParseByte(Encoder.CalculateCRC(payload))
     assert(self.s.state == 'PAYLOAD_READY')
     assert(self.s.payload == payload)
 
   def test_accept_packet_ignore_response_code(self):
-    self.s = s3g.PacketStreamDecoder()
+    self.s = Encoder.PacketStreamDecoder()
 
     payload = bytearray()
     payload.extend('abcde')
-    self.s.ParseByte(s3g.header)
+    self.s.ParseByte(constants.header)
     self.s.ParseByte(len(payload))
     for i in range (0, len(payload)):
       self.s.ParseByte(payload[i])
-    self.s.ParseByte(s3g.CalculateCRC(payload))
+    self.s.ParseByte(Encoder.CalculateCRC(payload))
     assert(self.s.state == 'PAYLOAD_READY')
     assert(self.s.payload == payload)
 

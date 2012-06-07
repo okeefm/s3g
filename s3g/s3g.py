@@ -3,11 +3,9 @@ import struct
 import time
 import logging
 
+import Encoder
 from constants import *
 from errors import *
-from crc import *
-from coding import *
-from packet import *
 
 
 class s3g(object):
@@ -33,7 +31,7 @@ class s3g(object):
 
     response = self.writer.SendQueryPayload(payload)
 
-    [response_code, version] = UnpackResponse('<BH', response)
+    [response_code, version] = Encoder.UnpackResponse('<BH', response)
 
     return version
 
@@ -51,7 +49,7 @@ class s3g(object):
 
     response = self.writer.SendQueryPayload(payload)
 
-    [response_code, sd_response_code] = UnpackResponse('<BB', response)
+    [response_code, sd_response_code] = Encoder.UnpackResponse('<BB', response)
     if sd_response_code != sd_error_dict['SUCCESS']:
       raise SDCardError(sd_response_code)
 
@@ -67,7 +65,7 @@ class s3g(object):
 
     response = self.writer.SendQueryPayload(payload)
     
-    [response_code, sdResponse] = UnpackResponse('<BI', response)
+    [response_code, sdResponse] = Encoder.UnpackResponse('<BI', response)
     return sdResponse
 
   def Reset(self):
@@ -94,7 +92,7 @@ class s3g(object):
 
     response = self.writer.SendQueryPayload(payload)
     
-    [response_code, isFinished] = UnpackResponse('<B?', response)
+    [response_code, isFinished] = Encoder.UnpackResponse('<B?', response)
     return isFinished
 
   def ClearBuffer(self):
@@ -137,7 +135,7 @@ class s3g(object):
      packetsSent,
      nonResponsivePacketsSent,
      packetRetries,
-     noiseBytes] = UnpackResponse('<BLLLLL', response)
+     noiseBytes] = Encoder.UnpackResponse('<BLLLLL', response)
 
     info = {
     'PacketsReceived' : packetsReceived,
@@ -163,9 +161,9 @@ class s3g(object):
     response = self.writer.SendQueryPayload(payload)
     
 
-    [response_code, bitfield] = UnpackResponse('<BB', response)
+    [response_code, bitfield] = Encoder.UnpackResponse('<BB', response)
 
-    bitfield = DecodeBitfield8(bitfield)      
+    bitfield = Encoder.DecodeBitfield8(bitfield)      
 
     flags = {
     'POWER_ERROR' : int(bitfield[7]),
@@ -194,7 +192,7 @@ class s3g(object):
 
     response = self.writer.SendQueryPayload(payload)
 
-    [response_code, extended_stop_response] = UnpackResponse('<BB', response)
+    [response_code, extended_stop_response] = Encoder.UnpackResponse('<BB', response)
 
     if extended_stop_response != 0:
       raise ExtendedStopError
@@ -270,7 +268,7 @@ class s3g(object):
     @param boolean enable: If true, enable all selected axes. Otherwise, disable the selected
            axes.
     """
-    axes_bitfield = EncodeAxes(axes)
+    axes_bitfield = Encoder.EncodeAxes(axes)
     if enable:
       axes_bitfield |= 0x80
 
@@ -301,7 +299,7 @@ class s3g(object):
       host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'],
       position[0], position[1], position[2], position[3], position[4],
       duration, 
-      EncodeAxes(relative_axes)
+      Encoder.EncodeAxes(relative_axes)
     )
 
     self.writer.SendActionPayload(payload)
@@ -314,7 +312,7 @@ class s3g(object):
     payload = struct.pack(
       '<BB',
       host_action_command_dict['STORE_HOME_POSITIONS'], 
-      EncodeAxes(axes)
+      Encoder.EncodeAxes(axes)
     )
 
     self.writer.SendActionPayload(payload)
@@ -328,7 +326,7 @@ class s3g(object):
     payload = struct.pack(
       '<BBB',
       host_action_command_dict['SET_POT_VALUE'], 
-      EncodeAxes(axes), 
+      Encoder.EncodeAxes(axes), 
       value
     )
 
@@ -379,7 +377,7 @@ class s3g(object):
     payload = struct.pack(
       '<BB',
       host_action_command_dict['RECALL_HOME_POSITIONS'], 
-      EncodeAxes(axes)
+      Encoder.EncodeAxes(axes)
     )
 
     self.writer.SendActionPayload(payload)
@@ -474,7 +472,7 @@ class s3g(object):
     )
 
     response = self.writer.SendQueryPayload(payload)
-    [response_code, buffer_size] = UnpackResponse('<BI', response)
+    [response_code, buffer_size] = Encoder.UnpackResponse('<BI', response)
 
     return buffer_size
 
@@ -490,7 +488,7 @@ class s3g(object):
     )
 
     response = self.writer.SendQueryPayload(payload)
-    [response_code, x, y, z, axes_bits] = UnpackResponse('<BiiiB', response)
+    [response_code, x, y, z, axes_bits] = Encoder.UnpackResponse('<BiiiB', response)
 
     return [x, y, z], axes_bits
 
@@ -521,7 +519,7 @@ class s3g(object):
 
     response = self.writer.SendQueryPayload(payload)
 
-    [response_code, sd_response_code] = UnpackResponse('<BB', response)
+    [response_code, sd_response_code] = Encoder.UnpackResponse('<BB', response)
 
     if sd_response_code != sd_error_dict['SUCCESS']:
       raise SDCardError(sd_response_code)
@@ -545,7 +543,7 @@ class s3g(object):
 
     response = self.writer.SendQueryPayload(payload)
    
-    [response_code, sd_response_code, filename] = UnpackResponseWithString('<BB', response)
+    [response_code, sd_response_code, filename] = Encoder.UnpackResponseWithString('<BB', response)
 
     if sd_response_code != sd_error_dict['SUCCESS']:
       raise SDCardError(sd_response_code)
@@ -563,7 +561,7 @@ class s3g(object):
     )
 
     response = self.writer.SendQueryPayload(payload)
-    [response_code, filename] = UnpackResponseWithString('<B', response)
+    [response_code, filename] = Encoder.UnpackResponseWithString('<B', response)
 
     return filename
 
@@ -582,7 +580,7 @@ class s3g(object):
   
     [response_code,
      x, y, z, a, b,
-     endstop_states] = UnpackResponse('<BiiiiiH', response)
+     endstop_states] = Encoder.UnpackResponse('<BiiiiiH', response)
 
     return [x, y, z, a, b], endstop_states
 
@@ -632,7 +630,7 @@ class s3g(object):
     payload = struct.pack(
       '<BBIH',
       host_action_command_dict['FIND_AXES_MINIMUMS'],
-      EncodeAxes(axes),
+      Encoder.EncodeAxes(axes),
       rate,
       timeout
     )
@@ -650,7 +648,7 @@ class s3g(object):
     payload = struct.pack(
       '<BBIH',
       host_action_command_dict['FIND_AXES_MAXIMUMS'],
-      EncodeAxes(axes),
+      Encoder.EncodeAxes(axes),
       rate,
       timeout
     )
@@ -868,7 +866,7 @@ class s3g(object):
     )
    
     response = self.ToolQuery(tool_index,slave_query_command_dict['GET_VERSION'], payload)
-    [response_code, version] = UnpackResponse('<BH', response)
+    [response_code, version] = Encoder.UnpackResponse('<BH', response)
 
     return version
 
@@ -880,7 +878,7 @@ class s3g(object):
       and the platform's Error Term, Delta Term and Last Output
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PID_STATE'])
-    [response_code, exError, exDelta, exLast, plError, plDelta, plLast] = UnpackResponse('<Bhhhhhh', response)
+    [response_code, exError, exDelta, exLast, plError, plDelta, plLast] = Encoder.UnpackResponse('<Bhhhhhh', response)
     PIDVals = {
       "ExtruderError"          : exError,
       "ExtruderDelta"          : exDelta,
@@ -910,9 +908,9 @@ class s3g(object):
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOL_STATUS'])
 
-    [resonse_code, bitfield] = UnpackResponse('<BB', response)
+    [resonse_code, bitfield] = Encoder.UnpackResponse('<BB', response)
 
-    bitfield = DecodeBitfield8(bitfield)
+    bitfield = Encoder.DecodeBitfield8(bitfield)
 
     returnDict = {
       "ExtruderReady" : bool(int(bitfield[0])),
@@ -993,7 +991,7 @@ class s3g(object):
     @return int Duration of each rotation, in miliseconds
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_MOTOR_1_SPEED_RPM'])
-    [response_code, speed] = UnpackResponse('<BI', response)
+    [response_code, speed] = Encoder.UnpackResponse('<BI', response)
     return speed
 
   def GetToolheadTemperature(self, tool_index):
@@ -1003,7 +1001,7 @@ class s3g(object):
     @return int temperature: reported by the toolhead
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOLHEAD_TEMP'])
-    [response_code, temperature] = UnpackResponse('<BH', response)
+    [response_code, temperature] = Encoder.UnpackResponse('<BH', response)
 
     return temperature
 
@@ -1014,7 +1012,7 @@ class s3g(object):
     @return boolean isReady: True if tool is done heating, false otherwise
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['IS_TOOL_READY'])
-    [response_code, ready] = UnpackResponse('<BB', response)
+    [response_code, ready] = Encoder.UnpackResponse('<BB', response)
 
     isReady = False
     if ready == 1:
@@ -1077,7 +1075,7 @@ class s3g(object):
     @return int temperature: reported by the toolhead
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PLATFORM_TEMP'])
-    [response_code, temperature] = UnpackResponse('<BH', response)
+    [response_code, temperature] = Encoder.UnpackResponse('<BH', response)
 
     return temperature
 
@@ -1088,7 +1086,7 @@ class s3g(object):
     @return int temperature: that the toolhead is attempting to achieve
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOLHEAD_TARGET_TEMP'])
-    [response_code, temperature] = UnpackResponse('<BH', response)
+    [response_code, temperature] = Encoder.UnpackResponse('<BH', response)
 
     return temperature
 
@@ -1099,7 +1097,7 @@ class s3g(object):
     @return int temperature: that the build platform is attempting to achieve
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PLATFORM_TARGET_TEMP'])
-    [response_code, temperature] = UnpackResponse('<BH', response)
+    [response_code, temperature] = Encoder.UnpackResponse('<BH', response)
 
     return temperature
 
@@ -1110,7 +1108,7 @@ class s3g(object):
     @return boolean isReady: true if the platform is at target temperature, false otherwise
     """
     response = self.ToolQuery(tool_index, slave_query_command_dict['IS_PLATFORM_READY'])
-    [response_code, ready] = UnpackResponse('<BB', response)
+    [response_code, ready] = Encoder.UnpackResponse('<BB', response)
 
     isReady = False
     if ready == 1:

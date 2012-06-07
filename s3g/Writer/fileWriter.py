@@ -5,7 +5,6 @@ if a user tries to write a query command to file, we throw a AttemptedQueryComma
 """
 
 from abstractWriter import *
-from s3g import *
 
 class FileWriter(AbstractWriter):
   """ A file writer can be used to export an s3g payload stream to a file

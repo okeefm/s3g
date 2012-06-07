@@ -7,11 +7,11 @@ import unittest
 import io
 import time
 
-import s3g
+from s3g import Gcode
 
 class s3gHelperFunctionTests(unittest.TestCase):
   def setUp(self):
-    self.g = s3g.GcodeStates()
+    self.g = Gcode.GcodeStates()
 
   def tearDown(self):
     self.g = None
@@ -38,7 +38,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
 
   def test_get_position_unspecified_axis_location(self):
     self.g.position['X'] = None
-    self.assertRaises(s3g.UnspecifiedAxisLocationError, self.g.GetPosition)
+    self.assertRaises(Gcode.UnspecifiedAxisLocationError, self.g.GetPosition)
 
   def test_get_position_no_offsets(self):
     self.g.position = {

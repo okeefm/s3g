@@ -1,7 +1,10 @@
 """ An implementation of S3g that sends s3g packets to a stream.
 """
+import time
 from abstractWriter import *
-from s3g import *
+from .. import errors
+from .. import Encoder
+from .. import constants
 
 class StreamWriter(AbstractWriter):
   def __init__(self, file):
@@ -23,7 +26,7 @@ class StreamWriter(AbstractWriter):
     self.SendCommand(payload)
 
   def SendCommand(self, payload):
-    packet = EncodePayload(payload)
+    packet = Encoder.EncodePayload(payload)
     return self.SendPacket(packet)
 
   def SendPacket(self, packet):
@@ -37,7 +40,7 @@ class StreamWriter(AbstractWriter):
     retry_count = 0
 
     while True:
-      decoder = PacketStreamDecoder()
+      decoder = Encoder.PacketStreamDecoder()
       self.file.write(packet)
       self.file.flush()
 
@@ -49,8 +52,8 @@ class StreamWriter(AbstractWriter):
           # Try to read a byte
           data = ''
           while data == '':
-            if (time.time() > start_time + timeout_length):
-              raise TimeoutError(len(data), decoder.state)
+            if (time.time() > start_time + constants.timeout_length):
+              raise errors.TimeoutError(len(data), decoder.state)
 
             # pySerial streams handle blocking read. Be sure to set up a timeout when
             # initializing them, or this could hang forever
@@ -59,12 +62,12 @@ class StreamWriter(AbstractWriter):
           data = ord(data)
           decoder.ParseByte(data)
        
-        CheckResponseCode(decoder.payload[0])        
+        Encoder.CheckResponseCode(decoder.payload[0])        
  
         # TODO: Should we chop the response code?
         return decoder.payload
 
-      except (BufferOverflowError) as e:
+      except (errors.BufferOverflowError) as e:
         # Buffer overflow error- wait a while for the buffer to clear, then try again.
         # TODO: This could hang forever if the machine gets stuck; is that what we want?
 
@@ -77,7 +80,7 @@ class StreamWriter(AbstractWriter):
 
         time.sleep(.2)
 
-      except (PacketDecodeError, RetryError, TimeoutError) as e:
+      except (errors.PacketDecodeError, errors.RetryError, errors.TimeoutError) as e:
         # Sent a packet to the host, but got a malformed response or timed out waiting
         # for a reply. Retry immediately.
 
@@ -96,7 +99,7 @@ class StreamWriter(AbstractWriter):
 #          %(type(e),e.__str__(),retry_count))
         raise e
 
-      if retry_count >= max_retry_count:
+      if retry_count >= constants.max_retry_count:
 # TODO: Re-enable logging
 #        self.logger.warning('{"event":"transmission_error"}\n')
-        raise TransmissionError
+        raise errors.TransmissionError

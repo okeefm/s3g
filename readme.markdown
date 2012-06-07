@@ -23,7 +23,7 @@ Create an s3g object, and attach it to a serial port:
 ```python
 r = s3g.s3g()
 file = serial.Serial(port, 115200, timeout=.2)
-r.writer = s3g.StreamWriter(file)
+r.writer = s3g.Writer.StreamWriter(file)
 ```
 
 _Note: Replace port with your serial port (example: '/dev/tty.usbmodemfd121')_

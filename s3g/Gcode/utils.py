@@ -1,4 +1,5 @@
 from errors import *
+from .. import errors
 import sys
 
 def ExtractComments(line):
@@ -125,9 +126,9 @@ def CalculateVectorDifference(minuend, subtrahend):
   @return list difference
   """
   if len(minuend) != 5:
-    raise PointLengthError("Expected list of length 5, got length %i"%(len(minuend)))
+    raise errors.PointLengthError("Expected list of length 5, got length %i"%(len(minuend)))
   if len(subtrahend) != 5:
-    raise PointLengthError("Expected list of length 5, got length %i"%(len(subtrahend)))
+    raise errors.PointLengthError("Expected list of length 5, got length %i"%(len(subtrahend)))
 
   difference = []
   for m, s in zip(minuend, subtrahend):
@@ -158,7 +159,7 @@ def CalculateVectorMagnitude(vector):
   @return magnitude of the vector
   """
   if len(vector) != 5:
-    raise PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
+    raise errors.PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
 
   magnitude_squared = 0
   for d in vector:
@@ -250,7 +251,7 @@ def FindLongestAxis(vector):
   @return int: The index of the longest vector
   """
   if len(vector) != 5:
-    raise PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
+    raise errors.PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
 
   max_value_index = 0
   for i in range (1,5):

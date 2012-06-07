@@ -1,7 +1,7 @@
 import struct
 import array
 
-from errors import *
+from .. import errors
 
 def EncodeInt32(number):
   """
@@ -100,7 +100,7 @@ def UnpackResponse(format, data):
   try:
     return struct.unpack(format, buffer(data))
   except struct.error as e:
-    raise ProtocolError("Unexpected data returned from machine. Expected length=%i, got=%i, error=%s"%
+    raise errors.ProtocolError("Unexpected data returned from machine. Expected length=%i, got=%i, error=%s"%
       (struct.calcsize(format),len(data),str(e)))
 
 def UnpackResponseWithString(format, data):
@@ -114,13 +114,13 @@ def UnpackResponseWithString(format, data):
   """
   #The +1 is for the null terminator of the string
   if (len(data) < struct.calcsize(format) + 1):
-    raise ProtocolError("Not enough data received from machine, expected=%i, got=%i"%
+    raise errors.ProtocolError("Not enough data received from machine, expected=%i, got=%i"%
       (struct.calcsize(format)+1,len(data))
     )
 
   #Check for a null terminator on the string
   elif (data[-1]) != 0:
-    raise ProtocolError("Expected null terminated string.")
+    raise errors.ProtocolError("Expected null terminated string.")
 
   output = UnpackResponse(format, data[0:struct.calcsize(format)])
   output += data[struct.calcsize(format):],
