@@ -967,7 +967,7 @@ class gcodeTests(unittest.TestCase):
     flags = []
     comment = ''
     self.g.WaitForToolReady(codes, flags, comment)
-    self.mock.WaitForToolReady.assert_called_once_with(tool_index, Gcode.waiting_delay, self.g.state.values['waiting_timeout'])
+    self.mock.WaitForToolReady.assert_called_once_with(tool_index, Gcode.wait_for_toolhead_delay, self.g.state.values['waiting_timeout'])
 
   def test_wait_for_tool_read_no_p_or_t_codes_no_set_toolhead(self):
     codes = {}
@@ -981,7 +981,7 @@ class gcodeTests(unittest.TestCase):
     flags = []
     comment = ''
     self.g.WaitForToolReady(codes, flags, comment)
-    self.mock.WaitForToolReady.assert_called_once_with(tool_index, Gcode.waiting_delay, self.g.state.values['waiting_timeout'])
+    self.mock.WaitForToolReady.assert_called_once_with(tool_index, Gcode.wait_for_toolhead_delay, self.g.state.values['waiting_timeout'])
     self.assertEqual(tool_index, self.g.state.values['tool_index'])
 
   def test_wait_for_tool_ready_no_t_code(self):
@@ -992,7 +992,7 @@ class gcodeTests(unittest.TestCase):
     flags = []
     comment = ''
     self.g.WaitForToolReady(codes, flags, comment)
-    self.mock.WaitForToolReady.assert_called_once_with(tool_index, Gcode.waiting_delay, timeout)
+    self.mock.WaitForToolReady.assert_called_once_with(tool_index, Gcode.wait_for_toolhead_delay, timeout)
 
   def test_wait_for_tool_ready(self):
     tool_index = 2
@@ -1004,7 +1004,7 @@ class gcodeTests(unittest.TestCase):
     flags = []
     comments = ''
     self.g.WaitForToolReady(codes, flags, comments)
-    self.mock.WaitForToolReady.assert_called_once_with(tool_index, Gcode.waiting_delay, timeout)
+    self.mock.WaitForToolReady.assert_called_once_with(tool_index, Gcode.wait_for_toolhead_delay, timeout)
     self.assertEqual(tool_index, self.g.state.values['tool_index'])
 
   def test_wait_for_platform_ready_all_codes_accounted_for(self):
@@ -1021,7 +1021,7 @@ class gcodeTests(unittest.TestCase):
     self.g.WaitForPlatformReady(codes, flags, comments)
     self.mock.WaitForPlatformReady.assert_called_once_with(
         self.g.state.values['platform_index'],
-        Gcode.waiting_delay,
+        Gcode.wait_for_platform_delay,
         self.g.state.values['waiting_timeout']
         )
 
@@ -1039,7 +1039,7 @@ class gcodeTests(unittest.TestCase):
     self.g.WaitForPlatformReady(codes, flags, comments)
     self.mock.WaitForPlatformReady.assert_called_once_with(
         platform_index,
-        Gcode.waiting_delay,
+        Gcode.wait_for_platform_delay,
         self.g.state.values['waiting_timeout']
         )
     self.assertEqual(self.g.state.values['platform_index'], platform_index)
@@ -1053,7 +1053,7 @@ class gcodeTests(unittest.TestCase):
     self.g.WaitForPlatformReady(codes, flags, comments)
     self.mock.WaitForPlatformReady.assert_called_once_with(
         self.g.state.values['platform_index'],
-        Gcode.waiting_delay,
+        Gcode.wait_for_platform_delay,
         timeout
         )
 
@@ -1069,7 +1069,7 @@ class gcodeTests(unittest.TestCase):
     self.g.WaitForPlatformReady(codes, flags, comments)
     self.mock.WaitForPlatformReady.assert_called_once_with(
         platform_index,
-        Gcode.waiting_delay,
+        Gcode.wait_for_platform_delay,
         timeout,
         )
     self.assertEqual(self.g.state.values['platform_index'], platform_index)

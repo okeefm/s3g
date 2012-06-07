@@ -218,7 +218,7 @@ class GcodeParser(object):
     else:
       timeout = self.state.values['waiting_timeout']
 
-    self.s3g.WaitForToolReady(int(self.state.values['tool_index']), waiting_delay, int(timeout))
+    self.s3g.WaitForToolReady(int(self.state.values['tool_index']), wait_for_toolhead_delay, int(timeout))
 
   def WaitForPlatformReady(self, codes, flags, comment):
     """
@@ -234,7 +234,7 @@ class GcodeParser(object):
       timeout = codes['P']
     else:
       timeout = self.state.values['waiting_timeout']
-    self.s3g.WaitForPlatformReady(int(self.state.values['platform_index']), waiting_delay, int(timeout))
+    self.s3g.WaitForPlatformReady(int(self.state.values['platform_index']), wait_for_platform_delay, int(timeout))
 
   def WaitForToolhead(self, codes, flags, comment):
     """Given a toolhead and a timeout, waits for that toolhead
@@ -249,7 +249,7 @@ class GcodeParser(object):
       timeout = codes['P']
     else:
       timeout = self.state.values['waiting_timeout']
-    self.s3g.WaitForToolReady(int(self.state.values['tool_index']), waiting_delay, int(timeout))
+    self.s3g.WaitForToolReady(int(self.state.values['tool_index']), wait_for_toolhead_delay, int(timeout))
 
   def DisableAxes(self, codes, flags, comment):
     """Disables a set of axes on the bot
