@@ -9,7 +9,7 @@ digraph
   "RESPONSE=SUCCESS?" -> "RESPONSE=GENERIC_ERROR?" [label="no", weight=10];
 
   "RESPONSE=GENERIC_ERROR?" [shape=diamond];
-  "RESPONSE=GENERIC_ERROR?" -> "RAISE RETRY_PACKET_ERROR" [label="yes"];
+  "RESPONSE=GENERIC_ERROR?" -> "RAISE GENERIC_ERROR" [label="yes"];
   "RESPONSE=GENERIC_ERROR?" -> "RESPONSE=BUFFER_OVERFLOW?" [label="no", weight=10];
 
   "RESPONSE=BUFFER_OVERFLOW?" [shape=diamond];

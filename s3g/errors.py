@@ -67,7 +67,7 @@ class BufferOverflowError(ResponseError):
   def __init__(self):
     self.value = 'BufferOverflow'
 
-class RetryError(ResponseError):
+class GenericError(ResponseError):
   """
   A generic error reported by the bot
   """

@@ -52,7 +52,7 @@ def CheckResponseCode(response_code):
     return
 
   elif response_code == constants.response_code_dict['GENERIC_ERROR']:
-    raise errors.RetryError('Generic error reported by toolhead, try sending packet again')
+    raise errors.GenericError('Generic error reported by toolhead, try sending packet again')
 
   elif response_code == constants.response_code_dict['ACTION_BUFFER_OVERFLOW']:
     raise errors.BufferOverflowError()

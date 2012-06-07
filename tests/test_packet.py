@@ -122,7 +122,7 @@ class PacketStreamDecoderTests(unittest.TestCase):
 
   def test_reject_response_generic_error(self):
     cases = [
-      ['GENERIC_ERROR',          errors.RetryError],
+      ['GENERIC_ERROR',          errors.GenericError],
       ['ACTION_BUFFER_OVERFLOW', errors.BufferOverflowError],
       ['CRC_MISMATCH',           errors.CRCMismatchError],
       ['DOWNSTREAM_TIMEOUT',     errors.DownstreamTimeoutError],

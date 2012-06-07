@@ -80,7 +80,7 @@ class StreamWriter(AbstractWriter):
 
         time.sleep(.2)
 
-      except (errors.PacketDecodeError, errors.RetryError, errors.TimeoutError, errors.CRCMismatchError) as e:
+      except (errors.PacketDecodeError, errors.GenericError, errors.TimeoutError, errors.CRCMismatchError) as e:
         # Sent a packet to the host, but got a malformed response or timed out waiting
         # for a reply. Retry immediately.
 
