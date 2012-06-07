@@ -405,6 +405,8 @@ Parameter
 
 ## M73 - Set build percentage
 Instruct the machine that the build has progressed to the specified percentage. The machine is expected to display this on it's interface board.
+This command will also send build start and end notifications to the machine, depending on the build percentage.  A build percentage of 0
+will send a BuildStartNotification, and a build percent of 100 will send a BuildEndNotification.
 
 Registers
 
@@ -412,7 +414,12 @@ Registers
 
 S3g Output
 
-    SetBuildPercent(percent)
+    If P == 0:
+      BuildStartNotification(0, build_name)
+      SetBuildPercent(percent)
+    If P == 100:
+      BuildEndNotification()
+      SetBuildPercent(percent)
 
 Parameters
 

@@ -1167,7 +1167,7 @@ Tells the motherboard that a build is about to begin, and provides the name of t
 
 Payload
 
-    uint32: Number of steps (commands?) in the build
+    uint32: 0 (reserved for future use)
     1+N bytes: Name of the build, in ASCII, null terminated
 
 Response (0 bytes)
