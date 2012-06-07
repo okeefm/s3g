@@ -21,6 +21,9 @@ class StreamWriterTests(unittest.TestCase):
     self.w = None
 
   def test_error_reporting(self):
+    """Tests that StreamWriter records errors received correctly
+    and stores those values in the TransmissionError Thrown.
+    """
     expected_errors = [
         'CRCMismatchError',
         'CRCMismatchError',
