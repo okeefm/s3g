@@ -40,7 +40,7 @@ class StreamWriterTests(unittest.TestCase):
     try:
       self.w.SendCommand(payload) 
     except errors.TransmissionError as e:
-      self.assertEqual(expected_errors, e.received_errors)
+      self.assertEqual(expected_errors, e.value)
 
   def test_send_command(self):
     """

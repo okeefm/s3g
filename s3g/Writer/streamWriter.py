@@ -103,6 +103,4 @@ class StreamWriter(AbstractWriter):
       if retry_count >= constants.max_retry_count:
 # TODO: Re-enable logging
 #        self.logger.warning('{"event":"transmission_error"}\n')
-        e = errors.TransmissionError()
-        e.received_errors = received_errors
-        raise e
+        raise errors.TransmissionError(received_errors)

@@ -97,7 +97,10 @@ class TimeoutError(ResponseError):
   def __init__(self, data_length, decoder_state):
     self.data_length = data_length
     self.decoder_state = decoder_state
-    self.value = {'DATA LENGTH':self.data_length, 'DECODER STATE':self.decoder_state}
+    self.value = {
+        'DATA LENGTH':self.data_length,  
+        'DECODER STATE':self.decoder_state
+        }
     self.__name__ = 'TimeoutError'
 
   def __str__(self):
@@ -105,27 +108,30 @@ class TimeoutError(ResponseError):
 
 class TransmissionError(IOError):
   """
-  A transmission error is raised when the s3g driver encounters too many errors while communicating.
-  This error is non-recoverable without resetting the state of the machine.
+  A transmission error is raised when the s3g driver encounters 
+  too many errors while communicating, OR the machine encountering
+  errors when communicating with its tools. This error is non-recoverable 
+  without resetting the state of the machine.
   """
+  def __init__(self, value):
+    self.value = value
+
   def __str__(self):
-    return 'TransmissionError causes by: ', self.received_errors
+    return str(self.value)    #This returns a str of the value because 
+                              #TransmissionErrors can contain
+                              #a list of proximate errors that caused this
 
 class DownstreamTimeoutError(TransmissionError):
   """
   Signifiees the machine cannot communicate with the tool
   due to a communication timeout.
   """
-  def __init__(self, value):
-    self.value = value
 
 class ToolLockError(TransmissionError):
   """
   Signifies the machine cannot communicate with the tool
   due to the tool being locked
   """
-  def __init__(self, value):
-    self.value = value
 
 class ExtendedStopError(Exception):
   """
