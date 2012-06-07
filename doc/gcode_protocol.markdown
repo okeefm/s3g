@@ -412,12 +412,7 @@ Registers
 
 S3g Output
 
-    If P == 0:
-      BuildStartNotification(0, build_name)
-      SetBuildPercent(percent)
-    If P == 100:
-      BuildEndNotification()
-      SetBuildPercent(percent)
+    SetBuildPercent(percent)
 
 Parameters
 
