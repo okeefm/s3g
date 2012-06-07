@@ -176,7 +176,18 @@ class StreamWriterTests(unittest.TestCase):
 
     self.assertEquals(response_payload, self.w.SendQueryPayload(payload))
     self.assertEquals(Encoder.EncodePayload(expected_payload), self.inputstream.getvalue())
-    
+
+  def test_emergency_stop(self):
+    self.w.EmergencyStop()
+    self.assertTrue(self.w.emergency_stop)
+
+  def test_emergency_stop_works(self):
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    self.outputstream.write(Encoder.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+    self.w.EmergencyStop()
+    self.assertRaises(Writer.EmergencyStopError, self.w.SendCommand, 'asdf')
 
 if __name__ == "__main__":
   unittest.main()
