@@ -18,6 +18,9 @@ digraph
   "73_IS_P_REGISTER_DEFINED?" [shape=rectangle];
   "104_IS_T_REGISTER_DEFINED?" [shape=rectangle];
   "109_IS_T_REGISTER_DEFINED?" [shape=rectangle];
+  "IS_P_CODE_0?" [shape=rectangle];
+  "IS_P_CODE_100?" [shape=rectangle];
+  "IS_BUILD_NAME_SPECIFIED?" [shape=rectangle];
   "RECOGNIZED_CODE" [shape=diamond];
   "EXTRA_REGISTERS_PRESENT?" [shape=diamond];
   "TOOLHEAD=T"
@@ -48,6 +51,12 @@ digraph
   "72_IS_P_REGISTER_DEFINED?" -> "QUEUE_SONG" [label="e"];
   "CODE=73" -> "73_IS_P_REGISTER_DEFINED?" [label="e"];
   "73_IS_P_REGISTER_DEFINED?" -> "SET_BUILD_PERCENTAGE" [label="e"];
+  "SET_BUILD_PERCENTAGE" -> "IS_P_CODE_0?" [label="e"];
+  "IS_P_CODE_0?" -> "IS_BUILD_NAME_SPECIFIED?" [label="yes"];
+  "IS_BUILD_NAME_SPECIFIED?" -> "BUILD_START_NOTIFICATION" [label="yes"];
+  "IS_BUILD_NAME_SPECIFIED?" -> "NO_BUILD_NAME_ERROR" [label="no"];
+  "IS_P_CODE_0?" -> "IS_P_CODE_100?" [label="no"];
+  "IS_P_CODE_100?" -> "SEND_BUILD_END_NOTIFICATION" [label="yes"]
   "CODE=101" -> "TOOL_FORWARD" [label="e"];
   "CODE=102" -> "TOOL_REVERSE" [label="e"];
   "TOOL_REVERSE" -> "ENABLE_TOOL" [label="e"];
