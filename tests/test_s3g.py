@@ -521,6 +521,7 @@ class S3gTests(unittest.TestCase):
     packet = bytearray(self.inputstream.getvalue())
     payload = Encoder.DecodePacket(packet)
     self.assertEquals(payload[0], constants.host_action_command_dict['BUILD_END_NOTIFICATION'])
+    self.assertEquals(payload[1], 0)
 
   def test_queue_point_short_length(self):
     point = [0,1]
