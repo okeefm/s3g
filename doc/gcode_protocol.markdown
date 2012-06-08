@@ -64,7 +64,7 @@ State Diagram of GCode Parsing:
 
 State Diagram of MCode Parsing:
 
-![mcode state diagram](https://github.com/makerbot/s3g/raw/master/doc/GcodeStateMachine.png)
+![mcode state diagram](https://github.com/makerbot/s3g/raw/master/doc/McodeStateMachine.png)
 
 # Parser
 
