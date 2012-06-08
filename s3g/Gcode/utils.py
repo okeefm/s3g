@@ -269,8 +269,7 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate, max_fe
   fastest_feedrate = float(abs(displacement_vector[longest_axis]))/CalculateVectorMagnitude(displacement_vector)*actual_feedrate
 
   # Now we know the feedrate of the fastest axis, in mm/s. Convert it to us/step. 
-  dda_speed = 60*1000000/(fastest_feedrate*steps_per_mm[longest_axis])
-
+  dda_speed = 60*1000000/(fastest_feedrate*abs(steps_per_mm[longest_axis]))
 
   return dda_speed
 
