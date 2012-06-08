@@ -8,7 +8,7 @@
       "maxfeedrate" : 12450,
       "homingfeedrate"  : 2500,
       "stepspermm"  : 94.139704,
-      "endstops"  : "max",
+      "endstops"  : "max"
     },
     {
       "name"  : "Y", 
@@ -16,7 +16,7 @@
       "maxfeedrate" : 12450,
       "homingfeedrate"  : 2500,
       "stepspermm"  : 94.139704,
-      "endstops"  : "max",
+      "endstops"  : "max"
     },
     {
       "name"  : "Z", 
@@ -24,22 +24,22 @@
       "maxfeedrate" : 1170,
       "homingfeedrate"  : 1100,
       "stepspermm"  : 400,
-      "endstops"  : "min",
+      "endstops"  : "min"
     },
     {
       "name"  : "A", 
       "length"  : 100000,
       "maxfeedrate" : 1600,
       "stepspermm"  : 96.275201870333662468889989185642,
-      "endstops"  : "none",
+      "endstops"  : "none"
     },
     {
       "name"  : "B", 
       "length"  : 100000,
       "maxfeedrate" : 1600,
       "stepspermm"  : 96.275201870333662468889989185642,
-      "endstops"  : "none",
-    },
+      "endstops"  : "none"
+    }
   ],
   "tools" :
   [
@@ -56,7 +56,7 @@
     "motor_steps" : 3200,
     "x_offset"  : 16.5,
     "y_offset"  : 0,
-    "z_offset"  : 0,
+    "z_offset"  : 0
     },
     {
     "name"  : "Mk8 Right",
@@ -71,14 +71,14 @@
     "motor_steps" : 3200,
     "x_offset"  : 16.5,
     "y_offset"  : 0,
-    "z_offset"  : 0,
+    "z_offset"  : 0
     },
     {
     "name"  : "heated_platform",
     "model" : "PlMk1",
     "max_temp"  : 150,
-    "index" : 0,
-    },
+    "index" : 0
+    }
   ],
   "wipes" : 
   [
@@ -90,7 +90,7 @@
     "Y2"  : 45.0,
     "wait"  : 1000.0,
     "purge_duration"  : 1000,
-    "reverse_duration"  : 15,
+    "reverse_duration"  : 15
     },
     {
     "index" : 1,
@@ -100,25 +100,23 @@
     "Y2"  : 45.0,
     "wait"  : 1000.0,
     "purge_duration"  : 1000,
-    "reverse_duration"  : 15,
-    },
+    "reverse_duration"  : 15
+    }
   ],
   "driver"  : 
-  [
     {
     "name"  : "s3g",
-    "baudrate"  : 115200,
+    "baudrate"  : 115200
     },
-  ],
   "warmup"  : 
   [],
   "cooldown"  : 
   [
-    "M18 (Turn off steppers after a build)",
+    "M18 (Turn off steppers after a build)"
   ],
   "bookends"  :
-  [
+  {
     "start" : "somePath",
-    "end"   : "someOtherPath",
-  ],
-},
+    "end"   : "someOtherPath"
+  }
+}

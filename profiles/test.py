@@ -1,5 +1,4 @@
 import json
-from StringIO import StringIO
 
-f = StringIO("replicatorDual.json")
+f = open("replicatorDual.json", 'r')
 print json.load(f)
