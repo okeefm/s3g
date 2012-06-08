@@ -18,8 +18,8 @@ s = s3g.s3g()
 s.writer = s3g.Writer.FileWriter(open(options.output_file, 'w'))
 
 parser = s3g.Gcode.GcodeParser()
+parser.state.values["build_name"] = 'test'
 parser.s3g = s
-
 
 with open(options.input_file) as f:
   for line in f:
