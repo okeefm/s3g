@@ -2,6 +2,7 @@
 """
 import time
 from abstractWriter import *
+from writerErrors import *
 from .. import errors
 from .. import Encoder
 from .. import constants
@@ -16,6 +17,10 @@ class StreamWriter(AbstractWriter):
 
     self.total_retries = 0
     self.total_overflows = 0
+    self.external_stop = False
+
+  def ExternalStop(self):
+    self.external_stop = True
 
   # TODO: test me
   def SendQueryPayload(self, payload):
@@ -40,6 +45,8 @@ class StreamWriter(AbstractWriter):
     retry_count = 0
 
     while True:
+      if self.external_stop:
+        raise ExternalStopError
       decoder = Encoder.PacketStreamDecoder()
       self.file.write(packet)
       self.file.flush()
