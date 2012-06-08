@@ -6,6 +6,8 @@ sys.path.append(lib_path)
 import io
 import struct
 import unittest
+import threading
+import time
 
 from s3g import Writer, Encoder, errors, constants
 
@@ -177,17 +179,35 @@ class StreamWriterTests(unittest.TestCase):
     self.assertEquals(response_payload, self.w.SendQueryPayload(payload))
     self.assertEquals(Encoder.EncodePayload(expected_payload), self.inputstream.getvalue())
 
-  def test_emergency_stop(self):
-    self.w.EmergencyStop()
-    self.assertTrue(self.w.emergency_stop)
+  def test_external_stop(self):
+    self.w.ExternalStop()
+    self.assertTrue(self.w.external_stop)
 
-  def test_emergency_stop_works(self):
+  def test_external_stop_works_precondition(self):
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
     self.outputstream.write(Encoder.EncodePayload(response_payload))
     self.outputstream.seek(0)
-    self.w.EmergencyStop()
-    self.assertRaises(Writer.EmergencyStopError, self.w.SendCommand, 'asdf')
+    self.w.ExternalStop()
+    self.assertRaises(Writer.ExternalStopError, self.w.SendCommand, 'asdf')
+
+  def delay_and_external_stop_in_thread(self):
+    time.sleep(.5)
+    self.w.ExternalStop()
+
+  def test_delay_and_external_stop_in_thread(self):
+    self.assertFalse(self.w.external_stop)
+    self.delay_and_external_stop_in_thread()
+    self.assertTrue(self.w.external_stop)
+
+  def test_eternal_stop_works_multithreaded(self):
+    t = threading.Thread(target=self.delay_and_external_stop_in_thread)
+    t.start()
+    try:
+      self.w.SendPacket('')
+    except Writer.ExternalStopError:
+      self.assertTrue(self.w.external_stop)
+      self.assertFalse(t.isAlive())
 
 if __name__ == "__main__":
   unittest.main()
