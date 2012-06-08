@@ -116,7 +116,7 @@
   ],
   "bookends"  :
   {
-    "start" : "somePath",
-    "end"   : "someOtherPath"
+    "start" : "./bookends/replicatorDualStart.gcode",
+    "end"   : "./bookends/replicatorDualEnd.gcode"
   }
 }
