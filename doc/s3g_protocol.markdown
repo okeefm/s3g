@@ -1175,7 +1175,9 @@ Response (0 bytes)
 ## 154 - Build end notification
 Tells the motherboard that a build has been completed or aborted.
 
-Payload (0 bytes)
+Payload (1 byte)
+
+    uint8: 0 (reserved for future use)
 
 Response (0 bytes)
 

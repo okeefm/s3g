@@ -849,8 +849,9 @@ class s3g(object):
     Notify the machine that a build has been stopped.
     """
     payload = struct.pack(
-      '<B',
-      host_action_command_dict['BUILD_END_NOTIFICATION']
+      '<BB',
+      host_action_command_dict['BUILD_END_NOTIFICATION'],
+      0,
     )
 
     self.writer.SendActionPayload(payload)
