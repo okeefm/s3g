@@ -258,7 +258,7 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate):
     1600,
   ]
 
-  steps_per_mm = [94.130, 94.130, 400, -96.275, 96.275]
+  steps_per_mm = [94.130, 94.130, 400, 96.275, 96.275]
 
 
   # First, figure out where we are moving to. 
