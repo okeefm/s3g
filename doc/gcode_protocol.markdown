@@ -60,11 +60,11 @@ Hints about what the commands are expected to do were extracted from ReplicatorG
 
 State Diagram of GCode Parsing:
 
-![gcode state diragram](https://github.com/makerbot/s3g/blob/master/doc/GcodeStateMachine.png)
+![gcode state diragram](https://github.com/makerbot/s3g/raw/master/doc/GcodeStateMachine.png)
 
 State Diagram of MCode Parsing:
 
-![mcode state diagram](https://github.com/makerbot/s3g/blob/master/doc/GcodeStateMachine.png)
+![mcode state diagram](https://github.com/makerbot/s3g/raw/master/doc/GcodeStateMachine.png)
 
 # Parser
 
