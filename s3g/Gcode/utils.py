@@ -177,7 +177,7 @@ def CalculateUnitVector(vector):
   @return list: The 5D equivalent of the vector
   """
   if len(vector) != 5:
-    raise PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
+    raise errors.PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
 
   magnitude = CalculateVectorMagnitude(vector)
 
@@ -239,27 +239,17 @@ def FindLongestAxis(vector):
 
   return max_value_index
 
-def CalculateDDASpeed(initial_position, target_position, target_feedrate):
+def CalculateDDASpeed(initial_position, target_position, target_feedrate, max_feedrates, steps_per_mm):
   """ Given an initial position, target position, and target feedrate, calculate an achievable
   travel speed.
 
-  @param initial_position: Starting position of the move, in mm
-  @param target_position: Target position to move to, in mm
+  @param initial_position: 5D starting position of the move, in mm
+  @param target_position: 5D target position to move to, in mm
   @param target_feedrate: Requested feedrate, in mm/s (TODO: Is this correct)
+  @param max_feedrates: 5D vector of maximum feedrates, in mm/s
+  @param steps_per_mm: 5D vector of steps per milimeters conversion, in steps/mm
   @return float ddaSpeed: The speed in us/step we move at
   """
-
-  # TODO: Move these out of here
-  max_feedrates = [
-    18000,
-    18000,
-    1170,
-    1600,
-    1600,
-  ]
-
-  steps_per_mm = [94.130, 94.130, 400, -96.275, 96.275]
-
 
   # First, figure out where we are moving to. 
   displacement_vector = CalculateVectorDifference(target_position, initial_position)
@@ -274,8 +264,8 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate):
 
   # Find the magnitude of the longest displacement axis. this axis has the most steps to move
   displacement_vector_steps = MultiplyVector(displacement_vector, steps_per_mm) 
-
   longest_axis = FindLongestAxis(displacement_vector_steps)
+
   fastest_feedrate = float(abs(displacement_vector[longest_axis]))/CalculateVectorMagnitude(displacement_vector)*actual_feedrate
 
   # Now we know the feedrate of the fastest axis, in mm/s. Convert it to us/step. 

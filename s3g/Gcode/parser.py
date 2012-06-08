@@ -140,7 +140,7 @@ class GcodeParser(object):
     axes = ParseOutAxes(flags) 
     try:
       feedrate = self.state.values['feedrate']
-      self.s3g.FindAxesMaximums(axes, feedrate, self.state.findingTimeout)
+      self.s3g.FindAxesMaximums(axes, int(feedrate), self.state.findingTimeout)
     except KeyError as e:
       if e[0] == 'feedrate':
         e = KeyError('F')
@@ -157,7 +157,7 @@ class GcodeParser(object):
     axes = ParseOutAxes(flags)
     try:
       feedrate = self.state.values['feedrate']
-      self.s3g.FindAxesMinimums(axes, feedrate, self.state.findingTimeout)
+      self.s3g.FindAxesMinimums(axes, int(feedrate), self.state.findingTimeout)
     except KeyError as e:
       if e[0] == 'feedrate':
         e = KeyError('F')
@@ -187,7 +187,8 @@ class GcodeParser(object):
         self.state.position['A'] = codes['A']
       if 'B' in codes:
         self.state.position['B'] = codes['B']
-    stepped_position = MultiplyVector(self.state.GetPosition(), self.state.replicator_step_vector)
+
+    stepped_position = MultiplyVector(self.state.GetPosition(), self.state.replicator_steps_per_mm)
     self.s3g.SetExtendedPosition(stepped_position)
       
   def UseP0Offsets(self, codes, flags, comment):
@@ -288,7 +289,7 @@ class GcodeParser(object):
     if percentage > 100 or percentage < 0:
       raise BadPercentageError
 
-    self.s3g.SetBuildPercent(percentage)
+    self.s3g.SetBuildPercent(int(percentage))
 
     # Side effect: If the build percentage is 0 or 100, then also send a build start or build end notification.
     # TODO: Should this be called first? is order of operations important?
@@ -309,16 +310,19 @@ class GcodeParser(object):
     """Using a preset rapid feedrate, moves the XYZ axes
     to a specific location.
     """
+    # TODO: This is bad- merge with linear interpolation.
     current_point = self.state.GetPosition()
     self.state.SetPosition(codes)
     dda_speed = CalculateDDASpeed(
       current_point, 
       self.state.GetPosition(), 
       self.state.rapidFeedrate,
-       )
+      self.state.replicator_max_feedrates,
+      self.state.replicator_steps_per_mm
+    )
     stepped_point = MultiplyVector(
         self.state.GetPosition(), 
-        self.state.replicator_step_vector
+        self.state.replicator_steps_per_mm
         )
     self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
 
@@ -378,14 +382,16 @@ class GcodeParser(object):
       try :
         feedrate = self.state.values['feedrate']
         dda_speed = CalculateDDASpeed(
-            current_position, 
-            self.state.GetPosition(), 
-            feedrate
-            )
+          current_position, 
+          self.state.GetPosition(), 
+          feedrate,
+          self.state.replicator_max_feedrates,
+          self.state.replicator_steps_per_mm
+        )
         stepped_point = MultiplyVector(
-            self.state.GetPosition(), 
-            self.state.replicator_step_vector
-            )
+          self.state.GetPosition(), 
+          self.state.replicator_steps_per_mm
+        )
         self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
 
       except KeyError as e:

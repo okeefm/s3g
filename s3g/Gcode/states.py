@@ -41,30 +41,27 @@ class GcodeStates(object):
     self.findingTimeout = 60      #Timeout used when finding minimums/maximums
 
     # Feedrate to try when making rapid motions
+    # TODO: use the max feedrates instead of this.
     self.rapidFeedrate = 1200
 
-    # Maximum velocities for a machine, in mm/s
-    # TODO: something besides pull these numbers out of the air
-    self.maximum_velocity_x = 300
-    self.maximum_velocity_y = 300
-    self.maximum_velocity_z = 20
-    self.maximum_velocity_a = 27
-    self.maximum_velocity_b = 27
+    # TODO: Move these out of here
+    self.replicator_max_feedrates = [
+      18000,
+      18000,
+      1170,
+      1600,
+      1600,
+    ]
 
     # Steps per milimeter conversions for a machine
     # TODO: This only works for a replicator
-    self.xSPM = 94.140
-    self.ySPM = 94.140
-    self.zSPM = 400
-    self.aSPM = 96.275
-    self.bSPM = 96.275
-    self.replicator_step_vector = [
-        self.xSPM, 
-        self.ySPM, 
-        self.zSPM,
-        self.aSPM,
-        self.bSPM,
-        ]
+    self.replicator_steps_per_mm = [
+      94.140,
+      94.140,
+      400,
+      -96.275,
+      -96.275,
+    ]
   
   def LosePosition(self, axes):
     """Given a set of axes, loses the position of
