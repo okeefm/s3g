@@ -3,7 +3,6 @@
 from states import *
 from utils import *
 from errors import *
-from constants import *
 import time
 
 class GcodeParser(object):
@@ -216,9 +215,13 @@ class GcodeParser(object):
     if 'P' in codes:
       timeout = codes['P']
     else:
-      timeout = self.state.values['waiting_timeout']
+      timeout = self.state.profile.values['wait_for_tool_ready_timeout']
 
-    self.s3g.WaitForToolReady(int(self.state.values['tool_index']), wait_for_toolhead_delay, int(timeout))
+    self.s3g.WaitForToolReady(
+        int(self.state.values['tool_index']), 
+        self.state.profile.values['wait_for_tool_ready_packet_delay'], 
+        int(timeout)
+        )
 
   def WaitForPlatformReady(self, codes, flags, comment):
     """
@@ -233,8 +236,12 @@ class GcodeParser(object):
     if 'P' in codes:
       timeout = codes['P']
     else:
-      timeout = self.state.values['waiting_timeout']
-    self.s3g.WaitForPlatformReady(int(self.state.values['platform_index']), wait_for_platform_delay, int(timeout))
+      timeout = self.state.profile.values['wait_for_platform_ready_timeout']
+    self.s3g.WaitForPlatformReady(
+        int(self.state.values['platform_index']), 
+        self.state.profile.values['wait_for_tool_ready_packet_delay'],
+        int(timeout)
+        )
 
   def WaitForToolhead(self, codes, flags, comment):
     """Given a toolhead and a timeout, waits for that toolhead
@@ -248,8 +255,12 @@ class GcodeParser(object):
     if 'P' in codes:
       timeout = codes['P']
     else:
-      timeout = self.state.values['waiting_timeout']
-    self.s3g.WaitForToolReady(int(self.state.values['tool_index']), wait_for_toolhead_delay, int(timeout))
+      timeout = self.state.profile.values['wait_for_tool_ready_timeout']
+    self.s3g.WaitForToolReady(
+        int(self.state.values['tool_index']), 
+        self.state.profile.values['wait_for_tool_ready_packet_delay'],
+        int(timeout)
+        )
 
   def DisableAxes(self, codes, flags, comment):
     """Disables a set of axes on the bot

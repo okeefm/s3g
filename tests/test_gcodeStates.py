@@ -205,5 +205,25 @@ class TestProfileInformationParsing(unittest.TestCase):
         ]
     self.assertEqual(expected_bookends, self.g.GetBookendPaths())
 
+class MachineProfileWith4Axes(unittest.TestCase):
+  def setUp(self):
+    self.g = Gcode.GcodeStates()
+    profile = Gcode.Profile('ReplicatorSingle')
+    self.g.profile = profile
+
+  def tearDown(self):
+    self.g = None
+
+  def get_axes_values_with_one_0(self):
+    key = 'steps_per_mm'
+    expected_values = [
+        94.139704,
+        94.139704,
+        400,
+        96.275201870333662468889989185642,
+        0,
+        ]
+    self.assertEqual(expected_values, self.g.GetAxesValues(key))
+
 if __name__ == "__main__":
   unittest.main()

@@ -34,9 +34,7 @@ class GcodeStates(object):
                 },
         }
 
-    self.values = {
-        'waiting_timeout'   :  8*60,
-        }
+    self.values = {}
 
     self.offset_register = None   #Curent offset register
   
@@ -103,6 +101,8 @@ class GcodeStates(object):
     values = []
     for axis in self.profile.values['axes']:
       values.append(axis[key])
+    if len(values) == 4:
+      values.append(0)
     return values
 
   def GetBookendPaths(self):

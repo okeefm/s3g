@@ -117,5 +117,8 @@
     "end"   : "./bookends/replicatorDualEnd.gcode"
   },
   "rapid_feedrate"  : 1200,
-  "find_axis_max_min_timeout"  : 20
+  "find_axis_max_min_timeout"  : 20,
+  "wait_for_tool_ready_packet_delay" : 100,
+  "wait_for_tool_ready_timeout" : 450,
+  "wait_for_platform_ready_timeout" : 450
 }
