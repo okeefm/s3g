@@ -300,7 +300,8 @@ def ListProfiles():
   Looks in the ./profiles directory for all files that
   end in .json and returns that list.
   """
-  path = './s3g/Gcode/profiles'
+  path = os.path.join(
+      os.path.abspath(os.path.dirname(__file__)), './profiles/')
   profile_extension = '.json'
   files = os.listdir(path)
   profiles = []

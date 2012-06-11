@@ -8,6 +8,7 @@ from errors import *
 
 class GcodeStates(object):
   def __init__(self):
+    self.profile = None
     self.position = {    #Position, In MM!!
         'X' : None,
         'Y' : None,
