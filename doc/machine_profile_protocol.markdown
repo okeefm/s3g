@@ -29,4 +29,14 @@ Platform Usage
     * A delay used when querying the platform during while the machine is waiting for it defined by the word "wait_for_read_packet_delay
 
 ##Start and End Gcodes
-Each machine profile can also contain links to start and end gcodes, if they require specific instructions immediately before and after printing.  These should be defined in a json array with the key "bookends", with each booken getting defined by a "start" and "end" keyword.
+Each machine profile can contain an array of gcode commands to be executed either immediately preceeding or succeeding a print called start and end gcodes, respectivly.  To specify an array of start/end gcodes, create a dict defined by keyword 'bookends', then an array of gcodes defined by eithe 'start' or 'end'.
+
+Start/End Gcode Example:
+"bookends"  : {
+  "start" : [
+      "G0 X0 Y0 Z0 A0 B0 F0"
+      ],
+  "end"   : [
+      "G1 X100 Y100 Z100 A100 B100 F0"
+      ]
+    }
