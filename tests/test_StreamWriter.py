@@ -207,6 +207,7 @@ class StreamWriterTests(unittest.TestCase):
       self.w.SendPacket('')
     except Writer.ExternalStopError:
       self.assertTrue(self.w.external_stop)
+    t.join()    #Kill that thread!
 
 if __name__ == "__main__":
   unittest.main()
