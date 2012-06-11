@@ -1,6 +1,7 @@
 from errors import *
 from .. import errors
 import sys
+import os
 
 def ExtractComments(line):
   """
@@ -293,3 +294,18 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate, max_fe
 
 
   return dda_speed
+
+def ListProfiles():
+  """
+  Looks in the ./profiles directory for all files that
+  end in .json and returns that list.
+  """
+  path = './s3g/Gcode/profiles'
+  profile_extension = '.json'
+  files = os.listdir(path)
+  profiles = []
+  for f in files:
+    if profile_extension in f:
+      #Take off the file extension
+      profiles.append(f[:f.index(profile_extension)])
+  return profiles

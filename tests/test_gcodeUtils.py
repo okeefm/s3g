@@ -226,6 +226,12 @@ class GcodeUtilities(unittest.TestCase):
     parsedAxes = Gcode.ParseOutAxes(codes)
     self.assertEqual(['A', 'B', 'X', 'Y', 'Z'], parsedAxes)
 
+  def test_list_profiles(self):
+    expected_profiles = [
+        'ReplicatorDual',
+        'ReplicatorSingle',
+        ]
+    self.assertEqual(sorted(expected_profiles), sorted(Gcode.ListProfiles()))
 class DDASpeedTests(unittest.TestCase):
 
   def setUp(self):

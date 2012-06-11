@@ -198,13 +198,6 @@ class TestProfileInformationParsing(unittest.TestCase):
         ]
     self.assertEqual(expected_values, self.g.GetAxesValues(key))
 
-  def test_get_bookend_paths(self):
-    expected_bookends = [
-        os.path.abspath('./s3g/Gcode/profiles/bookends/replicatorDualStart.gcode'),
-        os.path.abspath('./s3g/Gcode/profiles/bookends/replicatorDualEnd.gcode'),
-        ]
-    self.assertEqual(expected_bookends, self.g.GetBookendPaths())
-
 class MachineProfileWith4Axes(unittest.TestCase):
   def setUp(self):
     self.g = Gcode.GcodeStates()

@@ -3,7 +3,6 @@ A state machine for the gcode parser which keeps track of certain
 variables.
 """
 
-import os
 from utils import *
 from errors import *
 
@@ -104,21 +103,3 @@ class GcodeStates(object):
     if len(values) == 4:
       values.append(0)
     return values
-
-  def GetBookendPaths(self):
-    """
-    Gets the absolute path of the start and end
-    gcode files linked in a machine profile.
-
-    @return list: A list of length two, with 
-    the 0th index being the start gcode, and the second
-    being the end gcode.
-    """
-    path = './s3g/Gcode/profiles/'    #Path of the profiles directory
-    bookends = [
-        path+self.profile.values['bookends']['start'],
-        path+self.profile.values['bookends']['end'],
-        ]
-    for i in range(len(bookends)):
-      bookends[i] = os.path.abspath(bookends[i])
-    return bookends 
