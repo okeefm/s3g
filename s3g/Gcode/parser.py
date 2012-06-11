@@ -448,7 +448,7 @@ class GcodeParser(object):
     Sends a build start notification command to the machine.
     """
     try:
-      self.s3g.BuildStartNotification(0, self.state.values['build_name'])
+      self.s3g.BuildStartNotification(self.state.values['build_name'])
     except KeyError:
       raise NoBuildNameError
 

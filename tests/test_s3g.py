@@ -493,7 +493,6 @@ class S3gTests(unittest.TestCase):
     self.assertEquals(payload[-1], 0x00)
 
   def test_build_start_notification(self):
-    command_count = 1234
     build_name = 'abcdefghijkl'
 
     response_payload = bytearray()
@@ -501,12 +500,12 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(Encoder.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.r.BuildStartNotification(command_count, build_name)
+    self.r.BuildStartNotification(build_name)
 
     packet = bytearray(self.inputstream.getvalue())
     payload = Encoder.DecodePacket(packet)
     self.assertEquals(payload[0], constants.host_action_command_dict['BUILD_START_NOTIFICATION'])
-    self.assertEquals(payload[1:5], Encoder.EncodeUint32(command_count))
+    self.assertEquals(payload[1:5], Encoder.EncodeUint32(0)) # Reserved uint32
     self.assertEquals(payload[5:-1], build_name)
     self.assertEquals(payload[-1], 0x00)
 
@@ -1545,7 +1544,7 @@ class S3gTests(unittest.TestCase):
 
   def test_set_toolhead_temp(self):
     tool_index = 2
-    temp = 100
+    temp = 1024
 
     self.outputstream.seek(0)
     self.outputstream.truncate(0)
@@ -1562,12 +1561,11 @@ class S3gTests(unittest.TestCase):
     self.assertEquals(payload[1], tool_index)
     self.assertEquals(payload[2], constants.slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP'])
     self.assertEquals(payload[3], 2) #Temp is a byte of len 2
-    self.assertEquals(payload[4], temp)
-	
+    self.assertEquals(payload[4:6], Encoder.EncodeInt16(temp))
 
   def test_set_platform_temp(self):
     tool_index = 2
-    temp = 100
+    temp = 1024
 
     self.outputstream.seek(0)
     self.outputstream.truncate(0)
@@ -1584,7 +1582,7 @@ class S3gTests(unittest.TestCase):
     self.assertEquals(payload[1], tool_index)
     self.assertEquals(payload[2], constants.slave_action_command_dict['SET_PLATFORM_TEMP'])
     self.assertEquals(payload[3], 2) #Temp is a byte of len 2
-    self.assertEquals(payload[4], temp)
+    self.assertEquals(payload[4:6], Encoder.EncodeInt16(temp))
 
 if __name__ == "__main__":
   unittest.main()

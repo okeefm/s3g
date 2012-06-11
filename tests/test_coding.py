@@ -7,32 +7,7 @@ import unittest
 import struct
 from s3g import Encoder, errors
 
-class EncoderTests(unittest.TestCase):
-
-  def test_decode_bitfield8(self):
-    field1 = 0
-    vals1 = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80]
-    for val in vals1:
-      field1 |= val
-    self.assertTrue(Encoder.DecodeBitfield8(field1), [1, 1, 1, 1, 1, 1, 1, 1])
-    field2 = 0
-    vals2 = [0x01, 0x04, 0x10, 0x40]
-    for val in vals2:
-      field2 |= val
-    self.assertTrue(Encoder.DecodeBitfield8(field2), [1, 0, 1, 0, 1, 0, 1, 0])
-    field3 = 0
-    vals3 = [0x01, 0x02]
-    for val in vals3:
-      field3 |= val
-    self.assertTrue(Encoder.DecodeBitfield8(field3), [1, 1, 0, 0, 0, 0, 0, 0, 0])
-    self.assertTrue(Encoder.DecodeBitfield8(0), [0, 0, 0, 0, 0, 0, 0, 0])
-
-  def test_decode_bitfield8_pathogenic(self):
-    field = 0
-    field |= 0x80 + 0x80
-    self.assertRaises(TypeError, Encoder.DecodeBitfield8, field)
-
-
+class EncodeIntTests(unittest.TestCase):
   def test_encode_int32(self):
     cases = [
       [0,            '\x00\x00\x00\x00'],
@@ -51,6 +26,15 @@ class EncoderTests(unittest.TestCase):
     for case in cases:
       assert Encoder.EncodeUint32(case[0]) == case[1]
 
+  def test_encode_int16(self):
+    cases = [
+      [0,       '\x00\x00'],
+      [-32768,  '\x00\x80'],
+      [32767,   '\xFF\x7F'],
+    ]
+    for case in cases:
+      assert Encoder.EncodeInt16(case[0]) == case[1]
+
   def test_encode_uint16(self):
     cases = [
       [0,       '\x00\x00'],
@@ -60,6 +44,7 @@ class EncoderTests(unittest.TestCase):
     for case in cases:
       assert Encoder.EncodeUint16(case[0]) == case[1]
 
+class DecodeIntTests(unittest.TestCase):
   def test_decode_int32(self):
     cases = [
       [0,       '\x00\x00\x00\x00'],
@@ -100,6 +85,7 @@ class EncoderTests(unittest.TestCase):
     failCase = [0, bytearray('\x00\x00\x00')]
     self.assertRaises(struct.error, Encoder.DecodeUint16, failCase[1])
 
+class EncodeAxesTests(unittest.TestCase):
   def test_encode_axes(self):
     cases = [
       [['X', 'Y', 'Z', 'A', 'B'], 0x1F],
@@ -114,6 +100,7 @@ class EncoderTests(unittest.TestCase):
     for case in cases:
       assert Encoder.EncodeAxes(case[0]) == case[1]
 
+class UnpackResponseTests(unittest.TestCase):
   def test_unpack_response_no_format(self):
     b = bytearray()
     b.extend('abcde')

@@ -1195,8 +1195,6 @@ Response
 
     uint16: Firmware Version
 
-Payload
-
 ## 02 - Get toolhead temperature
 This returns the last recorded temperature of the toolhead. It's important for speed purposes that it does not actually trigger a temperature reading, but rather returns the last reading. The tool firmware should be constantly monitoring its temperature and keeping track of the latest readings.
 

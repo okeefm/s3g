@@ -164,7 +164,7 @@ class gcodeTests(unittest.TestCase):
 
     self.g.SetBuildPercentage(codes, [], '')
     self.mock.SetBuildPercent.assert_called_once_with(build_percentage)
-    self.mock.BuildStartNotification.assert_called_once_with(0, self.g.state.values['build_name'])
+    self.mock.BuildStartNotification.assert_called_once_with(self.g.state.values['build_name'])
 
   def test_set_build_percentage_100_percent(self):
     build_percentage = 100
@@ -1105,7 +1105,7 @@ class gcodeTests(unittest.TestCase):
     name = 'test'
     self.g.state.values['build_name'] = name
     self.g.BuildStartNotification()
-    self.mock.BuildStartNotification.assert_called_once_with(0, name)
+    self.mock.BuildStartNotification.assert_called_once_with(name)
 
   def test_build_start_notification_no_build_name_set(self):
     codes = {}

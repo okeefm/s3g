@@ -163,11 +163,9 @@ class s3g(object):
 
     [response_code, bitfield] = Encoder.UnpackResponse('<BB', response)
 
-    bitfield = Encoder.DecodeBitfield8(bitfield)      
-
     flags = {
-    'POWER_ERROR' : int(bitfield[7]),
-    'HEAT_SHUTDOWN' : int(bitfield[6]),
+    'POWER_ERROR'   : 1 == ((bitfield >> 7) & 0x01),
+    'HEAT_SHUTDOWN' : 1 == ((bitfield >> 6) & 0x01)
     }
     return flags
 
@@ -827,16 +825,15 @@ class s3g(object):
 
     self.writer.SendActionPayload(payload)
 
-  def BuildStartNotification(self, command_count, build_name):
+  def BuildStartNotification(self, build_name):
     """
     Notify the machine that a build has been started
-    @param int command_count Number of host commands in the build
     @param str build_name Name of the build
     """
     payload = struct.pack(
       '<BI',
       host_action_command_dict['BUILD_START_NOTIFICATION'],
-      command_count,
+      0
     )
 
     payload += build_name
@@ -911,16 +908,16 @@ class s3g(object):
 
     [resonse_code, bitfield] = Encoder.UnpackResponse('<BB', response)
 
-    bitfield = Encoder.DecodeBitfield8(bitfield)
+#    bitfield = Encoder.DecodeBitfield8(bitfield)
 
     returnDict = {
-      "ExtruderReady" : bool(int(bitfield[0])),
-      "ExtruderNotPluggedIn" : bool(int(bitfield[1])),
-      "ExtruderOverMaxTemp" : bool(int(bitfield[2])),
-      "ExtruderNotHeating" : bool(int(bitfield[3])),
-      "ExtruderDroppingTemp" : bool(int(bitfield[4])), 
-      "PlatformError" : bool(int(bitfield[6])),
-      "ExtruderError" : bool(int(bitfield[7])),
+      "ExtruderReady"        : 1 == ((bitfield >> 0) & 0x01),
+      "ExtruderNotPluggedIn" : 1 == ((bitfield >> 1) & 0x01),
+      "ExtruderOverMaxTemp"  : 1 == ((bitfield >> 2) & 0x01),
+      "ExtruderNotHeating"   : 1 == ((bitfield >> 3) & 0x01),
+      "ExtruderDroppingTemp" : 1 == ((bitfield >> 4) & 0x01),
+      "PlatformError"        : 1 == ((bitfield >> 6) & 0x01),
+      "ExtruderError"        : 1 == ((bitfield >> 7) & 0x01),
     }
     return returnDict
   

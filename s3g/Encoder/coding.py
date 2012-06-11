@@ -29,6 +29,14 @@ def DecodeInt32(data):
     data = array.array('B', data)
   return struct.unpack('<i', data)[0]
 
+def EncodeInt16(number):
+  """
+  Encode a 16-bit signed integer as a 2-byte string
+  @param number 
+  @return byte array of size 2 that represents the integer
+  """
+  return struct.pack('<h', number)
+
 def EncodeUint16(number):
   """
   Encode a 16-bit unsigned integer as a 2-byte string
@@ -48,21 +56,6 @@ def DecodeUint16(data):
     data = array.array('B', data)
   return struct.unpack('<H', data)[0]
     
-def DecodeBitfield8(bitfield):
-  """
-  Given a bitfield that is no greater than 8 bits, decodes it into a list of bits
-  @param bitfield: The bitfield to decode
-  @return list representation of the bitfield
-  """
-  bitString = bin(bitfield)[2:]
-  if len(bitString) > 8:
-    raise TypeError("Expecting bitfield of size no greater than 8, got bitfield of size %i"%(len(bitString)))
-  bitList = list(bitString)
-  bitList.reverse()
-  for i in range(8-len(bitList)):
-    bitList.append(0)
-  return bitList
-
 def EncodeAxes(axes):
   """
   Encode an array of axes names into an axis bitfield
