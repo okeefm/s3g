@@ -60,9 +60,6 @@ class GcodeParser(object):
     @param string command Gcode command to execute
     """
 
-    #print '>>', command, '<<'
-    # Parse the line
-
     try:
       codes, flags, comment = ParseLine(command)
 

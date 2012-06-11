@@ -805,7 +805,7 @@ class S3gTests(unittest.TestCase):
     packet = bytearray(self.inputstream.getvalue())
     payload = Encoder.DecodePacket(packet)
 
-    self.assertTrue(payload[0], constants.host_action_command_dict['SET_POT_VALUE'])
+    self.assertEqual(payload[0], constants.host_action_command_dict['SET_RGB_LED'])
     self.assertEqual(payload[1], r)
     self.assertEqual(payload[2], g)
     self.assertEqual(payload[3], b)
@@ -1064,22 +1064,22 @@ class S3gTests(unittest.TestCase):
   def test_get_pid_state(self):
     expectedDict = {
       "ExtruderError"    : 1,
-      "ExtruderDelta"    : 1,
-      "exLastTerm"       : 1,
-      "PlatformError"    : 1,
-      "PlatformDelta"    : 1,
-      "PlatformLastTerm" : 1,
+      "ExtruderDelta"    : 2,
+      "ExtruderLastTerm" : 3,
+      "PlatformError"    : 4,
+      "PlatformDelta"    : 5,
+      "PlatformLastTerm" : 6,
     }
 
     toolIndex = 0
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
     for i in range(6):
-      response_payload.extend(Encoder.EncodeUint16(1))
+      response_payload.extend(Encoder.EncodeUint16(i+1))
     self.outputstream.write(Encoder.EncodePayload(response_payload))
     self.outputstream.seek(0)
 
-    self.assertTrue(expectedDict, self.r.GetPIDState(toolIndex))
+    self.assertEquals(expectedDict, self.r.GetPIDState(toolIndex))
 
     packet = bytearray(self.inputstream.getvalue())
     payload = Encoder.DecodePacket(packet)

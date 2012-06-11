@@ -29,13 +29,14 @@ class gcodeTests(unittest.TestCase):
         'Command'     :   command,
         'InvalidCodes':   'Q',
         }
+
     try:
       self.g.ExecuteLine(command)
-      #If we get to this point we want to fail, to show that this test was never able
-      #to successfully complete
-      self.assertTrue(False)
     except s3g.Gcode.GcodeError as e:
       self.assertEqual(expectedValues, e.values)
+    else:
+      self.fail('ExpectedException not thrown')
+
 
   def test_check_gcode_extraneous_codes_gets_called(self):
     command = "G161 Q1" # Note: this assumes that G161 does not accept a Q code
