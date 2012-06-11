@@ -7,7 +7,6 @@ NB: All machine profiles are stored as json files.
 While there is no restriction on the amount of information encapsulated in a machine profile, there are several key elements that must be contained within them in order to successfully complete certain functions:
 
 Build Space Traversal
-* A timeout for finding axes minimums and maximums defined by the keyword "finding_timeout"
 * An array of 5 axes defined by the key "axes"
 * Each axis much have the following information:
     * Name defined by the keyword "name"
@@ -15,10 +14,11 @@ Build Space Traversal
     * A homing feedrate defined by the keyword "homing_feedrate"
     * The number of steps per mm defined by the keyword "steps_per_mm"
 * A maximum feedrate to use when using the G0 command 'Rapid Postioning' defined by "rapid_feedrate"
+* A timeout for finding axes minimums and maximums defined by the keyword "finding_timeout"
 
 Tool Usage
 * An array of applicable tools (i.e. extruders, heated build platforms) defined by the word "tools"
-* Each tool much hvae the following information:
+* Each tool much have the following information:
     * A tool index, defined by the keyword "index"
 
 ##Start and End Gcodes

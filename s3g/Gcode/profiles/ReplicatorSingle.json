@@ -1,0 +1,89 @@
+{
+  "name"  :  "The Replicator Single",
+  "axes"  : 
+  [
+    {
+      "name"  : "X", 
+      "length"  : 227,
+      "max_feedrate" : 12450,
+      "homing_feedrate"  : 2500,
+      "steps_per_mm"  : 94.139704,
+      "endstops"  : "max"
+    },
+    {
+      "name"  : "Y", 
+      "length"  : 148,
+      "max_feedrate" : 12450,
+      "homing_feedrate"  : 2500,
+      "steps_per_mm"  : 94.139704,
+      "endstops"  : "max"
+    },
+    {
+      "name"  : "Z", 
+      "length"  : 150,
+      "max_feedrate" : 1170,
+      "homing_feedrate"  : 1100,
+      "steps_per_mm"  : 400,
+      "endstops"  : "min"
+    },
+    {
+      "name"  : "A", 
+      "length"  : 100000,
+      "max_feedrate" : 1600,
+      "steps_per_mm"  : 96.275201870333662468889989185642,
+      "endstops"  : "none"
+    }
+  ],
+  "tools" :
+  [
+    {
+    "name"  : "Mk8 Right",
+    "model" : "Mk8",
+    "diameter"  : 0.4,
+    "stepper_axis"  : "a",
+    "index" : 0,
+    "type"  : "extruder",
+    "motor" : "True",
+    "fan"   : "True",
+    "heater"  : "true",
+    "motor_steps" : 3200,
+    "x_offset"  : 16.5,
+    "y_offset"  : 0,
+    "z_offset"  : 0
+    },
+    {
+    "name"  : "heated_platform",
+    "max_temp"  : 150,
+    "index" : 0
+    }
+  ],
+  "wipes" : 
+  [
+    {
+    "index" : 0,
+    "X1"  : -135.0,
+    "Y1"  : 55.0,
+    "X2"  : -135.0,
+    "Y2"  : 45.0,
+    "wait"  : 1000.0,
+    "purge_duration"  : 1000,
+    "reverse_duration"  : 15
+    }
+  ],
+  "driver"  : 
+    {
+    "name"  : "s3g",
+    "baudrate"  : 115200
+    },
+  "warmup"  : 
+  [],
+  "cooldown"  : 
+  [],
+  "bookends"  :
+  {
+    "start" : "./bookends/replicatorDualStart.gcode",
+    "end"   : "./bookends/replicatorDualEnd.gcode"
+  },
+  "rapid_feedrate"  : 1200,
+  "find_axis_max_min_timeout"  : 20
+}
