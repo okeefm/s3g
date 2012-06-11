@@ -56,7 +56,7 @@ class gcodeTests(unittest.TestCase):
     self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
   def test_wait_for_toolhead_can_update_toolhead(self):
-    tool_index = 2
+    tool_index=0
     timeout = 3
 
     codes = {'T':tool_index, 'P':timeout}
@@ -77,18 +77,18 @@ class gcodeTests(unittest.TestCase):
     )
 
   def test_wait_for_toolhead_missing_timeout(self):
-    tool_index = 2
-    delay = 100
+    tool_index=0
+    delay = self.g.state.profile.values['tools'][tool_index]['wait_for_ready_packet_delay']
     codes = {'T':tool_index}
     self.g.WaitForToolhead(codes, [], '')
     self.mock.WaitForToolReady.assert_called_once_with(
       tool_index,
       delay,
-      self.g.state.profile.values['wait_for_tool_ready_timeout']
+      self.g.state.profile.values['tools'][tool_index]['wait_for_ready_timeout']
     )
 
   def test_wait_for_toolhead(self):
-    tool_index = 2
+    tool_index=0
     timeout = 3
     delay = 100 # As specified in the gcode protocol
 
@@ -844,7 +844,7 @@ class gcodeTests(unittest.TestCase):
     self.mock.SetToolheadTemperature.assert_called_once_with(tool_index, temperature)
 
   def test_set_toolhead_temperature_t_code_defined(self):
-    tool_index = 2
+    tool_index=0
     temperature = 100
 
     codes = {'S'  : temperature, 'T' :  tool_index}
@@ -875,7 +875,7 @@ class gcodeTests(unittest.TestCase):
     self.mock.SetPlatformTemperature.assert_called_once_with(self.g.state.values['tool_index'], 100)
 
   def test_set_platform_temperature_t_code_Defined(self):
-    tool_index = 2
+    tool_index=0
     codes = {'S'  : 100,  'T' : tool_index}
     self.g.SetPlatformTemperature(codes, [], '')
     self.mock.SetPlatformTemperature.assert_called_once_with(tool_index, 100)
@@ -967,7 +967,7 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[133][2])
 
   def test_wait_for_tool_ready_no_p_or_t_codes(self):
-    tool_index = 2
+    tool_index=0
     self.g.state.values['tool_index'] = tool_index
     codes = {}
     flags = []
@@ -975,8 +975,8 @@ class gcodeTests(unittest.TestCase):
     self.g.WaitForToolReady(codes, flags, comment)
     self.mock.WaitForToolReady.assert_called_once_with(
       tool_index,
-      self.g.state.profile.values['wait_for_tool_ready_packet_delay'],
-      self.g.state.profile.values['wait_for_tool_ready_timeout']
+      self.g.state.profile.values['tools'][self.g.state.values['tool_index']]['wait_for_ready_packet_delay'],
+      self.g.state.profile.values['tools'][self.g.state.values['tool_index']]['wait_for_ready_timeout']
     )
 
   def test_wait_for_tool_read_no_p_or_t_codes_no_set_toolhead(self):
@@ -986,20 +986,20 @@ class gcodeTests(unittest.TestCase):
     self.assertRaises(s3g.Gcode.NoToolIndexError, self.g.WaitForToolReady, codes, flags, comments)
 
   def test_wait_for_tool_ready_no_p_code(self):
-    tool_index = 2
+    tool_index=0
     codes = {'T'  : tool_index}
     flags = []
     comment = ''
     self.g.WaitForToolReady(codes, flags, comment)
     self.mock.WaitForToolReady.assert_called_once_with(
       tool_index,
-      self.g.state.profile.values['wait_for_tool_ready_packet_delay'],
-      self.g.state.profile.values['wait_for_tool_ready_timeout'],
+      self.g.state.profile.values['tools'][self.g.state.values['tool_index']]['wait_for_ready_packet_delay'],
+      self.g.state.profile.values['tools'][self.g.state.values['tool_index']]['wait_for_ready_timeout'],
     )
     self.assertEqual(tool_index, self.g.state.values['tool_index'])
 
   def test_wait_for_tool_ready_no_t_code(self):
-    tool_index = 2
+    tool_index=0
     self.g.state.values['tool_index'] = tool_index
     timeout = 42
     codes = {'P' : timeout}
@@ -1008,12 +1008,12 @@ class gcodeTests(unittest.TestCase):
     self.g.WaitForToolReady(codes, flags, comment)
     self.mock.WaitForToolReady.assert_called_once_with(
         tool_index, 
-        self.g.state.profile.values['wait_for_tool_ready_packet_delay'], 
+        self.g.state.profile.values['tools'][self.g.state.values['tool_index']]['wait_for_ready_packet_delay'], 
         timeout
         )
 
   def test_wait_for_tool_ready(self):
-    tool_index = 2
+    tool_index=0
     timeout = 42
     codes = {
         'T' : tool_index,
@@ -1024,7 +1024,7 @@ class gcodeTests(unittest.TestCase):
     self.g.WaitForToolReady(codes, flags, comments)
     self.mock.WaitForToolReady.assert_called_once_with(
         tool_index, 
-        self.g.state.profile.values['wait_for_tool_ready_packet_delay'],
+        self.g.state.profile.values['tools'][self.g.state.values['tool_index']]['wait_for_ready_packet_delay'],
         timeout
         )
     self.assertEqual(tool_index, self.g.state.values['tool_index'])
@@ -1036,15 +1036,15 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[134][2])
 
   def test_wait_for_platform_no_p_or_t_codes(self):
-    self.g.state.values['platform_index'] = 2
+    self.g.state.values['platform_index'] = 0
     codes = {}
     flags = []
     comments = ''
     self.g.WaitForPlatformReady(codes, flags, comments)
     self.mock.WaitForPlatformReady.assert_called_once_with(
         self.g.state.values['platform_index'],
-        self.g.state.profile.values['wait_for_tool_ready_packet_delay'],
-        self.g.state.profile.values['wait_for_platform_ready_timeout'],
+        self.g.state.profile.values['platforms'][self.g.state.values['platform_index']]['wait_for_ready_packet_delay'],
+        self.g.state.profile.values['platforms'][self.g.state.values['platform_index']]['wait_for_ready_timeout'],
         )
 
   def test_wait_for_platform_no_p_or_t_codes_no_defined_platform_index(self):
@@ -1060,34 +1060,34 @@ class gcodeTests(unittest.TestCase):
     )
 
   def test_wait_for_platform_no_p_code_defines(self):
-    platform_index = 2
+    platform_index = 0
     codes = {'T'  : platform_index}
     flags = []
     comments = ''
     self.g.WaitForPlatformReady(codes, flags, comments)
     self.mock.WaitForPlatformReady.assert_called_once_with(
         platform_index,
-        self.g.state.profile.values['wait_for_tool_ready_packet_delay'],
-        self.g.state.profile.values['wait_for_platform_ready_timeout'],
+        self.g.state.profile.values['platforms'][self.g.state.values['platform_index']]['wait_for_ready_packet_delay'],
+        self.g.state.profile.values['platforms'][self.g.state.values['platform_index']]['wait_for_ready_timeout'],
         )
     self.assertEqual(self.g.state.values['platform_index'], platform_index)
 
   def test_wait_for_platform_no_t_code_defined(self):
     timeout = 42
-    self.g.state.values['platform_index'] = 2
+    self.g.state.values['platform_index'] = 0
     codes = {'P'  : timeout}
     flags = []
     comments = ''
     self.g.WaitForPlatformReady(codes, flags, comments)
     self.mock.WaitForPlatformReady.assert_called_once_with(
         self.g.state.values['platform_index'],
-        self.g.state.profile.values['wait_for_tool_ready_packet_delay'],
+        self.g.state.profile.values['platforms'][self.g.state.values['platform_index']]['wait_for_ready_packet_delay'],
         timeout
         )
 
   def test_wait_for_platform_all_codes_defined(self):
     timeout = 42
-    platform_index = 2
+    platform_index = 0
     codes = {
         'T' : platform_index,
         'P' : timeout,
@@ -1097,7 +1097,7 @@ class gcodeTests(unittest.TestCase):
     self.g.WaitForPlatformReady(codes, flags, comments)
     self.mock.WaitForPlatformReady.assert_called_once_with(
         platform_index,
-        self.g.state.profile.values['wait_for_tool_ready_packet_delay'],
+        self.g.state.profile.values['platforms'][self.g.state.values['platform_index']]['wait_for_ready_packet_delay'],
         timeout,
         )
     self.assertEqual(self.g.state.values['platform_index'], platform_index)

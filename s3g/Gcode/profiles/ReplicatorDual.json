@@ -56,7 +56,9 @@
     "motor_steps" : 3200,
     "x_offset"  : 16.5,
     "y_offset"  : 0,
-    "z_offset"  : 0
+    "z_offset"  : 0,
+    "wait_for_ready_timeout"  : 450,
+    "wait_for_ready_packet_delay" : 100
     },
     {
     "name"  : "Mk8 Right",
@@ -71,12 +73,18 @@
     "motor_steps" : 3200,
     "x_offset"  : 16.5,
     "y_offset"  : 0,
-    "z_offset"  : 0
-    },
+    "z_offset"  : 0,
+    "wait_for_ready_timeout"  : 450,
+    "wait_for_ready_packet_delay" : 100
+    }
+  ],
+  "platforms" : [
     {
     "name"  : "heated_platform",
     "max_temp"  : 150,
-    "index" : 0
+    "index" : 0,
+    "wait_for_ready_timeout"  : 450,
+    "wait_for_ready_packet_delay" : 100
     }
   ],
   "wipes" : 
@@ -117,8 +125,5 @@
     "end"   : "./bookends/replicatorDualEnd.gcode"
   },
   "rapid_feedrate"  : 1200,
-  "find_axis_max_min_timeout"  : 20,
-  "wait_for_tool_ready_packet_delay" : 100,
-  "wait_for_tool_ready_timeout" : 450,
-  "wait_for_platform_ready_timeout" : 450
+  "find_axis_max_min_timeout"  : 20
 }
