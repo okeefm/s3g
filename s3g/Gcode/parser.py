@@ -1,4 +1,4 @@
-# Gcode parser, 
+#Gcode parser, 
 
 from states import *
 from utils import *
@@ -140,7 +140,7 @@ class GcodeParser(object):
     axes = ParseOutAxes(flags) 
     try:
       feedrate = self.state.values['feedrate']
-      self.s3g.FindAxesMaximums(axes, feedrate, self.state.findingTimeout)
+      self.s3g.FindAxesMaximums(axes, feedrate, self.state.profile.values['find_axis_max_min_timeout'])
     except KeyError as e:
       if e[0] == 'feedrate':
         e = KeyError('F')
@@ -157,7 +157,7 @@ class GcodeParser(object):
     axes = ParseOutAxes(flags)
     try:
       feedrate = self.state.values['feedrate']
-      self.s3g.FindAxesMinimums(axes, feedrate, self.state.findingTimeout)
+      self.s3g.FindAxesMinimums(axes, feedrate, self.state.profile.values['find_axis_max_min_timeout'])
     except KeyError as e:
       if e[0] == 'feedrate':
         e = KeyError('F')
@@ -187,7 +187,7 @@ class GcodeParser(object):
         self.state.position['A'] = codes['A']
       if 'B' in codes:
         self.state.position['B'] = codes['B']
-    stepped_position = MultiplyVector(self.state.GetPosition(), self.state.replicator_step_vector)
+    stepped_position = MultiplyVector(self.state.GetPosition(), self.state.GetAxesValues('steps_per_mm'))
     self.s3g.SetExtendedPosition(stepped_position)
       
   def UseP0Offsets(self, codes, flags, comment):
@@ -314,11 +314,13 @@ class GcodeParser(object):
     dda_speed = CalculateDDASpeed(
       current_point, 
       self.state.GetPosition(), 
-      self.state.rapidFeedrate,
+      self.state.profile.values['rapid_feedrate'],
+      self.state.GetAxesValues('max_feedrate'),
+      self.state.GetAxesValues('steps_per_mm'),
        )
     stepped_point = MultiplyVector(
         self.state.GetPosition(), 
-        self.state.replicator_step_vector
+        self.state.GetAxesValues('steps_per_mm')
         )
     self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
 
@@ -380,11 +382,13 @@ class GcodeParser(object):
         dda_speed = CalculateDDASpeed(
             current_position, 
             self.state.GetPosition(), 
-            feedrate
+            feedrate,
+            self.state.GetAxesValues('max_feedrate'),
+            self.state.GetAxesValues('steps_per_mm'),
             )
         stepped_point = MultiplyVector(
             self.state.GetPosition(), 
-            self.state.replicator_step_vector
+            self.state.GetAxesValues('steps_per_mm')
             )
         self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
 

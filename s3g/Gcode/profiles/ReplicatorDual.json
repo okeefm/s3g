@@ -5,39 +5,39 @@
     {
       "name"  : "X", 
       "length"  : 227,
-      "maxfeedrate" : 12450,
-      "homingfeedrate"  : 2500,
-      "stepspermm"  : 94.139704,
+      "max_feedrate" : 12450,
+      "homing_feedrate"  : 2500,
+      "steps_per_mm"  : 94.139704,
       "endstops"  : "max"
     },
     {
       "name"  : "Y", 
       "length"  : 148,
-      "maxfeedrate" : 12450,
-      "homingfeedrate"  : 2500,
-      "stepspermm"  : 94.139704,
+      "max_feedrate" : 12450,
+      "homing_feedrate"  : 2500,
+      "steps_per_mm"  : 94.139704,
       "endstops"  : "max"
     },
     {
       "name"  : "Z", 
       "length"  : 150,
-      "maxfeedrate" : 1170,
-      "homingfeedrate"  : 1100,
-      "stepspermm"  : 400,
+      "max_feedrate" : 1170,
+      "homing_feedrate"  : 1100,
+      "steps_per_mm"  : 400,
       "endstops"  : "min"
     },
     {
       "name"  : "A", 
       "length"  : 100000,
-      "maxfeedrate" : 1600,
-      "stepspermm"  : 96.275201870333662468889989185642,
+      "max_feedrate" : 1600,
+      "steps_per_mm"  : 96.275201870333662468889989185642,
       "endstops"  : "none"
     },
     {
       "name"  : "B", 
       "length"  : 100000,
-      "maxfeedrate" : 1600,
-      "stepspermm"  : 96.275201870333662468889989185642,
+      "max_feedrate" : 1600,
+      "steps_per_mm"  : 96.275201870333662468889989185642,
       "endstops"  : "none"
     }
   ],
@@ -75,7 +75,6 @@
     },
     {
     "name"  : "heated_platform",
-    "model" : "PlMk1",
     "max_temp"  : 150,
     "index" : 0
     }
@@ -111,12 +110,12 @@
   "warmup"  : 
   [],
   "cooldown"  : 
-  [
-    "M18 (Turn off steppers after a build)"
-  ],
+  [],
   "bookends"  :
   {
     "start" : "./bookends/replicatorDualStart.gcode",
     "end"   : "./bookends/replicatorDualEnd.gcode"
-  }
+  },
+  "rapid_feedrate"  : 1200,
+  "find_axis_max_min_timeout"  : 20
 }

@@ -261,7 +261,7 @@ def FindLongestAxis(vector):
   return max_value_index
 
 
-def CalculateDDASpeed(initial_position, target_position, target_feedrate):
+def CalculateDDASpeed(initial_position, target_position, target_feedrate, max_feedrates, steps_per_mm):
   """ Given an initial position, target position, and target feedrate, calculate an achievable
   travel speed.
 
@@ -270,18 +270,6 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate):
   @param target_feedrate: Requested feedrate, in mm/s (TODO: Is this correct)
   @return float ddaSpeed: The speed in us/step we move at
   """
-
-  # TODO: Move these out of here
-  max_feedrates = [
-    18000,
-    18000,
-    1170,
-    1600,
-    1600,
-  ]
-
-  steps_per_mm = [94.130, 94.130, 400, 96.275, 96.275]
-
 
   # First, figure out where we are moving to. 
   displacement_vector = CalculateVectorDifference(target_position, initial_position)
@@ -305,4 +293,3 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate):
 
 
   return dda_speed
-

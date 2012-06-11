@@ -8,4 +8,5 @@ G162 X Y F2500
 M18
 M70 P5 ( We <3 Making Things!)
 M72 P1  ( Play Ta-Da song )
+M18 (Turn off steppers after a build)
 (*********end End.gcode*******)

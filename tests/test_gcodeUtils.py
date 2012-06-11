@@ -226,6 +226,16 @@ class GcodeUtilities(unittest.TestCase):
     parsedAxes = Gcode.ParseOutAxes(codes)
     self.assertEqual(['A', 'B', 'X', 'Y', 'Z'], parsedAxes)
 
+class DDASpeedTests(unittest.TestCase):
+
+  def setUp(self):
+    profile = Gcode.Profile("ReplicatorDual")
+    self.g = Gcode.GcodeStates()
+    self.g.profile = profile
+
+  def tearDown(self):
+    self.profile = None
+
   def test_reject_non_5d_lists(self):
     self.assertRaises(errors.PointLengthError, Gcode.CalculateVectorMagnitude, range(0,4))
 
@@ -361,7 +371,7 @@ class GcodeUtilities(unittest.TestCase):
     target_feedrate = 0
     Gcode.CalculateVectorMagnitude = mock.Mock(return_value=0)
 
-    self.assertRaises(Gcode.VectorLengthZeroError, Gcode.CalculateDDASpeed, initial_position, target_position, target_feedrate)
+    self.assertRaises(Gcode.VectorLengthZeroError, Gcode.CalculateDDASpeed, initial_position, target_position, target_feedrate, self.g.GetAxesValues('max_feedrate'), self.g.GetAxesValues('steps_per_mm'))
 
   def test_calculate_dda_speed_good_result(self):
     # TODO: These cases assume a replicator with specific steps_per_mm
@@ -375,7 +385,13 @@ class GcodeUtilities(unittest.TestCase):
 
     tolerance = .1
     for case in cases:
-      self.assertTrue(abs(case[3] - Gcode.CalculateDDASpeed(case[0], case[1], case[2])) < tolerance)
+      dda_speed = Gcode.CalculateDDASpeed(
+          case[0], 
+          case[1], 
+          case[2], 
+          self.g.GetAxesValues('max_feedrate'), 
+          self.g.GetAxesValues('steps_per_mm'))
+      self.assertAlmostEqual(case[3], dda_speed, 7)
 
 """
 [[9413,0,0,0,0) in 180000000 us (relative: 18)

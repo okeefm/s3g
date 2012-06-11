@@ -3,6 +3,7 @@ A state machine for the gcode parser which keeps track of certain
 variables.
 """
 
+import os
 from utils import *
 from errors import *
 
@@ -38,33 +39,6 @@ class GcodeStates(object):
         }
 
     self.offset_register = None   #Curent offset register
-    self.findingTimeout = 60      #Timeout used when finding minimums/maximums
-
-    # Feedrate to try when making rapid motions
-    self.rapidFeedrate = 1200
-
-    # Maximum velocities for a machine, in mm/s
-    # TODO: something besides pull these numbers out of the air
-    self.maximum_velocity_x = 300
-    self.maximum_velocity_y = 300
-    self.maximum_velocity_z = 20
-    self.maximum_velocity_a = 27
-    self.maximum_velocity_b = 27
-
-    # Steps per milimeter conversions for a machine
-    # TODO: This only works for a replicator
-    self.xSPM = 94.140
-    self.ySPM = 94.140
-    self.zSPM = 400
-    self.aSPM = 96.275
-    self.bSPM = 96.275
-    self.replicator_step_vector = [
-        self.xSPM, 
-        self.ySPM, 
-        self.zSPM,
-        self.aSPM,
-        self.bSPM,
-        ]
   
   def LosePosition(self, axes):
     """Given a set of axes, loses the position of
@@ -117,3 +91,34 @@ class GcodeStates(object):
       raise TypeError
     else:
       self.values['build_name'] = build_name
+
+  def GetAxesValues(self, key):
+    """
+    Given a key, returns a list of all 
+    axes values for that key
+    @param string key: the key to use when ascertaining
+      all axes information
+    @return list: List of values for the key of each axis
+    """
+    values = []
+    for axis in self.profile.values['axes']:
+      values.append(axis[key])
+    return values
+
+  def GetBookendPaths(self):
+    """
+    Gets the absolute path of the start and end
+    gcode files linked in a machine profile.
+
+    @return list: A list of length two, with 
+    the 0th index being the start gcode, and the second
+    being the end gcode.
+    """
+    path = './s3g/Gcode/profiles/'
+    bookends = [
+        path+self.profile.values['bookends']['start'],
+        path+self.profile.values['bookends']['end'],
+        ]
+    for i in range(len(bookends)):
+      bookends[i] = os.path.abspath(bookends[i])
+    return bookends 

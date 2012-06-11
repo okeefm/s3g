@@ -173,6 +173,37 @@ class s3gHelperFunctionTests(unittest.TestCase):
     build_name = 9
     self.assertRaises(TypeError, self.g.SetBuildName, build_name)
 
+class TestProfileInformationParsing(unittest.TestCase):
+
+  def setUp(self):
+    self.g = Gcode.GcodeStates()
+    profile = Gcode.Profile('ReplicatorDual')
+    self.g.profile = profile
+
+  def tearDown(self):
+    self.g = None
+
+  def test_get_axes_values_key_error(self):
+    key = 'this_is_going_to_fail_;('
+    self.assertRaises(KeyError, self.g.GetAxesValues, key)
+
+  def test_get_axes_values(self):
+    key = 'steps_per_mm'
+    expected_values = [
+        94.139704,
+        94.139704,
+        400,
+        96.275201870333662468889989185642,
+        96.275201870333662468889989185642,
+        ]
+    self.assertEqual(expected_values, self.g.GetAxesValues(key))
+
+  def test_get_bookend_paths(self):
+    expected_bookends = [
+        os.path.abspath('./s3g/Gcode/profiles/bookends/replicatorDualStart.gcode'),
+        os.path.abspath('./s3g/Gcode/profiles/bookends/replicatorDualEnd.gcode'),
+        ]
+    self.assertEqual(expected_bookends, self.g.GetBookendPaths())
 
 if __name__ == "__main__":
   unittest.main()
