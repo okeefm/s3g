@@ -192,7 +192,7 @@ class StreamWriterTests(unittest.TestCase):
     self.assertRaises(Writer.ExternalStopError, self.w.SendCommand, 'asdf')
 
   def delay_and_external_stop_in_thread(self):
-    time.sleep(.5)
+    time.sleep(constants.timeout_length)
     self.w.ExternalStop()
 
   def test_delay_and_external_stop_in_thread(self):
@@ -202,12 +202,11 @@ class StreamWriterTests(unittest.TestCase):
 
   def test_eternal_stop_works_multithreaded(self):
     t = threading.Thread(target=self.delay_and_external_stop_in_thread)
-    t.start()
     try:
+      t.start()
       self.w.SendPacket('')
     except Writer.ExternalStopError:
       self.assertTrue(self.w.external_stop)
-      self.assertFalse(t.isAlive())
 
 if __name__ == "__main__":
   unittest.main()
