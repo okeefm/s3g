@@ -49,7 +49,7 @@
     "motor_steps" : 3200,
     "x_offset"  : 16.5,
     "y_offset"  : 0,
-    "z_offset"  : 0
+    "z_offset"  : 0,
     "wait_for_ready_timeout"  : 450,
     "wait_for_ready_packet_delay" : 100
     }

@@ -93,9 +93,9 @@ class GcodeStates(object):
   def GetAxesValues(self, key):
     """
     Given a key, returns a list of all 
-    axes values for that key
+    axis values for that key
     @param string key: the key to use when ascertaining
-      all axes information
+      info for each axis
     @return list: List of values for the key of each axis
     """
     values = []
@@ -114,7 +114,7 @@ class GcodeStates(object):
     the 0th index being the start gcode, and the second
     being the end gcode.
     """
-    path = './s3g/Gcode/profiles/'
+    path = './s3g/Gcode/profiles/'    #Path of the profiles directory
     bookends = [
         path+self.profile.values['bookends']['start'],
         path+self.profile.values['bookends']['end'],

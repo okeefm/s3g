@@ -17,9 +17,16 @@ Build Space Traversal
 * A timeout for finding axes minimums and maximums defined by the keyword "finding_timeout"
 
 Tool Usage
-* An array of applicable tools (i.e. extruders, heated build platforms) defined by the word "tools"
-* Each tool much have the following information:
-    * A tool index, defined by the keyword "index"
+* An array of applicable tools (i.e. extruders) defined by the word "tools"
+* Each tool must have the following information:
+    * A timeout to use when waiting for that tool to heat up defined by the word "wait_for_ready_timeout"
+    * A delay used when querying the tool during while the machine is waiting for it defined by the word "wait_for_read_packet_delay
+
+Platform Usage
+* An array of applicable platforms (i.e. a heated build platform) defined by the word "platforms"
+* Each platform must have the following information:
+    * A timeout to use when waiting for that platform to heat up defined by the word "wait_for_ready_timeout"
+    * A delay used when querying the platform during while the machine is waiting for it defined by the word "wait_for_read_packet_delay
 
 ##Start and End Gcodes
 Each machine profile can also contain links to start and end gcodes, if they require specific instructions immediately before and after printing.  These should be defined in a json array with the key "bookends", with each booken getting defined by a "start" and "end" keyword.
