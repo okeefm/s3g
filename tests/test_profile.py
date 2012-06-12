@@ -28,7 +28,14 @@ class ProfileInitTests(unittest.TestCase):
     expected_name = "The Replicator Dual"
     name = "ReplicatorDual"
     p = s3g.Profile(name)
-    self.assertEqual(p.values['name'], expected_name)
+    self.assertEqual(p.values['type'], expected_name)
+
+  def test_list_profiles(self):
+    expected_profiles = [
+        'ReplicatorDual',
+        'ReplicatorSingle',
+        ]
+    self.assertEqual(sorted(expected_profiles), sorted(s3g.ListProfiles()))
 
 if __name__ == '__main__':
   unittest.main()
