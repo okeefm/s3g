@@ -325,7 +325,7 @@ class GcodeParser(object):
     dda_speed = CalculateDDASpeed(
       current_point, 
       self.state.GetPosition(), 
-      self.state.profile.values['rapid_feedrate'],
+      self.state.profile.values['rapid_movement_feedrate'],
       self.state.GetAxesValues('max_feedrate'),
       self.state.GetAxesValues('steps_per_mm'),
        )
