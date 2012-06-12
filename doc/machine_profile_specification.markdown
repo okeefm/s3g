@@ -4,6 +4,8 @@ Machine Profiles are how we learn information about the machine at run time.  Di
 ##Contents
 Machine profiles are stored as .json files.  As such, all information is stored in one of two ways: as a dictionary or as an array.  Dictionaries are comprised of keys, where each key has a value, or definition.  Arrays are lists of items that can be accessed individually.  Arrays can store dictionaries; values can be their own separate dictionaries as well.
 
+NB: All of the following items are considered on the same 'level' (as in, they are not nested within each other).
+
 ###Machine Type:
   The type of maching you are using (i.e. The Replicator Dual, Thing-O-Matic Dual, etc)
 
