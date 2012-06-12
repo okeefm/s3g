@@ -1,10 +1,8 @@
 #Maching Profiles
 Machine Profiles are how we learn information about the machine at run time.  Differing machines have differing attributes, such as their dimensions and defined axes; these attributes will be defined in their machine profiles.
 
-NB: All machine profiles are stored as json files.
-
 ##Contents
-A machine profile is made up of the following attributes.
+Machine profiles are stored as .json files.  As such, all information is stored in one of two ways: as a dictionary or as an array.  Dictionaries are comprised of keys, where each key has a value, or definition.  Arrays are lists of items that can be accessed individually.  Arrays can store dictionaries; values can be their own separate dictionaries as well.
 
 ###Machine Type:
   The type of maching you are using (i.e. The Replicator Dual, Thing-O-Matic Dual, etc)
@@ -16,44 +14,51 @@ A machine profile is made up of the following attributes.
   A listing of all axes on this machine.
 
     Key: "axes"
-    Value: A Dictionary Comprised of Different Axes (see entry "Axis").
+    Value: A Dictionary Comprised of Different Axes (see "Axis").
 
 ###Axis:
   A description for an axis.
 
     Key: Name of this Axis (i.e. "X", "Y", "A")
-    Value: A Dictionary of the Following Keys with appropriate Integer Values:
-        * "length", the lenght of this axis in mm
-        * "max_feedrate", the maximum feedrate this axis can use in mm/min
-        * "steps_per_mm", the number of steps the machine takes to travel 1 mm 
+    Value: A Dictionary of the Following Keys with appropriate Values:
+        * Key: "length" 
+          Value: The Length of this axis in mm as an integer
+        * Key:"max_feedrate"
+          Value: The maximum feedrate this axis can use in mm/min as an integer
+        * Key: "steps_per_mm" 
+          Value: The number of steps the machine takes to travel 1 mm as an integer
 
 ###Tool Listing:
   A Listing of all Tools the Machine can use for Extrusion.
 
     Key: "tools"
-    Value: A Dictonary Comprised of Different Tools (see entry "Tool")
+    Value: A Dictonary Comprised of Different Tools (see "Tool")
 
 ###Tool:
   A Description for a Tool
 
     Key: A String of the Index of this Tool (i.e. "0", "1")
     Value: A Dictionary of the Following Keys with appropriate values:
-        * "name", the name of the tool as a string
-        * "model", the model number of the tool (i.e. "Mk8") as a string
-        * "stepper_axis", the stepper axis this tool uses to extrude (i.e. "A', "B") as a string
+        * Key: "name"
+          Value: The name of the tool as a string
+        * Key: "model"
+          Value: The model number of the tool (i.e. "Mk8") as a string
+        * Key: "stepper_axis"
+          Value: The stepper axis this tool uses to extrude (i.e. "A', "B") as a string
 
 ###Heated Platforms Listing:
   A Listing of all Heated Platforms this Machine can use.
 
     Key: "heated_platforms"
-    Value: A Dictionary Comprised of Different Heated Platforms (see entry Heated Platform)
+    Value: A Dictionary Comprised of Different Heated Platforms (see "Heated Platform")
 
 ###Heated Platform:
   A Description for a Heated Platform
 
     Key: A String of the Index of this Heated Platform (i.e. "0")
     Value: A Dictionary of the Following Keys with appropriate values:
-        * "name", the name of the heated platform as a string
+        * Key: "name"
+          Value: The name of the heated platform as a string
 
 ###Baudrate:
   The Baudrate that this machine communicates at
