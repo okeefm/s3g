@@ -139,7 +139,7 @@ class GcodeParser(object):
     axes = ParseOutAxes(flags) 
     try:
       feedrate = self.state.values['feedrate']
-      self.s3g.FindAxesMaximums(axes, feedrate, self.state.profile.values['find_axis_max_min_timeout'])
+      self.s3g.FindAxesMaximums(axes, feedrate, self.state.profile.values['find_axis_maximum_timeout'])
     except KeyError as e:
       if e[0] == 'feedrate':
         e = KeyError('F')
@@ -156,7 +156,7 @@ class GcodeParser(object):
     axes = ParseOutAxes(flags)
     try:
       feedrate = self.state.values['feedrate']
-      self.s3g.FindAxesMinimums(axes, feedrate, self.state.profile.values['find_axis_max_min_timeout'])
+      self.s3g.FindAxesMinimums(axes, feedrate, self.state.profile.values['find_axis_minimum_timeout'])
     except KeyError as e:
       if e[0] == 'feedrate':
         e = KeyError('F')

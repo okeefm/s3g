@@ -457,7 +457,7 @@ class gcodeTests(unittest.TestCase):
     self.g.state.values['feedrate'] = feedrate
     flags = ['X']
     self.g.FindAxesMinimums({}, flags, '')
-    self.mock.FindAxesMinimums.assert_called_once_with(flags, feedrate, self.g.state.profile.values["find_axis_max_min_timeout"])
+    self.mock.FindAxesMinimums.assert_called_once_with(flags, feedrate, self.g.state.profile.values["find_axis_minimum_timeout"])
 
   def test_find_axes_minimums(self):
     codes = 'F'
@@ -477,7 +477,7 @@ class gcodeTests(unittest.TestCase):
     flags = ['X', 'Y', 'Z']
     axes = flags
     feedrate = 0
-    timeout = self.g.state.profile.values['find_axis_max_min_timeout']
+    timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMinimums(codes, flags, '')
     self.mock.FindAxesMinimums.assert_called_once_with(axes, feedrate, timeout)
     expectedPosition = {
@@ -493,7 +493,7 @@ class gcodeTests(unittest.TestCase):
     codes = {'F':0}
     axes = []
     feedrate = 0
-    timeout = self.g.state.profile.values['find_axis_max_min_timeout']
+    timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMinimums(codes, [], '')
     self.mock.FindAxesMinimums.assert_called_once_with(axes, feedrate, timeout)
 
@@ -512,7 +512,7 @@ class gcodeTests(unittest.TestCase):
     self.g.state.values['feedrate'] = feedrate
     flags = ['X']
     self.g.FindAxesMaximums({}, flags, '')
-    self.mock.FindAxesMaximums.assert_called_once_with(flags, feedrate, self.g.state.profile.values['find_axis_max_min_timeout'])  
+    self.mock.FindAxesMaximums.assert_called_once_with(flags, feedrate, self.g.state.profile.values['find_axis_maximum_timeout'])  
 
   def test_find_axes_maximum(self):
     self.g.state.position = {
@@ -526,7 +526,7 @@ class gcodeTests(unittest.TestCase):
     flags = ['X', 'Y', 'Z']
     axes = flags
     feedrate = 0
-    timeout = self.g.state.profile.values['find_axis_max_min_timeout']
+    timeout = self.g.state.profile.values['find_axis_maximum_timeout']
     self.g.FindAxesMaximums(codes, flags, '')
     self.mock.FindAxesMaximums.assert_called_once_with(axes, feedrate, timeout)
     expectedPosition = {
@@ -542,7 +542,7 @@ class gcodeTests(unittest.TestCase):
     codes = {'F':0}
     axes = []
     feedrate = 0
-    timeout = self.g.state.profile.values['find_axis_max_min_timeout']
+    timeout = self.g.state.profile.values['find_axis_maximum_timeout']
     self.g.FindAxesMaximums(codes, [], '')
     self.mock.FindAxesMaximums.assert_called_once_with(axes, feedrate, timeout)
 
