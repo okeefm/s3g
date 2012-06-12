@@ -81,7 +81,6 @@
   "platforms" : [
     {
     "name"  : "heated_platform",
-    "max_temp"  : 150,
     "index" : 0,
     "wait_for_ready_timeout"  : 450,
     "wait_for_ready_packet_delay" : 100
