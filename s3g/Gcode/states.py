@@ -101,6 +101,6 @@ class GcodeStates(object):
     values = []
     for axis in self.profile.values['axes']:
       values.append(axis[key])
-    if len(values) == 4:
+    if len(values) == 4:    #If length is 4, we assume the missing axis is B and append a 0
       values.append(0)
     return values
