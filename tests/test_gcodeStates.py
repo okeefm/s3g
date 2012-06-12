@@ -7,7 +7,7 @@ import unittest
 import io
 import time
 
-from s3g import Gcode
+from s3g import Gcode, Profile
 
 class s3gHelperFunctionTests(unittest.TestCase):
   def setUp(self):
@@ -177,7 +177,7 @@ class TestProfileInformationParsing(unittest.TestCase):
 
   def setUp(self):
     self.g = Gcode.GcodeStates()
-    profile = Gcode.Profile('ReplicatorDual')
+    profile = Profile('ReplicatorDual')
     self.g.profile = profile
 
   def tearDown(self):
@@ -193,15 +193,15 @@ class TestProfileInformationParsing(unittest.TestCase):
         94.139704,
         94.139704,
         400,
-        96.275201870333662468889989185642,
-        96.275201870333662468889989185642,
+        96.275,
+        96.275,
         ]
     self.assertEqual(expected_values, self.g.GetAxesValues(key))
 
 class MachineProfileWith4Axes(unittest.TestCase):
   def setUp(self):
     self.g = Gcode.GcodeStates()
-    profile = Gcode.Profile('ReplicatorSingle')
+    profile = Profile('ReplicatorSingle')
     self.g.profile = profile
 
   def tearDown(self):

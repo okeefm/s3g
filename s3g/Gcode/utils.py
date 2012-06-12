@@ -1,6 +1,5 @@
 from errors import *
 from .. import errors
-import sys
 import os
 
 def ExtractComments(line):
@@ -301,7 +300,7 @@ def ListProfiles():
   end in .json and returns that list.
   """
   path = os.path.join(
-      os.path.abspath(os.path.dirname(__file__)), './profiles/')
+      os.path.abspath(os.path.dirname(__file__)), '../profiles/')
   profile_extension = '.json'
   files = os.listdir(path)
   profiles = []

@@ -215,11 +215,11 @@ class GcodeParser(object):
     if 'P' in codes:
       timeout = codes['P']
     else:
-      timeout = self.state.profile.values['tools'][self.state.values['tool_index']]['wait_for_ready_timeout']
+      timeout = self.state.wait_for_ready_timeout
 
     self.s3g.WaitForToolReady(
         int(self.state.values['tool_index']), 
-        self.state.profile.values['tools'][self.state.values['tool_index']]['wait_for_ready_packet_delay'], 
+        self.state.wait_for_ready_packet_delay,
         int(timeout)
         )
 
@@ -236,10 +236,10 @@ class GcodeParser(object):
     if 'P' in codes:
       timeout = codes['P']
     else:
-      timeout = self.state.profile.values['platforms'][self.state.values['platform_index']]['wait_for_ready_timeout']
+      timeout = self.state.wait_for_ready_timeout
     self.s3g.WaitForPlatformReady(
         int(self.state.values['platform_index']), 
-        self.state.profile.values['platforms'][self.state.values['platform_index']]['wait_for_ready_packet_delay'],
+        self.state.wait_for_ready_packet_delay,
         int(timeout)
         )
 
@@ -255,10 +255,10 @@ class GcodeParser(object):
     if 'P' in codes:
       timeout = codes['P']
     else:
-      timeout = self.state.profile.values['tools'][self.state.values['tool_index']]['wait_for_ready_timeout']
+      timeout = self.state.wait_for_ready_timeout
     self.s3g.WaitForToolReady(
         int(self.state.values['tool_index']), 
-        self.state.profile.values['tools'][self.state.values['tool_index']]['wait_for_ready_packet_delay'],
+        self.state.wait_for_ready_packet_delay,
         int(timeout)
         )
 

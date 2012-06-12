@@ -35,7 +35,8 @@ class GcodeStates(object):
         }
 
     self.values = {}
-
+    self.wait_for_ready_packet_delay = 100  #ms
+    self.wait_for_ready_timeout =   480  #seconds
     self.offset_register = None   #Curent offset register
   
   def LosePosition(self, axes):
@@ -93,14 +94,18 @@ class GcodeStates(object):
   def GetAxesValues(self, key):
     """
     Given a key, returns a list of all 
-    axis values for that key
+    axis values for that key.  If an axis
+    if missing from the machine profile, put a 0
+    in its place.
     @param string key: the key to use when ascertaining
       info for each axis
     @return list: List of values for the key of each axis
-    """
+    """ 
+    axes = ['X', 'Y', 'Z', 'A', 'B']
     values = []
-    for axis in self.profile.values['axes']:
-      values.append(axis[key])
-    if len(values) == 4:    #If length is 4, we assume the missing axis is B and append a 0
-      values.append(0)
+    for axis in axes:
+      if axis in self.profile.values['axes']:
+        values.append(self.profile.values['axes'][axis][key])
+      else:
+        values.append(0)
     return values

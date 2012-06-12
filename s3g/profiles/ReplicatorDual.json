@@ -7,7 +7,6 @@
       "steps_per_mm"  : 94.139704
     },
     "Y" : {
-      "name"          : "Y",
       "length"        : 148,
       "max_feedrate"  : 12450,
       "steps_per_mm"  : 94.139704
@@ -30,20 +29,20 @@
   },
   "tools" :
   {
-    0 : {
+    "0" : {
       "name"          : "Mk8 Right",
       "model"         : "Mk8",
-      "stepper_axis"  : "A",
+      "stepper_axis"  : "A"
     },
-    1 : {
+    "1" : {
       "name"          : "Mk8 Left",
       "model"         : "Mk8",
-      "stepper_axis"  : "B",
+      "stepper_axis"  : "B"
     }
   },
   "heated_platforms" : {
-    0 : {
-      "name"          : "heated_platform",
+    "0" : {
+      "name"          : "heated_platform"
     }
   },
   "baudrate"  : 115200,

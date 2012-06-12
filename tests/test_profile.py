@@ -12,12 +12,12 @@ import s3g
 class ProfileInitTests(unittest.TestCase):
   def test_bad_profile_name(self):
     bad_name = 'this_is_going_to_fail :('
-    self.assertRaises(IOError, s3g.Gcode.Profile,bad_name)
+    self.assertRaises(IOError, s3g.Profile, bad_name)
 
   def test_good_profile_name(self):
     name = "ReplicatorSingle"
-    p = s3g.Gcode.Profile(name)
-    f = open('./s3g/Gcode/profiles/'+name+'.json')
+    p = s3g.Profile(name)
+    f = open('./s3g/profiles/'+name+'.json')
     expected_vals = json.load(f)
     self.assertEqual(expected_vals, p.values)
 
@@ -27,7 +27,7 @@ class ProfileInitTests(unittest.TestCase):
     """
     expected_name = "The Replicator Dual"
     name = "ReplicatorDual"
-    p = s3g.Gcode.Profile(name)
+    p = s3g.Profile(name)
     self.assertEqual(p.values['name'], expected_name)
 
 if __name__ == '__main__':

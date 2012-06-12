@@ -7,7 +7,7 @@ import glob
 import unittest
 import string
 import mock
-from s3g import Gcode, errors
+from s3g import Gcode, errors, Profile
 
 class GcodeUtilities(unittest.TestCase):
   def setUp(self):
@@ -235,7 +235,7 @@ class GcodeUtilities(unittest.TestCase):
 class DDASpeedTests(unittest.TestCase):
 
   def setUp(self):
-    profile = Gcode.Profile("ReplicatorDual")
+    profile = Profile("ReplicatorDual")
     self.g = Gcode.GcodeStates()
     self.g.profile = profile
 
@@ -391,10 +391,10 @@ class DDASpeedTests(unittest.TestCase):
   def test_calculate_dda_speed_good_result(self):
     # TODO: These cases assume a replicator with specific steps_per_mm
     cases = [
-      [[100,0,0,0,0], [200,0,0,0,0], 200, 30000000/(self.g.profile.values['axes'][0]['steps_per_mm']*100)],    # Single axis, forward motion
-      [[0,100,0,0,0], [0,200,0,0,0], 300, 20000000/(self.g.profile.values['axes'][1]['steps_per_mm']*100)],
-      [[0,0,100,0,0], [0,0,200,0,0], 300, 20000000/(self.g.profile.values['axes'][2]['steps_per_mm']*100)],
-      [[200,0,0,0,0], [100,0,0,0,0], 200, 30000000/(self.g.profile.values['axes'][0]['steps_per_mm']*100)],    # Single axis, reverse motion
+      [[100,0,0,0,0], [200,0,0,0,0], 200, 30000000/(self.g.profile.values['axes']['X']['steps_per_mm']*100)],    # Single axis, forward motion
+      [[0,100,0,0,0], [0,200,0,0,0], 300, 20000000/(self.g.profile.values['axes']['Y']['steps_per_mm']*100)],
+      [[0,0,100,0,0], [0,0,200,0,0], 300, 20000000/(self.g.profile.values['axes']['Z']['steps_per_mm']*100)],
+      [[200,0,0,0,0], [100,0,0,0,0], 200, 30000000/(self.g.profile.values['axes']['X']['steps_per_mm']*100)],    # Single axis, reverse motion
       [[0,0,0,0,0],   [1,1,1,0,0],   100, 2598.0762113533156],        # Multiple axis, forward motion
       ]
 
