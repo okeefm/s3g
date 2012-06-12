@@ -22,7 +22,7 @@ A machine profile is made up of the following attributes.
   A description for an axis.
 
     Key: Name of this Axis (i.e. "X", "Y", "A")
-    Value: A Dictionary of the Following Parameters, with appropriate integer values for their definitions:
+    Value: A Dictionary of the Following Keys with appropriate Integer Values:
         * "length", the lenght of this axis in mm
         * "max_feedrate", the maximum feedrate this axis can use in mm/min
         * "steps_per_mm", the number of steps the machine takes to travel 1 mm 
@@ -37,7 +37,7 @@ A machine profile is made up of the following attributes.
   A Description for a Tool
 
     Key: A String of the Index of this Tool (i.e. "0", "1")
-    Value: A Dictionary of the Following Parameters, with appropriate values for their definitions:
+    Value: A Dictionary of the Following Keys with appropriate values:
         * "name", the name of the tool as a string
         * "model", the model number of the tool (i.e. "Mk8") as a string
         * "stepper_axis", the stepper axis this tool uses to extrude (i.e. "A', "B") as a string
@@ -52,7 +52,7 @@ A machine profile is made up of the following attributes.
   A Description for a Heated Platform
 
     Key: A String of the Index of this Heated Platform (i.e. "0")
-    Value: A Dictionary of the Following Parameters, with appropriate values for their definitions:
+    Value: A Dictionary of the Following Keys with appropriate values:
         * "name", the name of the heated platform as a string
 
 ###Baudrate:
