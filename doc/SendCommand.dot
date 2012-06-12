@@ -32,11 +32,15 @@ digraph
   
   "RESPONSE=BUFFER_OVERFLOW?" [shape=diamond];
   "RESPONSE=BUFFER_OVERFLOW?" -> "INIT DECODER" [label="yes"];
-  "RESPONSE=BUFFER_OVERFLOW?" -> "RESPONSE=RETRY_ERROR?" [label="no"];
+  "RESPONSE=BUFFER_OVERFLOW?" -> "RESPONSE=GENERIC_ERROR?" [label="no"];
 
-  "RESPONSE=RETRY_ERROR?" [shape=diamond];
-  "RESPONSE=RETRY_ERROR?" -> "INCREMENT RETRY_COUNT" [label="yes"];
-  "RESPONSE=RETRY_ERROR?" -> "FAILURE" [label="no"];
+  "RESPONSE=GENERIC_ERROR?" [shape=diamond];
+  "RESPONSE=GENERIC_ERROR?" -> "ERROR" [label="yes"];
+  "RESPONSE=GENERIC_ERROR?" -> "RESPONSE=CRC_MISMATCH_ERROR?" [label="no"];
+
+  "RESPONSE=CRC_MISMATCH_ERROR?" [shape=diamond];
+  "RESPONSE=CRC_MISMATCH_ERROR?" -> "ERROR" [label="yes"];
+  "RESPONSE=CRC_MISMATCH_ERROR?" -> "FAILURE" [label="no"];
 
   "ERROR" -> "INCREMENT RETRY_COUNT";
 

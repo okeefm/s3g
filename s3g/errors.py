@@ -6,7 +6,8 @@ class PacketDecodeError(Exception):
   are potentially recoverable.
   """
   def __init__(self, value):
-     self.value = value
+    self.value = value
+    self.__name__= 'PacketDecodeError'     
   def __str__(self):
     return str(self.value)
 
@@ -18,6 +19,7 @@ class PacketLengthError(PacketDecodeError):
     self.length = length
     self.expected_length = expected_length
     self.value = {'LENGTH': self.length, 'EXPECTED LENGTH':self.expected_length}
+    self.__name__ = 'PacketLengthError'
 
 class PacketLengthFieldError(PacketDecodeError):
   """
@@ -27,6 +29,7 @@ class PacketLengthFieldError(PacketDecodeError):
     self.length = length
     self.expected_length = expected_length
     self.value = {'LENGTH':self.length, 'EXPECTED LENGTH':self.expected_length}
+    self.__name__ = 'PacketLengthFieldError'
 
 class PacketHeaderError(PacketDecodeError):
   """
@@ -36,6 +39,7 @@ class PacketHeaderError(PacketDecodeError):
     self.header = header
     self.expected_header = expected_header
     self.value = {'HEADER':self.header, 'EXPECTED HEADER':self.expected_header}
+    self.__name__ = 'PacketHeaderError'
 
 class PacketCRCError(PacketDecodeError):
   """
@@ -45,7 +49,7 @@ class PacketCRCError(PacketDecodeError):
     self.crc = crc
     self.expected_crc = expected_crc
     self.value = {'CRC':self.crc, 'EXPECTED CRC':self.expected_crc}
-
+    self.__name__ = 'PacketCRCError'
 
 class ResponseError(Exception):
   """
@@ -63,12 +67,21 @@ class BufferOverflowError(ResponseError):
   def __init__(self):
     self.value = 'BufferOverflow'
 
-class RetryError(ResponseError):
+class GenericError(ResponseError):
   """
   A generic error reported by the bot
   """
   def __init__(self, value):
     self.value = value
+    self.__name__ = 'RetryError'
+
+class CRCMismatchError(ResponseError):
+  """
+  Signifies a bad crc code was received by the bot
+  """
+  def __init__(self, value):
+    self.value = value
+    self.__name__ = 'CRCMismatchError'
 
 class BuildCancelledError(ResponseError):
   """
@@ -84,18 +97,41 @@ class TimeoutError(ResponseError):
   def __init__(self, data_length, decoder_state):
     self.data_length = data_length
     self.decoder_state = decoder_state
-    self.value = {'DATA LENGTH':self.data_length, 'DECODER STATE':self.decoder_state}
+    self.value = {
+        'DATA LENGTH':self.data_length,  
+        'DECODER STATE':self.decoder_state
+        }
+    self.__name__ = 'TimeoutError'
 
   def __str__(self):
     return str(self.value)
 
 class TransmissionError(IOError):
   """
-  A transmission error is raised when the s3g driver encounters too many errors while communicating.
-  This error is non-recoverable without resetting the state of the machine.
+  A transmission error is raised when the s3g driver encounters 
+  too many errors while communicating, OR the machine encountering
+  errors when communicating with its tools. This error is non-recoverable 
+  without resetting the state of the machine.
   """
+  def __init__(self, value):
+    self.value = value
+
   def __str__(self):
-    return 'TransmissionError'
+    return str(self.value)    #This returns a str of the value because 
+                              #TransmissionErrors can contain
+                              #a list of proximate errors that caused this
+
+class DownstreamTimeoutError(TransmissionError):
+  """
+  Signifiees the machine cannot communicate with the tool
+  due to a communication timeout.
+  """
+
+class ToolLockError(TransmissionError):
+  """
+  Signifies the machine cannot communicate with the tool
+  due to the tool being locked
+  """
 
 class ExtendedStopError(Exception):
   """

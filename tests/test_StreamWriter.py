@@ -22,6 +22,28 @@ class StreamWriterTests(unittest.TestCase):
   def tearDown(self):
     self.w = None
 
+  def test_error_reporting(self):
+    """Tests that StreamWriter records errors received correctly
+    and stores those values in the TransmissionError Thrown.
+    """
+    expected_errors = [
+        'CRCMismatchError',
+        'CRCMismatchError',
+        'CRCMismatchError',
+        'CRCMismatchError',
+        'CRCMismatchError',
+        ]
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['CRC_MISMATCH'])
+    for i in range(5):
+      self.outputstream.write(Encoder.EncodePayload(response_payload))
+    self.outputstream.seek(0)
+    payload = 'asdf'
+    try:
+      self.w.SendCommand(payload) 
+    except errors.TransmissionError as e:
+      self.assertEqual(expected_errors, e.value)
+
   def test_send_command(self):
     """
     Passing case: Preload the buffer with a correctly formatted expected response, and verigy that it works correctly
