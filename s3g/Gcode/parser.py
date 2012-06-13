@@ -36,7 +36,6 @@ class GcodeParser(object):
 }
 
     self.MCODE_INSTRUCTIONS = {
-       6   : [self.WaitForToolhead,            'PT',      ''],
        18  : [self.DisableAxes,                '',        'XYZAB'],
        70  : [self.DisplayMessage,             'P',       ''],
        72  : [self.PlaySong,                   'P',       ''],
@@ -224,21 +223,6 @@ class GcodeParser(object):
     else:
       timeout = self.state.wait_for_ready_timeout
     self.s3g.WaitForPlatformReady(
-        codes['T'],
-        self.state.wait_for_ready_packet_delay,
-        int(timeout)
-        )
-
-  def WaitForToolhead(self, codes, flags, comment):
-    """Given a toolhead and a timeout, waits for that toolhead
-    to reach its target temperature.
-    """
-    # Handle optional codes
-    if 'P' in codes:
-      timeout = codes['P']
-    else:
-      timeout = self.state.wait_for_ready_timeout
-    self.s3g.WaitForToolReady(
         codes['T'],
         self.state.wait_for_ready_packet_delay,
         int(timeout)

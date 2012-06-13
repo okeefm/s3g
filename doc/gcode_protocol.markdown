@@ -335,25 +335,6 @@ Parameters
 
 # Supported M Codes
 
-## M6 - Wait for toolhead to reach temperature
-Instruct the machine to wait for the toolhead to reach its target temperature
-TODO: Should this command be depricated?
-
-Registers
-
-    P: (code) Maximum time to wait, in seconds (TODO: is this correct?)
-    T: (code, optional) If present, first change to the specified tool
-
-S3g Output
-
-    WaitForToolReady(tool_index, delay, timeout)
-
-Parameters
-
-    tool_index = T
-    delay = 100
-    timeout = P
-
 ## M18 - Disable axes stepper motors
 Instruct the machine to disable the stepper motors for the specifed axes.
 
@@ -455,7 +436,7 @@ Set the target temperature for the current toolhead
 Registers
 
     S: (code) Temperature to set the toolhead to, in degrees C
-    T: (code, optional) If present, first change to the specified tool
+    T: (code) The toolhead to heat
 
 S3g Output
 
@@ -472,7 +453,7 @@ Sets the target temperature for the current build platform
 Registers
 
     S: (code) Temperature to set the platform to, in degrees C
-    T: (code, optional) If present, first change to the specified tool
+    T: (code) The platform to heat
 
 S3g Output
 
@@ -507,7 +488,7 @@ Instruct the machine to wait for the toolhead to reach its target temperature
 
 Registers
 
-    T: (code, optional) If present, the extruder to wait for.
+    T: (code) The extruder to wait for.
     P: (code, optional) If present, sets the time limit that we wait for.
 
 S3g Output
@@ -525,7 +506,7 @@ Instruct the machine to wait for the platform to reach its target temperature
 
 Registers
 
-    T: (code, optional) If present, the platform to wait for.
+    T: (code) The platform to wait for.
     P: (code, optional) If present, sets the time limit that we wait for.
 
 S3g Output
@@ -537,6 +518,23 @@ Parameters
     tool_index = T
     delay = 100
     timeout = P
+
+## M135 - Tool Change
+Instructs the machine to change its toolhead.  Also updates the State Machine's current
+tool_index.
+
+Registers
+
+    T: (code) The toolhead for the machine to switch to and the new tool_index for
+        the state machine to use.
+
+S3g Output
+
+    ChangeTool(tool_index)
+
+Parameters
+
+    tool_index = T
 
 # Ignored M codes
 These codes will not cause an error if encountered, but do not get evaluated. This is because some skeining engines are buggy and produce them.
@@ -569,16 +567,3 @@ Registers
 S3g Output (none)
 
 Parameters (none)
-
-## M108 - Set extruder max speed
-Set the motor speed for the current toolhead
-
-Registers
-
-    R: (code) Motor speed, in RPM
-    T: (code, optional) If present, first change to the specified tool
-
-S3g Output (none)
-
-Parameters (none)
-

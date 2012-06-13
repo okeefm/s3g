@@ -49,60 +49,12 @@ class gcodeTests(unittest.TestCase):
     self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
   def test_check_mcode_extraneous_codes_gets_called(self):
-    command = "M6 X4" # Note: This assumes that M6 does not accept an X code
+    command = "M18 Q4" # Note: This assumes that M6 does not accept an X code
     self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
   def test_check_mcode_extraneous_flags_gets_called(self):
-    command = "M6 X" # Note: This assumes that M6 does not accept an X flag
+    command = "M18 Q" # Note: This assumes that M6 does not accept an X flag
     self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
-
-  def test_wait_for_toolhead_all_codes_accounted_for(self):
-    codes = 'PT'
-    flags = ''
-    self.assertEqual(sorted(codes), sorted(self.g.MCODE_INSTRUCTIONS[6][1]))
-    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[6][2])
-
-  def test_wait_for_toolhead_missing_t_code(self):
-    codes = {}
-    flags = []
-    comments = ''
-    self.assertRaises(
-      KeyError,
-      self.g.WaitForToolhead,
-      codes,
-      flags,
-      comments
-    )
-
-  def test_wait_for_toolhead_missing_timeout(self):
-    tool_index=0
-    delay = self.g.state.wait_for_ready_packet_delay
-    codes = {'T':tool_index}
-    self.g.WaitForToolhead(codes, [], '')
-    self.mock.WaitForToolReady.assert_called_once_with(
-      tool_index,
-      delay,
-      self.g.state.wait_for_ready_timeout
-    )
-
-  def test_wait_for_toolhead_all_codes_defined(self):
-    tool_index=0
-    timeout = 3
-    delay = 100 # As specified in the gcode protocol
-
-    codes = {'T':tool_index, 'P':timeout}
-    self.g.WaitForToolhead(codes, [], '')
-
-    self.mock.WaitForToolReady.assert_called_once_with(tool_index, delay, timeout)
-
-  def test_wait_for_toolhead_doesnt_update_state_machine(self):
-    tool_index = 0
-    timeout = 3
-    codes = {'T' : tool_index, 'P' : timeout}
-    flags = []
-    comments = ''
-    self.g.WaitForToolhead(codes, flags, comments)
-    self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_disable_axes(self):
     flags = ['A','B','X','Y','Z']
