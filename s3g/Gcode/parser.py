@@ -318,18 +318,6 @@ class GcodeParser(object):
         )
     self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
 
-  def AbsoluteProgramming(self, codes, flags, comment):
-    """Set the programming mode to absolute
-    We are not implementing this command, so this is just a stub.
-    """
-    pass
-
-  def MilimeterProgramming(self, codes, flags, comment):
-    """
-    Set the programming mode to milimeters
-    This is a stub, since we dropped support for this function
-    """
-    pass
 
   def LinearInterpolation(self, codes, flags, comment):
     """Movement command that has two flavors: E and AB commands.
@@ -429,6 +417,7 @@ class GcodeParser(object):
     """
     Sends a chagne tool command to the machine.
     """
+    self.state.values['tool_index'] = codes['T']
     self.s3g.ChangeTool(codes['T'])
 
   def BuildStartNotification(self):
@@ -447,6 +436,19 @@ class GcodeParser(object):
     self.state.values['build_name'] = None
 
     self.s3g.BuildEndNotification()
+
+  def AbsoluteProgramming(self, codes, flags, comment):
+    """Set the programming mode to absolute
+    We are not implementing this command, so this is just a stub.
+    """
+    pass
+
+  def MilimeterProgramming(self, codes, flags, comment):
+    """
+    Set the programming mode to milimeters
+    This is a stub, since we dropped support for this function
+    """
+    pass
 
   def ExtruderOff(self, codes, flags, comment):
     """Turn the extruder off
