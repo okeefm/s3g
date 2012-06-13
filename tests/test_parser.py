@@ -70,7 +70,7 @@ class gcodeTests(unittest.TestCase):
     flags = []
     comments = ''
     self.assertRaises(
-      s3g.Gcode.NoToolIndexError,
+      KeyError,
       self.g.WaitForToolhead,
       codes,
       flags,
@@ -944,6 +944,26 @@ class gcodeTests(unittest.TestCase):
     newState = self.g.state.values
     self.assertEqual(oldState, newState)
 
+  def test_tool_change_all_codes_accounted_for(self):
+    codes = 'T'
+    flags = ''
+    self.assertEqual(sorted(codes), sorted(self.g.MCODE_INSTRUCTIONS[135][1]))
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[135][2])
+
+  def test_tool_change_no_t_code(self):
+    codes = {}
+    flags = []
+    comments = ''
+    self.assertRaises(KeyError, self.g.ChangeTool, codes, flags, comments)
+
+  def test_tool_change(self):
+    tool_index = 2
+    codes = {'T':tool_index}
+    flags = []
+    comments = ''
+    self.g.ChangeTool(codes, flags, comments)
+    self.mock.ChangeTool.assert_called_once_with(tool_index)
+
   def test_set_extruder_speed_all_codes_accounted_for(self):
     codes = 'TR'
     flags = ''
@@ -985,7 +1005,7 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     flags = []
     comments = ''
-    self.assertRaises(s3g.Gcode.NoToolIndexError, self.g.WaitForToolReady, codes, flags, comments)
+    self.assertRaises(KeyError, self.g.WaitForToolReady, codes, flags, comments)
 
   def test_wait_for_tool_ready_no_p_code(self):
     tool_index=0
@@ -1054,7 +1074,7 @@ class gcodeTests(unittest.TestCase):
     flags = []
     comments = ''
     self.assertRaises(
-      s3g.Gcode.NoToolIndexError,
+      KeyError,
       self.g.WaitForPlatformReady,
       codes,
       flags,
