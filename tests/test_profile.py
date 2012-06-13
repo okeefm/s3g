@@ -17,8 +17,8 @@ class ProfileInitTests(unittest.TestCase):
   def test_good_profile_name(self):
     name = "ReplicatorSingle"
     p = s3g.Profile(name)
-    f = open('./s3g/profiles/'+name+'.json')
-    expected_vals = json.load(f)
+    with open('s3g' + os.path.sep + 'profiles' + os.path.sep +name+'.json') as f:
+      expected_vals = json.load(f)
     self.assertEqual(expected_vals, p.values)
 
   def test_profile_access(self):
@@ -35,7 +35,7 @@ class ProfileInitTests(unittest.TestCase):
         'ReplicatorDual',
         'ReplicatorSingle',
         ]
-    self.assertEqual(sorted(expected_profiles), sorted(s3g.ListProfiles()))
+    self.assertEqual(sorted(expected_profiles), sorted(list(s3g.ListProfiles())))
 
 if __name__ == '__main__':
   unittest.main()

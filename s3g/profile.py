@@ -11,23 +11,21 @@ class Profile(object):
     @param string name: Name of the profile, NOT the path.
     """
     self.path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)),'./profiles/')  #Path of the profiles directory
+        os.path.abspath(os.path.dirname(__file__)),'profiles' + os.path.sep)  #Path of the profiles directory
     extension = '.json'
-    f = open(self.path + name + extension)
-    self.values = json.load(f) 
+    with open(self.path + name + extension) as f:
+      self.values = json.load(f) 
 
 def ListProfiles():
   """
   Looks in the ./profiles directory for all files that
   end in .json and returns that list.
+  @return A generator of profiles without their .json extensions
   """
   path = os.path.join(
-      os.path.abspath(os.path.dirname(__file__)), 'profiles/')
+      os.path.abspath(os.path.dirname(__file__)), 'profiles' + os.path.sep)
   profile_extension = '.json'
-  files = os.listdir(path)
-  profiles = []
-  for f in files:
-    if profile_extension in f:
-      #Take off the file extension
-      profiles.append(f[:f.index(profile_extension)])
-  return profiles
+  for f in os.listdir(path):
+    root, ext = os.path.splitext(f)
+    if profile_extension == ext:
+      yield root

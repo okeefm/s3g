@@ -1,7 +1,6 @@
-__all__ = ['parser', 'constants', 'states', 'utils', 'errors']
+__all__ = ['parser', 'states', 'utils', 'errors']
 
 from parser import *
-from constants import *
 from states import *
 from utils import *
 from errors import *
