@@ -94,7 +94,14 @@ class gcodeTests(unittest.TestCase):
     self.g.WaitForToolhead(codes, [], '')
 
     self.mock.WaitForToolReady.assert_called_once_with(tool_index, delay, timeout)
-    #Check to make sure state machine isnt updated
+
+  def test_wait_for_toolhead_doesnt_update_state_machine(self):
+    tool_index = 0
+    timeout = 3
+    codes = {'T' : tool_index, 'P' : timeout}
+    flags = []
+    comments = ''
+    self.g.WaitForToolhead(codes, flags, comments)
     self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_disable_axes(self):
@@ -272,8 +279,6 @@ class gcodeTests(unittest.TestCase):
             }
         }
     self.assertEqual(expectedOffsets, self.g.state.offsetPosition)
-    #Check to make sure state machine isnt updated
-    self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_use_p1_offsets_all_codes_accounted_for(self):
     codes = ''
@@ -285,8 +290,6 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     self.g.UseP1Offsets(codes, [], '')
     self.assertEqual(1, self.g.state.offset_register)
-    #Check to make sure state machine isnt updated
-    self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_use_p0_offsets_all_codes_accounted_for(self):
     codes = ''
@@ -298,8 +301,6 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     self.g.UseP0Offsets(codes, [], '')
     self.assertEqual(0, self.g.state.offset_register) 
-    #Check to make sure state machine isnt updated
-    self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_absolute_programming_all_codes_accounted_for(self):
     codes = ''
@@ -846,7 +847,14 @@ class gcodeTests(unittest.TestCase):
     codes = {'S'  : temperature, 'T' :  tool_index}
     self.g.SetToolheadTemperature(codes, [], '')
     self.mock.SetToolheadTemperature.assert_called_once_with(tool_index, temperature)
-    #Ensure state machine hasn't been updated
+
+  def test_set_toolhead_temperature_doesnt_update_state_machine(self):
+    tool_index = 0
+    temperature = 100
+    codes = {'S':temperature, 'T':tool_index}
+    flags = []
+    comments = ''
+    self.g.SetToolheadTemperature(codes, flags, comments)
     self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_set_platform_temperature_all_codes_accounted_for(self):
@@ -865,12 +873,21 @@ class gcodeTests(unittest.TestCase):
     self.assertRaises(KeyError, self.g.SetPlatformTemperature, codes, [], '')
 
   def test_set_platform_temperature_all_code_defined(self):
-    tool_index=0
-    codes = {'S'  : 100,  'T' : tool_index}
+    tool_index=0  
+    temperature = 42
+    codes = {'S'  : temperature,  'T' : tool_index}
     self.g.SetPlatformTemperature(codes, [], '')
-    self.mock.SetPlatformTemperature.assert_called_once_with(tool_index, 100)
-    #Ensure state machine hasn't been updated
+    self.mock.SetPlatformTemperature.assert_called_once_with(tool_index, temperature)
+
+  def test_set_platform_temperature_doesnt_update_state_machine(self):
+    tool_index = 0
+    temperature = 42 
+    codes = {'S':temperature, 'T':tool_index}
+    flags = []
+    comments = ''
+    self.g.SetPlatformTemperature(codes, flags, comments)
     self.assertTrue('tool_index' not in self.g.state.values)
+    
 
   def test_load_position_all_codes_accounted_for(self):
     codes = ''
@@ -1001,6 +1018,15 @@ class gcodeTests(unittest.TestCase):
         timeout
         )
 
+  def test_wait_for_tool_ready_doesnt_update_state_machine(self):
+    tool_index = 0
+    timeout = 42
+    codes = {'T':tool_index, 'P':timeout}
+    flags = []
+    comments = ''
+    self.g.WaitForToolReady(codes, flags, comments)
+    self.assertTrue('tool_index' not in self.g.state.values)
+
   def test_wait_for_platform_ready_all_codes_accounted_for(self):
     codes = 'PT'
     flags = ''
@@ -1059,6 +1085,15 @@ class gcodeTests(unittest.TestCase):
         self.g.state.wait_for_ready_packet_delay,
         timeout,
         )
+
+  def test_wait_for_platform_doesnt_update_state_machine(self):
+    tool_index = 0
+    timeout = 42
+    codes = {'T':tool_index, 'P':timeout}
+    flags = []
+    comments = ''
+    self.g.WaitForPlatformReady(codes, flags, comments)
+    self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_build_start_notification(self):
     name = 'test'
