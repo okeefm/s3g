@@ -56,7 +56,13 @@ class gcodeTests(unittest.TestCase):
     command = "M6 X" # Note: This assumes that M6 does not accept an X flag
     self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
-  def test_wait_for_toolhead_missing_t_code_no_toolhead_set(self):
+  def test_wait_for_toolhead_all_codes_accounted_for(self):
+    codes = 'PT'
+    flags = ''
+    self.assertEqual(sorted(codes), sorted(self.g.MCODE_INSTRUCTIONS[6][1]))
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[6][2])
+
+  def test_wait_for_toolhead_missing_t_code(self):
     codes = {}
     flags = []
     comments = ''
@@ -79,7 +85,7 @@ class gcodeTests(unittest.TestCase):
       self.g.state.wait_for_ready_timeout
     )
 
-  def test_wait_for_toolhead(self):
+  def test_wait_for_toolhead_all_codes_defined(self):
     tool_index=0
     timeout = 3
     delay = 100 # As specified in the gcode protocol
@@ -88,6 +94,8 @@ class gcodeTests(unittest.TestCase):
     self.g.WaitForToolhead(codes, [], '')
 
     self.mock.WaitForToolReady.assert_called_once_with(tool_index, delay, timeout)
+    #Check to make sure state machine isnt updated
+    self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_disable_axes(self):
     flags = ['A','B','X','Y','Z']
@@ -232,7 +240,7 @@ class gcodeTests(unittest.TestCase):
         }
     self.assertRaises(KeyError, self.g.StoreOffsets, codes, [],  '')
 
-  def test_store_offsets(self):
+  def test_store_offsets_all_codes_defined(self):
     self.g.state.offsetPosition[0] = {
         'X' : 0,
         'Y' : 0,
@@ -264,6 +272,8 @@ class gcodeTests(unittest.TestCase):
             }
         }
     self.assertEqual(expectedOffsets, self.g.state.offsetPosition)
+    #Check to make sure state machine isnt updated
+    self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_use_p1_offsets_all_codes_accounted_for(self):
     codes = ''
@@ -275,6 +285,8 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     self.g.UseP1Offsets(codes, [], '')
     self.assertEqual(1, self.g.state.offset_register)
+    #Check to make sure state machine isnt updated
+    self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_use_p0_offsets_all_codes_accounted_for(self):
     codes = ''
@@ -286,6 +298,8 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     self.g.UseP0Offsets(codes, [], '')
     self.assertEqual(0, self.g.state.offset_register) 
+    #Check to make sure state machine isnt updated
+    self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_absolute_programming_all_codes_accounted_for(self):
     codes = ''
@@ -817,29 +831,23 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[104][1])
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[104][2])
 
-  def test_set_toolhead_temperature_no_s(self):
+  def test_set_toolhead_temperature_no_s_code(self):
     codes = {'T'  : 2}
     self.assertRaises(KeyError, self.g.SetToolheadTemperature, codes, [], '')
 
-  def test_set_toolhead_temperature_no_t_no_set_tool_index(self):
+  def test_set_toolhead_temperature_no_t_code(self):
     codes = {'S'  : 100}
     self.assertRaises(KeyError, self.g.SetToolheadTemperature, codes, [], '')
 
-  def test_set_toolhead_temperature_no_t_set_tool_index(self):
-    temperature = 100
-
-    codes = {'S'  : temperature}
-    flags = []
-    comments = ''
-    self.assertRaises(KeyError, self.g.SetToolheadTemperature, codes, flags, comments)
-
-  def test_set_toolhead_temperature_t_code_defined(self):
+  def test_set_toolhead_temperature_all_code_defined(self):
     tool_index=0
     temperature = 100
 
     codes = {'S'  : temperature, 'T' :  tool_index}
     self.g.SetToolheadTemperature(codes, [], '')
     self.mock.SetToolheadTemperature.assert_called_once_with(tool_index, temperature)
+    #Ensure state machine hasn't been updated
+    self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_set_platform_temperature_all_codes_accounted_for(self):
     codes = 'ST'
@@ -848,7 +856,7 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[109][1])
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[109][2])
 
-  def test_set_platform_temperature_no_s(self):
+  def test_set_platform_temperature_no_s_code(self):
     codes = {'T'  : 2}
     self.assertRaises(KeyError, self.g.SetPlatformTemperature, codes, [], '')
 
@@ -856,11 +864,13 @@ class gcodeTests(unittest.TestCase):
     codes = {'S'  : 100}
     self.assertRaises(KeyError, self.g.SetPlatformTemperature, codes, [], '')
 
-  def test_set_platform_temperature_t_code_Defined(self):
+  def test_set_platform_temperature_all_code_defined(self):
     tool_index=0
     codes = {'S'  : 100,  'T' : tool_index}
     self.g.SetPlatformTemperature(codes, [], '')
     self.mock.SetPlatformTemperature.assert_called_once_with(tool_index, 100)
+    #Ensure state machine hasn't been updated
+    self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_load_position_all_codes_accounted_for(self):
     codes = ''
@@ -887,39 +897,39 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(expectedPosition, self.g.state.position)
     self.mock.RecallHomePositions.assert_called_once_with(sorted(['X', 'Y', 'Z', 'A', 'B']))    
 
-  def test_extruder_on_forward_all_codes_accounted_for(self):
-    codes = ''
-    flags = ''
-    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[101][1])
-    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[101][2])
-
   def test_extruder_on_forward(self):
     oldState = copy.deepcopy(self.g.state.values)
-    self.g.ExtruderOnForward({}, [], "")
+    codes = {}
+    flags = []
+    comments = ''
+    self.g.ExtruderOnForward(codes, flags, comments)
     newState = self.g.state.values
     self.assertEqual(oldState, newState)
-
-  def test_extruder_on_reverse_all_codes_accounted_for(self):
-    codes = ''
-    flags = ''
-    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[102][1])
-    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[102][2])
 
   def test_extruder_on_reverse(self):
     oldState = copy.deepcopy(self.g.state.values)
-    self.g.ExtruderOnReverse({}, [], "")
+    codes = {}
+    flags = []
+    comments = ''
+    self.g.ExtruderOnReverse(codes, flags, comments)
     newState = self.g.state.values
     self.assertEqual(oldState, newState)
 
-  def test_extruder_off_all_codes_accounted_for(self):
-    codes = 'T'
-    flags = ''
-    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[103][1])
-    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[103][2])
-
   def test_extruder_off(self):
     oldState = copy.deepcopy(self.g.state.values)
-    self.g.ExtruderOff({}, [], "")
+    codes = {}
+    flags = []
+    comments = ''
+    self.g.ExtruderOff(codes, flags, comments)
+    newState = self.g.state.values
+    self.assertEqual(oldState, newState)
+
+  def test_get_temperature(self):
+    oldState = copy.deepcopy(self.g.state.values)
+    codes = {}
+    flags = []
+    comments = ''
+    self.g.GetTemperature(codes, flags, comments)
     newState = self.g.state.values
     self.assertEqual(oldState, newState)
 
@@ -955,12 +965,6 @@ class gcodeTests(unittest.TestCase):
     flags = []
     comment = ''
     self.assertRaises(KeyError, self.g.WaitForToolReady, codes, flags, comment)
-
-  def test_wait_for_tool_read_no_p_or_t_codes_no_set_toolhead(self):
-    codes = {}
-    flags = []
-    comments = ''
-    self.assertRaises(KeyError, self.g.WaitForToolReady, codes, flags, comments)
 
   def test_wait_for_tool_ready_no_p_code(self):
     tool_index=0
@@ -1007,21 +1011,15 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     flags = []
     comments = ''
-    self.assertRaises(KeyError, self.g.WaitForPlatformReady, codes, flags, comments)
-
-  def test_wait_for_platform_no_p_or_t_codes_no_defined_platform_index(self):
-    codes = {}
-    flags = []
-    comments = ''
     self.assertRaises(
-      KeyError,
-      self.g.WaitForPlatformReady,
-      codes,
-      flags,
-      comments
-    )
+        KeyError, 
+        self.g.WaitForPlatformReady, 
+        codes, 
+        flags, 
+        comments
+        )
 
-  def test_wait_for_platform_no_p_code_defines(self):
+  def test_wait_for_platform_no_p_code_defined(self):
     tool_index= 0
     codes = {'T'  : tool_index}
     flags = []
@@ -1038,7 +1036,13 @@ class gcodeTests(unittest.TestCase):
     codes = {'P'  : timeout}
     flags = []
     comments = ''
-    self.assertRaises(KeyError, self.g.WaitForPlatformReady, codes, flags, comments)
+    self.assertRaises(
+        KeyError, 
+        self.g.WaitForPlatformReady, 
+        codes, 
+        flags, 
+        comments
+        )
 
   def test_wait_for_platform_all_codes_defined(self):
     timeout = 42
