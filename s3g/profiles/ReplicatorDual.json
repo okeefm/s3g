@@ -4,12 +4,12 @@
     "X" : {
       "length"        : 227,
       "max_feedrate"  : 12450,
-      "steps_per_mm"  : 94.139704
+      "steps_per_mm"  : 94.139
     },
     "Y" : {
       "length"        : 148,
       "max_feedrate"  : 12450,
-      "steps_per_mm"  : 94.139704
+      "steps_per_mm"  : 94.139
     },
     "Z" : {
       "length"        : 150,
@@ -17,14 +17,12 @@
       "steps_per_mm"  : 400
     },
     "A" : {
-      "length"        : 100000,
       "max_feedrate"  : 1600,
-      "steps_per_mm"  : 96.275
+      "steps_per_mm"  : -96.275
     },
     "B" : {
-      "length"        : 100000,
       "max_feedrate"  : 1600,
-      "steps_per_mm"  : 96.275
+      "steps_per_mm"  : -96.275
     }
   },
   "tools" :

@@ -7,7 +7,7 @@
       "length"  : 227,
       "max_feedrate" : 12450,
       "homing_feedrate"  : 2500,
-      "steps_per_mm"  : 94.139704,
+      "steps_per_mm"  : 94.139,
       "endstops"  : "max"
     },
     {
@@ -15,7 +15,7 @@
       "length"  : 148,
       "max_feedrate" : 12450,
       "homing_feedrate"  : 2500,
-      "steps_per_mm"  : 94.139704,
+      "steps_per_mm"  : 94.139,
       "endstops"  : "max"
     },
     {
@@ -28,9 +28,8 @@
     },
     {
       "name"  : "A", 
-      "length"  : 100000,
       "max_feedrate" : 1600,
-      "steps_per_mm"  : 96.275201870333662468889989185642,
+      "steps_per_mm"  : 96.275,
       "endstops"  : "none"
     }
   ],
