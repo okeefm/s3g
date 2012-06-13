@@ -1,9 +1,8 @@
-# Gcode parser, 
+#Gcode parser, 
 
 from states import *
 from utils import *
 from errors import *
-from constants import *
 import time
 
 class GcodeParser(object):
@@ -137,7 +136,7 @@ class GcodeParser(object):
     axes = ParseOutAxes(flags) 
     try:
       feedrate = self.state.values['feedrate']
-      self.s3g.FindAxesMaximums(axes, int(feedrate), self.state.findingTimeout)
+      self.s3g.FindAxesMaximums(axes, feedrate, self.state.profile.values['find_axis_maximum_timeout'])
     except KeyError as e:
       if e[0] == 'feedrate':
         e = KeyError('F')
@@ -154,7 +153,7 @@ class GcodeParser(object):
     axes = ParseOutAxes(flags)
     try:
       feedrate = self.state.values['feedrate']
-      self.s3g.FindAxesMinimums(axes, int(feedrate), self.state.findingTimeout)
+      self.s3g.FindAxesMinimums(axes, feedrate, self.state.profile.values['find_axis_minimum_timeout'])
     except KeyError as e:
       if e[0] == 'feedrate':
         e = KeyError('F')
@@ -184,8 +183,7 @@ class GcodeParser(object):
         self.state.position['A'] = codes['A']
       if 'B' in codes:
         self.state.position['B'] = codes['B']
-
-    stepped_position = MultiplyVector(self.state.GetPosition(), self.state.replicator_steps_per_mm)
+    stepped_position = MultiplyVector(self.state.GetPosition(), self.state.GetAxesValues('steps_per_mm'))
     self.s3g.SetExtendedPosition(stepped_position)
       
   def UseP0Offsets(self, codes, flags, comment):
@@ -214,9 +212,13 @@ class GcodeParser(object):
     if 'P' in codes:
       timeout = codes['P']
     else:
-      timeout = self.state.values['waiting_timeout']
+      timeout = self.state.wait_for_ready_timeout
 
-    self.s3g.WaitForToolReady(int(self.state.values['tool_index']), wait_for_toolhead_delay, int(timeout))
+    self.s3g.WaitForToolReady(
+        int(self.state.values['tool_index']), 
+        self.state.wait_for_ready_packet_delay,
+        int(timeout)
+        )
 
   def WaitForPlatformReady(self, codes, flags, comment):
     """
@@ -231,8 +233,12 @@ class GcodeParser(object):
     if 'P' in codes:
       timeout = codes['P']
     else:
-      timeout = self.state.values['waiting_timeout']
-    self.s3g.WaitForPlatformReady(int(self.state.values['platform_index']), wait_for_platform_delay, int(timeout))
+      timeout = self.state.wait_for_ready_timeout
+    self.s3g.WaitForPlatformReady(
+        int(self.state.values['platform_index']), 
+        self.state.wait_for_ready_packet_delay,
+        int(timeout)
+        )
 
   def WaitForToolhead(self, codes, flags, comment):
     """Given a toolhead and a timeout, waits for that toolhead
@@ -246,8 +252,12 @@ class GcodeParser(object):
     if 'P' in codes:
       timeout = codes['P']
     else:
-      timeout = self.state.values['waiting_timeout']
-    self.s3g.WaitForToolReady(int(self.state.values['tool_index']), wait_for_toolhead_delay, int(timeout))
+      timeout = self.state.wait_for_ready_timeout
+    self.s3g.WaitForToolReady(
+        int(self.state.values['tool_index']), 
+        self.state.wait_for_ready_packet_delay,
+        int(timeout)
+        )
 
   def DisableAxes(self, codes, flags, comment):
     """Disables a set of axes on the bot
@@ -313,13 +323,13 @@ class GcodeParser(object):
     dda_speed = CalculateDDASpeed(
       current_point, 
       self.state.GetPosition(), 
-      self.state.rapidFeedrate,
-      self.state.replicator_max_feedrates,
-      self.state.replicator_steps_per_mm
-    )
+      self.state.profile.values['rapid_movement_feedrate'],
+      self.state.GetAxesValues('max_feedrate'),
+      self.state.GetAxesValues('steps_per_mm'),
+       )
     stepped_point = MultiplyVector(
         self.state.GetPosition(), 
-        self.state.replicator_steps_per_mm
+        self.state.GetAxesValues('steps_per_mm')
         )
     self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
 
@@ -379,16 +389,16 @@ class GcodeParser(object):
       try :
         feedrate = self.state.values['feedrate']
         dda_speed = CalculateDDASpeed(
-          current_position, 
-          self.state.GetPosition(), 
-          feedrate,
-          self.state.replicator_max_feedrates,
-          self.state.replicator_steps_per_mm
-        )
+            current_position, 
+            self.state.GetPosition(), 
+            feedrate,
+            self.state.GetAxesValues('max_feedrate'),
+            self.state.GetAxesValues('steps_per_mm'),
+            )
         stepped_point = MultiplyVector(
-          self.state.GetPosition(), 
-          self.state.replicator_steps_per_mm
-        )
+            self.state.GetPosition(), 
+            self.state.GetAxesValues('steps_per_mm')
+            )
         self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
 
       except KeyError as e:

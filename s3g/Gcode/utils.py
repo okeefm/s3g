@@ -1,6 +1,5 @@
 from errors import *
 from .. import errors
-import sys
 
 def ExtractComments(line):
   """
@@ -272,4 +271,3 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate, max_fe
   dda_speed = 60*1000000/(fastest_feedrate*abs(steps_per_mm[longest_axis]))
 
   return dda_speed
-

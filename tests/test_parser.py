@@ -17,6 +17,8 @@ class gcodeTests(unittest.TestCase):
 
     self.g = s3g.Gcode.GcodeParser()
     self.g.s3g = self.mock
+    profile = s3g.Profile("ReplicatorDual")
+    self.g.state.profile = profile
 
   def tearDown(self):
     self.mock = None
@@ -55,7 +57,7 @@ class gcodeTests(unittest.TestCase):
     self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
   def test_wait_for_toolhead_can_update_toolhead(self):
-    tool_index = 2
+    tool_index=0
     timeout = 3
 
     codes = {'T':tool_index, 'P':timeout}
@@ -76,18 +78,18 @@ class gcodeTests(unittest.TestCase):
     )
 
   def test_wait_for_toolhead_missing_timeout(self):
-    tool_index = 2
-    delay = 100
+    tool_index=0
+    delay = self.g.state.wait_for_ready_packet_delay
     codes = {'T':tool_index}
     self.g.WaitForToolhead(codes, [], '')
     self.mock.WaitForToolReady.assert_called_once_with(
       tool_index,
       delay,
-      self.g.state.values['waiting_timeout']
+      self.g.state.wait_for_ready_timeout
     )
 
   def test_wait_for_toolhead(self):
-    tool_index = 2
+    tool_index=0
     timeout = 3
     delay = 100 # As specified in the gcode protocol
 
@@ -202,14 +204,15 @@ class gcodeTests(unittest.TestCase):
     self.g.RapidPositioning(codes,[], '')
     rapid_feedrate = 1200     #This is the rapid feedrate baked into the gcode state machine
     dda_speed = s3g.Gcode.CalculateDDASpeed(
-      initial_position,
-      expected_position,
-      rapid_feedrate,
-      self.g.state.replicator_max_feedrates,
-      self.g.state.replicator_steps_per_mm
-    )
-    for i in range(len(self.g.state.replicator_steps_per_mm)):
-      expected_position[i] *= self.g.state.replicator_steps_per_mm[i]
+        initial_position, 
+        expected_position, 
+        rapid_feedrate, 
+        self.g.state.GetAxesValues('max_feedrate'), 
+        self.g.state.GetAxesValues('steps_per_mm')
+        )
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
+    for i in range(len(spmList)):
+      expected_position[i] *= spmList[i]
     actual_params = self.mock.mock_calls[0][1]
 
     for expected, actual in zip(expected_position, actual_params[0]):
@@ -366,8 +369,9 @@ class gcodeTests(unittest.TestCase):
         'E' : -1,
         }
     expectedPosition = [1, 2, 3, -1, 5]
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
     for i in range(len(expectedPosition)):
-      expectedPosition[i] *= self.g.state.replicator_steps_per_mm[i]
+      expectedPosition[i] *= spmList[i]
     self.g.SetPosition(codes, [], '')
     self.mock.SetExtendedPosition.assert_called_once_with(expectedPosition)
 
@@ -382,8 +386,9 @@ class gcodeTests(unittest.TestCase):
     self.g.SetPosition(codes, [], '')
     self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.state.position)
     expectedPosition = [0, 1, 2, 3, 4]
-    for i in range(len(expectedPosition)):
-      expectedPosition[i] *= self.g.state.replicator_steps_per_mm[i]
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
+    for i in range(len(spmList)):
+      expectedPosition[i] *= spmList[i]
     self.mock.SetExtendedPosition.assert_called_once_with(expectedPosition)
 
   def test_find_Axes_maximum_missing_feedrate(self):
@@ -453,7 +458,7 @@ class gcodeTests(unittest.TestCase):
     self.g.state.values['feedrate'] = feedrate
     flags = ['X']
     self.g.FindAxesMinimums({}, flags, '')
-    self.mock.FindAxesMinimums.assert_called_once_with(flags, feedrate, self.g.state.findingTimeout)
+    self.mock.FindAxesMinimums.assert_called_once_with(flags, feedrate, self.g.state.profile.values["find_axis_minimum_timeout"])
 
   def test_find_axes_minimums(self):
     codes = 'F'
@@ -473,7 +478,7 @@ class gcodeTests(unittest.TestCase):
     flags = ['X', 'Y', 'Z']
     axes = flags
     feedrate = 0
-    timeout = self.g.state.findingTimeout
+    timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMinimums(codes, flags, '')
     self.mock.FindAxesMinimums.assert_called_once_with(axes, feedrate, timeout)
     expectedPosition = {
@@ -489,7 +494,7 @@ class gcodeTests(unittest.TestCase):
     codes = {'F':0}
     axes = []
     feedrate = 0
-    timeout = self.g.state.findingTimeout
+    timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMinimums(codes, [], '')
     self.mock.FindAxesMinimums.assert_called_once_with(axes, feedrate, timeout)
 
@@ -508,7 +513,7 @@ class gcodeTests(unittest.TestCase):
     self.g.state.values['feedrate'] = feedrate
     flags = ['X']
     self.g.FindAxesMaximums({}, flags, '')
-    self.mock.FindAxesMaximums.assert_called_once_with(flags, feedrate, self.g.state.findingTimeout)  
+    self.mock.FindAxesMaximums.assert_called_once_with(flags, feedrate, self.g.state.profile.values['find_axis_maximum_timeout'])  
 
   def test_find_axes_maximum(self):
     self.g.state.position = {
@@ -522,7 +527,7 @@ class gcodeTests(unittest.TestCase):
     flags = ['X', 'Y', 'Z']
     axes = flags
     feedrate = 0
-    timeout = self.g.state.findingTimeout
+    timeout = self.g.state.profile.values['find_axis_maximum_timeout']
     self.g.FindAxesMaximums(codes, flags, '')
     self.mock.FindAxesMaximums.assert_called_once_with(axes, feedrate, timeout)
     expectedPosition = {
@@ -538,7 +543,7 @@ class gcodeTests(unittest.TestCase):
     codes = {'F':0}
     axes = []
     feedrate = 0
-    timeout = self.g.state.findingTimeout
+    timeout = self.g.state.profile.values['find_axis_maximum_timeout']
     self.g.FindAxesMaximums(codes, [], '')
     self.mock.FindAxesMaximums.assert_called_once_with(axes, feedrate, timeout)
 
@@ -600,16 +605,17 @@ class gcodeTests(unittest.TestCase):
 
     self.g.LinearInterpolation(codes, [], '')
     ddaFeedrate = s3g.Gcode.CalculateDDASpeed(
-      initialPosition,
-      expectedPoint,
-      feedrate,
-      self.g.state.replicator_max_feedrates,
-      self.g.state.replicator_steps_per_mm
-    )
+        initialPosition, 
+        expectedPoint, 
+        feedrate,
+        self.g.state.GetAxesValues('max_feedrate'),
+        self.g.state.GetAxesValues('steps_per_mm'),
+        )
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
 
     # Gcode works in steps, so we need to convert the expected position to steps
     for i in range(len(expectedPoint)):
-      expectedPoint[i] *= self.g.state.replicator_steps_per_mm[i]
+      expectedPoint[i] *= spmList[i]
     actual_params = self.mock.mock_calls[0][1]
 
     for expected, actual in zip(expectedPoint, actual_params[0]):
@@ -709,19 +715,16 @@ class gcodeTests(unittest.TestCase):
         }
     self.g.LinearInterpolation(codes, [], '')
     dda_speed = s3g.Gcode.CalculateDDASpeed(
-      initialPosition,
-      expectedPoint,
-      feedrate,
-      self.g.state.replicator_max_feedrates,
-      self.g.state.replicator_steps_per_mm
-    )
+        initialPosition, 
+        expectedPoint, 
+        feedrate,
+        self.g.state.GetAxesValues('max_feedrate'),
+        self.g.state.GetAxesValues('steps_per_mm')
+        )
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
     for i in range(len(expectedPoint)):
-      expectedPoint[i] *= self.g.state.replicator_steps_per_mm[i]
-    actual_params = self.mock.mock_calls[0][1]
-
-    for expected, actual in zip(expectedPoint, actual_params[0]):
-      self.assertAlmostEquals(expected, actual)
-    self.assertAlmostEquals(dda_speed, actual_params[1])
+      expectedPoint[i] *= spmList[i]
+    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, dda_speed)
 
   def test_linear_interpolation_a_and_b(self):
     self.g.state.position = {
@@ -757,22 +760,18 @@ class gcodeTests(unittest.TestCase):
         'F' : feedrate,
         }
     self.g.LinearInterpolation(codes, [], '')
-
     # TODO: Clean up all of these implementations
     dda_speed = s3g.Gcode.CalculateDDASpeed(
-      initialPosition,
-      expected_position,
-      feedrate,
-      self.g.state.replicator_max_feedrates,
-      self.g.state.replicator_steps_per_mm
-    )
+        initialPosition, 
+        expected_position, 
+        feedrate,
+        self.g.state.GetAxesValues('max_feedrate'),
+        self.g.state.GetAxesValues('steps_per_mm'),
+        ) 
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
     for i in range(len(expected_position)):
-      expected_position[i] *= self.g.state.replicator_steps_per_mm[i]
-    actual_params = self.mock.mock_calls[0][1]
-
-    for expected, actual in zip(expected_position, actual_params[0]):
-      self.assertAlmostEquals(expected, actual)
-    self.assertAlmostEquals(dda_speed, actual_params[1])
+      expected_position[i] *= spmList[i]
+    self.mock.QueueExtendedPoint.assert_called_once_with(expected_position, dda_speed)
 
   def test_linear_interpolation_b(self):
     initial_position = [5, 4, 3, 2, 1]
@@ -793,22 +792,17 @@ class gcodeTests(unittest.TestCase):
         'F' : feedrate,
         }
     self.g.LinearInterpolation(codes, [], '')
-
     dda_speed = s3g.Gcode.CalculateDDASpeed(
-      initial_position,
-      expected_position,
-      feedrate,
-      self.g.state.replicator_max_feedrates,
-      self.g.state.replicator_steps_per_mm
-    )
+        initial_position, 
+        expected_position, 
+        feedrate,
+        self.g.state.GetAxesValues('max_feedrate'),
+        self.g.state.GetAxesValues('steps_per_mm'),
+        )
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
     for i in range(len(expected_position)):
-      expected_position[i] *= self.g.state.replicator_steps_per_mm[i]
-
-    actual_params = self.mock.mock_calls[0][1]
-
-    for expected, actual in zip(expected_position, actual_params[0]):
-      self.assertAlmostEquals(expected, actual)
-    self.assertAlmostEquals(dda_speed, actual_params[1])
+      expected_position[i] *= spmList[i]
+    self.mock.QueueExtendedPoint.assert_called_once_with(expected_position, dda_speed)
 
   def test_dwell_all_codes_accounted_for(self):
     codes = 'P'
@@ -852,7 +846,7 @@ class gcodeTests(unittest.TestCase):
     self.mock.SetToolheadTemperature.assert_called_once_with(tool_index, temperature)
 
   def test_set_toolhead_temperature_t_code_defined(self):
-    tool_index = 2
+    tool_index=0
     temperature = 100
 
     codes = {'S'  : temperature, 'T' :  tool_index}
@@ -883,7 +877,7 @@ class gcodeTests(unittest.TestCase):
     self.mock.SetPlatformTemperature.assert_called_once_with(self.g.state.values['tool_index'], 100)
 
   def test_set_platform_temperature_t_code_Defined(self):
-    tool_index = 2
+    tool_index=0
     codes = {'S'  : 100,  'T' : tool_index}
     self.g.SetPlatformTemperature(codes, [], '')
     self.mock.SetPlatformTemperature.assert_called_once_with(tool_index, 100)
@@ -975,7 +969,7 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[133][2])
 
   def test_wait_for_tool_ready_no_p_or_t_codes(self):
-    tool_index = 2
+    tool_index=0
     self.g.state.values['tool_index'] = tool_index
     codes = {}
     flags = []
@@ -983,8 +977,8 @@ class gcodeTests(unittest.TestCase):
     self.g.WaitForToolReady(codes, flags, comment)
     self.mock.WaitForToolReady.assert_called_once_with(
       tool_index,
-      s3g.Gcode.wait_for_toolhead_delay,
-      self.g.state.values['waiting_timeout']
+      self.g.state.wait_for_ready_packet_delay,
+      self.g.state.wait_for_ready_timeout
     )
 
   def test_wait_for_tool_read_no_p_or_t_codes_no_set_toolhead(self):
@@ -994,30 +988,34 @@ class gcodeTests(unittest.TestCase):
     self.assertRaises(s3g.Gcode.NoToolIndexError, self.g.WaitForToolReady, codes, flags, comments)
 
   def test_wait_for_tool_ready_no_p_code(self):
-    tool_index = 2
+    tool_index=0
     codes = {'T'  : tool_index}
     flags = []
     comment = ''
     self.g.WaitForToolReady(codes, flags, comment)
     self.mock.WaitForToolReady.assert_called_once_with(
       tool_index,
-      s3g.Gcode.wait_for_toolhead_delay,
-      self.g.state.values['waiting_timeout']
+      self.g.state.wait_for_ready_packet_delay,
+      self.g.state.wait_for_ready_timeout
     )
     self.assertEqual(tool_index, self.g.state.values['tool_index'])
 
   def test_wait_for_tool_ready_no_t_code(self):
-    tool_index = 2
+    tool_index=0
     self.g.state.values['tool_index'] = tool_index
     timeout = 42
     codes = {'P' : timeout}
     flags = []
     comment = ''
     self.g.WaitForToolReady(codes, flags, comment)
-    self.mock.WaitForToolReady.assert_called_once_with(tool_index, s3g.Gcode.wait_for_toolhead_delay, timeout)
+    self.mock.WaitForToolReady.assert_called_once_with(
+        tool_index, 
+        self.g.state.wait_for_ready_packet_delay,
+        timeout
+        )
 
   def test_wait_for_tool_ready(self):
-    tool_index = 2
+    tool_index=0
     timeout = 42
     codes = {
         'T' : tool_index,
@@ -1026,7 +1024,11 @@ class gcodeTests(unittest.TestCase):
     flags = []
     comments = ''
     self.g.WaitForToolReady(codes, flags, comments)
-    self.mock.WaitForToolReady.assert_called_once_with(tool_index, s3g.Gcode.wait_for_toolhead_delay, timeout)
+    self.mock.WaitForToolReady.assert_called_once_with(
+        tool_index, 
+        self.g.state.wait_for_ready_packet_delay,
+        timeout
+        )
     self.assertEqual(tool_index, self.g.state.values['tool_index'])
 
   def test_wait_for_platform_ready_all_codes_accounted_for(self):
@@ -1036,15 +1038,15 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[134][2])
 
   def test_wait_for_platform_no_p_or_t_codes(self):
-    self.g.state.values['platform_index'] = 2
+    self.g.state.values['platform_index'] = 0
     codes = {}
     flags = []
     comments = ''
     self.g.WaitForPlatformReady(codes, flags, comments)
     self.mock.WaitForPlatformReady.assert_called_once_with(
         self.g.state.values['platform_index'],
-        s3g.Gcode.wait_for_platform_delay,
-        self.g.state.values['waiting_timeout']
+        self.g.state.wait_for_ready_packet_delay,
+        self.g.state.wait_for_ready_timeout,
         )
 
   def test_wait_for_platform_no_p_or_t_codes_no_defined_platform_index(self):
@@ -1060,34 +1062,34 @@ class gcodeTests(unittest.TestCase):
     )
 
   def test_wait_for_platform_no_p_code_defines(self):
-    platform_index = 2
+    platform_index = 0
     codes = {'T'  : platform_index}
     flags = []
     comments = ''
     self.g.WaitForPlatformReady(codes, flags, comments)
     self.mock.WaitForPlatformReady.assert_called_once_with(
         platform_index,
-        s3g.Gcode.wait_for_platform_delay,
-        self.g.state.values['waiting_timeout']
+        self.g.state.wait_for_ready_packet_delay,
+        self.g.state.wait_for_ready_timeout
         )
     self.assertEqual(self.g.state.values['platform_index'], platform_index)
 
   def test_wait_for_platform_no_t_code_defined(self):
     timeout = 42
-    self.g.state.values['platform_index'] = 2
+    self.g.state.values['platform_index'] = 0
     codes = {'P'  : timeout}
     flags = []
     comments = ''
     self.g.WaitForPlatformReady(codes, flags, comments)
     self.mock.WaitForPlatformReady.assert_called_once_with(
         self.g.state.values['platform_index'],
-        s3g.Gcode.wait_for_platform_delay,
+        self.g.state.wait_for_ready_packet_delay,
         timeout
         )
 
   def test_wait_for_platform_all_codes_defined(self):
     timeout = 42
-    platform_index = 2
+    platform_index = 0
     codes = {
         'T' : platform_index,
         'P' : timeout,
@@ -1097,7 +1099,7 @@ class gcodeTests(unittest.TestCase):
     self.g.WaitForPlatformReady(codes, flags, comments)
     self.mock.WaitForPlatformReady.assert_called_once_with(
         platform_index,
-        s3g.Gcode.wait_for_platform_delay,
+        self.g.state.wait_for_ready_packet_delay,
         timeout,
         )
     self.assertEqual(self.g.state.values['platform_index'], platform_index)

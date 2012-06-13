@@ -8,6 +8,7 @@ from errors import *
 
 class GcodeStates(object):
   def __init__(self):
+    self.profile = None
     self.position = {    #Position, In MM!!
         'X' : None,
         'Y' : None,
@@ -33,35 +34,10 @@ class GcodeStates(object):
                 },
         }
 
-    self.values = {
-        'waiting_timeout'   :  8*60,
-        }
-
+    self.values = {}
+    self.wait_for_ready_packet_delay = 100  #ms
+    self.wait_for_ready_timeout =   480  #seconds
     self.offset_register = None   #Curent offset register
-    self.findingTimeout = 60      #Timeout used when finding minimums/maximums
-
-    # Feedrate to try when making rapid motions
-    # TODO: use the max feedrates instead of this.
-    self.rapidFeedrate = 1200
-
-    # TODO: Move these out of here
-    self.replicator_max_feedrates = [
-      18000,
-      18000,
-      1170,
-      1600,
-      1600,
-    ]
-
-    # Steps per milimeter conversions for a machine
-    # TODO: This only works for a replicator
-    self.replicator_steps_per_mm = [
-      94.140,
-      94.140,
-      400,
-      -96.275,
-      -96.275,
-    ]
   
   def LosePosition(self, axes):
     """Given a set of axes, loses the position of
@@ -114,3 +90,22 @@ class GcodeStates(object):
       raise TypeError
     else:
       self.values['build_name'] = build_name
+
+  def GetAxesValues(self, key):
+    """
+    Given a key, returns a list of all 
+    axis values for that key.  If an axis
+    if missing from the machine profile, put a 0
+    in its place.
+    @param string key: the key to use when ascertaining
+      info for each axis
+    @return list: List of values for the key of each axis
+    """ 
+    axes = ['X', 'Y', 'Z', 'A', 'B']
+    values = []
+    for axis in axes:
+      if axis in self.profile.values['axes']:
+        values.append(self.profile.values['axes'][axis][key])
+      else:
+        values.append(0)
+    return values
