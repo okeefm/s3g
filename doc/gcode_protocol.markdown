@@ -90,24 +90,6 @@ These are the rules used to parse commands:
 
 # Supported G Codes
 
-## G0 - Rapid positioning
-Move to the specified position at the maximum feedrate.
-
-Registers
-
-    X: (code, optional) If present, new X axis position, in mm
-    Y: (code, optional) If present, new Y axis position, in mm
-    Z: (code, optional) If present, new Z axis position, in mm
-
-S3g output
-
-    QueueExtendedPoint(point, rate)
-
-Parameters
-
-    point = If the extruder is configured as off, then the point will be the position currently 
-    rate = 500
-
 ## G1 - Linear interpolation
 Move to the specified position at the current or specified feedrate.
 NB: There are two methods of forming the G1 command:

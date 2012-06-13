@@ -180,45 +180,6 @@ class gcodeTests(unittest.TestCase):
     self.mock.BuildEndNotification.assert_called_once_with()
     self.assertEqual(None, self.g.state.values['build_name'])
 
-  def test_rapid_position_all_codes_accounted_for(self):
-    codes = 'XYZ'
-    flags = ''
-    self.assertEqual(self.g.GCODE_INSTRUCTIONS[0][1], codes)
-    self.assertEqual(self.g.GCODE_INSTRUCTIONS[0][2], flags)
-
-  def test_rapid_position(self):
-    initial_position = [1, 2, 3, 4, 5]
-    expected_position = [6, 7, 8, 4, 5]
-    self.g.state.position = {
-        'X' : initial_position[0],
-        'Y' : initial_position[1],
-        'Z' : initial_position[2],
-        'A' : initial_position[3],
-        'B' : initial_position[4],
-        } 
-    codes = {
-        'X' : expected_position[0],
-        'Y' : expected_position[1],
-        'Z' : expected_position[2],
-        }
-    self.g.RapidPositioning(codes,[], '')
-    rapid_feedrate = 1200     #This is the rapid feedrate baked into the gcode state machine
-    dda_speed = s3g.Gcode.CalculateDDASpeed(
-        initial_position, 
-        expected_position, 
-        rapid_feedrate, 
-        self.g.state.GetAxesValues('max_feedrate'), 
-        self.g.state.GetAxesValues('steps_per_mm')
-        )
-    spmList = self.g.state.GetAxesValues('steps_per_mm')
-    for i in range(len(spmList)):
-      expected_position[i] *= spmList[i]
-    actual_params = self.mock.mock_calls[0][1]
-
-    for expected, actual in zip(expected_position, actual_params[0]):
-      self.assertAlmostEquals(expected, actual)
-    self.assertAlmostEquals(dda_speed, actual_params[1])
- 
   def test_store_offsets_all_codes_accounted_for(self):
     codes = 'XYZP'
     flags = ''

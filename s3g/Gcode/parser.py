@@ -21,7 +21,6 @@ class GcodeParser(object):
     # [2] : allowed flags
 
     self.GCODE_INSTRUCTIONS = {
-      0   : [self.RapidPositioning,            'XYZ',     ''],
       1   : [self.LinearInterpolation,         'XYZABEF', ''],
       4   : [self.Dwell,                       'P',       ''],
       10  : [self.StoreOffsets,                'XYZP',    ''],
@@ -312,26 +311,6 @@ class GcodeParser(object):
     designate P1 as the 0'th offset and P2 as the 1'th offset....dumb
     """
     self.state.StoreOffset(codes['P']-1, [codes['X'], codes['Y'], codes['Z']])
-
-  def RapidPositioning(self, codes, flags, comment):
-    """Using a preset rapid feedrate, moves the XYZ axes
-    to a specific location.
-    """
-    # TODO: This is bad- merge with linear interpolation.
-    current_point = self.state.GetPosition()
-    self.state.SetPosition(codes)
-    dda_speed = CalculateDDASpeed(
-      current_point, 
-      self.state.GetPosition(), 
-      self.state.profile.values['rapid_movement_feedrate'],
-      self.state.GetAxesValues('max_feedrate'),
-      self.state.GetAxesValues('steps_per_mm'),
-       )
-    stepped_point = MultiplyVector(
-        self.state.GetPosition(), 
-        self.state.GetAxesValues('steps_per_mm')
-        )
-    self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
 
   def AbsoluteProgramming(self, codes, flags, comment):
     """Set the programming mode to absolute
