@@ -138,5 +138,6 @@
       ]
   },
   "rapid_feedrate"  : 1200,
-  "find_axis_max_min_timeout"  : 20
+  "find_axis_maximum_timeout"  : 20,
+  "find_axis_minimum_timeout"  : 20
 }
