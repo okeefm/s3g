@@ -24,6 +24,8 @@ r.writer = s3g.Writer.StreamWriter(file)
 parser = s3g.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
 parser.s3g = r
+profile = s3g.Profile("ReplicatorDual")
+parser.state.profile = profile
 
 with open(options.filename) as f:
   for line in f:
