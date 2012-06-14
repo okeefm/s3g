@@ -58,6 +58,11 @@ class GcodeParser(object):
     Execute a line of gcode
     @param string command Gcode command to execute
     """
+    #If command is in unicode, encode it into ascii
+    if isinstance(command, unicode):
+      command = command.encode("utf8")
+    elif not isinstance(command, str):
+      raise ImproperGcodeEncodingError
 
     try:
       codes, flags, comment = ParseLine(command)

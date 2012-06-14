@@ -16,11 +16,16 @@ class SingleHeadReading(unittest.TestCase):
     self.profile = s3g.Profile('ReplicatorSingle')
     self.s.profile = self.profile
     self.p.state = self.s
-    self.p.s3g =  mock.Mock(s3g.s3g)
+    self.s3g = s3g.s3g()
+    self.writer = s3g.Writer.FileWriter(open('test.s3g', 'w'))
+    self.s3g.writer = self.writer
+    self.p.s3g = self.s3g
 
   def tearDown(self):
     self.profile = None
     self.s = None
+    self.writer = None
+    self.s3g = None
     self.p = None
 
 
@@ -42,11 +47,16 @@ class DualHeadReading(unittest.TestCase):
     self.profile = s3g.Profile('ReplicatorDual')
     self.s.profile = self.profile
     self.p.state = self.s
-    self.p.s3g =  mock.Mock(s3g.s3g)
+    self.s3g = s3g.s3g()
+    self.writer = s3g.Writer.FileWriter(open('test.s3g', 'w'))
+    self.s3g.writer = self.writer
+    self.p.s3g = self.s3g
 
   def tearDown(self):
     self.profile = None
     self.s = None
+    self.writer = None
+    self.s3g = None
     self.p = None
 
   def test_dual_head_skeinforge_hilbert_cube(self):

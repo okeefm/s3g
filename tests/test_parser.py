@@ -24,6 +24,21 @@ class gcodeTests(unittest.TestCase):
     self.mock = None
     self.g = None
 
+  def test_check_cant_read_non_unicde_non_ascii(self):
+    command = 92
+    self.assertRaises(s3g.Gcode.ImproperGcodeEncodingError, self.g.ExecuteLine, command)
+
+  def test_check_can_read_unicode(self):
+    command = "G92 X0 Y0 Z0 A0 B0"
+    command = unicode(command)
+    self.g.ExecuteLine(command)
+    self.mock.SetExtendedPosition.assert_called_once_with([0,0,0,0,0])
+
+  def test_check_can_read_ascii(self):
+    command = "G92 X0 Y0 Z0 A0 B0"
+    self.g.ExecuteLine(command)
+    self.mock.SetExtendedPosition.assert_called_once_with([0,0,0,0,0])
+
   def test_check_gcode_errors_are_recorded_correctly(self):
     command = "G161 Q1" #NOTE: this assumes that G161 does not accept a Q code
     expectedValues = {
