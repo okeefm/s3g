@@ -345,7 +345,7 @@ class FindLongestAxisTests(unittest.TestCase):
     for case in cases:
       self.assertEqual(case[1], s3g.Gcode.FindLongestAxis(case[0]))
 
-class CalculateDDASpeedTests(unittest.TestCase):
+class CalculateDDASpeedTestsWithReplicatorDual(unittest.TestCase):
   def setUp(self):
     self.profile = s3g.Profile("ReplicatorDual")
     self.g = s3g.Gcode.GcodeStates()
