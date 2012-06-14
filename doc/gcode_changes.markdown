@@ -12,19 +12,38 @@ The following commands will make the Gcode Parser lose its location:
 ###Tool Changes
 Previously, whenever the Gcode Parser encountered a T command, the internal Gcode State Machine would be updated with that tool_index, and a ChangeTool command would be sent to the machine.  This caused an excessive amount of bloat to the parser, so we now only change the tool_index and send a ChangeTool command to the machine is we receive the new M135 ChangeTool command.  However, due to our need to support E commands, we still update the Gcode State Machine's tool_index.
 
-###Mangatory T codes
+###Mandatory T codes
 All G and M codes that include a T code must now include that code.  If excluded, a MissingCodeError will be thrown.
+
+##Gcode Chanages
+###M161 Find Axes Minimums
+Addition
+
+    Added a D command, which specifies a DDA speed in microseconds/step to move at
+
+Removals
+
+    The F command which specified a feedrate to move at.  In order to derive a feedrate, a displacement vector needs to be calculated between the current position and the position the machine is traveling to.  This is impossible with the G161 command, since the State Machine has no idea where it is moving to when this action starts.  Due to the displacement vector being the sine qua non of DDA calculations, a DDA speed must be explicitely specified instead of derived (this in turn makes the specified feedrate useless) 
+
+###M162 Find Axes Maximums
+Addition
+
+    Added a D command, which specifies a DDA speed in microseconds/step to move at
+
+Removals
+
+    The F command which specified a feedrate to move at.  In order to derive a feedrate, a displacement vector needs to be calculated between the current position and the position the machine is traveling to.  This is impossible with the G162 command, since the State Machine has no idea where it is moving to when this action starts.  Due to the displacement vector being the sine qua non of DDA calculations, a DDA speed must be explicitely specified instead of derived (this in turn makes the specified feedrate useless) 
 
 ##Gcode Command Additions
 ###M133 Wait For Tool Ready
 Reason for Addition:
 
-    The M6 code was insufficient to achieve proper functionality, so it this addition was necessary.
+    The M6 code is a generic Wait For Tool command that will wait for all tools to heat up in with a given index.  This command was deemed to open ended, and bifurcated into a Wait For Tool command and a Wait For Platform command.
 
-###M134 Wait For Tool Ready
+###M134 Wait For Platform Ready
 Reason for Addition:
 
-    The M6 code was insufficient to achieve proper functionality, so it this addition was necessary.
+    The M6 code is a generic Wait For Tool command, that will wait for all tools in with a given index.  This command was deemed to open ended, and bifurcated into a Wait For Tool command and a Wait For Platform command.
 
 ###M135 Change Tool
 Reason For Addition:

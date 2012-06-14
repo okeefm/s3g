@@ -299,7 +299,7 @@ Instruct the machine to home the specified axes to their minimum position.
 
 Registers
 
-    F: (code, optional) Homing feedrate, in mm/min (TODO: Is this correct?)
+    D: (code, optional) Movement DDA speed in microseconds/step
     X: (flag, optional) If present, home the x axis to its minimum position
     Y: (flag, optional) If present, home the y axis to its minimum position
     Z: (flag, optional) If present, home the z axis to its minimum position
@@ -319,7 +319,7 @@ Instruct the machine to home the specified axes to their maximum position.
 
 Registers
 
-    F: (code, optional) Homing feedrate, in mm/min (TODO: Is this corect?)
+    D: (code, optional) Movement DDA speed in microseconds/step
     X: (flag, optional) If present, home the x axis to its maximum position
     Y: (flag, optional) If present, home the y axis to its maximum position
     Z: (flag, optional) If present, home the z axis to its maximum position
