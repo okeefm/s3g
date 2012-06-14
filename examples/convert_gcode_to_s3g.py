@@ -23,6 +23,8 @@ parser = s3g.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
 parser.state.profile = s3g.Profile(options.machine)
 parser.s3g = s
+profile = s3g.Profile('ReplicatorDual')
+parser.state.profile = profile
 
 with open(options.input_file) as f:
   for line in f:

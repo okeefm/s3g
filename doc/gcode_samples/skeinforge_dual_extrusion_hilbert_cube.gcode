@@ -5,7 +5,7 @@ G90 (set positioning to absolute)
 G10 P1 X-16.5 Y0 Z0 (Designate T0 Offset)
 G10 P2 X16.5 Y0 Z0 (Designate T1 Offset)
 G54 (Recall offset cooridinate system for T0)
-**** begin homing ****)
+(**** begin homing ****)
 G162 X Y F2500 (home XY axes maximum)
 G161 Z F1100 (home Z axis minimum)
 G92 X0 Y0 Z-5 A0 B0 (set Z to -5)
@@ -25,7 +25,7 @@ M133 T0 (wait for extruder 0 to reach temperature)
 M133 T1 (wait for extruder 1 to reach temperature)
 G130 X127 Y127 A127 B127 (Set Stepper motor Vref to defaults)
 
-G0 Z0.5          (Position Height)
+G1 Z0.5          (Position Height)
 G1 E4 F50.0      (Create Anchor)
 G92 E0
 (**** end of start.gcode ****)
@@ -81331,7 +81331,7 @@ G1 F2400.0
 M103
 (******* End.gcode*******)
 M73 P100 (end  build progress )
-G0 Z155
+G1 Z155
 M18
 M109 S0 T0
 M104 S0 T0

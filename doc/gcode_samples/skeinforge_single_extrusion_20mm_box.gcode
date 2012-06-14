@@ -29,7 +29,7 @@ M133 T0 (wait for extruder 0 to reach temperature)
 G130 X127 Y127 A127 B127 (Set Stepper motor Vref to defaults)
 
 M108 R3.0 T0
-G0 Z0.2      (Position Height)
+G1 Z0.2      (Position Height)
 G1 A2.0      (Create Anchor)
 M108 R4.0    (Set Extruder Speed)
 M101         (Start Extruder)
@@ -4770,7 +4770,7 @@ M104 S0
 ;M113 S0.0
 (******* End.gcode*******)
 M73 P100 ( End  build progress )
-G0 Z150 ( Send Z axis to bottom of machine )
+G1 Z150 ( Send Z axis to bottom of machine )
 M18 ( Disable steppers )
 M109 S0 T0 ( Cool down the build platform )
 M104 S0 T0 ( Cool down the Right Extruder )
