@@ -89,7 +89,6 @@
     "M18 (Turn off steppers after a build)",
     "(*********end End.gcode*******)"
   ],
-  "rapid_movement_feedrate"  : 1200,
   "find_axis_maximum_timeout"  : 20,
   "find_axis_minimum_timeout"  : 20
 }
