@@ -76,13 +76,14 @@ class DualHeadReading(unittest.TestCase):
     ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode'), self.p) 
 
 def ExecuteFile(theFile, parser):
+  environment = {}
   for line in parser.state.profile.values['print_start_sequence']:
-    parser.ExecuteLine(line)
+    parser.ExecuteLine(line, environment)
   with open(theFile) as f:
     for line in f:
-      parser.ExecuteLine(line)
+      parser.ExecuteLine(line, environment)
   for line in parser.state.profile.values['print_end_sequence']:
-    parser.ExecuteLine(line)
+    parser.ExecuteLine(line, environment)
 
 if __name__ == '__main__':
   unittest.main()

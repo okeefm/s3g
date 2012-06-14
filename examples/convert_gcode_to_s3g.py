@@ -26,6 +26,7 @@ parser.s3g = s
 profile = s3g.Profile('ReplicatorDual')
 parser.state.profile = profile
 
+environment = {}
 with open(options.input_file) as f:
   for line in f:
-    parser.ExecuteLine(line)
+    parser.ExecuteLine(line, environment)
