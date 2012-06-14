@@ -819,7 +819,6 @@ class s3g(object):
       row, 
       timeout,
     )
-
     payload += message
     payload += '\x00'
 

@@ -30,8 +30,8 @@ class GcodeParser(object):
       90  : [self.AbsoluteProgramming,         '',        ''],
       92  : [self.SetPosition,                 'XYZABE',  ''],
       130 : [self.SetPotentiometerValues,      'XYZAB',   ''],
-      161 : [self.FindAxesMinimums,            'F',       'XYZ'],
-      162 : [self.FindAxesMaximums,            'F',       'XYZ'],
+      161 : [self.FindAxesMinimums,            'D',       'XYZ'],
+      162 : [self.FindAxesMaximums,            'D',       'XYZ'],
 }
 
     self.MCODE_INSTRUCTIONS = {
@@ -56,6 +56,11 @@ class GcodeParser(object):
     Execute a line of gcode
     @param string command Gcode command to execute
     """
+    #If command is in unicode, encode it into ascii
+    if isinstance(command, unicode):
+      command = command.encode("utf8")
+    elif not isinstance(command, str):
+      raise ImproperGcodeEncodingError
 
     try:
       codes, flags, comment = ParseLine(command)
@@ -128,34 +133,18 @@ class GcodeParser(object):
     or endstop is reached
     This function loses the state machine's position.
     """
-    if 'F' in codes:
-      self.state.values['feedrate'] = codes['F']
     self.state.LosePosition(flags)
     axes = ParseOutAxes(flags) 
-    try:
-      feedrate = self.state.values['feedrate']
-      self.s3g.FindAxesMaximums(axes, feedrate, self.state.profile.values['find_axis_maximum_timeout'])
-    except KeyError as e:
-      if e[0] == 'feedrate':
-        e = KeyError('F')
-      raise e
+    self.s3g.FindAxesMaximums(axes, codes['D'], self.state.profile.values['find_axis_maximum_timeout'])
 
   def FindAxesMinimums(self, codes, flags, comment):
     """Moves the given axes in the negative direction until a timeout
     or endstop is reached.
     This function loses the state machine's position.
     """
-    if 'F' in codes:
-      self.state.values['feedrate'] = codes['F']
     self.state.LosePosition(flags) 
     axes = ParseOutAxes(flags)
-    try:
-      feedrate = self.state.values['feedrate']
-      self.s3g.FindAxesMinimums(axes, feedrate, self.state.profile.values['find_axis_minimum_timeout'])
-    except KeyError as e:
-      if e[0] == 'feedrate':
-        e = KeyError('F')
-      raise e
+    self.s3g.FindAxesMinimums(axes, codes['D'], self.state.profile.values['find_axis_minimum_timeout'])
 
   def SetPosition(self, codes, flags, comment):
     """Explicitely sets the position of the state machine and bot

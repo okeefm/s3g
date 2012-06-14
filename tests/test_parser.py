@@ -24,6 +24,21 @@ class gcodeTests(unittest.TestCase):
     self.mock = None
     self.g = None
 
+  def test_check_cant_read_non_unicde_non_ascii(self):
+    command = 92
+    self.assertRaises(s3g.Gcode.ImproperGcodeEncodingError, self.g.ExecuteLine, command)
+
+  def test_check_can_read_unicode(self):
+    command = "G92 X0 Y0 Z0 A0 B0"
+    command = unicode(command)
+    self.g.ExecuteLine(command)
+    self.mock.SetExtendedPosition.assert_called_once_with([0,0,0,0,0])
+
+  def test_check_can_read_ascii(self):
+    command = "G92 X0 Y0 Z0 A0 B0"
+    self.g.ExecuteLine(command)
+    self.mock.SetExtendedPosition.assert_called_once_with([0,0,0,0,0])
+
   def test_check_gcode_errors_are_recorded_correctly(self):
     command = "G161 Q1" #NOTE: this assumes that G161 does not accept a Q code
     expectedValues = {
@@ -308,16 +323,6 @@ class gcodeTests(unittest.TestCase):
       expectedPosition[i] *= spmList[i]
     self.mock.SetExtendedPosition.assert_called_once_with(expectedPosition)
 
-  def test_find_Axes_maximum_missing_feedrate(self):
-    codes = {"G" : 162}
-    self.assertRaises(KeyError, self.g.FindAxesMaximums, codes, [], '')
-
-  def test_find_axes_maximums_all_codes_accounted_for(self):
-    codes = 'F'
-    flags = 'XYZ'
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[162][1])
-    self.assertEqual(sorted(flags), sorted(self.g.GCODE_INSTRUCTIONS[162][2]))
-
   def test_set_potentiometer_values_all_codes_accounted_for(self):
     codes = 'XYZAB'
     flags = ''
@@ -361,27 +366,10 @@ class gcodeTests(unittest.TestCase):
     Tests to make sure that throwing all registers in a command doesnt raise an
     extra register error.
     """
-    codes = 'F'
+    codes = 'D'
     flags = 'XYZ'
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[161][1])
     self.assertEqual(sorted(flags), sorted(self.g.GCODE_INSTRUCTIONS[161][2]))
-
-  def test_find_axes_minimum_no_feedrate_state_feedrate_not_set(self):
-    flags = ['X']
-    self.assertRaises(KeyError, self.g.FindAxesMinimums, {}, flags, '') 
-
-  def test_find_axes_minimum_no_feedrate_state_feedrate_set(self):
-    feedrate = 1
-    self.g.state.values['feedrate'] = feedrate
-    flags = ['X']
-    self.g.FindAxesMinimums({}, flags, '')
-    self.mock.FindAxesMinimums.assert_called_once_with(flags, feedrate, self.g.state.profile.values["find_axis_minimum_timeout"])
-
-  def test_find_axes_minimums(self):
-    codes = 'F'
-    flags = 'XYZ'
-    self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[161][1]))
-    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[161][2])
 
   def test_find_axes_minimum(self):
     self.g.state.position = {
@@ -391,13 +379,13 @@ class gcodeTests(unittest.TestCase):
           'A' : 4,
           'B' : 5,
           }
-    codes = {'F':0}
+    dda_speed = 5
+    codes = {'D':dda_speed}
     flags = ['X', 'Y', 'Z']
     axes = flags
-    feedrate = 0
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMinimums(codes, flags, '')
-    self.mock.FindAxesMinimums.assert_called_once_with(axes, feedrate, timeout)
+    self.mock.FindAxesMinimums.assert_called_once_with(axes, dda_speed, timeout)
     expectedPosition = {
         'X'   :   None,
         'Y'   :   None,
@@ -408,29 +396,25 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(expectedPosition, self.g.state.position)
 
   def test_find_axes_minimum_no_axes(self):
-    codes = {'F':0}
+    dda_speed = 5
+    codes = {'D' : dda_speed}
     axes = []
-    feedrate = 0
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMinimums(codes, [], '')
-    self.mock.FindAxesMinimums.assert_called_once_with(axes, feedrate, timeout)
+    self.mock.FindAxesMinimums.assert_called_once_with(axes, dda_speed, timeout)
+
+  def test_find_axes_minimum_no_d_code(self):
+    codes = {}
+    flags = []
+    comments = ''
+    self.assertRaises(KeyError, self.g.FindAxesMinimums, codes, flags, comments)
+
 
   def test_find_axes_maximums_all_codes_accounted_for(self):
-    codes = 'F'
+    codes = 'D'
     flags = 'XYZ'
     self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[162][1]))
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[162][2])
-
-  def test_find_axes_maximums_no_feedrate_feedrate_not_set(self):
-    flags = ['X']
-    self.assertRaises(KeyError, self.g.FindAxesMaximums, {}, flags, '')
-
-  def test_find_axes_maximums_no_feedrate_feedrate_set(self):
-    feedrate = 1
-    self.g.state.values['feedrate'] = feedrate
-    flags = ['X']
-    self.g.FindAxesMaximums({}, flags, '')
-    self.mock.FindAxesMaximums.assert_called_once_with(flags, feedrate, self.g.state.profile.values['find_axis_maximum_timeout'])  
 
   def test_find_axes_maximum(self):
     self.g.state.position = {
@@ -440,13 +424,14 @@ class gcodeTests(unittest.TestCase):
         'A'   :   4,
         'B'   :   5
         }
-    codes = {'F':0}
+    dda_speed = 5
+    codes = {'D' : dda_speed}
     flags = ['X', 'Y', 'Z']
     axes = flags
     feedrate = 0
     timeout = self.g.state.profile.values['find_axis_maximum_timeout']
     self.g.FindAxesMaximums(codes, flags, '')
-    self.mock.FindAxesMaximums.assert_called_once_with(axes, feedrate, timeout)
+    self.mock.FindAxesMaximums.assert_called_once_with(axes, dda_speed, timeout)
     expectedPosition = {
         'X'   :   None,
         'Y'   :   None,
@@ -457,12 +442,18 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(expectedPosition, self.g.state.position)
 
   def test_find_axes_maximum_no_axes(self):
-    codes = {'F':0}
+    dda_speed = 5
+    codes = {'D' : dda_speed}
     axes = []
-    feedrate = 0
-    timeout = self.g.state.profile.values['find_axis_maximum_timeout']
+    timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMaximums(codes, [], '')
-    self.mock.FindAxesMaximums.assert_called_once_with(axes, feedrate, timeout)
+    self.mock.FindAxesMaximums.assert_called_once_with(axes, dda_speed, timeout)
+
+  def test_find_axes_maximum_no_d_code(self):
+    codes = {}
+    flags = []
+    comments = ''
+    self.assertRaises(KeyError, self.g.FindAxesMaximums, codes, flags, comments)
 
   def test_linear_interpolation_all_codes_accounted_for(self):
     codes = 'XYZABEF'

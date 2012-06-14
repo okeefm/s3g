@@ -345,63 +345,90 @@ class FindLongestAxisTests(unittest.TestCase):
     for case in cases:
       self.assertEqual(case[1], s3g.Gcode.FindLongestAxis(case[0]))
 
-class CalculateDDASpeedTests(unittest.TestCase):
+class CalculateDDASpeedTestsWithReplicatorDual(unittest.TestCase):
   def setUp(self):
-    profile = s3g.Profile("ReplicatorDual")
+    self.profile = s3g.Profile("ReplicatorDual")
     self.g = s3g.Gcode.GcodeStates()
-    self.g.profile = profile
+    self.g.profile = self.profile
+
+  def tearDown(self):
+    self.profile = None
+    self.g = None
 
   def test_zero_move(self):
-    initial_position = [0,0,0,0,0]
-    target_position =  [0,0,0,0,0]
-    target_feedrate = 0
-
-    self.assertRaises(
-        s3g.Gcode.VectorLengthZeroError, 
-        s3g.Gcode.CalculateDDASpeed, 
-        initial_position, 
-        target_position, 
-        target_feedrate, 
-        self.g.GetAxesValues('max_feedrate'), 
-        self.g.GetAxesValues('steps_per_mm')
-        )
+    self.assertRaises(s3g.Gcode.VectorLengthZeroError, generic_zero_move_test, self.g)
 
   def test_calculate_dda_speed_good_result(self):
-    # TODO: These cases assume a replicator with specific steps_per_mm
-    cases = [
-      [[100,0,0,0,0], [200,0,0,0,0], 200, 30000000/(self.g.profile.values['axes']['X']['steps_per_mm']*100)],    # Single axis, forward motion
-      [[0,100,0,0,0], [0,200,0,0,0], 300, 20000000/(self.g.profile.values['axes']['Y']['steps_per_mm']*100)],
-      [[0,0,100,0,0], [0,0,200,0,0], 300, 20000000/(self.g.profile.values['axes']['Z']['steps_per_mm']*100)],
-      [[200,0,0,0,0], [100,0,0,0,0], 200, 30000000/(self.g.profile.values['axes']['X']['steps_per_mm']*100)],    # Single axis, reverse motion
-      [[0,0,0,0,0],   [1,1,1,0,0],   100, 2598.0762113533156],        # Multiple axis, forward motion
-      ]
-
+    cases = generic_calculate_dda_speed_good_result(self.g)
     for case in cases:
-      dda_speed = s3g.Gcode.CalculateDDASpeed(
-          case[0], 
-          case[1], 
-          case[2], 
-          self.g.GetAxesValues('max_feedrate'), 
-          self.g.GetAxesValues('steps_per_mm'))
-      self.assertAlmostEqual(case[3], dda_speed, 7)
+      self.assertAlmostEqual(case[0], case[1], 7)
 
+class DDASpeedTestsWithReplicatorSingle(unittest.TestCase):
+  """Because the parser is desinged to support a 5d machine, 
+  the ReplicatorSingle may pose a problem (since it lacks a 
+  B axis).  This problem becomes apparent when we query the 
+  machine profile for information about its axes.  To fix 
+  this probem, we always append a 0 when we encounter a missing
+  axis in the machine profile.  This fix could damage the DDA
+  speec calculating functions, so these tests will help us
+  track down any problems if they arise.
+  """
 
-#class ParseSampleGcodeFileTests(unittest.TestCase):
-#  def test_parse_files(self):
-#    # Terriable hack, to support running from the root or test directory.
-#    files = [t]
-#    path = '../doc/gcode_samples/'
-#    files += glob.glob(os.path.join(path, '*.gcode'))
-#    path = 'doc/gcode_samples/'
-#    files += glob.glob(os.path.join(path, '*.gcode'))
-#
-#    assert len(files) > 0
-#
-#    for file in files:
-#      with open(file) as lines:
-#        for line in lines:
-#          codes, flags, comment = s3g.Gcode.ParseLine(line)
+  def setUp(self):
+    self.profile = s3g.Profile('ReplicatorSingle')
+    self.g = s3g.Gcode.GcodeStates()
+    self.g.profile = self.profile
 
+  def tearDown(self):
+    self.profile = None
+    self.g = None
+
+  def test_zero_move(self):
+    self.assertRaises(s3g.Gcode.VectorLengthZeroError, generic_zero_move_test, self.g)
+
+  def test_calculate_dda_speed_good_result(self):
+    cases = generic_calculate_dda_speed_good_result(self.g)
+    for case in cases:
+      self.assertAlmostEqual(case[0], case[1], 7)
+
+def generic_zero_move_test(state):
+  """This function is used to test both replicator single and dual profiles
+  while calculating DDA speeds
+  """
+  initial_position = [0,0,0,0,0]
+  target_position =  [0,0,0,0,0]
+  target_feedrate = 0
+
+  s3g.Gcode.CalculateDDASpeed(
+      initial_position, 
+      target_position, 
+      target_feedrate, 
+      state.GetAxesValues('max_feedrate'), 
+      state.GetAxesValues('steps_per_mm')
+      )
+
+def generic_calculate_dda_speed_good_result(state):
+  """This function is used to test both replicator single and dual profiles
+  while calculating DDA speeds
+  """
+  # TODO: These cases assume a replicator with specific steps_per_mm
+  cases = [
+    [[100,0,0,0,0], [200,0,0,0,0], 200, 30000000/(state.profile.values['axes']['X']['steps_per_mm']*100)],    # Single axis, forward motion
+    [[0,100,0,0,0], [0,200,0,0,0], 300, 20000000/(state.profile.values['axes']['Y']['steps_per_mm']*100)],
+    [[0,0,100,0,0], [0,0,200,0,0], 300, 20000000/(state.profile.values['axes']['Z']['steps_per_mm']*100)],
+    [[200,0,0,0,0], [100,0,0,0,0], 200, 30000000/(state.profile.values['axes']['X']['steps_per_mm']*100)],    # Single axis, reverse motion
+    [[0,0,0,0,0],   [1,1,1,0,0],   100, 2598.0762113533156],        # Multiple axis, forward motion
+    ]
+
+  for case in cases:
+    dda_speed = s3g.Gcode.CalculateDDASpeed(
+        case[0], 
+        case[1], 
+        case[2], 
+        state.GetAxesValues('max_feedrate'), 
+        state.GetAxesValues('steps_per_mm'))
+    #Return a generator of the expected and calculated DDA speed
+    yield case[3], dda_speed
 
  
 if __name__ == "__main__":

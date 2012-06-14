@@ -16,6 +16,8 @@ parser.add_option("-f", "--filename", dest="filename",
                   help="gcode file to print", default=False)
 parser.add_option("-m", "--machine_type", dest="machine",
                   help="machine type", default="ReplicatorDual")
+parser.add_option("-s", "--gcode_start_end_sequences", dest="start_end_sequences",
+                  help="run gcode start and end proceeses", default=False)
 (options, args) = parser.parse_args()
 
 
@@ -27,8 +29,16 @@ parser = s3g.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
 parser.state.profile = s3g.Profile(options.machine)
 parser.s3g = r
+profile = s3g.Profile("ReplicatorSingle")
+parser.state.profile = profile
 
+if options.start_end_sequences:
+  for line in parser.state.profile.values['print_start_sequence']:
+    parser.ExecuteLine(line)
 with open(options.filename) as f:
   for line in f:
     print line,
+    parser.ExecuteLine(line)
+if options.start_end_sequences:
+  for line in parser.state.profile.values['print_end_sequence']:
     parser.ExecuteLine(line)
