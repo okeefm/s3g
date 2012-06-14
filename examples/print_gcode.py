@@ -14,6 +14,8 @@ parser.add_option("-b", "--baud", dest="serialbaud",
                   help="serial port baud rate", default="115200")
 parser.add_option("-f", "--filename", dest="filename",
                   help="gcode file to print", default=False)
+parser.add_option("-m", "--machine_type", dest="machine",
+                  help="machine type", default="ReplicatorDual")
 (options, args) = parser.parse_args()
 
 
@@ -23,6 +25,7 @@ r.writer = s3g.Writer.StreamWriter(file)
 
 parser = s3g.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
+parser.state.profile = s3g.Profile(options.machine)
 parser.s3g = r
 profile = s3g.Profile("ReplicatorDual")
 parser.state.profile = profile

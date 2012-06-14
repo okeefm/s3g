@@ -190,11 +190,11 @@ class TestProfileInformationParsing(unittest.TestCase):
   def test_get_axes_values(self):
     key = 'steps_per_mm'
     expected_values = [
-        94.139704,
-        94.139704,
+        94.139,
+        94.139,
         400,
-        96.275,
-        96.275,
+        -96.275,
+        -96.275,
         ]
     self.assertEqual(expected_values, self.g.GetAxesValues(key))
 
@@ -210,10 +210,10 @@ class MachineProfileWith4Axes(unittest.TestCase):
   def get_axes_values_with_one_0(self):
     key = 'steps_per_mm'
     expected_values = [
-        94.139704,
-        94.139704,
+        94.139,
+        94.139,
         400,
-        96.275201870333662468889989185642,
+        -96.275,
         0,
         ]
     self.assertEqual(expected_values, self.g.GetAxesValues(key))
