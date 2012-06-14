@@ -35,7 +35,6 @@ class GcodeParser(object):
 }
 
     self.MCODE_INSTRUCTIONS = {
-       6   : [self.WaitForToolhead,            'PT',      ''],
        18  : [self.DisableAxes,                '',        'XYZAB'],
        70  : [self.DisplayMessage,             'P',       ''],
        72  : [self.PlaySong,                   'P',       ''],
@@ -45,11 +44,11 @@ class GcodeParser(object):
        103 : [self.ExtruderOff,                'T',       ''],       #This command is explicitely ignored
        104 : [self.SetToolheadTemperature,     'ST',      ''],
        105 : [self.GetTemperature,             '',        ''],
-       108 : [self.SetExtruderSpeed,           'RT',      ''],   #This command is explicitely ignored
        109 : [self.SetPlatformTemperature,     'ST',      ''],
        132 : [self.LoadPosition,               '',        'XYZAB'],
        133 : [self.WaitForToolReady,           'PT',      ''],
        134 : [self.WaitForPlatformReady,       'PT',      ''],
+       135 : [self.ChangeTool,                 'T',       ''],
     }
 
   def ExecuteLine(self, command):
@@ -189,13 +188,11 @@ class GcodeParser(object):
     """Sets the state machine to use the P0 offset.
     """
     self.state.offset_register = 0
-    self.state.values['tool_index'] = 0
 
   def UseP1Offsets(self, codes, flags, comment):
     """Sets the state machine to use the P1 offset.
     """
     self.state.offset_register = 1
-    self.state.values['tool_index'] = 1
 
   def WaitForToolReady(self, codes, flags, comment):
     """
@@ -203,18 +200,13 @@ class GcodeParser(object):
     these codes are not defined (T and P respectively), the 
     default values in the gcode state is used.
     """
-    if 'T' in codes:
-      self.state.values['tool_index'] = codes['T']
-    elif 'tool_index' not in self.state.values:
-      raise NoToolIndexError
-
     if 'P' in codes:
       timeout = codes['P']
     else:
       timeout = self.state.wait_for_ready_timeout
 
     self.s3g.WaitForToolReady(
-        int(self.state.values['tool_index']), 
+        codes['T'],
         self.state.wait_for_ready_packet_delay,
         int(timeout)
         )
@@ -225,35 +217,12 @@ class GcodeParser(object):
     of these codes are not defined (T and P respectively), the
     default vaules in the gcode state is used.
     """
-    if 'T' in codes:
-      self.state.values['platform_index'] = codes['T']
-    elif 'platform_index' not in self.state.values:
-      raise NoToolIndexError
     if 'P' in codes:
       timeout = codes['P']
     else:
       timeout = self.state.wait_for_ready_timeout
     self.s3g.WaitForPlatformReady(
-        int(self.state.values['platform_index']), 
-        self.state.wait_for_ready_packet_delay,
-        int(timeout)
-        )
-
-  def WaitForToolhead(self, codes, flags, comment):
-    """Given a toolhead and a timeout, waits for that toolhead
-    to reach its target temperature.
-    """
-    # Handle optional codes
-    if 'T' in codes.keys():
-      self.state.values['tool_index'] = codes['T']
-    elif 'tool_index' not in self.state.values:
-      raise NoToolIndexError
-    if 'P' in codes:
-      timeout = codes['P']
-    else:
-      timeout = self.state.wait_for_ready_timeout
-    self.s3g.WaitForToolReady(
-        int(self.state.values['tool_index']), 
+        codes['T'],
         self.state.wait_for_ready_packet_delay,
         int(timeout)
         )
@@ -311,19 +280,6 @@ class GcodeParser(object):
     designate P1 as the 0'th offset and P2 as the 1'th offset....dumb
     """
     self.state.StoreOffset(codes['P']-1, [codes['X'], codes['Y'], codes['Z']])
-
-  def AbsoluteProgramming(self, codes, flags, comment):
-    """Set the programming mode to absolute
-    We are not implementing this command, so this is just a stub.
-    """
-    pass
-
-  def MilimeterProgramming(self, codes, flags, comment):
-    """
-    Set the programming mode to milimeters
-    This is a stub, since we dropped support for this function
-    """
-    pass
 
   def LinearInterpolation(self, codes, flags, comment):
     """Movement command that has two flavors: E and AB commands.
@@ -403,18 +359,14 @@ class GcodeParser(object):
     a specific temperature.  We set the state's tool_idnex to be the
     'T' code (if present) and use that tool_index when heating.
     """
-    if 'T' in codes:
-      self.state.values['tool_index'] = codes['T']
-    self.s3g.SetToolheadTemperature(int(self.state.values['tool_index']), int(codes['S']))
+    self.s3g.SetToolheadTemperature(codes['T'], int(codes['S']))
 
   def SetPlatformTemperature(self, codes, flags, comment):
     """Sets the platform temperature for a specific toolhead to a specific 
     temperature.  We set the state's tool_index to be the 'T' code (if present)
     and use that tool_index when heating.
     """
-    if 'T' in codes:
-      self.state.values['tool_index'] = codes['T']
-    self.s3g.SetPlatformTemperature(int(self.state.values['tool_index']), int(codes['S']))
+    self.s3g.SetPlatformTemperature(codes['T'], int(codes['S']))
 
   def LoadPosition(self, codes, flags, comment):
     """Loads the home positions for the XYZ axes from the eeprom
@@ -423,15 +375,14 @@ class GcodeParser(object):
     self.state.LosePosition(axes)
     self.s3g.RecallHomePositions(axes)
 
-  def SetExtruderSpeed(self, codes, flags, comment):
-    """Sets the max extruder speed in RPM and tool_index to T
+  def ChangeTool(self, codes, flags, comments):
+    """Sends a chagne tool command to the machine.
     """
-    if 'T' in codes:
-      self.state.tool_index = codes['T']
+    self.state.values['tool_index'] = codes['T']
+    self.s3g.ChangeTool(codes['T'])
 
   def BuildStartNotification(self):
-    """
-    Sends a build start notification command to the machine.
+    """Sends a build start notification command to the machine.
     """
     try:
       self.s3g.BuildStartNotification(self.state.values['build_name'])
@@ -439,12 +390,23 @@ class GcodeParser(object):
       raise NoBuildNameError
 
   def BuildEndNotification(self):
-    """
-    Sends a build end notification command to the machine
+    """Sends a build end notification command to the machine
     """
     self.state.values['build_name'] = None
 
     self.s3g.BuildEndNotification()
+
+  def AbsoluteProgramming(self, codes, flags, comment):
+    """Set the programming mode to absolute
+    This is a stub, since we dropped support for this function
+    """
+    pass
+
+  def MilimeterProgramming(self, codes, flags, comment):
+    """Set the programming mode to milimeters
+    This is a stub, since we dropped support for this function
+    """
+    pass
 
   def ExtruderOff(self, codes, flags, comment):
     """Turn the extruder off
