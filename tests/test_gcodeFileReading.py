@@ -17,11 +17,13 @@ class SingleHeadReading(unittest.TestCase):
     self.s.profile = self.profile
     self.p.state = self.s
     self.s3g = s3g.s3g()
-    self.writer = s3g.Writer.FileWriter(open('test.s3g', 'w'))
+    self.f = open('test.s3g', 'w')
+    self.writer = s3g.Writer.FileWriter(self.f)
     self.s3g.writer = self.writer
     self.p.s3g = self.s3g
 
   def tearDown(self):
+    self.f.close()
     self.profile = None
     self.s = None
     self.writer = None
@@ -48,11 +50,13 @@ class DualHeadReading(unittest.TestCase):
     self.s.profile = self.profile
     self.p.state = self.s
     self.s3g = s3g.s3g()
-    self.writer = s3g.Writer.FileWriter(open('test.s3g', 'w'))
+    self.f = open('test.s3g', 'w')
+    self.writer = s3g.Writer.FileWriter(self.f)
     self.s3g.writer = self.writer
     self.p.s3g = self.s3g
 
   def tearDown(self):
+    self.f.close()
     self.profile = None
     self.s = None
     self.writer = None
