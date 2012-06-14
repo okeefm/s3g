@@ -97,11 +97,14 @@ class GcodeParser(object):
         else:
           pass
     except KeyError as e:
-      gcode_error = MissingCodeError()
-      gcode_error.values['MissingCode'] = e[0]
-      gcode_error.values['LineNumber'] = self.line_number
-      gcode_error.values['Command'] = command
-      raise gcode_error
+      if e[0] == 'T':
+        TCodeNotDefinedWarning()
+      else:
+        gcode_error = MissingCodeError()
+        gcode_error.values['MissingCode'] = e[0]
+        gcode_error.values['LineNumber'] = self.line_number
+        gcode_error.values['Command'] = command
+        raise gcode_error
     except VectorLengthZeroError:
       pass
     except GcodeError as gcode_error:

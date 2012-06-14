@@ -1,3 +1,5 @@
+import warnings
+
 class GcodeError(ValueError):
   """
   Gcode errrors are raised when the gcode parser encounters an invalid line
@@ -109,3 +111,12 @@ class ImproperGcodeEncodingError(TypeError):
   An ImproperGcodeEncodingError is thrown when a Gcode Command is encountered that is not 
   encoded in either ASCII or unicode.
   """
+
+class TCodeNotDefinedWarning:
+  """
+  A TCodeNotDefinedWarning is raised when a command is executed that should have a T command
+  but does not.  We throw warnings to keep compatability with skeinforge, which tends to violate
+  our parser habitually.
+  """
+  def __init__(self):
+    warnings.warn("We are allowing commands that do not have T codes defined even though they should to pass through currently due to skeinforge compatability issues.  Once skeinforge has been fixed, these commands WILL cause errors.", FutureWarning)
