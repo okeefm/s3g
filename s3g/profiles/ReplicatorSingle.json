@@ -19,7 +19,7 @@
     "A" : {
       "length"        : 100000,
       "max_feedrate"  : 1600,
-      "steps_per_mm"  : 96.275
+      "steps_per_mm"  : -96.275
     }
   },
   "tools" :

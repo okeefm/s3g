@@ -1,34 +1,3 @@
-(**** start.gcode for The Replicator, Dualstrusion! ****)
-M73 P0 (enable build progress)
-G21 (set units to mm)
-G90 (set positioning to absolute)
-G10 P1 X-16.5 Y0 Z0 (Designate T0 Offset)
-G10 P2 X16.5 Y0 Z0 (Designate T1 Offset)
-G54 (Recall offset cooridinate system for T0)
-(**** begin homing ****)
-G162 X Y F2500 (home XY axes maximum)
-G161 Z F1100 (home Z axis minimum)
-G92 X0 Y0 Z-5 A0 B0 (set Z to -5)
-G1 Z0.0 (move Z to "0")
-G161 Z F100 (home Z axis minimum)
-M132 X Y Z A B (Recall stored home offsets for XYZAB axis)
-(**** end homing ****)
-G92 X112 Y73 Z0 A0 B0
-G1 X-112 Y-73 Z150 F3300.0 (move to waiting position)
-
-G130 X0 Y0 A0 B0 (Lower stepper Vrefs while heating)
-M109 S100 T0 (set platform temperature)
-M134 T0 (wait for platform to reach temperature)
-M104 S220 T0 (set extruder 0 temperature)
-M104 S220 T1 (set extruder 1 temperature)
-M133 T0 (wait for extruder 0 to reach temperature)
-M133 T1 (wait for extruder 1 to reach temperature)
-G130 X127 Y127 A127 B127 (Set Stepper motor Vref to defaults)
-
-G0 Z0.5          (Position Height)
-G1 E4 F50.0      (Create Anchor)
-G92 E0
-(**** end of start.gcode ****)
 G55
 M108 T1(Set tool)
 M73 P0 (display progress)
@@ -81329,14 +81298,3 @@ G1 F798.0
 G1 E4001.787
 G1 F2400.0
 M103
-(******* End.gcode*******)
-M73 P100 (end  build progress )
-G0 Z155
-M18
-M109 S0 T0
-M104 S0 T0
-G162 X Y F2500
-M18
-M70 P5 ( We <3 Making Things!)
-M72 P1  ( Play Ta-Da song )
-(*********end End.gcode*******)
