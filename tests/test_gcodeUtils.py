@@ -430,6 +430,63 @@ def generic_calculate_dda_speed_good_result(state):
     #Return a generator of the expected and calculated DDA speed
     yield case[3], dda_speed
 
+class VariableReplaceTest(unittest.TestCase):
+
+  def test_variable_substitution_blank_line_no_environment(self):
+    environment = {}
+    line = ''
+    replaced_line =s3g.Gcode.VariableReplace(line, environment)
+    self.assertEqual(line, replaced_line)
+
+  def test_variable_substitution_no_variables_no_environment(self):
+    environment = {}
+    line = "161 X Y Z"
+    replaced_line = s3g.Gcode.VariableReplace(line, environment)
+    self.assertEqual(line, replaced_line)
+
+  def test_variable_substitution_no_variables_has_environment(self):
+    environment = {
+        '#0'  : '-1'
+        }
+    line = "G161 X Y Z"
+    replaced_line = s3g.Gcode.VariableReplace(line, environment)
+    self.assertEqual(line, replaced_line)
+
+  def test_variable_substitution_line_has_varibles_no_environment(self):
+    environment = {}
+    line = "#1"
+    replaced_line = s3g.Gcode.VariableReplace(line, environment)
+    self.assertEqual(line, replaced_line)
+
+  def test_variale_substitution_variables_has_environment_no_matching_variables(self):
+    environment = {'#1' : '-1'}
+    line = '#2'
+    replaced_line = s3g.Gcode.VariableReplace(line, environment)
+    self.assertEqual(line, replaced_line)
+
+  def test_variable_substitution_line_and_environment_has_variables(self):
+    environment = {'#1' : '-1'}
+    line = '#1'
+    expected_line = '-1'
+    replaced_line = s3g.Gcode.VariableReplace(line, environment)
+    self.assertEqual(expected_line, replaced_line)
+
+  def test_variable_substitution_line_has_more_variables_than_environment(self):
+    environment = {'#1' : '-1'}
+    line = '#1 #2'
+    expected_line = '-1 #2'
+    replaced_line = s3g.Gcode.VariableReplace(line, environment)
+    self.assertEqual(expected_line, replaced_line)
+
+  def test_variable_substitution_line_has_less_variables_than_environment(self):
+    environment = {
+        '#1'  : '-1',
+        '#2'  : '-2',
+        }
+    line = '#1'
+    expected_line = '-1'
+    replaced_line = s3g.Gcode.VariableReplace(line, environment)
+    self.assertEqual(expected_line, replaced_line) 
  
 if __name__ == "__main__":
   unittest.main()

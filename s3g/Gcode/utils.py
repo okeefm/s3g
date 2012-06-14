@@ -116,6 +116,22 @@ def ParseOutAxes(codes):
   parsedAxes = set(axesCodes) & set(codes)
   return list(sorted(parsedAxes))
 
+def VariableReplace(line, environment):
+  """
+  Given a dict of variables and their definitions with a line ,
+  replace all instances of variables with their respective 
+  definition in the line. 
+
+  @param string Line: A line that we will be subjected to variable
+      replace
+  @param dict environment: A set of variables and definitions that will
+      be used to execute variable substitution.
+  """
+  replaced_line = line
+  for key in environment:
+    replaced_line = replaced_line.replace(key, environment[key])
+  return replaced_line
+
 def CalculateVectorDifference(minuend, subtrahend):
   """ Given two 5d vectors represented as lists, calculates their
   difference (minued - subtrahend)
