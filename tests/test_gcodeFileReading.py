@@ -23,20 +23,15 @@ class SingleHeadReading(unittest.TestCase):
     self.s = None
     self.p = None
 
+
   def test_single_head_skeinforge_single_20mm_box(self):
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_single_extrusion_20mm_box.gcode')) as f:
-      for line in f:
-        self.p.ExecuteLine(line)
+    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_single_extrusion_20mm_box.gcode'), self.p) 
 
   def test_single_head_skeinforge_single_snake(self):
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_single_extrusion_snake.gcode')) as f:
-      for line in f:
-        self.p.ExecuteLine(line)
+    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_single_extrusion_snake.gcode'), self.p) 
 
   def test_single_head_miracle_grue(self):
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode')) as f:
-      for line in f:
-        self.p.ExecuteLine(line)
+    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode'), self.p) 
 
 class DualHeadReading(unittest.TestCase):
 
@@ -55,24 +50,25 @@ class DualHeadReading(unittest.TestCase):
     self.p = None
 
   def test_dual_head_skeinforge_hilbert_cube(self):
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_dual_extrusion_hilbert_cube.gcode')) as f:
-      for line in f:
-        self.p.ExecuteLine(line)
+    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_dual_extrusion_hilbert_cube.gcode'), self.p) 
 
   def test_single_head_skeinforge_single_20mm_box(self):
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_single_extrusion_20mm_box.gcode')) as f:
-      for line in f:
-        self.p.ExecuteLine(line)
+    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_single_extrusion_20mm_box.gcode'), self.p) 
 
   def test_single_head_skeinforge_single_snake(self):
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_single_extrusion_snake.gcode')) as f:
-      for line in f:
-        self.p.ExecuteLine(line)
+    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_single_extrusion_snake.gcode'), self.p) 
 
   def test_single_head_miracle_grue(self):
-    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode')) as f:
-      for line in f:
-        self.p.ExecuteLine(line)
+    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode'), self.p) 
+
+def ExecuteFile(theFile, parser):
+  for line in parser.state.profile.values['print_start_sequence']:
+    parser.ExecuteLine(line)
+  with open(theFile) as f:
+    for line in f:
+      parser.ExecuteLine(line)
+  for line in parser.state.profile.values['print_end_sequence']:
+    parser.ExecuteLine(line)
 
 if __name__ == '__main__':
   unittest.main()
