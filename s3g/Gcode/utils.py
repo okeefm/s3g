@@ -116,7 +116,7 @@ def ParseOutAxes(codes):
   parsedAxes = set(axesCodes) & set(codes)
   return list(sorted(parsedAxes))
 
-def VariableReplace(line, environment):
+def VariableSubstitute(line, environment):
   """
   Given a dict of variables and their definitions with a line ,
   replace all instances of variables with their respective 

@@ -62,7 +62,7 @@ class GcodeParser(object):
     elif not isinstance(command, str):
       raise ImproperGcodeEncodingError
    
-    command = VariableReplace(command, environment) 
+    command = VariableSubstitute(command, environment) 
 
     try:
       codes, flags, comment = ParseLine(command)
