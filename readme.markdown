@@ -8,7 +8,7 @@ To connect to a machine, you will need the following module:
 
 To run the unit tests, you will need the following modules:
 
-* [Mock](http://pypi.python.org/pypi/mock)
+* [Mock](http://pypi.python.org/pypi/mock) (Note: Use version 0.8 or greater)
 * [unittest2](http://pypi.python.org/pypi/unittest2) (Python 2.6 and earlier)
 
 ## Example: Connecting to a Replicator

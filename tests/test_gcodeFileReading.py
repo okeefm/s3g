@@ -3,9 +3,13 @@ import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import s3g
-import unittest2 as unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 import mock
+
+import s3g
 
 class SingleHeadReading(unittest.TestCase):
 
