@@ -129,6 +129,8 @@ def VariableSubstitute(line, environment):
   """
   for key in environment:
     line = line.replace(key, environment[key])
+  if '#' in line:
+    raise UndefinedVariableError
   return line
 
 def CalculateVectorDifference(minuend, subtrahend):

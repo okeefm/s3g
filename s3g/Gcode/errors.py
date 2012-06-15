@@ -112,6 +112,12 @@ class ImproperGcodeEncodingError(TypeError):
   encoded in either ASCII or unicode.
   """
 
+class UndefinedVariableError(GcodeError):
+  """
+  An UndefinedVariableError is thrown when a variable is encountered that is not defined
+  in the given environment.
+  """
+
 class TCodeNotDefinedWarning:
   """
   A TCodeNotDefinedWarning is raised when a command is executed that should have a T command
