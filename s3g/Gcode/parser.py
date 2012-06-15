@@ -41,9 +41,9 @@ class GcodeParser(object):
        73  : [self.SetBuildPercentage,         'P',       ''],
        101 : [self.ExtruderOnForward,          '',        ''], #This command is explicitely ignored
        102 : [self.ExtruderOnReverse,          '',        ''], #This command is explicitely ignored
-       103 : [self.ExtruderOff,                'T',       ''], #This command is explicitely ignored
+       103 : [self.ExtruderOff,                'T',       ''],       #This command is explicitely ignored
        104 : [self.SetToolheadTemperature,     'ST',      ''],
-       105 : [self.GetTemperature,             '',        ''], #This command is explicitely ignored
+       105 : [self.GetTemperature,             '',        ''],
        109 : [self.SetPlatformTemperature,     'ST',      ''],
        132 : [self.LoadPosition,               '',        'XYZAB'],
        133 : [self.WaitForToolReady,           'PT',      ''],
@@ -229,9 +229,9 @@ class GcodeParser(object):
     """
     row = 0 # As per the gcode protocol
     col = 0 # As per the gcode protocol
-    clear_existing = True # As per the gcode protocol
-    last_in_group = True # As per the gcode protocol
-    wait_for_button = False # As per the gcode protocol
+    clear_existing = False #If false, clears the message buffer
+    last_in_group = True #If true, signifies this is the last in a group
+    wait_for_button = False #If true, signifies a button wait
 
     self.s3g.DisplayMessage(
         row,
