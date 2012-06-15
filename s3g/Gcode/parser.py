@@ -41,9 +41,9 @@ class GcodeParser(object):
        73  : [self.SetBuildPercentage,         'P',       ''],
        101 : [self.ExtruderOnForward,          '',        ''], #This command is explicitely ignored
        102 : [self.ExtruderOnReverse,          '',        ''], #This command is explicitely ignored
-       103 : [self.ExtruderOff,                'T',       ''],       #This command is explicitely ignored
+       103 : [self.ExtruderOff,                'T',       ''], #This command is explicitely ignored
        104 : [self.SetToolheadTemperature,     'ST',      ''],
-       105 : [self.GetTemperature,             '',        ''],
+       105 : [self.GetTemperature,             '',        ''], #This command is explicitely ignored
        109 : [self.SetPlatformTemperature,     'ST',      ''],
        132 : [self.LoadPosition,               '',        'XYZAB'],
        133 : [self.WaitForToolReady,           'PT',      ''],
