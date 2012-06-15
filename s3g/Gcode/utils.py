@@ -127,10 +127,9 @@ def VariableReplace(line, environment):
   @param dict environment: A set of variables and definitions that will
       be used to execute variable substitution.
   """
-  replaced_line = line
   for key in environment:
-    replaced_line = replaced_line.replace(key, environment[key])
-  return replaced_line
+    line = line.replace(key, environment[key])
+  return line
 
 def CalculateVectorDifference(minuend, subtrahend):
   """ Given two 5d vectors represented as lists, calculates their
