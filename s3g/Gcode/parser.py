@@ -51,7 +51,7 @@ class GcodeParser(object):
        135 : [self.ChangeTool,                 'T',       ''],
     }
 
-  def ExecuteLine(self, command):
+  def ExecuteLine(self, command, environment):
     """
     Execute a line of gcode
     @param string command Gcode command to execute
@@ -61,6 +61,8 @@ class GcodeParser(object):
       command = command.encode("utf8")
     elif not isinstance(command, str):
       raise ImproperGcodeEncodingError
+   
+    command = VariableSubstitute(command, environment) 
 
     try:
       codes, flags, comment = ParseLine(command)

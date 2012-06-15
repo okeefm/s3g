@@ -32,13 +32,15 @@ parser.s3g = r
 profile = s3g.Profile("ReplicatorSingle")
 parser.state.profile = profile
 
+environment = {}
+
 if options.start_end_sequences:
   for line in parser.state.profile.values['print_start_sequence']:
-    parser.ExecuteLine(line)
+    parser.ExecuteLine(line, environment)
 with open(options.filename) as f:
   for line in f:
     print line,
-    parser.ExecuteLine(line)
+    parser.ExecuteLine(line, environment)
 if options.start_end_sequences:
   for line in parser.state.profile.values['print_end_sequence']:
-    parser.ExecuteLine(line)
+    parser.ExecuteLine(line, environment)

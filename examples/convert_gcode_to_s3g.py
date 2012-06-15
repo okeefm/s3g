@@ -28,13 +28,16 @@ parser.s3g = s
 profile = s3g.Profile('ReplicatorDual')
 parser.state.profile = profile
 
+environment = {}
 
 if options.start_end_sequences:
   for line in parser.state.profile.values['print_start_sequence']:
-    parser.ExecuteLine(line)
+    parser.ExecuteLine(line, environment)
+
 with open(options.input_file) as f:
   for line in f:
-    parser.ExecuteLine(line)
+    parser.ExecuteLine(line, environment)
+
 if options.start_end_sequences:
   for line in parser.state.profile.values['print_end_sequence']:
-    parser.ExecuteLine(line)
+    parser.ExecuteLine(line, environment)
