@@ -13,6 +13,8 @@ parser.add_option("-o", "--outputfile", dest="output_file",
                   help="s3g file to write out", default=False)
 parser.add_option("-m", "--machine_type", dest="machine",
                   help="machine type", default="ReplicatorDual")
+parser.add_option("-s", "--gcode_start_end_sequences", dest="start_end_sequences",
+                  help="run gcode start and end proceeses", default=False)
 (options, args) = parser.parse_args()
 
 
@@ -26,6 +28,13 @@ parser.s3g = s
 profile = s3g.Profile('ReplicatorDual')
 parser.state.profile = profile
 
+
+if options.start_end_sequences:
+  for line in parser.state.profile.values['print_start_sequence']:
+    parser.ExecuteLine(line)
 with open(options.input_file) as f:
   for line in f:
+    parser.ExecuteLine(line)
+if options.start_end_sequences:
+  for line in parser.state.profile.values['print_end_sequence']:
     parser.ExecuteLine(line)
