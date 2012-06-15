@@ -51,6 +51,10 @@ Here is some vocabulary, that should be used when talking about the protocol:
  <td>A comment is a user readable block of text used to clarify what a section of code does. Comments are also used by some commands to specify a filename or message that should be displayed on a machine's interface LCD.
  <td>(embedded comment) G1 ;This G1 is a comment</td>
 </tr>
+<td>Variable</td>
+<td>A variable is a placeholder in a line of gcode that can be replaced by a value during run time.  Variables can exist anywhere in the Gcode line.  A variable should only be an interger value (1, 2, 3...) up to 5399, and should be preceeded by a '#'.</td>
+<td>#0</td>
+</tr>
 </table>
 
 ## References
@@ -87,6 +91,8 @@ These are the rules used to parse commands:
 * Upper and lower case codes and flag names are accepted, and will silently be converted to uppercase.
 * Each G and M code has a list of required and optional codes and flags. Codes and flags that are not supported by the G or M code are considered an error.
 
+## Variable Substitution                                                                                                                                                 
+During Line Execution, prior to parsing out the comments/commands, all variables that are defined in an environment dict passed into the ExecuteLine function are replaced with their defined values.
 
 # Supported G Codes
 
