@@ -79,15 +79,20 @@ class gcodeTests(unittest.TestCase):
     self.mock.ToggleAxes.assert_called_once_with(flags, False)
 
 
-  # TODO: test for missing timeout
+  def test_display_message_missing_timeout(self):
+    codes = {}
+    flags = []
+    comment = 'asdf'
+    self.assertRaises(KeyError, self.g.DisplayMessage, codes, flags, comment)
+
   def test_display_message(self):
     row = 0 # As specified in the gcode protocol
     col = 0 # As specified in the gcode protocol
     message = 'ABCDEFG123'
     timeout = 123
-    clear_existing = True # As specified in the gcode protocol
-    last_in_group = True # As specified in the gcode protocol
-    wait_for_button = False # As specified in the gcode protocol
+    clear_existing = False
+    last_in_group = True
+    wait_for_button = False
 
     codes = {'P' : timeout}
     comment = message
