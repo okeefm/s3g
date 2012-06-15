@@ -51,6 +51,11 @@ Here is some vocabulary, that should be used when talking about the protocol:
  <td>A comment is a user readable block of text used to clarify what a section of code does. Comments are also used by some commands to specify a filename or message that should be displayed on a machine's interface LCD.
  <td>(embedded comment) G1 ;This G1 is a comment</td>
 </tr>
+<tr>
+ <td>Variable</td>
+ <td>A variable is a placeholder in a line of gcode that can be replaced by a value during run time.  Variables can be in either the Codes part of comments part of the Gcode line.  A variable can only be a number, and is marked by a '#'.</td>
+<td>#0</td>
+</tr>
 </table>
 
 ## References
