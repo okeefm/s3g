@@ -89,9 +89,9 @@ class gcodeTests(unittest.TestCase):
     col = 0 # As specified in the gcode protocol
     message = 'ABCDEFG123'
     timeout = 123
-    clear_existing = True # As specified in the gcode protocol
-    last_in_group = True # As specified in the gcode protocol
-    wait_for_button = False # As specified in the gcode protocol
+    clear_existing = False
+    last_in_group = True
+    wait_for_button = False
 
     codes = {'P' : timeout}
     comment = message
