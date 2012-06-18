@@ -54,7 +54,7 @@ Here is some vocabulary, that should be used when talking about the protocol:
 <tr>
  <td>Variable</td>
  <td>A variable is a placeholder in a line of gcode that can be replaced by a value during run time.  Variables can be anywhere in the entirety of the line of Gcode.  A variable can be a string of any size, but must be prefixed by a '#' sign.<td>
-<td>#0, #TEMP, #FOO</td>
+<td>#0, #TEMPERATURE, #FOO</td>
 </tr>
 </table>
 
@@ -93,7 +93,7 @@ These are the rules used to parse commands:
 * Each G and M code has a list of required and optional codes and flags. Codes and flags that are not supported by the G or M code are considered an error.
 
 ## Variable Substitution
-During Line Execution, prior to parsing out the comments/commands, all variables that are defined in an environment dict passed into the ExecuteLine function are replaced with their defined values.  If any variables present in a line of Gcode are undefined in the environment, the parser will throw an UndefinedVariableError.  If any variables defined in the environment do not start with a '#', an ImproperVariableError will be thrown.
+During Line Execution, prior to parsing out the comments/commands, all variables inside a line of Gcode that are defined in an environment dict passed into the ExecuteLine function are replaced with their defined values.  If any variables present in a line of Gcode are undefined in the environment, the parser will throw an UndefinedVariableError.  While variables contained within the line of Gcode must be prefixed by a '#', the variables defined in the environment do not need to be delineated with a '#'.
 
 # Supported G Codes
 
