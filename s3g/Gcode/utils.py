@@ -282,10 +282,40 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate, max_fe
 
   fastest_feedrate = float(abs(displacement_vector[longest_axis]))/CalculateVectorMagnitude(displacement_vector)*actual_feedrate
 
-  secondConst = 60
-  microSecondConst = 1000000 
+  # Now we know the feedrate of the fastest axis, in mm/min. Convert it to us/step. 
+  dda_speed = ComputeDDASpeed(fastest_feedrate, abs(steps_per_mm[longest_axis]))
 
-  # Now we know the feedrate of the fastest axis, in mm/s. Convert it to us/step. 
-  dda_speed = secondConst * microSecondConst/(fastest_feedrate*abs(steps_per_mm[longest_axis]))
+  return dda_speed
 
+def ComputeDDASpeed(feedrate, spm):
+  """
+  Given a feedrate in mm/min, and SPM in steps/mm, calculate its DDA
+  speed, in microSeconds/step.
+  
+  @param int feedrate: The desired movement speed in mm/min
+  @param float spm: The steps per mm we use to get the DDA speed
+  @return float dda_speed: The dda speed we use
+  """
+  second_const = 60
+  micro_second_const = 1000000
+  dda_speed = second_const * micro_second_const/(feedrate*spm)
+  return dda_speed
+
+def CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list):
+  """
+  Given a set of axes and a feedrate, calculates the homing DDA speed
+  for those axes.  We always use the slowest axis' spm value.  Additionally,
+  for a feedrate, we use the minimum value in the set of axes max feedrates 
+  plus the feedrate given.
+
+  @param int feedrate: The feedrate we want to move at
+  @param int list max_feedrates: The max feedrates we will be using
+  @param float list spm_list: The steps_per_mm we use to calculate the DDA speed
+  @retun float dda_speed: The speed we will be moving at
+  """
+  #Move on the slowest axis
+  usable_spm = max(spm_list)  
+  #Move withslowest feedrate
+  usable_feedrate = min(max_feedrates + [feedrate])
+  dda_speed = ComputeDDASpeed(usable_feedrate, usable_spm)
   return dda_speed

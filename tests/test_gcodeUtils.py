@@ -433,6 +433,15 @@ def generic_calculate_dda_speed_good_result(state):
     #Return a generator of the expected and calculated DDA speed
     yield case[3], dda_speed
 
+class CalculateDDASpeed(unittest.TestCase):
+  def test_calculate_dda_speed(self):
+    feedrate = 100
+    spm = 100.0
+    secondConst = 60
+    microSecondConst = 1000000
+    expected_dda_speed = secondConst * microSecondConst / (feedrate*abs(spm))
+    self.assertEqual(expected_dda_speed, s3g.Gcode.ComputeDDASpeed(feedrate, spm))
+
 class VariableSubstituteTest(unittest.TestCase):
 
   def test_variable_substitution_blank_line_no_environment(self):
@@ -499,6 +508,21 @@ class VariableSubstituteTest(unittest.TestCase):
     expected_line = '-1 -1'
     replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(expected_line, replaced_line)
+
+class CalculateHomingDDASpeed(unittest.TestCase):
+  def test_calculate_homing_dda_speed_safe_feedrate(self):
+    feedrate = 10
+    max_feedrates = [100, 200, 300, 400, 500]
+    spm_list = [1, 2, 3, 4, 5]
+    expected_dda = s3g.Gcode.ComputeDDASpeed(feedrate, max(spm_list))
+    self.assertEqual(expected_dda, s3g.Gcode.CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list))
+
+  def test_calculate_homing_dda_speed_unsafe_feedrate(self):
+    feedrate = 600
+    max_feedrates = [100, 200, 300, 400]
+    spm_list = [1, 2, 3, 4, 5]
+    expected_dda = s3g.Gcode.ComputeDDASpeed(min(max_feedrates), max(spm_list))
+    self.assertEqual(expected_dda, s3g.Gcode.CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list))
  
 if __name__ == "__main__":
   unittest.main()
