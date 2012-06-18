@@ -17,13 +17,21 @@ parser.add_option("-f", "--filename", dest="filename",
 parser.add_option("-m", "--machine_type", dest="machine",
                   help="machine type", default="ReplicatorDual")
 parser.add_option("-s", "--gcode_start_end_sequences", dest="start_end_sequences",
-                  help="run gcode start and end proceeses", default=False)
+                  help="run gcode start and end proceeses", default=True)
+parser.add_option("-w", "--write_to_file", dest="write_to_file",
+                  help="If set, writes out to a file instead of priting to a printer", default=False)
 (options, args) = parser.parse_args()
 
 
-file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 r = s3g.s3g()
-r.writer = s3g.Writer.StreamWriter(file)
+if options.write_to_file:
+  filename = options.filename.split('.gcode')[0]
+  filename += '.s3g'
+  file = open(filename, 'w')
+  r.writer = s3g.Writer.FileWriter(file)
+else:
+  file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
+  r.writer = s3g.Writer.StreamWriter(file)
 
 parser = s3g.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
