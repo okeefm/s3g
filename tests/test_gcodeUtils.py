@@ -492,6 +492,11 @@ class VariableSubstituteTest(unittest.TestCase):
     expected_line = '-1 -2'
     replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(expected_line, replaced_line)
+
+  def test_variable_substitution_poorly_defined_variables(self):
+    environment = {'fail' : -1}
+    line = 'G1'
+    self.assertRaises(s3g.Gcode.ImproperVariableError, s3g.Gcode.VariableSubstitute, line, environment)
  
 if __name__ == "__main__":
   unittest.main()

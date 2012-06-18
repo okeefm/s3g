@@ -118,6 +118,12 @@ class UndefinedVariableError(GcodeError):
   in the given environment.
   """
 
+class ImproperVariableError(GcodeError):
+  """
+  An ImproperVariableError is thrown when a variable that is not prefixed with a '#' is 
+  defined in the environment.
+  """
+
 class TCodeNotDefinedWarning:
   """
   A TCodeNotDefinedWarning is raised when a command is executed that should have a T command

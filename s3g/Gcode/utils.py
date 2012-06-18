@@ -128,6 +128,11 @@ def VariableSubstitute(line, environment):
       be used to execute variable substitution.
   """
   for key in environment:
+    # Variables are only properly defined if they are prefixed with a #
+    if key[0] != '#':
+      gcode_error = ImproperVariableError()
+      gcode_error.values['ImproperVariable'] = key
+      raise gcode_error
     line = line.replace(key, environment[key])
   if '#' in line:
     raise UndefinedVariableError

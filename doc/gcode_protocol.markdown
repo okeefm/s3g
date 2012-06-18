@@ -53,8 +53,8 @@ Here is some vocabulary, that should be used when talking about the protocol:
 </tr>
 <tr>
  <td>Variable</td>
- <td>A variable is a placeholder in a line of gcode that can be replaced by a value during run time.  Variables can be in either the Codes part of comments part of the Gcode line.  A variable can only be a number, and is marked by a '#'.</td>
-<td>#0</td>
+ <td>A variable is a placeholder in a line of gcode that can be replaced by a value during run time.  Variables can be in either the Codes part of comments part of the Gcode line.  A variable can be a string of any size, prefixed by a '#' sign.<td>
+<td>#0, #TEMP, #FOO</td>
 </tr>
 </table>
 
@@ -92,6 +92,8 @@ These are the rules used to parse commands:
 * Upper and lower case codes and flag names are accepted, and will silently be converted to uppercase.
 * Each G and M code has a list of required and optional codes and flags. Codes and flags that are not supported by the G or M code are considered an error.
 
+## Variable Substitution
+During Line Execution, prior to parsing out the comments/commands, all variables that are defined in an environment dict passed into the ExecuteLine function are replaced with their defined values.  If any variables are present in a line of Gcode are undefined in the environment, the parser will throw an UndefinedVariableError.  If any variables defined in the environment do not start with a '#', an ImproperVariableError will be thrown.
 
 # Supported G Codes
 
