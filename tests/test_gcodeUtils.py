@@ -501,6 +501,15 @@ class VariableSubstituteTest(unittest.TestCase):
     expected_line = '-1 -2'
     replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(expected_line, replaced_line)
+
+  def test_variable_substitution_can_substitute_multiple_variables_multiple_times(self):
+    environment = {
+        'FOO' : '-1',
+        '42'  : '-2',
+        }
+    line = '#FOO #42 #FOO #42'
+    expected_line = '-1 -2 -1 -2'
+    self.assertEqual(expected_line, s3g.Gcode.VariableSubstitute(line, environment))
  
 if __name__ == "__main__":
   unittest.main()

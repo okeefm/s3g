@@ -93,7 +93,7 @@ These are the rules used to parse commands:
 * Each G and M code has a list of required and optional codes and flags. Codes and flags that are not supported by the G or M code are considered an error.
 
 ## Variable Substitution
-During Line Execution, prior to parsing out the comments/commands, all variables inside a line of Gcode that are defined in an environment dict passed into the ExecuteLine function are replaced with their defined values.  If any variables present in a line of Gcode are undefined in the environment, the parser will throw an UndefinedVariableError.  While variables contained within the line of Gcode must be prefixed by a '#', the variables defined in the environment do not need to be delineated with a '#'.
+The gcode parser has an internal variables, called an environemnt.  The environment is a python dict that defines all variables encased in a Gcode File.  During Line Execution, prior to parsing out the comments/commands, all variables defined in the environment are replaced by their defined value.  If any variables present in a line of Gcode are undefined in the environment, the parser will throw an UndefinedVariableError.  While variables contained within the line of Gcode must be prefixed by a '#', the variables defined in the environment do not need to be delineated with a '#'.
 
 # Supported G Codes
 

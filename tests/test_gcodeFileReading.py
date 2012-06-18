@@ -78,12 +78,12 @@ class DualHeadReading(unittest.TestCase):
 def ExecuteFile(theFile, parser):
   environment = {}
   for line in parser.state.profile.values['print_start_sequence']:
-    parser.ExecuteLine(line, environment)
+    parser.ExecuteLine(line)
   with open(theFile) as f:
     for line in f:
-      parser.ExecuteLine(line, environment)
+      parser.ExecuteLine(line)
   for line in parser.state.profile.values['print_end_sequence']:
-    parser.ExecuteLine(line, environment)
+    parser.ExecuteLine(line)
 
 if __name__ == '__main__':
   unittest.main()
