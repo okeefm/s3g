@@ -3,9 +3,13 @@ import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import s3g
-import unittest2 as unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 import mock
+
+import s3g
 
 class SingleHeadReading(unittest.TestCase):
 
@@ -76,7 +80,6 @@ class DualHeadReading(unittest.TestCase):
     ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode'), self.p) 
 
 def ExecuteFile(theFile, parser):
-  environment = {}
   for line in parser.state.profile.values['print_start_sequence']:
     parser.ExecuteLine(line)
   with open(theFile) as f:

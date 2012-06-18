@@ -232,9 +232,9 @@ class GcodeParser(object):
     """
     row = 0 # As per the gcode protocol
     col = 0 # As per the gcode protocol
-    clear_existing = True # As per the gcode protocol
-    last_in_group = True # As per the gcode protocol
-    wait_for_button = False # As per the gcode protocol
+    clear_existing = False #If false, clears the message buffer
+    last_in_group = True #If true, signifies this is the last in a group
+    wait_for_button = False #If true, signifies a button wait
 
     self.s3g.DisplayMessage(
         row,

@@ -1077,7 +1077,7 @@ The buffer is also displayed when the clear message flag is 1. If multiple packe
 The "last message in group" flag must be used for display of multi-packet messages.
 Normal popping of the message screen, such as when a print is over, is ignored if the "last message in group" flag has not been received. This is because the bot thinks it is still waiting for the remainder of a message.
 
-if the "clear message" flag is 1, the message buffer will be cleared and any existing timeout out will be cleared.
+if the "clear message" flag is 0, the message buffer will be cleared and any existing timeout out will be cleared.
 
 If the "wait on button" flag is 1, the message screen will clear after a user button press is received. The timeout field is still relevant if the button press is never received.
 
