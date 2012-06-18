@@ -62,7 +62,6 @@ class GcodeParser(object):
       command = command.encode("utf8")
     elif not isinstance(command, str):
       raise ImproperGcodeEncodingError
-   
 
     try:
       command = VariableSubstitute(command, self.environment) 
