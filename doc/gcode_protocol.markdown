@@ -178,15 +178,6 @@ S3g Output (none)
 
 Parameters (none)
 
-## G21 - Programming in milimeters
-Instruct the machine that all distances are in milimeters. This command is ignored; the only coordinate system supported is mm.
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
 ## G54 - Use coordinage system from G10 P0 (toolhead 0?)
 Consider all future positions to be offset by the values stored in the position register P0.
 
@@ -204,16 +195,6 @@ Registers (none)
 S3g Output (none)
 
 Parameters (none)
-
-## G90 - Absolute programming
-Instruct the machine that all distances are absolute. This command is ignored; the only programming mode is absolute.
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
 
 ## G92 - Position register: Set the specified axes positions to the given position
 Sets the position of the state machine and the bot.

@@ -24,10 +24,8 @@ class GcodeParser(object):
       1   : [self.LinearInterpolation,         'XYZABEF', ''],
       4   : [self.Dwell,                       'P',       ''],
       10  : [self.StoreOffsets,                'XYZP',    ''],
-      21  : [self.MilimeterProgramming,        '',        ''],
       54  : [self.UseP0Offsets,                '',        ''],
       55  : [self.UseP1Offsets,                '',        ''],
-      90  : [self.AbsoluteProgramming,         '',        ''],
       92  : [self.SetPosition,                 'XYZABE',  ''],
       130 : [self.SetPotentiometerValues,      'XYZAB',   ''],
       161 : [self.FindAxesMinimums,            'D',       'XYZ'],
@@ -389,18 +387,6 @@ class GcodeParser(object):
     self.state.values['build_name'] = None
 
     self.s3g.BuildEndNotification()
-
-  def AbsoluteProgramming(self, codes, flags, comment):
-    """Set the programming mode to absolute
-    This is a stub, since we dropped support for this function
-    """
-    pass
-
-  def MilimeterProgramming(self, codes, flags, comment):
-    """Set the programming mode to milimeters
-    This is a stub, since we dropped support for this function
-    """
-    pass
 
   def ExtruderOff(self, codes, flags, comment):
     """Turn the extruder off
