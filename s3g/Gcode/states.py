@@ -91,17 +91,17 @@ class GcodeStates(object):
     else:
       self.values['build_name'] = build_name
 
-  def GetAxesValues(self, key):
+  def GetAxesValues(self, axes, key):
     """
     Given a key, returns a list of all 
     axis values for that key.  If an axis
     if missing from the machine profile, put a 0
     in its place.
+    @param string list: The axes to query
     @param string key: the key to use when ascertaining
       info for each axis
     @return list: List of values for the key of each axis
     """ 
-    axes = ['X', 'Y', 'Z', 'A', 'B']
     values = []
     for axis in axes:
       if axis in self.profile.values['axes']:

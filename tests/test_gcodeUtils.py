@@ -398,13 +398,14 @@ def generic_zero_move_test(state):
   initial_position = [0,0,0,0,0]
   target_position =  [0,0,0,0,0]
   target_feedrate = 0
+  axes = ['X', 'Y', 'Z', 'A', 'B']
 
   s3g.Gcode.CalculateDDASpeed(
       initial_position, 
       target_position, 
       target_feedrate, 
-      state.GetAxesValues('max_feedrate'), 
-      state.GetAxesValues('steps_per_mm')
+      state.GetAxesValues(axes,'max_feedrate'), 
+      state.GetAxesValues(axes,'steps_per_mm')
       )
 
 def generic_calculate_dda_speed_good_result(state):
@@ -419,14 +420,16 @@ def generic_calculate_dda_speed_good_result(state):
     [[200,0,0,0,0], [100,0,0,0,0], 200, 30000000/(state.profile.values['axes']['X']['steps_per_mm']*100)],    # Single axis, reverse motion
     [[0,0,0,0,0],   [1,1,1,0,0],   100, 2598.0762113533156],        # Multiple axis, forward motion
     ]
+  
+  axes = ['X', 'Y', 'Z', 'A', 'B']
 
   for case in cases:
     dda_speed = s3g.Gcode.CalculateDDASpeed(
         case[0], 
         case[1], 
         case[2], 
-        state.GetAxesValues('max_feedrate'), 
-        state.GetAxesValues('steps_per_mm'))
+        state.GetAxesValues(axes,'max_feedrate'), 
+        state.GetAxesValues(axes,'steps_per_mm'))
     #Return a generator of the expected and calculated DDA speed
     yield case[3], dda_speed
 

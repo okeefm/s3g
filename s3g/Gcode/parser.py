@@ -11,6 +11,7 @@ class GcodeParser(object):
   commands against an s3g machine.
   """
   def __init__(self):
+    self.axes = ['X', 'Y', 'Z', 'A', 'B']
     self.state = GcodeStates()
     self.s3g = None
     self.line_number = 1
@@ -139,7 +140,7 @@ class GcodeParser(object):
     This function loses the state machine's position.
     """
     self.state.LosePosition(flags)
-    axes = ParseOutAxes(flags) 
+    axes = ParseOutAxes(flags)
     self.s3g.FindAxesMaximums(axes, codes['D'], self.state.profile.values['find_axis_maximum_timeout'])
 
   def FindAxesMinimums(self, codes, flags, comment):
@@ -175,7 +176,7 @@ class GcodeParser(object):
         self.state.position['A'] = codes['A']
       if 'B' in codes:
         self.state.position['B'] = codes['B']
-    stepped_position = MultiplyVector(self.state.GetPosition(), self.state.GetAxesValues('steps_per_mm'))
+    stepped_position = MultiplyVector(self.state.GetPosition(), self.state.GetAxesValues(self.axes, 'steps_per_mm'))
     self.s3g.SetExtendedPosition(stepped_position)
       
   def UseP0Offsets(self, codes, flags, comment):
@@ -321,12 +322,12 @@ class GcodeParser(object):
             current_position, 
             self.state.GetPosition(), 
             feedrate,
-            self.state.GetAxesValues('max_feedrate'),
-            self.state.GetAxesValues('steps_per_mm'),
+            self.state.GetAxesValues(self.axes, 'max_feedrate'),
+            self.state.GetAxesValues(self.axes, 'steps_per_mm'),
             )
         stepped_point = MultiplyVector(
             self.state.GetPosition(), 
-            self.state.GetAxesValues('steps_per_mm')
+            self.state.GetAxesValues(self.axes, 'steps_per_mm')
             )
         self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
 

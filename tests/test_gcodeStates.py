@@ -179,13 +179,14 @@ class TestProfileInformationParsing(unittest.TestCase):
     self.g = Gcode.GcodeStates()
     profile = Profile('ReplicatorDual')
     self.g.profile = profile
+    self.axes = ['X', 'Y', 'Z', 'A', 'B']
 
   def tearDown(self):
     self.g = None
 
   def test_get_axes_values_key_error(self):
     key = 'this_is_going_to_fail_;('
-    self.assertRaises(KeyError, self.g.GetAxesValues, key)
+    self.assertRaises(KeyError, self.g.GetAxesValues, self.axes, key)
 
   def test_get_axes_values(self):
     key = 'steps_per_mm'
@@ -196,7 +197,7 @@ class TestProfileInformationParsing(unittest.TestCase):
         -96.275,
         -96.275,
         ]
-    self.assertEqual(expected_values, self.g.GetAxesValues(key))
+    self.assertEqual(expected_values, self.g.GetAxesValues(self.axes, key))
 
 class MachineProfileWith4Axes(unittest.TestCase):
   def setUp(self):
@@ -208,6 +209,7 @@ class MachineProfileWith4Axes(unittest.TestCase):
     self.g = None
 
   def get_axes_values_with_one_0(self):
+    axes = ['X', 'Y', 'Z', 'A', 'B']
     key = 'steps_per_mm'
     expected_values = [
         94.139,
@@ -216,7 +218,7 @@ class MachineProfileWith4Axes(unittest.TestCase):
         -96.275,
         0,
         ]
-    self.assertEqual(expected_values, self.g.GetAxesValues(key))
+    self.assertEqual(expected_values, self.g.GetAxesValues(axes, key))
 
 if __name__ == "__main__":
   unittest.main()
