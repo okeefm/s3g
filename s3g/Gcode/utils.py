@@ -304,18 +304,20 @@ def ComputeDDASpeed(feedrate, spm):
 def CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list):
   """
   Given a set of axes and a feedrate, calculates the homing DDA speed
-  for those axes.  We always use the slowest axis' spm value.  Additionally,
-  for a feedrate, we use the minimum value in the set of axes max feedrates 
-  plus the feedrate given.
+  for those axes.  We always use the limiting axis' feedrate and SPM 
+  constant, if applicable.  If there is no limiting axis, we default to 
+  the first axis' spm value.
 
   @param int feedrate: The feedrate we want to move at
   @param int list max_feedrates: The max feedrates we will be using
   @param float list spm_list: The steps_per_mm we use to calculate the DDA speed
   @retun float dda_speed: The speed we will be moving at
   """
-  #Move on the slowest axis
-  usable_spm = max(spm_list)  
-  #Move withslowest feedrate
-  usable_feedrate = min(max_feedrates + [feedrate])
+  usable_feedrate = feedrate
+  usable_spm = spm_list[0]
+  for max_feedrate, spm in zip(max_feedrates, spm_list):
+    if usable_feedrate > max_feedrate:
+      usable_feedrate = max_feedrate
+      usable_spm = spm
   dda_speed = ComputeDDASpeed(usable_feedrate, usable_spm)
   return dda_speed

@@ -299,7 +299,7 @@ S3g Output
 Parameters
 
     axes = List Of All Present Axes
-    feedrate = The calculated DDA speed for F.  We always use the minimum feedrate (relative to the desired feedrate and maximum feedrates of all homing axes) and the maximum steps per mm (relative to all homing axes).
+    feedrate = The calculated DDA speed for F.  We always use the minimum feedrate (relative to the desired feedrate and maximum feedrates of all homing axes) and the limiting axis' spm constant.  If no limiting axis is present, we default to the first axis' spm constant.
     timeout = Timeout specified in the machine profile
 
 ## G162 - Home given axes to maximum
@@ -319,7 +319,7 @@ S3g Output
 Parameters
 
     axes = List Of All Present Axes
-    feedrate = The calculated DDA speed for F.  We always use the minimum feedrate (relative to the desired feedrate and maximum feedrates of all homing axes) and the maximum steps per mm (relative to all homing axes).
+    feedrate = The calculated DDA speed for F.  We always use the minimum feedrate (relative to the desired feedrate and maximum feedrates of all homing axes) and the limiting axis' spm constant.  If no limiting axis is present, we default to the first axis' spm constant.
     timeout = Timeout specified in the machine profile
 
 # Supported M Codes

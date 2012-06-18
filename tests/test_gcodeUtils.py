@@ -514,14 +514,14 @@ class CalculateHomingDDASpeed(unittest.TestCase):
     feedrate = 10
     max_feedrates = [100, 200, 300, 400, 500]
     spm_list = [1, 2, 3, 4, 5]
-    expected_dda = s3g.Gcode.ComputeDDASpeed(feedrate, max(spm_list))
+    expected_dda = s3g.Gcode.ComputeDDASpeed(feedrate, spm_list[0])
     self.assertEqual(expected_dda, s3g.Gcode.CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list))
 
   def test_calculate_homing_dda_speed_unsafe_feedrate(self):
     feedrate = 600
-    max_feedrates = [100, 200, 300, 400]
+    max_feedrates = [100, 200, 300, 400, 500]
     spm_list = [1, 2, 3, 4, 5]
-    expected_dda = s3g.Gcode.ComputeDDASpeed(min(max_feedrates), max(spm_list))
+    expected_dda = s3g.Gcode.ComputeDDASpeed(max_feedrates[0], spm_list[0])
     self.assertEqual(expected_dda, s3g.Gcode.CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list))
  
 if __name__ == "__main__":
