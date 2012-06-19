@@ -106,7 +106,7 @@ class NoBuildNameError(GcodeError):
   started without a build name set
   """
 
-class ImproperGcodeEncodingError(TypeError):
+class ImproperGcodeEncodingError(GcodeError):
   """
   An ImproperGcodeEncodingError is thrown when a Gcode Command is encountered that is not 
   encoded in either ASCII or unicode.
