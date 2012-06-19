@@ -444,44 +444,39 @@ class VariableSubstituteTest(unittest.TestCase):
     replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(line, replaced_line)
 
+  def test_variable_substitution_can_read_multiple_variable_types(self):
+    environment = {
+        '1' : '-1',
+        'foo' : '-2',
+        }
+    line = '#1 #foo'
+    expected_line = '-1 -2'
+    self.assertEqual(expected_line, s3g.Gcode.VariableSubstitute(line, environment))
+
   def test_variable_substitution_no_variables_has_environment(self):
     environment = {
-        '#0'  : '-1'
+        '0'  : '-1'
         }
     line = "G161 X Y Z"
     replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(line, replaced_line)
 
-  def test_variable_substitution_line_has_varibles_no_environment(self):
-    environment = {}
-    line = "#1"
-    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
-    self.assertEqual(line, replaced_line)
-
   def test_variale_substitution_variables_has_environment_no_matching_variables(self):
-    environment = {'#1' : '-1'}
+    environment = {'1' : '-1'}
     line = '#2'
-    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
-    self.assertEqual(line, replaced_line)
+    self.assertRaises(s3g.Gcode.UndefinedVariableError, s3g.Gcode.VariableSubstitute, line, environment)
 
   def test_variable_substitution_line_and_environment_has_variables(self):
-    environment = {'#1' : '-1'}
+    environment = {'1' : '-1'}
     line = '#1'
     expected_line = '-1'
     replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(expected_line, replaced_line)
 
-  def test_variable_substitution_line_has_more_variables_than_environment(self):
-    environment = {'#1' : '-1'}
-    line = '#1 #2'
-    expected_line = '-1 #2'
-    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
-    self.assertEqual(expected_line, replaced_line)
-
   def test_variable_substitution_line_has_less_variables_than_environment(self):
     environment = {
-        '#1'  : '-1',
-        '#2'  : '-2',
+        '1'  : '-1',
+        '2'  : '-2',
         }
     line = '#1'
     expected_line = '-1'
@@ -490,12 +485,31 @@ class VariableSubstituteTest(unittest.TestCase):
 
   def test_variable_substitution_can_substitute_multiple_lines(self):
     environment = {
-        '#1'  : '-1',
+        '1'  : '-1',
         }
     line = '#1 #1'
     expected_line = '-1 -1'
     replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(expected_line, replaced_line)
+
+  def test_variable_substitution_can_substitute_multiple_variables(self):
+    environment = {
+        '1'  : '-1',
+        '2'  : '-2',
+        }
+    line = '#1 #2'
+    expected_line = '-1 -2'
+    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
+    self.assertEqual(expected_line, replaced_line)
+
+  def test_variable_substitution_can_substitute_multiple_variables_multiple_times(self):
+    environment = {
+        'FOO' : '-1',
+        '42'  : '-2',
+        }
+    line = '#FOO #42 #FOO #42'
+    expected_line = '-1 -2 -1 -2'
+    self.assertEqual(expected_line, s3g.Gcode.VariableSubstitute(line, environment))
  
 if __name__ == "__main__":
   unittest.main()

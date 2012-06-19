@@ -19,7 +19,6 @@ class gcodeTests(unittest.TestCase):
     self.g.s3g = self.mock
     profile = s3g.Profile("ReplicatorDual")
     self.g.state.profile = profile
-    self.environment = {}
 
   def tearDown(self):
     self.mock = None
@@ -27,17 +26,17 @@ class gcodeTests(unittest.TestCase):
 
   def test_check_cant_read_non_unicde_non_ascii(self):
     command = 92
-    self.assertRaises(s3g.Gcode.ImproperGcodeEncodingError, self.g.ExecuteLine, command, self.environment)
+    self.assertRaises(s3g.Gcode.ImproperGcodeEncodingError, self.g.ExecuteLine, command)
 
   def test_check_can_read_unicode(self):
     command = "G92 X0 Y0 Z0 A0 B0"
     command = unicode(command)
-    self.g.ExecuteLine(command, self.environment)
+    self.g.ExecuteLine(command)
     self.mock.SetExtendedPosition.assert_called_once_with([0,0,0,0,0])
 
   def test_check_can_read_ascii(self):
     command = "G92 X0 Y0 Z0 A0 B0"
-    self.g.ExecuteLine(command, self.environment)
+    self.g.ExecuteLine(command)
     self.mock.SetExtendedPosition.assert_called_once_with([0,0,0,0,0])
 
   def test_check_gcode_errors_are_recorded_correctly(self):
@@ -49,7 +48,7 @@ class gcodeTests(unittest.TestCase):
         }
 
     try:
-      self.g.ExecuteLine(command, self.environment)
+      self.g.ExecuteLine(command)
     except s3g.Gcode.GcodeError as e:
       self.assertEqual(expectedValues, e.values)
     else:
@@ -58,19 +57,19 @@ class gcodeTests(unittest.TestCase):
 
   def test_check_gcode_extraneous_codes_gets_called(self):
     command = "G161 Q1" # Note: this assumes that G161 does not accept a Q code
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command, self.environment)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
   def test_check_gcode_extraneous_flags_gets_called(self):
     command = "G161 Q" # Note: this assumes that G161 does not accept a Q flag
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command, self.environment)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
   def test_check_mcode_extraneous_codes_gets_called(self):
     command = "M18 Q4" # Note: This assumes that M6 does not accept an X code
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command, self.environment)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
   def test_check_mcode_extraneous_flags_gets_called(self):
     command = "M18 Q" # Note: This assumes that M6 does not accept an X flag
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command, self.environment)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
   def test_disable_axes(self):
     flags = ['A','B','X','Y','Z']

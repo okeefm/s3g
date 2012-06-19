@@ -13,6 +13,7 @@ class GcodeParser(object):
   def __init__(self):
     self.state = GcodeStates()
     self.s3g = None
+    self.environment = {}
     self.line_number = 1
 
     # Note: The datastructure looks like this:
@@ -51,7 +52,7 @@ class GcodeParser(object):
        135 : [self.ChangeTool,                 'T',       ''],
     }
 
-  def ExecuteLine(self, command, environment):
+  def ExecuteLine(self, command):
     """
     Execute a line of gcode
     @param string command Gcode command to execute
@@ -61,10 +62,10 @@ class GcodeParser(object):
       command = command.encode("utf8")
     elif not isinstance(command, str):
       raise ImproperGcodeEncodingError
-   
-    command = VariableSubstitute(command, environment) 
 
     try:
+      command = VariableSubstitute(command, self.environment) 
+
       codes, flags, comment = ParseLine(command)
 
       if 'G' in codes:

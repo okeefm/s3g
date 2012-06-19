@@ -51,9 +51,10 @@ Here is some vocabulary, that should be used when talking about the protocol:
  <td>A comment is a user readable block of text used to clarify what a section of code does. Comments are also used by some commands to specify a filename or message that should be displayed on a machine's interface LCD.
  <td>(embedded comment) G1 ;This G1 is a comment</td>
 </tr>
-<td>Variable</td>
-<td>A variable is a placeholder in a line of gcode that can be replaced by a value during run time.  Variables can exist anywhere in the Gcode line.  A variable should only be an interger value (1, 2, 3...) up to 5399, and should be preceeded by a '#'.</td>
-<td>#0</td>
+<tr>
+ <td>Variable</td>
+ <td>A variable is a placeholder in a line of gcode that can be replaced by a value during run time.  Variables can be anywhere in the entirety of the line of Gcode.  A variable can be a string of any size, but must be prefixed by a '#' sign.<td>
+<td>#0, #TEMPERATURE, #FOO</td>
 </tr>
 </table>
 
@@ -91,8 +92,10 @@ These are the rules used to parse commands:
 * Upper and lower case codes and flag names are accepted, and will silently be converted to uppercase.
 * Each G and M code has a list of required and optional codes and flags. Codes and flags that are not supported by the G or M code are considered an error.
 
-## Variable Substitution                                                                                                                                                 
-During Line Execution, prior to parsing out the comments/commands, all variables that are defined in an environment dict passed into the ExecuteLine function are replaced with their defined values.
+## Variable Substitution
+The gcode parser has an internal variable, called an environemnt.  The environment is a python dict that defines all variables encased in a Gcode File.  During Line Execution, prior to parsing out the comments/commands, all variables defined in the environment are replaced by their defined value.  If any variables present in a line of Gcode are undefined in the environment, the parser will throw an UndefinedVariableError.  While variables contained within the line of Gcode must be prefixed by a '#', the variables defined in the environment do not need to be delineated (i.e. The variable '#FOO' is defined as 'FOO' in the environment).
+
+NB: The environment defaults with as an empty python dict.
 
 # Supported G Codes
 
