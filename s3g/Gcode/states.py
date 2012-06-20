@@ -91,17 +91,20 @@ class GcodeStates(object):
     else:
       self.values['build_name'] = build_name
 
-  def GetAxesValues(self, axes, key):
+
+  def GetAxesValues(self, key):
     """
-    Given a key, returns a list of all 
-    axis values for that key.  If an axis
-    if missing from the machine profile, put a 0
-    in its place.
-    @param string list: The axes to query
-    @param string key: the key to use when ascertaining
-      info for each axis
-    @return list: List of values for the key of each axis
+    Given a key, queries the current profile's axis list
+    for the information associated with that key.  This function
+    always asks the profile for information regarding the axes:
+    X, Y, Z, A, B.  For compatability issues, if one of these axes is 
+    not present in the profile, we add a 0 for that value.
+
+    @param string key: The information we want to get from each axis
+    @return list: List of information retrieved from each axis attached to
+        a profile.
     """ 
+    axes = ['X', 'Y', 'Z', 'A', 'B']
     values = []
     for axis in axes:
       if axis in self.profile.values['axes']:
@@ -109,3 +112,19 @@ class GcodeStates(object):
       else:
         values.append(0)
     return values
+  
+  def GetAxesFeedrateAndSPM(self, axes):
+    """
+    Given a set of axes, returns their max feedrates and SPM values
+
+    @param string list axes: A list of axes
+    @return tuple: A tuple comprised of feedrates and spm values.
+    """
+    if not isinstance(axes, list):
+      raise ValueError
+    feedrates = []
+    spm = []
+    for axis in axes:
+      feedrates.append(self.profile.values['axes'][axis]['max_feedrate'])
+      spm.append(self.profile.values['axes'][axis]['steps_per_mm'])
+    return feedrates, spm

@@ -20,7 +20,6 @@ class gcodeTests(unittest.TestCase):
     profile = s3g.Profile("ReplicatorDual")
     self.g.state.profile = profile
     self.environment = {}
-    self.axes = ['X', 'Y', 'Z', 'A', 'B']
 
   def tearDown(self):
     self.mock = None
@@ -308,7 +307,7 @@ class gcodeTests(unittest.TestCase):
         'E' : -1,
         }
     expectedPosition = [1, 2, 3, -1, 5]
-    spmList = self.g.state.GetAxesValues(self.axes, 'steps_per_mm')
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
     for i in range(len(expectedPosition)):
       expectedPosition[i] *= spmList[i]
     self.g.SetPosition(codes, [], '')
@@ -325,7 +324,7 @@ class gcodeTests(unittest.TestCase):
     self.g.SetPosition(codes, [], '')
     self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.state.position)
     expectedPosition = [0, 1, 2, 3, 4]
-    spmList = self.g.state.GetAxesValues(self.axes, 'steps_per_mm')
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
     for i in range(len(spmList)):
       expectedPosition[i] *= spmList[i]
     self.mock.SetExtendedPosition.assert_called_once_with(expectedPosition)
@@ -525,10 +524,10 @@ class gcodeTests(unittest.TestCase):
         initialPosition, 
         expectedPoint, 
         feedrate,
-        self.g.state.GetAxesValues(self.axes, 'max_feedrate'),
-        self.g.state.GetAxesValues(self.axes, 'steps_per_mm'),
+        self.g.state.GetAxesValues('max_feedrate'),
+        self.g.state.GetAxesValues('steps_per_mm'),
         )
-    spmList = self.g.state.GetAxesValues(self.axes, 'steps_per_mm')
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
 
     # Gcode works in steps, so we need to convert the expected position to steps
     for i in range(len(expectedPoint)):
@@ -635,10 +634,10 @@ class gcodeTests(unittest.TestCase):
         initialPosition, 
         expectedPoint, 
         feedrate,
-        self.g.state.GetAxesValues(self.axes, 'max_feedrate'),
-        self.g.state.GetAxesValues(self.axes, 'steps_per_mm')
+        self.g.state.GetAxesValues('max_feedrate'),
+        self.g.state.GetAxesValues('steps_per_mm')
         )
-    spmList = self.g.state.GetAxesValues(self.axes, 'steps_per_mm')
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
     for i in range(len(expectedPoint)):
       expectedPoint[i] *= spmList[i]
     self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, dda_speed)
@@ -682,10 +681,10 @@ class gcodeTests(unittest.TestCase):
         initialPosition, 
         expected_position, 
         feedrate,
-        self.g.state.GetAxesValues(self.axes, 'max_feedrate'),
-        self.g.state.GetAxesValues(self.axes, 'steps_per_mm'),
+        self.g.state.GetAxesValues('max_feedrate'),
+        self.g.state.GetAxesValues('steps_per_mm'),
         ) 
-    spmList = self.g.state.GetAxesValues(self.axes, 'steps_per_mm')
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
     for i in range(len(expected_position)):
       expected_position[i] *= spmList[i]
     self.mock.QueueExtendedPoint.assert_called_once_with(expected_position, dda_speed)
@@ -713,10 +712,10 @@ class gcodeTests(unittest.TestCase):
         initial_position, 
         expected_position, 
         feedrate,
-        self.g.state.GetAxesValues(self.axes, 'max_feedrate'),
-        self.g.state.GetAxesValues(self.axes, 'steps_per_mm'),
+        self.g.state.GetAxesValues('max_feedrate'),
+        self.g.state.GetAxesValues('steps_per_mm'),
         )
-    spmList = self.g.state.GetAxesValues(self.axes, 'steps_per_mm')
+    spmList = self.g.state.GetAxesValues('steps_per_mm')
     for i in range(len(expected_position)):
       expected_position[i] *= spmList[i]
     self.mock.QueueExtendedPoint.assert_called_once_with(expected_position, dda_speed)

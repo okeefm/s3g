@@ -398,14 +398,13 @@ def generic_zero_move_test(state):
   initial_position = [0,0,0,0,0]
   target_position =  [0,0,0,0,0]
   target_feedrate = 0
-  axes = ['X', 'Y', 'Z', 'A', 'B']
 
   s3g.Gcode.CalculateDDASpeed(
       initial_position, 
       target_position, 
       target_feedrate, 
-      state.GetAxesValues(axes,'max_feedrate'), 
-      state.GetAxesValues(axes,'steps_per_mm')
+      state.GetAxesValues('max_feedrate'), 
+      state.GetAxesValues('steps_per_mm')
       )
 
 def generic_calculate_dda_speed_good_result(state):
@@ -421,15 +420,13 @@ def generic_calculate_dda_speed_good_result(state):
     [[0,0,0,0,0],   [1,1,1,0,0],   100, 2598.0762113533156],        # Multiple axis, forward motion
     ]
   
-  axes = ['X', 'Y', 'Z', 'A', 'B']
-
   for case in cases:
     dda_speed = s3g.Gcode.CalculateDDASpeed(
         case[0], 
         case[1], 
         case[2], 
-        state.GetAxesValues(axes,'max_feedrate'), 
-        state.GetAxesValues(axes,'steps_per_mm'))
+        state.GetAxesValues('max_feedrate'), 
+        state.GetAxesValues('steps_per_mm'))
     #Return a generator of the expected and calculated DDA speed
     yield case[3], dda_speed
 
@@ -510,6 +507,24 @@ class VariableSubstituteTest(unittest.TestCase):
     self.assertEqual(expected_line, replaced_line)
 
 class CalculateHomingDDASpeed(unittest.TestCase):
+  def test_calculate_homing_dda_speed_max_feedrates_empty(self):
+    feedrate = 10
+    max_feedrates = []
+    spm_list = [1, 2, 3, 4, 5]
+    self.assertRaises(s3g.Gcode.CalculateHomingDDAError, s3g.Gcode.CalculateHomingDDASpeed, feedrate, max_feedrates, spm_list)
+
+  def test_calculate_homing_dda_speed_spm_list_empty(self):
+    feedrate = 10
+    max_feedrates = [1, 2, 3, 4, 5]
+    spm_list = []
+    self.assertRaises(s3g.Gcode.CalculateHomingDDAError, s3g.Gcode.CalculateHomingDDASpeed, feedrate, max_feedrates, spm_list)
+
+  def test_calculate_homing_dda_speed_uneven_lists(self):
+    feedrate = 10
+    max_feedrates = [1, 2, 3, 4, 5]
+    spm_list = [1, 2, 3, 4]
+    self.assertRaises(s3g.Gcode.CalculateHomingDDAError, s3g.Gcode.CalculateHomingDDASpeed, feedrate, max_feedrates, spm_list)
+
   def test_calculate_homing_dda_speed_safe_feedrate(self):
     feedrate = 10
     max_feedrates = [100, 200, 300, 400, 500]

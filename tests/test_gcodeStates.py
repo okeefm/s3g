@@ -179,14 +179,13 @@ class TestProfileInformationParsing(unittest.TestCase):
     self.g = Gcode.GcodeStates()
     profile = Profile('ReplicatorDual')
     self.g.profile = profile
-    self.axes = ['X', 'Y', 'Z', 'A', 'B']
 
   def tearDown(self):
     self.g = None
 
   def test_get_axes_values_key_error(self):
     key = 'this_is_going_to_fail_;('
-    self.assertRaises(KeyError, self.g.GetAxesValues, self.axes, key)
+    self.assertRaises(KeyError, self.g.GetAxesValues, key)
 
   def test_get_axes_values(self):
     key = 'steps_per_mm'
@@ -197,7 +196,7 @@ class TestProfileInformationParsing(unittest.TestCase):
         -96.275,
         -96.275,
         ]
-    self.assertEqual(expected_values, self.g.GetAxesValues(self.axes, key))
+    self.assertEqual(expected_values, self.g.GetAxesValues(key))
 
 class MachineProfileWith4Axes(unittest.TestCase):
   def setUp(self):
@@ -209,7 +208,6 @@ class MachineProfileWith4Axes(unittest.TestCase):
     self.g = None
 
   def get_axes_values_with_one_0(self):
-    axes = ['X', 'Y', 'Z', 'A', 'B']
     key = 'steps_per_mm'
     expected_values = [
         94.139,
@@ -218,7 +216,47 @@ class MachineProfileWith4Axes(unittest.TestCase):
         -96.275,
         0,
         ]
-    self.assertEqual(expected_values, self.g.GetAxesValues(axes, key))
+    self.assertEqual(expected_values, self.g.GetAxesValues(key))
+   
+class GetAxesFeedrateSPM(unittest.TestCase):
+
+  def setUp(self):
+    self.g = Gcode.GcodeStates()
+    profile = Profile('ReplicatorDual')
+    self.g.profile = profile
+
+  def tearDown(self):
+    self.g = None
+
+  def test_get_axes_feedrate_and_spm_non_listed_axes(self):
+    axes = 'XYZ'
+    self.assertRaises(ValueError, self.g.GetAxesFeedrateAndSPM, axes)
+
+  def test_get_axes_feedrate_and_spm_no_axes(self):
+    axes = []
+    feedrate, spm = self.g.GetAxesFeedrateAndSPM(axes)
+    for l in (feedrate, spm):
+      self.assertEqual(l, [])
+
+  def test_get_axes_feedrate_and_spm_bad_axes(self):
+    axes = ['q']
+    self.assertRaises(KeyError, self.g.GetAxesFeedrateAndSPM, axes)
+
+  def test_get_axes_feedrate_and_spm_one_axis(self):
+    axes = ['X']
+    feedrate, spm = self.g.GetAxesFeedrateAndSPM(axes)
+    expected_feedrate = [12450]
+    expected_spm = [94.139]
+    self.assertEqual(expected_feedrate, feedrate)
+    self.assertEqual(expected_spm, spm)
+
+  def test_get_axes_feedrate_and_spm_many_axes(self):
+    axes = ['X', 'Y', 'Z']
+    feedrate, spm = self.g.GetAxesFeedrateAndSPM(axes)
+    expected_feedrate = [12450, 12450, 1170]
+    expected_spm = [94.139, 94.139, 400]
+    self.assertEqual(expected_feedrate, feedrate)
+    self.assertEqual(expected_spm, spm)
 
 if __name__ == "__main__":
   unittest.main()

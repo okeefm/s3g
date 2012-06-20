@@ -112,6 +112,12 @@ class ImproperGcodeEncodingError(TypeError):
   encoded in either ASCII or unicode.
   """
 
+class CalculateHomingDDAError(GcodeError):
+  """
+  A CalculateHomingDDAError is raised when an empty max_feedrates list or spm_list has been
+  passed in.
+  """
+
 class TCodeNotDefinedWarning:
   """
   A TCodeNotDefinedWarning is raised when a command is executed that should have a T command
