@@ -93,7 +93,7 @@ NB: All of the following items are considered on the same 'level' (as in, they a
     Value: An Integer Value of this timeout in seconds 
 
 ###Find Axis Maximum Timeout:
-  Time Timeout used when the Machine Attempts to Find the Axis Maximum.
+  The Timeout used when the Machine Attempts to Find the Axis Maximum.
 
     Key: "find_axis_maximum_timeout"
     Value: An Integer Value of this timeout in seconds

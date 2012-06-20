@@ -26,7 +26,7 @@ Host software:
 
 ## Definitions
 
-Here is some vocabulary, that should be used when talking about the protocol:
+Here is some vocabulary that should be used when talking about the protocol:
 
 <table>
 <tr>
@@ -63,7 +63,7 @@ Here is some vocabulary, that should be used when talking about the protocol:
 </tr>
 <tr>
  <td>Buffered Command</td>
- <td>A buffered command should be acknowledge immediately, but the Host or Tool may choose to store in a buffer for later execution. These should be used for commands that could take a long time to execute, such as motion commands.
+ <td>A buffered command should be acknowledged immediately, but the Host or Tool may choose to store it in a buffer for later execution. These should be used for commands that could take a long time to execute, such as motion commands.
 </tr>
 </table>
 
@@ -447,7 +447,7 @@ Payload (0 bytes)
 Response (0 bytes)
 
 ## 08 - Pause/resume: Halt execution temporarily
-This function is inteded to be called infrequently by the end user in order to make build-time adjustments during a print. It differes from 'Abort Immediately', in that the command buffers and heaters are not disabled.
+This function is inteded to be called infrequently by the end user in order to make build-time adjustments during a print. It differs from 'Abort Immediately', in that the command buffers and heaters are not disabled.
 
 On Pause, it stops all stepper movement and halts extrusion.
 On Resume, it restarts extrusion and resumes movement.
@@ -717,7 +717,7 @@ Response
 </table>
 
 ## 26 - Get communication statistics
-Gathers statistics about communication over the tool network. This wass intended for use while troubleshooting Gen3/4 machines.
+Gathers statistics about communication over the tool network. This was intended for use while troubleshooting Gen3/4 machines.
 
 Payload (0 bytes)
 
@@ -799,7 +799,7 @@ Payload
 Response (0 bytes)
 
 ## 135 - Wait for tool ready: Wait until a tool is ready before proceeding
-This command halts machine motion until the specified toolhead reaches a ready state. A tool is ready when it's temperature is within range of the setpoint.
+This command halts machine motion until the specified toolhead reaches a ready state. A tool is ready when its temperature is within range of the setpoint.
 
 Payload
 
@@ -931,7 +931,7 @@ Record the positions of the selected axes to device EEPROM
 
 Payload
 
-    uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
+    uint8: Axes bitfield to specify which axes' positions to store. Any axis with a bit set should have its position stored.
 
 Response (0 bytes)
 
@@ -940,7 +940,7 @@ Recall the positions of the selected axes from device EEPROM
 
 Payload
 
-    uint8: Axes bitfield to specify which axes' positions to recall. Any axes with a bit set should have it's position recalled.
+    uint8: Axes bitfield to specify which axes' positions to recall. Any axis with a bit set should have its position recalled.
 
 Response (0 bytes)
 
@@ -949,7 +949,7 @@ Set the value of the digital potentiometers that control the voltage reference f
 
 Payload
 
-    uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
+    uint8: Axes bitfield to specify which axes' potentiometers to set. Any axis with a bit set should have it's potentiometer set.
     uint8: value (valid range 0-127), values over max will be capped at max
 
 Response (0 bytes)
@@ -1071,11 +1071,11 @@ Options Field
 
 ## 149 - Display message to LCD
 This command is used to display a message to the LCD board.
-The maximum buffer size is limited by the maximum package size. Thus a full screen cannot be written with one command.
+The maximum buffer size is larger than the maximum package size, so a full screen cannot be written with one command.
 Messages are stored in a buffer and the full buffer is displayed when the "last message in group" flag is 1.
 The buffer is also displayed when the clear message flag is 1. If multiple packets are received before the screen update is called, they will all be displayed. After screen update is called, the screen will wait until the "last message in group" is received to display the full buffer. TODO: clean this
 The "last message in group" flag must be used for display of multi-packet messages.
-Normal popping of the message screen, such as when a print is over, is ignored if the "last message in group" flag has not been received. This is because the bot thinks it is still waiting for the remainder of a message.
+Normal popping up of the message screen, such as when a print is over, is ignored if the "last message in group" flag has not been received. This is because the bot thinks it is still waiting for the remainder of a message.
 
 if the "clear message" flag is 0, the message buffer will be cleared and any existing timeout out will be cleared.
 
@@ -1093,6 +1093,7 @@ Payload
 
 Response (0 bytes)
 
+Options Field
 <table>
 <tr>
  <th>Bit</th>
