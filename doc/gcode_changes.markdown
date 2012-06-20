@@ -17,20 +17,15 @@ All G and M codes that include a T code must now include that code.  If excluded
 
 ##Gcode Chanages
 ###M161 Find Axes Minimums
-Addition
+Change
 
     When executing a G161 command, the F code is compared against each maximum feedrate thats being moved.  If any maximum feedrate is less than the desired feedrate, we use that maximum feedrate and associated steps_per_mm constant to calculate the DDA speed.
 
-Removals
-
 
 ###M162 Find Axes Maximums
-Addition
+Change
 
     When executing a G162 command, the F code is compared against each maximum feedrate thats being moved.  If any maximum feedrate is less than the desired feedrate, we use that maximum feedrate and associated steps_per_mm constant to calculate the DDA speed.
-
-Removals
-
 
 ##Gcode Command Additions
 ###M133 Wait For Tool Ready
