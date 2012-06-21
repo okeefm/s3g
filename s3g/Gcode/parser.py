@@ -73,8 +73,8 @@ class GcodeParser(object):
           self.GCODE_INSTRUCTIONS[codes['G']][0](codes, flags, comment)
 
         else:
-          gcode_error = UnrecognizedCodeError()
-          gcode_error.values['UnrecognizedCode'] = codes['M']
+          gcode_error = UnrecognizedCommandError()
+          gcode_error.values['UnrecognizedCommand'] = codes['G']
           raise gcode_error
 
       elif 'M' in codes:
@@ -84,15 +84,14 @@ class GcodeParser(object):
           self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
 
         else:
-          gcode_error = UnrecognizedCodeError()
-          gcode_error.values['UnrecognizedCode'] = codes['M']
+          gcode_error = UnrecognizedCommandError()
+          gcode_error.values['UnrecognizedCommand'] = codes['M']
           raise gcode_error
 
       # Not a G or M code, should we throw here?
       else:
         if len(codes) + len(flags) > 0:
           gcode_error = ExtraneousCodeError()
-          gcode_error.values['Misc'] = 'This is probably a blank line'
           raise gcode_error
 
         else:

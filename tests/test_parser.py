@@ -24,6 +24,22 @@ class gcodeTests(unittest.TestCase):
     self.mock = None
     self.g = None
 
+  def test_unrecognized_command_test_g_command(self):
+    cmd = 999
+    command = 'G' + str(cmd)
+    try:
+      self.g.ExecuteLine(command)
+    except s3g.Gcode.UnrecognizedCommandError as e:
+      self.assertEqual(e.values['UnrecognizedCommand'], cmd)
+
+  def test_unrecognized_command_test_m_command(self):
+    cmd = 999
+    command = 'M' + str(cmd)
+    try:
+      self.g.ExecuteLine(command)
+    except s3g.Gcode.UnrecognizedCommandError as e:
+      self.assertEqual(e.values['UnrecognizedCommand'], cmd)
+
   def test_check_cant_read_non_unicde_non_ascii(self):
     command = 92
     self.assertRaises(s3g.Gcode.ImproperGcodeEncodingError, self.g.ExecuteLine, command)
