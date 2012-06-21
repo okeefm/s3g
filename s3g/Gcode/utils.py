@@ -285,10 +285,47 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate, max_fe
 
   fastest_feedrate = float(abs(displacement_vector[longest_axis]))/CalculateVectorMagnitude(displacement_vector)*actual_feedrate
 
-  secondConst = 60
-  microSecondConst = 1000000 
+  # Now we know the feedrate of the fastest axis, in mm/min. Convert it to us/step. 
+  dda_speed = ComputeDDASpeed(fastest_feedrate, abs(steps_per_mm[longest_axis]))
 
-  # Now we know the feedrate of the fastest axis, in mm/s. Convert it to us/step. 
-  dda_speed = secondConst * microSecondConst/(fastest_feedrate*abs(steps_per_mm[longest_axis]))
+  return dda_speed
 
+def ComputeDDASpeed(feedrate, spm):
+  """
+  Given a feedrate in mm/min, and SPM in steps/mm, calculate its DDA
+  speed, in microSeconds/step.
+  
+  @param int feedrate: The desired movement speed in mm/min
+  @param float spm: The steps per mm we use to get the DDA speed
+  @return float dda_speed: The dda speed we use
+  """
+  second_const = 60
+  micro_second_const = 1000000
+  dda_speed = second_const * micro_second_const/(feedrate*spm)
+  return dda_speed
+
+def CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list):
+  """
+  Given a set of feedrates and spm values, calculates the homing DDA speed
+  We always use the limiting axis' feedrate and SPM 
+  constant, if applicable.  If there is no limiting axis, we default to 
+  the first axis' spm value.
+
+  @param int feedrate: The feedrate we want to move at
+  @param int list max_feedrates: The max feedrates we will be using
+  @param float list spm_list: The steps_per_mm we use to calculate the DDA speed
+  @retun float dda_speed: The speed we will be moving at
+  """
+  if max_feedrates == [] or spm_list == [] or len(spm_list) != len(max_feedrates):
+    gcode_error = CalculateHomingDDAError()
+    gcode_error.values['MaxFeedrateLength'] = len(max_feedrates)
+    gcode_error.values['SPMLength'] = len(spm_list)
+    raise gcode_error
+  usable_feedrate = feedrate
+  usable_spm = spm_list[0]
+  for max_feedrate, spm in zip(max_feedrates, spm_list):
+    if usable_feedrate > max_feedrate:
+      usable_feedrate = max_feedrate
+      usable_spm = spm
+  dda_speed = ComputeDDASpeed(usable_feedrate, usable_spm)
   return dda_speed

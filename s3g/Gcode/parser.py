@@ -31,8 +31,8 @@ class GcodeParser(object):
       90  : [self.AbsoluteProgramming,         '',        ''],
       92  : [self.SetPosition,                 'XYZABE',  ''],
       130 : [self.SetPotentiometerValues,      'XYZAB',   ''],
-      161 : [self.FindAxesMinimums,            'D',       'XYZ'],
-      162 : [self.FindAxesMaximums,            'D',       'XYZ'],
+      161 : [self.FindAxesMinimums,            'F',       'XYZ'],
+      162 : [self.FindAxesMaximums,            'F',       'XYZ'],
 }
 
     self.MCODE_INSTRUCTIONS = {
@@ -139,18 +139,36 @@ class GcodeParser(object):
     or endstop is reached
     This function loses the state machine's position.
     """
+    axes = ParseOutAxes(flags)
+    if len(axes) == 0:
+      return
     self.state.LosePosition(flags)
-    axes = ParseOutAxes(flags) 
-    self.s3g.FindAxesMaximums(axes, codes['D'], self.state.profile.values['find_axis_maximum_timeout'])
+    #We need some axis information to calc the DDA speed
+    axes_feedrates, axes_SPM = self.state.GetAxesFeedrateAndSPM(axes)
+    dda_speed = CalculateHomingDDASpeed(
+        codes['F'], 
+        axes_feedrates,
+        axes_SPM
+        )
+    self.s3g.FindAxesMaximums(axes, dda_speed, self.state.profile.values['find_axis_maximum_timeout'])
 
   def FindAxesMinimums(self, codes, flags, comment):
     """Moves the given axes in the negative direction until a timeout
     or endstop is reached.
     This function loses the state machine's position.
     """
-    self.state.LosePosition(flags) 
     axes = ParseOutAxes(flags)
-    self.s3g.FindAxesMinimums(axes, codes['D'], self.state.profile.values['find_axis_minimum_timeout'])
+    if len(axes) == 0:
+      return
+    self.state.LosePosition(flags) 
+    #We need some axis information to calc the DDA speed
+    axes_feedrates, axes_SPM = self.state.GetAxesFeedrateAndSPM(axes)
+    dda_speed = CalculateHomingDDASpeed(
+        codes['F'], 
+        axes_feedrates,
+        axes_SPM
+        )
+    self.s3g.FindAxesMinimums(axes, dda_speed, self.state.profile.values['find_axis_minimum_timeout'])
 
   def SetPosition(self, codes, flags, comment):
     """Explicitely sets the position of the state machine and bot

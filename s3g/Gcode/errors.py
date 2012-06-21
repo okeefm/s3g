@@ -124,6 +124,12 @@ class ImproperVariableError(GcodeError):
   defined in the environment.
   """
 
+class CalculateHomingDDAError(GcodeError):
+  """
+  A CalculateHomingDDAError is raised when an empty max_feedrates list or spm_list has been
+  passed in.
+  """
+
 class TCodeNotDefinedWarning:
   """
   A TCodeNotDefinedWarning is raised when a command is executed that should have a T command

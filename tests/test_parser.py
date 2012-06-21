@@ -371,7 +371,7 @@ class gcodeTests(unittest.TestCase):
     Tests to make sure that throwing all registers in a command doesnt raise an
     extra register error.
     """
-    codes = 'D'
+    codes = 'F'
     flags = 'XYZ'
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[161][1])
     self.assertEqual(sorted(flags), sorted(self.g.GCODE_INSTRUCTIONS[161][2]))
@@ -384,39 +384,39 @@ class gcodeTests(unittest.TestCase):
           'A' : 4,
           'B' : 5,
           }
-    dda_speed = 5
-    codes = {'D':dda_speed}
+    feedrate = 512
+    codes = {'F':feedrate}
     flags = ['X', 'Y', 'Z']
     axes = flags
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMinimums(codes, flags, '')
-    self.mock.FindAxesMinimums.assert_called_once_with(axes, dda_speed, timeout)
-    expectedPosition = {
-        'X'   :   None,
-        'Y'   :   None,
-        'Z'   :   None,
-        'A'   :   4,
-        'B'   :   5,
+    params = self.mock.mock_calls[0][1]
+    self.assertEqual(params[0], flags)
+    expected_position = {
+        'X' : None,
+        'Y' : None,
+        'Z' : None,
+        'A' : 4,  
+        'B' : 5,
         }
-    self.assertEqual(expectedPosition, self.g.state.position)
+    self.assertEqual(expected_position, self.g.state.position)
 
   def test_find_axes_minimum_no_axes(self):
-    dda_speed = 5
-    codes = {'D' : dda_speed}
+    feedrate = 5
+    codes = {'F' : feedrate}
     axes = []
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMinimums(codes, [], '')
-    self.mock.FindAxesMinimums.assert_called_once_with(axes, dda_speed, timeout)
+    self.assertTrue(len(self.mock.mock_calls) == 0)
 
-  def test_find_axes_minimum_no_d_code(self):
+  def test_find_axes_minimum_no_F_code(self):
     codes = {}
-    flags = []
+    flags = ['X', 'Y']
     comments = ''
     self.assertRaises(KeyError, self.g.FindAxesMinimums, codes, flags, comments)
 
-
   def test_find_axes_maximums_all_codes_accounted_for(self):
-    codes = 'D'
+    codes = 'F'
     flags = 'XYZ'
     self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[162][1]))
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[162][2])
@@ -429,14 +429,15 @@ class gcodeTests(unittest.TestCase):
         'A'   :   4,
         'B'   :   5
         }
-    dda_speed = 5
-    codes = {'D' : dda_speed}
+    feedrate = 5
+    codes = {'F' : feedrate}
     flags = ['X', 'Y', 'Z']
     axes = flags
     feedrate = 0
     timeout = self.g.state.profile.values['find_axis_maximum_timeout']
     self.g.FindAxesMaximums(codes, flags, '')
-    self.mock.FindAxesMaximums.assert_called_once_with(axes, dda_speed, timeout)
+    params = self.mock.mock_calls[0][1]
+    self.assertEqual(params[0], flags)
     expectedPosition = {
         'X'   :   None,
         'Y'   :   None,
@@ -447,16 +448,17 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(expectedPosition, self.g.state.position)
 
   def test_find_axes_maximum_no_axes(self):
-    dda_speed = 5
-    codes = {'D' : dda_speed}
+    feedrate = 5
+    codes = {'F' : feedrate}
     axes = []
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMaximums(codes, [], '')
-    self.mock.FindAxesMaximums.assert_called_once_with(axes, dda_speed, timeout)
+    calls = self.mock.mock_calls
+    self.assertTrue(len(calls) == 0)
 
-  def test_find_axes_maximum_no_d_code(self):
+  def test_find_axes_maximum_no_f_code(self):
     codes = {}
-    flags = []
+    flags = ['X', 'Y']
     comments = ''
     self.assertRaises(KeyError, self.g.FindAxesMaximums, codes, flags, comments)
 

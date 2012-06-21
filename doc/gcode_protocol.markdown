@@ -290,7 +290,7 @@ Instruct the machine to home the specified axes to their minimum position.
 
 Registers
 
-    D: (code, optional) Movement DDA speed in microseconds/step
+    F: (code) Desired feedrate (mm/min) for this command
     X: (flag, optional) If present, home the x axis to its minimum position
     Y: (flag, optional) If present, home the y axis to its minimum position
     Z: (flag, optional) If present, home the z axis to its minimum position
@@ -302,27 +302,28 @@ S3g Output
 Parameters
 
     axes = List Of All Present Axes
-    feedrate = F
-    timeout = Hardcoded timeout of 60 seconds
+    feedrate = The calculated DDA speed for F.  We always use the minimum feedrate (relative to the desired feedrate and maximum feedrates of all homing axes) and the limiting axis' spm constant.  If no limiting axis is present, we default to the first axis' spm constant.
+    timeout = Timeout specified in the machine profile
 
 ## G162 - Home given axes to maximum
 Instruct the machine to home the specified axes to their maximum position.
 
 Registers
 
-    D: (code, optional) Movement DDA speed in microseconds/step
+    F: (code) Desired feedrate (mm/min) for this command
     X: (flag, optional) If present, home the x axis to its maximum position
     Y: (flag, optional) If present, home the y axis to its maximum position
     Z: (flag, optional) If present, home the z axis to its maximum position
 
 S3g Output
 
-    FindAxesMaximums(axes, feedrate)
+    FindAxesMaximums(axes, feedrate, timeout)
 
 Parameters
 
     axes = List Of All Present Axes
-    feedrate = F
+    feedrate = The calculated DDA speed for F.  We always use the minimum feedrate (relative to the desired feedrate and maximum feedrates of all homing axes) and the limiting axis' spm constant.  If no limiting axis is present, we default to the first axis' spm constant.
+    timeout = Timeout specified in the machine profile
 
 # Supported M Codes
 

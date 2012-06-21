@@ -17,22 +17,15 @@ All G and M codes that include a T code must now include that code.  If excluded
 
 ##Gcode Chanages
 ###M161 Find Axes Minimums
-Addition
+Change
 
-    Added a D command, which specifies a DDA speed in microseconds/step to move at
+    When executing a G161 command, the F code is compared against each maximum feedrate thats being moved.  If any maximum feedrate is less than the desired feedrate, we use that maximum feedrate and associated steps_per_mm constant to calculate the DDA speed.
 
-Removals
-
-    The F command which specified a feedrate to move at.  In order to derive a feedrate, a displacement vector needs to be calculated between the current position and the position the machine is traveling to.  This is impossible with the G161 command, since the State Machine has no idea where it is moving to when this action starts.  Due to the displacement vector being the sine qua non of DDA calculations, a DDA speed must be explicitely specified instead of derived (this in turn makes the specified feedrate useless) 
 
 ###M162 Find Axes Maximums
-Addition
+Change
 
-    Added a D command, which specifies a DDA speed in microseconds/step to move at
-
-Removals
-
-    The F command which specified a feedrate to move at.  In order to derive a feedrate, a displacement vector needs to be calculated between the current position and the position the machine is traveling to.  This is impossible with the G162 command, since the State Machine has no idea where it is moving to when this action starts.  Due to the displacement vector being the sine qua non of DDA calculations, a DDA speed must be explicitely specified instead of derived (this in turn makes the specified feedrate useless) 
+    When executing a G162 command, the F code is compared against each maximum feedrate thats being moved.  If any maximum feedrate is less than the desired feedrate, we use that maximum feedrate and associated steps_per_mm constant to calculate the DDA speed.
 
 ##Gcode Command Additions
 ###M133 Wait For Tool Ready
