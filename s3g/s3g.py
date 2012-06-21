@@ -1130,11 +1130,11 @@ class s3g(object):
 
     self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_FAN'], payload)
 
-  def ToggleExtraDevice(self, tool_index, state):
+  def ToggleExtraOutput(self, tool_index, state):
     """
-    Turn the extra device output on or off
+    Turn the extra output on or off
     @param int tool_index: Toolhead Index
-    @param boolean state: If True, turn the extra device on, otherwise off.
+    @param boolean state: If True, turn the extra output on, otherwise off.
     """
 
     if state == True:

@@ -1531,7 +1531,7 @@ class S3gTests(unittest.TestCase):
       self.outputstream.seek(0)
       self.inputstream.seek(0)
  
-      self.r.ToggleExtraDevice(tool_index, fan_state)
+      self.r.ToggleExtraOutput(tool_index, fan_state)
  
       packet = bytearray(self.inputstream.getvalue())
       payload = Encoder.DecodePacket(packet)

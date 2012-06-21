@@ -455,31 +455,31 @@ Parameters
     tool_index = 0
     temperature = S
 
-## M126 - Enable Extra Device
-Enables an extra device attached to a specific toolhead.
+## M126 - Enable Extra Output
+Enables an extra output attached to a specific toolhead.
 
 Registers
 
-    T: (code) The toolhead that the extra device we want to enable is attached to.
+    T: (code) The toolhead that the extra output we want to enable is attached to.
 
 S3g Output
 
-    ToggleExtraDevice(tool_index, True)
+    ToggleExtraOutput(tool_index, True)
 
 Parameters
 
     tool_index = T
 
-## M127 - Disable Extra Device
-Disables an extra device attached to a specific toolhead.
+## M127 - Disable Extra Output 
+Disables an extra output attached to a specific toolhead.
 
 Registers
 
-    T: (code) The toolhead that the extra device we want to disable is attached to
+    T: (code) The toolhead that the extra output we want to disable is attached to
 
 S3g Output
 
-    ToggleExtraDevice(tool_index, False)
+    ToggleExtraOutput(tool_index, False)
 
 Parameters
 

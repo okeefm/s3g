@@ -25,21 +25,21 @@ Removals
 
     The F command which specified a feedrate to move at.  In order to derive a feedrate, a displacement vector needs to be calculated between the current position and the position the machine is traveling to.  This is impossible with the G161 command, since the State Machine has no idea where it is moving to when this action starts.  Due to the displacement vector being the sine qua non of DDA calculations, a DDA speed must be explicitely specified instead of derived (this in turn makes the specified feedrate useless) 
 
-###M126 Enable Extra Device
+###M126 Enable Extra Output
 
 Addition
 
-    This command was previously called Enable Valve.  There has been a general namespace change, and there are no longer 'valves' on machines, but extra devices.  Thus, this command has been renamed to Enable Extra Device.
+    This command was previously called Enable Valve.  There has been a general namespace change, and there are no longer 'valves' on machines, but instead extra outputs.  Thus, this command has been renamed to Enable Extra Output.
 
 Removal
 
     None.
 
-###M127 Disable Extra Device
+###M127 Disable Extra Output 
 
 Addition
 
-    This command was previously called Disable Valve.  There has been a general namespace change, and there are no longer 'valves' on machines, but extra devices.  Thus, this command has been renamed to Disable Extra Device.
+    This command was previously called Disable Valve.  There has been a general namespace change, and there are no longer 'valves' on machines, but instead extra outputs.  Thus, this command has been renamed to Disable Extra Output.
 
 Removal
 

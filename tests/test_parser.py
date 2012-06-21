@@ -1033,15 +1033,15 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     flags = []
     comments = ''
-    self.assertRaises(KeyError, self.g.EnableExtraDevice, codes, flags, comments)
+    self.assertRaises(KeyError, self.g.EnableExtraOutput, codes, flags, comments)
  
   def test_enable_extra_device_t_code_defined(self):
     tool_index = 2
     codes = {'T'  : tool_index}
     flags = []
     comments = ''
-    self.g.EnableExtraDevice(codes, flags, comments)
-    self.mock.ToggleExtraDevice.assert_called_once_with(tool_index, True)
+    self.g.EnableExtraOutput(codes, flags, comments)
+    self.mock.ToggleExtraOutput.assert_called_once_with(tool_index, True)
 
   def test_disable_extra_device_all_codes_accounted_for(self):
     codes = 'T'
@@ -1053,15 +1053,15 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     flags = []
     comments = ''
-    self.assertRaises(KeyError, self.g.DisableExtraDevice, codes, flags, comments)
+    self.assertRaises(KeyError, self.g.DisableExtraOutput, codes, flags, comments)
 
   def test_disable_extra_device_t_code_defined(self):
     tool_index = 2
     codes = {'T'  : tool_index}
     flags = []
     comments = ''
-    self.g.DisableExtraDevice(codes, flags, comments)
-    self.mock.ToggleExtraDevice.assert_called_once_with(tool_index, False)
+    self.g.DisableExtraOutput(codes, flags, comments)
+    self.mock.ToggleExtraOutput.assert_called_once_with(tool_index, False)
 
 if __name__ == "__main__":
   unittest.main()

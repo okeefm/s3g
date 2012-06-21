@@ -1501,8 +1501,8 @@ Payload
 
 Response (0 bytes)
 
-## 13 - Enable/disable extra device
-Turn the extra device output on or off
+## 13 - Enable/disable extra output
+Turn the extra output attached to a toolhead on or off
 
 Payload
 
