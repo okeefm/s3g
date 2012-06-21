@@ -1142,7 +1142,7 @@ class s3g(object):
     else:
       payload = '\x00'
 
-    self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_EXTRA_DEVICE'], payload)
+    self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_EXTRA_OUTPUT'], payload)
 
   def ToolheadInit(self, tool_index):
     """

@@ -1538,7 +1538,7 @@ class S3gTests(unittest.TestCase):
  
       self.assertEquals(payload[0], constants.host_action_command_dict['TOOL_ACTION_COMMAND'])
       self.assertEquals(payload[1], tool_index)
-      self.assertEquals(payload[2], constants.slave_action_command_dict['TOGGLE_EXTRA_DEVICE'])
+      self.assertEquals(payload[2], constants.slave_action_command_dict['TOGGLE_EXTRA_OUTPUT'])
       self.assertEquals(payload[3], 1)
       self.assertEquals(payload[4], fan_state)
 
