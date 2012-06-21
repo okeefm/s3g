@@ -55,14 +55,14 @@ class FileReaderTestsWithS3g(unittest.TestCase):
 
     self.r.QueueExtendedPointNew(point, duration, [])
     self.r.SetExtendedPosition(point)
-    self.r.SetPosition(point[:3])
+    self.r.SetBuildPercent(0)
     self.inputstream.seek(0)
 
     payloads = self.d.ReadFile()
     cmdNumbers = [
         s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'], 
         s3g.host_action_command_dict['SET_EXTENDED_POSITION'], 
-        s3g.host_action_command_dict['SET_POSITION']
+        s3g.host_action_command_dict['SET_BUILD_PERCENT']
         ]
 
     for readCmd, cmd in zip([payloads[0][0], payloads[1][0], payloads[2][0]], cmdNumbers):
@@ -159,7 +159,7 @@ class MockTests(unittest.TestCase):
     self.assertRaises(s3g.FileReader.BadCommandError, self.d.GetNextCommand)
 
   def test_get_next_command_host_action_command(self):
-    cmd = s3g.host_action_command_dict['QUEUE_POINT']
+    cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT']
     reply = bytearray()
     reply.append(cmd)
     self.d.ReadBytes = mock.Mock(return_value=reply)

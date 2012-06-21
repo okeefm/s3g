@@ -427,18 +427,6 @@ Payload (0 bytes)
 
 Response (0 bytes)
 
-## 04 - Get position: Get the current position of the toolhead
-Retrieve the curent position of the XYZ axes
-
-Payload (0 bytes)
-
-Response
-
-    int32: X position, in steps
-    int32: Y position, in steps
-    int32: Z position, in steps
-    uint8: Axes bitfield corresponding to the endstop status
-
 ## 07 - Abort immediately: Stop machine, shut down job permanently
 This function is intended to be used to terminate a print during printing. Disables steppers, heaters, and any toolheads, and clears all command buffers.
 
@@ -730,31 +718,6 @@ Response
     uint32: Number of bytes received over the tool network that were discarded as noise
 
 # Host Buffered Commands
-
-## 129 - Queue point
-This queues an absolute point to move to.
-
-_Historical note: This implementation is much more wordy than an incremental solution, which likely impacts processing time and buffer sizes on the resource-constrained firmware_
-
-Payload
-
-    int32: X coordinate, in steps
-    int32: Y coordinate, in steps
-    int32: Z coordinate, in steps
-    uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
-
-Response (0 bytes)
-
-## 130 - Set position
-Reset the current position of the axes to the given values.
-
-Payload
-
-    int32: X position, in steps
-    int32: Y position, in steps
-    int32: Z position, in steps
-
-Response (0 bytes)
 
 ## 131 - Find axes minimums: Move specified axes in the negative direction until their limit switch is triggered.
 This function will find the minimum position that the hardware can travel to, then stop. Note that all axes are moved syncronously. If one of the axes (Z, for example) should be moved separately, then a seperate command should be sent to move that axis. Note that a minimum endstop is required for each axis that is to be moved.
