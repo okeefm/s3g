@@ -10,20 +10,22 @@ digraph
   ]
 
   "RecoverableError" [shape=diamond];
-  "UnrecoverableError" [shape=diamond];
   "PacketDecodeError" [shape=diamond];
   "ProtocolError" [shape=diamond]; 
   "ParameterError" [shape=diamond];
   "MachineTransmissionError" [shape=diamond];
-  "BufferOverflowError" -> "RecoverableError";
+  "ExtendedStopError";
+  "BufferOverflowError";
+  "TransmissionError";
+  "ExternalStopError";
+  "SDCardError";
+  "ExtendedStopError";
+  "BuildCancelError";
   "GenericError" -> "RecoverableError";
   "CRCMismatchError" -> "RecoverableError";
-  "BuildCancelError" -> "UnrecoverableError";
   "TimeoutError" -> "RecoverableError";
   "DownstreamTimeoutError" -> "MachineTransmissionError";
   "ToolLockError" ->  "MachineTransmissionError";
-  "MachineTransmissionError" -> "UnrecoverableError";
-  "TransmissionError" -> "UnrecoverableError";
 
   "PacketDecodeError" -> "RecoverableError";
   "PacketLengthError" -> "PacketDecodeError";
@@ -31,15 +33,11 @@ digraph
   "PacketHeaderError" -> "PacketDecodeError";
   "PacketCRCError" -> "PacketDecodeError"; 
 
-  "ProtocolError" -> "UnrecoverableError";
   "HeatElementReadyError" -> "ProtocolError";
   "EEPROMMismatchError" ->  "ProtocolError";
 
-  "ParameterError"  ->  "UnrecoverableError";
   "ButtonError" -> "ParameterError";
   "EEPROMLengthError" -> "ParameterError";
   "ToolIndexError" -> "ParameterError";
   "PointLengthError" -> "ParameterError";
-
-  "ExtendedStopError" -> "UnrecoverableError";
 } 
