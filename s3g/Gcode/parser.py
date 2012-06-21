@@ -44,6 +44,8 @@ class GcodeParser(object):
        104 : [self.SetToolheadTemperature,     'ST',      ''],
        105 : [self.GetTemperature,             '',        ''],
        109 : [self.SetPlatformTemperature,     'ST',      ''],
+       126 : [self.EnableExtraOutput,          'T',       ''],
+       127 : [self.DisableExtraOutput,         'T',       ''],
        132 : [self.LoadPosition,               '',        'XYZAB'],
        133 : [self.WaitForToolReady,           'PT',      ''],
        134 : [self.WaitForPlatformReady,       'PT',      ''],
@@ -405,6 +407,20 @@ class GcodeParser(object):
     self.state.values['build_name'] = None
 
     self.s3g.BuildEndNotification()
+
+  def EnableExtraOutput(self, codes, flags, comment):
+    """
+    Enables an extra output attached to a certain toolhead
+    of the machine
+    """
+    self.s3g.ToggleExtraOutput(codes['T'], True)
+
+  def DisableExtraOutput(self, codes, flags, comment):
+    """
+    Disables an extra output attached to a certain toolhead
+    of the machine
+    """
+    self.s3g.ToggleExtraOutput(codes['T'], False)
 
   def ExtruderOff(self, codes, flags, comment):
     """Turn the extruder off

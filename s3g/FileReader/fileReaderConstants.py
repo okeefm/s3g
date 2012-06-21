@@ -29,7 +29,7 @@ slaveFormats = {
     6       :     ['I'], #"SET MOTOR 1 SPED RPM", 
     10      :     ['B'], #"TOGGLE MOTOR 1", 
     12      :     ['B'], #"TOGGLE FAN", 
-    13      :     ['B'], #"TOGGLE VALVE", 
+    13      :     ['B'], #"TOGGLE EXTRA OUTPUT", 
     14      :     ['B'], #"SET SERVO 1 POSITION", 
     23      :     [], #"PAUSE"
     24      :     [], #"ABORT"

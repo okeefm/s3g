@@ -22,6 +22,26 @@ Change
     When executing a G161 command, the F code is compared against each maximum feedrate thats being moved.  If any maximum feedrate is less than the desired feedrate, we use that maximum feedrate and associated steps_per_mm constant to calculate the DDA speed.
 
 
+###M126 Enable Extra Output
+
+Addition
+
+    This command was previously called Enable Valve.  There has been a general namespace change, and there are no longer 'valves' on machines, but instead extra outputs.  Thus, this command has been renamed to Enable Extra Output.
+
+Removal
+
+    None.
+
+###M127 Disable Extra Output 
+
+Addition
+
+    This command was previously called Disable Valve.  There has been a general namespace change, and there are no longer 'valves' on machines, but instead extra outputs.  Thus, this command has been renamed to Disable Extra Output.
+
+Removal
+
+    None.
+
 ###M162 Find Axes Maximums
 Change
 
