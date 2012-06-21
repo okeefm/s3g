@@ -15,7 +15,7 @@ Previously, whenever the Gcode Parser encountered a T command, the internal Gcod
 ###Mandatory T codes
 All G and M codes that include a T code must now include that code.  If excluded, a MissingCodeError will be thrown.
 
-##Gcode Chanages
+##Gcode Changes
 ###M161 Find Axes Minimums
 Change
 
@@ -31,12 +31,12 @@ Change
 ###M133 Wait For Tool Ready
 Reason for Addition:
 
-    The M6 code is a generic Wait For Tool command that will wait for all tools to heat up in with a given index.  This command was deemed to open ended, and bifurcated into a Wait For Tool command and a Wait For Platform command.
+    The M6 code is a generic Wait For Tool command that will wait for all tools with a given index to heat up.  This command was deemed too open ended, and bifurcated into a Wait For Tool command and a Wait For Platform command.
 
 ###M134 Wait For Platform Ready
 Reason for Addition:
 
-    The M6 code is a generic Wait For Tool command, that will wait for all tools in with a given index.  This command was deemed to open ended, and bifurcated into a Wait For Tool command and a Wait For Platform command.
+    The M6 code is a generic Wait For Tool command, that will wait for all tools with a given index.  This command was deemed too open ended, and bifurcated into a Wait For Tool command and a Wait For Platform command.
 
 ###M135 Change Tool
 Reason For Addition:
@@ -91,7 +91,7 @@ Status:
 
 Reason For Removal:
 
-    This code used to be the goto method for changing the tool_index (as in, if we wanted to change from tool_index 0 to 1, we would add an M6 command with a defined T code.  This is using the code for an unintended purpose, so after moving away from that paradigm, this command was reduced to an RPM command.  S3g's parser can only handle 5d commands and not RPM commands, so this command was removed.
+    This code used to be the goto method for changing the tool_index (as in, if we wanted to change from tool_index 0 to 1, we would add an M108 command with a defined T code.  This is using the code for an unintended purpose, so after moving away from that paradigm, this command was reduced to an RPM command.  S3g's parser can only handle 5d commands and not RPM commands, so this command was removed.
 
 ###M101 Extruder On Forward
 Status:

@@ -95,7 +95,7 @@ These are the rules used to parse commands:
 ## Variable Substitution
 The gcode parser has an internal variable, called an environemnt.  The environment is a python dict that defines all variables encased in a Gcode File.  During Line Execution, prior to parsing out the comments/commands, all variables defined in the environment are replaced by their defined value.  If any variables present in a line of Gcode are undefined in the environment, the parser will throw an UndefinedVariableError.  While variables contained within the line of Gcode must be prefixed by a '#', the variables defined in the environment do not need to be delineated (i.e. The variable '#FOO' is defined as 'FOO' in the environment).
 
-NB: The environment defaults with as an empty python dict.
+NB: The environment defaults to an empty python dict.
 
 # Supported G Codes
 
@@ -466,7 +466,7 @@ Registers
 
 S3g Output
 
-    WaitForPlatformReady(tool_index, delay, timeout)
+    WaitForToolReady(tool_index, delay, timeout)
 
 Parameters
 
