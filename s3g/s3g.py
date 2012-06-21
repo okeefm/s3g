@@ -474,22 +474,6 @@ class s3g(object):
 
     return buffer_size
 
-  def GetPosition(self):
-    """
-    Gets the current machine position
-    @return tuple containing the 3D position the machine is currently located at, 
-    and the endstop states.
-    """
-    payload = struct.pack(
-      '<B',
-      host_query_command_dict['GET_POSITION']
-    )
-
-    response = self.writer.SendQueryPayload(payload)
-    [response_code, x, y, z, axes_bits] = Encoder.UnpackResponse('<BiiiB', response)
-
-    return [x, y, z], axes_bits
-
   def AbortImmediately(self):
     """
     Stop the machine by disabling steppers, clearing the command buffers, and 
@@ -581,41 +565,6 @@ class s3g(object):
      endstop_states] = Encoder.UnpackResponse('<BiiiiiH', response)
 
     return [x, y, z, a, b], endstop_states
-
-  # TODO: Change all references to position
-  def QueuePoint(self, point, rate):
-    """
-    Move the toolhead to a new position at the given rate
-    @param list position array 3D position to move to. All dimension should be in steps.
-    @param double rate: Movement speed, in steps/??
-    """
-    if len(point) != self.PointLength:
-      raise PointLengthError(len(point))
-
-    payload = struct.pack(
-      '<BiiiI',
-      host_action_command_dict['QUEUE_POINT'],
-      point[0], point[1], point[2],
-      rate
-    )
-
-    self.writer.SendActionPayload(payload)
-
-  def SetPosition(self, position):
-    """
-    Inform the machine that it should consider this p
-    @param list position: 3D position to set the machine to, in steps.
-    """
-    if len(position) != self.PointLength:
-      raise PointLengthError(len(position))
-
-    payload = struct.pack(
-      '<Biii',
-      host_action_command_dict['SET_POSITION'],
-      position[0], position[1], position[2],
-    )
-
-    self.writer.SendActionPayload(payload)
 
   def FindAxesMinimums(self, axes, rate, timeout):
     """

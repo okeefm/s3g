@@ -145,7 +145,7 @@ for test_state in test_states:
  
         try:
             queue_start_time = time.time()
-            r.QueuePoint(target, int(velocity))
+            r.QueueExtendedPoint(target, int(velocity))
             queue_times.append(time.time() - queue_start_time)
  
             command_count += 1

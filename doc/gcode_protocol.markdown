@@ -240,7 +240,7 @@ Registers
 
 S3g Output
 
-    SetPosition(position)
+    SetExtendedPosition(position)
 
 Parameters
 
@@ -257,7 +257,7 @@ Registers
 
 S3g Output
 
-    SetPosition(position)
+    SetExtendedPosition(position)
 
 Parameters
 

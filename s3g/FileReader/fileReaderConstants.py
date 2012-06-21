@@ -1,6 +1,4 @@
 hostFormats = {
-    129     :     ['i', 'i', 'i', 'i'], #"QUEUE POINT", 
-    130     :     ['i', 'i', 'i'], #"SET POSITION", 
     131     :     ['B', 'I', 'H'], #"FIND AXES MINIMUMS", 
     132     :     ['B', 'I', 'H'], #"FIND AXES MAXIMUMS", 
     133     :     ['I'], #"DELAY", 
