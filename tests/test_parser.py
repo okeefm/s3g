@@ -235,29 +235,6 @@ class gcodeTests(unittest.TestCase):
     self.g.UseP0Offsets(codes, [], '')
     self.assertEqual(0, self.g.state.offset_register) 
 
-  def test_absolute_programming_all_codes_accounted_for(self):
-    codes = ''
-    flags = ''
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[90][1])
-
-  def test_absolute_programming(self):
-    oldState = copy.deepcopy(self.g.state.values)
-    self.g.AbsoluteProgramming({}, [], "")
-    newState = self.g.state.values
-    self.assertEqual(oldState, newState)
-
-  def test_milimeter_programming_all_codes_accounted_for(self):
-    codes = ''
-    flags = ''
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[21][1])
-    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[21][2])
-
-  def test_milimeter_programming(self):
-    oldState = copy.deepcopy(self.g.state.values)
-    self.g.MilimeterProgramming({}, [], "")
-    newState = self.g.state.values
-    self.assertEqual(oldState, newState)
-
   def test_set_position_all_codes_accounted_for(self):
     codes = 'XYZABE'
     flags = ''

@@ -57,6 +57,24 @@ Reason for Removal:
 
     This code took the same code path as the G1 command, and only differed by using a baked in constant written into the machine profile.  Due to its redundancy, it was removed.
 
+###G21 Programming in Milimteres
+Status:
+
+    This code has been totally removed, and will throw an error if used.
+
+Reason For Removal:
+
+    S3g's parser only supports programming in milimeters, so this code was not necessary.
+
+###G90 Absolute Programming
+Status:
+
+    This code has been totally removed, and will throw an error if used.
+
+Reason For Removal:
+
+    S3g's parser only supports absolute programming, so this code was not necessary.
+
 ###M6 Wait For Toolhead
 Status:
 
