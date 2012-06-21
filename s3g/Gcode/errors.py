@@ -61,7 +61,7 @@ class ExtraneousCodeError(GcodeError):
   An extraneous code error is raised when a code is found in a command that doesn't support it.
   """
 
-class UnrecognizedCodeError(GcodeError):
+class UnrecognizedCommandError(GcodeError):
   """
   An UnrecognizedCodeError is thrown when a gcode is parsed out that is not recognized
   """
