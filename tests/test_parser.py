@@ -1023,5 +1023,45 @@ class gcodeTests(unittest.TestCase):
     self.g.BuildEndNotification()
     self.mock.BuildEndNotification.assert_called_once_with()
 
+  def test_enable_extra_device_all_codes_accounted_for(self):
+    codes = 'T'
+    flags = ''
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[126][1])
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[126][2])
+
+  def test_enable_extra_device_no_t_code(self):
+    codes = {}
+    flags = []
+    comments = ''
+    self.assertRaises(KeyError, self.g.EnableExtraDevice, codes, flags, comments)
+ 
+  def test_enable_extra_device_t_code_defined(self):
+    tool_index = 2
+    codes = {'T'  : tool_index}
+    flags = []
+    comments = ''
+    self.g.EnableExtraDevice(codes, flags, comments)
+    self.mock.ToggleExtraDevice.assert_called_once_with(tool_index, True)
+
+  def test_disable_extra_device_all_codes_accounted_for(self):
+    codes = 'T'
+    flags = ''
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[127][1])
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[127][2])
+
+  def test_disable_extra_device_no_t_code(self):
+    codes = {}
+    flags = []
+    comments = ''
+    self.assertRaises(KeyError, self.g.DisableExtraDevice, codes, flags, comments)
+
+  def test_disable_extra_device_t_code_defined(self):
+    tool_index = 2
+    codes = {'T'  : tool_index}
+    flags = []
+    comments = ''
+    self.g.DisableExtraDevice(codes, flags, comments)
+    self.mock.ToggleExtraDevice.assert_called_once_with(tool_index, False)
+
 if __name__ == "__main__":
   unittest.main()

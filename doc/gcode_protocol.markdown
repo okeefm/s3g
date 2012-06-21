@@ -455,6 +455,36 @@ Parameters
     tool_index = 0
     temperature = S
 
+## M126 - Enable Extra Device
+Enables an extra device attached to a specific toolhead.
+
+Registers
+
+    T: (code) The toolhead that the extra device we want to enable is attached to.
+
+S3g Output
+
+    ToggleExtraDevice(tool_index, True)
+
+Parameters
+
+    tool_index = T
+
+## M127 - Disable Extra Device
+Disables an extra device attached to a specific toolhead.
+
+Registers
+
+    T: (code) The toolhead that the extra device we want to disable is attached to
+
+S3g Output
+
+    ToggleExtraDevice(tool_index, False)
+
+Parameters
+
+    tool_index = T
+
 ## M132 - Load current home position from EEPROM
 Recalls current home position from the EEPROM and waits for the buffer to empty
 
