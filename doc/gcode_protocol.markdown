@@ -153,7 +153,7 @@ Parameters
     rate = F
 
 ## G4 - Dwell
-If a toolhead is not enabled, this command simply pauses motion for the specified time. If a toolhead is enabled, then this command extrudes at the current rate and direction for the specified time, but does not move the toolhead.
+Tells the machine to pause for a certain amount of time.
 
 Registers
 
@@ -492,7 +492,7 @@ Instruct the machine to wait for the toolhead to reach its target temperature
 Registers
 
     T: (code) The extruder to wait for.
-    P: (code, optional) If present, sets the time limit that we wait for.
+    P: (code, optional) If present, sets the time limit that we wait for.  Otherwise, use a timeout coded into the Gcode State Machine.
 
 S3g Output
 
@@ -510,7 +510,7 @@ Instruct the machine to wait for the platform to reach its target temperature
 Registers
 
     T: (code) The platform to wait for.
-    P: (code, optional) If present, sets the time limit that we wait for.
+    P: (code, optional) If present, sets the time limit that we wait for.  Otherwise, use a timeout coded into the Gcode State Machine.
 
 S3g Output
 
@@ -565,7 +565,7 @@ Disables the extruder motor
 
 Registers
 
-    T: (code, optional) If present, first change to the specified tool
+    T: (code) First change to the specified tool
 
 S3g Output (none)
 

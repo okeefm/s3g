@@ -89,7 +89,7 @@ The s3g module will raise an exception if it encounters a problem during transmi
 TODO: This is largely duplicated in the errors.py doc, consider rewriting as a summary of the base error types only.
 
 ## Parameter Errors
-Parameter errors are raised when the 
+Parameter errors are raised when improperly formatted arguments are passed into an s3g function.
 
     Bad Point Length
     EEPROM Read/Write length too long
@@ -97,7 +97,7 @@ Parameter errors are raised when the
     Bad button name
 
 ## Packet Decode Errors (used internally):
-Packet decode errors are raised if there is a problem evaluating a return packet from an s3g Host. These errors are hand
+Packet decode errors are raised if there is a problem evaluating a return packet from an s3g Host. 
 
     Bad Packet Lengths
     Bad Packet Field Lenghts
