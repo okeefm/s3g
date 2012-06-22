@@ -529,125 +529,15 @@ class gcodeTests(unittest.TestCase):
     for expected, actual in zip(expectedPoint, actual_params[0]):
       self.assertAlmostEquals(expected, actual)
     self.assertAlmostEquals(ddaFeedrate, actual_params[1])
- 
-  def test_linaer_interpolation_e_and_a_codes_present(self):
-    self.g.state.position = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'B' : 0,
-        }
-    codes = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'E' : 0,
-        'A' : 0,
-        'F' : 0,
-        }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
-
-  def test_linear_interpolation_e_and_b_codes_present(self):
-    self.g.state.position = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'B' : 0,
-        }
-    codes = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'E' : 0,
-        'B' : 0,
-        'F' : 0,
-        }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
-
-  def test_linear_interpolation_e_and_a_and_b_present(self):
-    self.g.state.position = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'B' : 0,
-        }
-    codes = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'E' : 0,
-        'A' : 0,
-        'B' : 0,
-        'F' : 0,
-        }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
-
-  def test_linear_interpolation_e_code_no_toolhead(self):
-    self.g.state.position = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'B' : 0,
-        }
-    codes = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'E' : 0,
-        'F' : 0,
-        }
-    self.assertRaises(s3g.Gcode.NoToolIndexError, self.g.LinearInterpolation, codes, [], '')
-
-  def test_linear_interpolation_e_code(self):
-    initialPosition = [5, 4, 3, 2, 1]
-    feedrate = 1
-    expectedPoint = [1, 2, 3, 4, 1]
-    self.g.state.position = {
-        'X' : initialPosition[0],
-        'Y' : initialPosition[1],
-        'Z' : initialPosition[2],
-        'A' : initialPosition[3],
-        'B' : initialPosition[4],
-        }
-    self.g.state.values['tool_index'] = 0
-    codes = {
-        'X' : expectedPoint[0], 
-        'Y' : expectedPoint[1],
-        'Z' : expectedPoint[2],
-        'E' : expectedPoint[3],
-        'F' : feedrate,
-        }
-    self.g.LinearInterpolation(codes, [], '')
-    dda_speed = s3g.Gcode.CalculateDDASpeed(
-        initialPosition, 
-        expectedPoint, 
-        feedrate,
-        self.g.state.GetAxesValues('max_feedrate'),
-        self.g.state.GetAxesValues('steps_per_mm')
-        )
-    spmList = self.g.state.GetAxesValues('steps_per_mm')
-    for i in range(len(expectedPoint)):
-      expectedPoint[i] *= spmList[i]
-    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, dda_speed)
 
   def test_linear_interpolation_a_and_b(self):
-    self.g.state.position = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'B' : 0,
-        }
     codes = {
         'A' : 0,
         'B' : 0,
-        'F' : 0,
         }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
+    flags = []
+    comments = ''
+    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.LinearInterpolation, codes, flags, comments)
 
   def test_linear_interpolation_a(self):
     initialPosition = [5, 4, 3, 2, 1]

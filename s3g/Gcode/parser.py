@@ -173,26 +173,7 @@ class GcodeParser(object):
     """Explicitely sets the position of the state machine and bot
     to the given point
     """
-    for axis in ['X', 'Y', 'Z']:
-      if axis in codes:
-        self.state.position[axis] = codes[axis]
-    if 'E' in codes:
-      if 'A' in codes or 'B' in codes:
-        gcode_error = ConflictingCodesError()
-        gcode_error.values['ConflictingCodes'] = ['E', 'A', 'B']
-        raise gcode_error    
-      if not 'tool_index' in self.state.values:
-        raise NoToolIndexError
-      elif self.state.values['tool_index'] == 0:
-        self.state.position['A'] = codes['E']
-      elif self.state.values['tool_index'] == 1:
-        self.state.position['B'] = codes['E']
-
-    else:
-      if 'A' in codes:
-        self.state.position['A'] = codes['A']
-      if 'B' in codes:
-        self.state.position['B'] = codes['B']
+    self.state.SetPosition(codes)
     stepped_position = MultiplyVector(self.state.GetPosition(), self.state.GetAxesValues('steps_per_mm'))
     self.s3g.SetExtendedPosition(stepped_position)
       
@@ -291,7 +272,9 @@ class GcodeParser(object):
     We subtract one from the 'P' code because skeining engines store 
     designate P1 as the 0'th offset and P2 as the 1'th offset....dumb
     """
-    self.state.StoreOffset(codes['P']-1, [codes['X'], codes['Y'], codes['Z']])
+    for axis in ['X', 'Y', 'Z', 'A', 'B']:
+      if axis in codes:
+        setattr(self.state.offsetPosition[self.state.offset_register], axis, codes[axis])
 
   def LinearInterpolation(self, codes, flags, comment):
     """Movement command that has two flavors: E and AB commands.
@@ -302,37 +285,10 @@ class GcodeParser(object):
     """
     if 'F' in codes:
       self.state.values['feedrate'] = codes['F']
-    if len(ParseOutAxes(codes)) > 0 or 'E' in codes:
-      current_position = self.state.GetPosition()
-      for axis in ['X', 'Y', 'Z']:
-        if axis in codes:
-          self.state.position[axis] = codes[axis]
-
-      if 'E' in codes:
-        if 'A' in codes or 'B' in codes:
-          gcode_error = ConflictingCodesError()
-          gcode_error.values['ConflictingCodes'] = ['E', 'A', 'b']
-          raise gcode_error
-
-        if not 'tool_index' in self.state.values:
-          raise NoToolIndexError
-
-        elif self.state.values['tool_index'] == 0:
-          self.state.position['A'] = codes['E']
-
-        elif self.state.values['tool_index'] == 1:
-          self.state.position['B'] = codes['E']
-
-      elif 'A' in codes and 'B' in codes:
-        gcode_error = ConflictingCodesError()
-        gcode_error.values['ConflictingCodes'] = ['A', 'B']
-        raise gcode_error
-      else:
-        if 'A' in codes:
-          self.state.position['A'] = codes['A']
-        if 'B' in codes:
-          self.state.position['B'] = codes['B']
-
+    if 'A' and 'B' in codes:
+      gcode_error = ConflictingCodesError()
+      gcode_error.values['ConflictingCodes'] = ['A', 'B']
+      raise gcode_error
       try :
         feedrate = self.state.values['feedrate']
         dda_speed = CalculateDDASpeed(

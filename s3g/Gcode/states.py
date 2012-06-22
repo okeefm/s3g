@@ -5,33 +5,16 @@ variables.
 
 from utils import *
 from errors import *
+from point import *
 
 class GcodeStates(object):
   def __init__(self):
     self.profile = None
-    self.position = {    #Position, In MM!!
-        'X' : None,
-        'Y' : None,
-        'Z' : None,
-        'A' : None,
-        'B' : None,
-        }
+    self.position = Point()    #Position, In MM!!
 
     self.offsetPosition = {
-        0   :   {
-                'X' : 0,
-                'Y' : 0,
-                'Z' : 0,
-                'A' : 0,
-                'B' : 0,
-                },
-        1   :   {
-                'X' : 0,
-                'Y' : 0,
-                'Z' : 0,
-                'A' : 0,
-                'B' : 0,
-                },
+        0   :   Point(),
+        1   :   Point(),
         }
 
     self.values = {}
@@ -45,15 +28,7 @@ class GcodeStates(object):
     @param list axes: A list of axes to lose
     """
     for axis in axes:
-      self.position[axis] = None
-
-  def SetPosition(self, axes):
-    """Given a dict of axes and positions, sets
-    those axes in the dict to their position.
-    @param dict axes: Dict of axes and positions
-    """
-    for axis in axes:
-        self.position[axis] = axes[axis]
+      setattr(self.position, axis, None)
 
   def GetPosition(self):
     """Gets a usable position in steps to send to the machine by applying 
@@ -62,28 +37,20 @@ class GcodeStates(object):
     een used, we apply no offsets
     @return list position: The current position of the machine in steps
     """
-    positionFormat = ['X', 'Y', 'Z', 'A', 'B']
-    returnPosition = []
-    for axis in positionFormat:
-      if self.position[axis] == None:
+    #Check each axis first, since we need to report a bad axis if needed
+    for axis in ['X', 'Y', 'Z', 'A', 'B']:
+      if getattr(self.position, axis) == None:
         gcode_error = UnspecifiedAxisLocationError()
         gcode_error.values['UnspecifiedAxis'] = axis
         raise gcode_error
-      elif self.offset_register == None:
-        returnPosition.append(self.position[axis])
-      else:
-        returnPosition.append(self.position[axis] + self.offsetPosition[self.offset_register][axis])
-    return returnPosition
-
-  def StoreOffset(self, register, offsets):
-    """Given a register with offsets, sets a specific
-    register's offsets to the offsets passed in.
-    @param int register: The register we modify
-    @param list offsets: The offsets we apply
-    """
-    axes = ['X','Y','Z','A','B']  
-    for i in range(len(offsets)):
-      self.offsetPosition[register][axes[i]] = offsets[i]
+    
+    return_position = self.position.ToList()
+    
+    if self.offset_register != None:
+      offsets = self.offsetPosition[self.offset_register]
+      return_position = map(lambda x, y: x+y, return_position, offsets.ToList())
+    
+    return return_position
 
   def SetBuildName(self, build_name):
     if not isinstance(build_name, str):
@@ -91,6 +58,47 @@ class GcodeStates(object):
     else:
       self.values['build_name'] = build_name
 
+  def SetPosition(self, codes):
+    """
+    Given a dict of codes containing axes and values, sets those 
+    axes values to the state's internal position's axes values.
+    If an E codes is defined, interpolates that E code's value 
+    with the correct A or B axis.
+
+    @param dict codes:  A dictionary that contains axes and their 
+        defined positions
+    """
+    #If there are axes to move on, or an E command interpolate with
+    if len(ParseOutAxes(codes)) > 0 or 'E' in codes:
+      for axis in ['X', 'Y', 'Z']:
+        if axis in codes:
+          setattr(self.position, axis, codes[axis])
+
+      if 'E' in codes:
+        if 'A' in codes or 'B' in codes:
+          gcode_error = ConflictingCodesError()
+          gcode_error.values['ConflictingCodes'] = ['E', 'A', 'B']
+          raise gcode_error
+        
+        #Cant interpolate E unless a tool_head is specified
+        if not 'tool_index' in self.values:
+          raise NoToolIndexError
+
+        elif self.values['tool_index'] == 0:
+          setattr(self.position, 'A', codes['E'])
+
+        elif self.values['tool_index'] == 1:
+          setattr(self.position, 'B', codes['E'])
+
+      elif 'A' in codes and 'B' in codes:
+        gcode_error = ConflictingCodesError()
+        gcode_error.values['ConflictingCodes'] = ['A', 'B']
+        raise gcode_error
+      else:
+        if 'A' in codes:
+          setattr(self.position, 'A', codes['A'])
+        if 'B' in codes:
+          setattr(self.position, 'B', codes['B'])
 
   def GetAxesValues(self, key):
     """

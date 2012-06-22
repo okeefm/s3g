@@ -7,60 +7,44 @@ import unittest
 import io
 import time
 
-from s3g import Gcode, Profile
+import s3g
 
 class s3gHelperFunctionTests(unittest.TestCase):
   def setUp(self):
-    self.g = Gcode.GcodeStates()
+    self.g = s3g.Gcode.GcodeStates()
 
   def tearDown(self):
     self.g = None
 
-  def test_store_offsets(self):
-    offset = 0
-    offsets = [1, 2, 3]
-
-  def test_store_offsets(self):
-    offset = 0
-    offsets = [1, 2, 3] 
-    self.g.offsetPosition[0] = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        }
-    self.g.StoreOffset(offset, offsets)
-    expectedOffset = {
-        'X' : 1,
-        'Y' : 2,
-        'Z' : 3,
-        }
-    self.assertEqual(expectedOffset, self.g.offsetPosition[0])
-
   def test_get_position_unspecified_axis_location(self):
-    self.g.position['X'] = None
-    self.assertRaises(Gcode.UnspecifiedAxisLocationError, self.g.GetPosition)
+    setattr(self.g.position, 'X', None)
+    self.assertRaises(s3g.Gcode.UnspecifiedAxisLocationError, self.g.GetPosition)
 
   def test_get_position_no_offsets(self):
-    self.g.position = {
+    position = {
         'X' : 0,
         'Y' : 1,
         'Z' : 2,
         'A' : 3,
         'B' : 4,
         }
+    for key in position:
+      setattr(self.g.position, key, position[key])
     self.g.ofset_register = None
     expectedPosition = [0, 1, 2, 3, 4]
     self.assertEqual(expectedPosition, self.g.GetPosition())
 
   def test_get_position_with_offset(self):
-    self.g.position = {
+    position = {
         'X' : 0,
         'Y' : 1,
         'Z' : 2,
         'A' : 3,
         'B' : 4,
         }
-    self.g.offsetPosition[0] = {
+    for key in position:
+      setattr(self.g.position, key, position[key])
+    offsetPosition = {
         'X' : 100,
         'Y' : 200,
         'Z' : 300,
@@ -68,92 +52,52 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'B' : 500,
         }
     self.g.offset_register = 0
+    for key in offsetPosition:
+      setattr(self.g.offsetPosition[self.g.offset_register], key, offsetPosition[key])
     expectedPosition = [100, 201, 302, 403, 504]
     self.assertEqual(expectedPosition, self.g.GetPosition())
-  
-  def test_set_position_no_axes(self):
-    self.g.position = {
-        'X' : 0,
-        'Y' : 1,
-        'Z' : 2,
-        'A' : 3,
-        'B' : 4,
-        }
-    axes = {}
-    self.g.SetPosition(axes)
-    self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.position)
-
-  def test_set_position_minimal_axes(self):
-    self.g.position = {
-        'X' : 0, 
-        'Y' : 1,
-        'Z' : 2,
-        'A' : 3,
-        'B' : 4,
-        }
-    axes = {'X' : -1}
-    self.g.SetPosition(axes)
-    self.assertEqual({'X' : -1, 'Y' : 1, 'Z' : 2, 'A' : 3, 'B' : 4}, self.g.position)
-
-  def test_set_position(self):
-    self.g.position = {
-        'X' : 0,
-        'Y' : 1,
-        'Z' : 2,
-        'A' : 3,
-        'B' : 4,
-        }
-    axes = {
-        'X' : 5,
-        'Y' : 6,
-        'Z' : 7,  
-        'A' : 8,
-        'B' : 9, 
-        }
-    self.g.SetPosition(axes)
-    self.assertEqual({'X' : 5, 'Y' : 6, 'Z' : 7, 'A' : 8, 'B' : 9}, self.g.position)
 
   def test_lose_position(self):
-    self.g.position = {
+    position = {
           'X' : 1,
           'Y' : 2,
           'Z' : 3,
           'A' : 4,
           'B' : 5,
           }
+    for key in position:
+      setattr(self.g.position, key, position[key])
     axes = ['X', 'Y', 'Z', 'A', 'B']
     self.g.LosePosition(axes)
-    for key in self.g.position:
-      self.assertTrue(self.g.position[key] == None)
+    for axis in axes:
+      self.assertEqual(getattr(self.g.position, axis), None)
 
   def test_lose_position_no_axes(self):
-    self.g.position = {
+    position = {
         'X' : 0,
         'Y' : 1,
         'Z' : 2,
         'A' : 3,
         'B' : 4,
         }
+    for key in position:
+      setattr(self.g.position, key, position[key])
     axes = []
-    expectedPosition = {
-        'X' : 0,
-        'Y' : 1,
-        'Z' : 2, 
-        'A' : 3,
-        'B' : 4, 
-        }
+    expected_position = [0, 1, 2, 3, 4]
     self.g.LosePosition(axes)
-    self.assertEqual(expectedPosition, self.g.position)
+    self.assertEqual(expected_position, self.g.GetPosition())
 
   def test_lose_position_minimal_codes(self):
-    self.g.position = {
+    position = {
         'X' : 0,
         'Y' : 1,
         'Z' : 2,
         'A' : 3,
         'B' : 4,
         }
-    expectedPosition = {
+    for key in position:
+      setattr(self.g.position, key, position[key])
+    expected_position = {
         'X' : None,
         'Y' : 1,
         'Z' : 2,
@@ -162,7 +106,8 @@ class s3gHelperFunctionTests(unittest.TestCase):
         }
     axes = ['X']
     self.g.LosePosition(axes)
-    self.assertEqual(expectedPosition, self.g.position)
+    for key in expected_position:
+      self.assertEqual(getattr(self.g.position, key), expected_position[key])
 
   def test_set_build_name(self):
     build_name = 'test'
@@ -173,11 +118,86 @@ class s3gHelperFunctionTests(unittest.TestCase):
     build_name = 9
     self.assertRaises(TypeError, self.g.SetBuildName, build_name)
 
+  def test_set_position_no_axes(self):
+    codes = {}
+    self.g.SetPosition(codes)
+    expected_position = [None, None, None, None, None]
+    self.assertEqual(expected_position, self.g.position.ToList())
+
+  def test_set_position_e_and_a_codes(self):
+    codes = {
+        'E' : 0,
+        'A' : 0,
+        }
+    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.SetPosition, codes)
+
+  def test_set_position_e_and_b_codes(self):
+    codes = {
+        'E' : 0,
+        'B' : 0,
+        }
+    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.SetPosition, codes)
+
+  def test_set_position_e_and_a_and_b_codes(self):
+    codes = {
+        'E' : 0,
+        'A' : 0,
+        'B' : 0,
+        }
+    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.SetPosition, codes)
+
+  def test_set_position_e_code_no_tool_index(self):
+    codes = {'E'  : 0}
+    self.assertRaises(s3g.Gcode.NoToolIndexError, self.g.SetPosition, codes)
+
+  def test_set_position_e_code_tool_index_1(self):
+    codes = {'E'  : 2}
+    self.g.values['tool_index'] = 1
+    self.g.SetPosition(codes)
+    expected_position = [None, None, None, None, 2]
+    self.assertEqual(expected_position, self.g.position.ToList())
+
+  def test_set_position_e_code_tool_index_2(self):
+    codes = {'E'  : 2}
+    self.g.values['tool_index'] = 0
+    self.g.SetPosition(codes)
+    expected_position = [None, None, None, 2, None]
+    self.assertEqual(expected_position, self.g.position.ToList())
+
+  def test_set_position_a_and_b_codes(self):
+    codes = {
+        'A' : 3,
+        'B' : 4,
+        }
+    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.SetPosition, codes)
+  
+  def test_set_position_x_y_z(self):
+    codes = {
+        'X' : 0,
+        'Y' : 1,
+        'Z' : 2,
+        }
+    self.g.SetPosition(codes)
+    expected_position  = [0, 1, 2, None, None]
+    self.assertEqual(expected_position, self.g.position.ToList())
+
+  def test_set_position_extra_codes(self):
+    codes = {
+        'X' : 0,
+        'Y' : 1,
+        'Z' : 2,
+        'A' : 3,
+        'Q' : -1,
+        }
+    self.g.SetPosition(codes)
+    expected_position = [0, 1, 2, 3, None]
+    self.assertEqual(expected_position, self.g.position.ToList())
+
 class TestProfileInformationParsing(unittest.TestCase):
 
   def setUp(self):
-    self.g = Gcode.GcodeStates()
-    profile = Profile('ReplicatorDual')
+    self.g = s3g.Gcode.GcodeStates()
+    profile = s3g.Profile('ReplicatorDual')
     self.g.profile = profile
 
   def tearDown(self):
@@ -200,8 +220,8 @@ class TestProfileInformationParsing(unittest.TestCase):
 
 class MachineProfileWith4Axes(unittest.TestCase):
   def setUp(self):
-    self.g = Gcode.GcodeStates()
-    profile = Profile('ReplicatorSingle')
+    self.g = s3g.Gcode.GcodeStates()
+    profile = s3g.Profile('ReplicatorSingle')
     self.g.profile = profile
 
   def tearDown(self):
@@ -221,8 +241,8 @@ class MachineProfileWith4Axes(unittest.TestCase):
 class GetAxesFeedrateSPM(unittest.TestCase):
 
   def setUp(self):
-    self.g = Gcode.GcodeStates()
-    profile = Profile('ReplicatorDual')
+    self.g = s3g.Gcode.GcodeStates()
+    profile = s3g.Profile('ReplicatorDual')
     self.g.profile = profile
 
   def tearDown(self):
@@ -257,6 +277,7 @@ class GetAxesFeedrateSPM(unittest.TestCase):
     expected_spm = [94.139, 94.139, 400]
     self.assertEqual(expected_feedrate, feedrate)
     self.assertEqual(expected_spm, spm)
+
 
 if __name__ == "__main__":
   unittest.main()
