@@ -16,6 +16,11 @@ class GcodeStates(object):
         0   :   Point(),
         1   :   Point(),
         }
+    
+    #Set offsets to 0
+    for axis in ['X', 'Y', 'Z', 'A', 'B']:
+      for key in self.offsetPosition:
+        setattr(self.offsetPosition[key], axis, 0)
 
     self.values = {}
     self.wait_for_ready_packet_delay = 100  #ms
@@ -68,37 +73,30 @@ class GcodeStates(object):
     @param dict codes:  A dictionary that contains axes and their 
         defined positions
     """
-    #If there are axes to move on, or an E command interpolate with
-    if len(ParseOutAxes(codes)) > 0 or 'E' in codes:
-      for axis in ['X', 'Y', 'Z']:
-        if axis in codes:
-          setattr(self.position, axis, codes[axis])
+    for axis in ['X', 'Y', 'Z']:
+      if axis in codes:
+        setattr(self.position, axis, codes[axis])
 
-      if 'E' in codes:
-        if 'A' in codes or 'B' in codes:
-          gcode_error = ConflictingCodesError()
-          gcode_error.values['ConflictingCodes'] = ['E', 'A', 'B']
-          raise gcode_error
-        
-        #Cant interpolate E unless a tool_head is specified
-        if not 'tool_index' in self.values:
-          raise NoToolIndexError
-
-        elif self.values['tool_index'] == 0:
-          setattr(self.position, 'A', codes['E'])
-
-        elif self.values['tool_index'] == 1:
-          setattr(self.position, 'B', codes['E'])
-
-      elif 'A' in codes and 'B' in codes:
+    if 'E' in codes:
+      if 'A' in codes or 'B' in codes:
         gcode_error = ConflictingCodesError()
-        gcode_error.values['ConflictingCodes'] = ['A', 'B']
+        gcode_error.values['ConflictingCodes'] = ['E', 'A', 'B']
         raise gcode_error
-      else:
-        if 'A' in codes:
-          setattr(self.position, 'A', codes['A'])
-        if 'B' in codes:
-          setattr(self.position, 'B', codes['B'])
+      
+      #Cant interpolate E unless a tool_head is specified
+      if not 'tool_index' in self.values:
+        raise NoToolIndexError
+
+      elif self.values['tool_index'] == 0:
+        setattr(self.position, 'A', codes['E'])
+
+      elif self.values['tool_index'] == 1:
+        setattr(self.position, 'B', codes['E'])
+
+    if 'A' in codes:
+        setattr(self.position, 'A', codes['A'])
+    if 'B' in codes:
+        setattr(self.position, 'B', codes['B'])
 
   def GetAxesValues(self, key):
     """

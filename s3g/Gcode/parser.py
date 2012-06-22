@@ -274,7 +274,7 @@ class GcodeParser(object):
     """
     for axis in ['X', 'Y', 'Z', 'A', 'B']:
       if axis in codes:
-        setattr(self.state.offsetPosition[self.state.offset_register], axis, codes[axis])
+        setattr(self.state.offsetPosition[codes['P']-1], axis, codes[axis])
 
   def LinearInterpolation(self, codes, flags, comment):
     """Movement command that has two flavors: E and AB commands.
@@ -285,10 +285,13 @@ class GcodeParser(object):
     """
     if 'F' in codes:
       self.state.values['feedrate'] = codes['F']
-    if 'A' and 'B' in codes:
-      gcode_error = ConflictingCodesError()
-      gcode_error.values['ConflictingCodes'] = ['A', 'B']
-      raise gcode_error
+    if len(ParseOutAxes(codes)) > 0 or 'E' in codes:
+      current_position = self.state.GetPosition()
+      self.state.SetPosition(codes)
+      if 'A' and 'B' in codes:
+        gcode_error = ConflictingCodesError()
+        gcode_error.values['ConflictingCodes'] = ['A', 'B']
+        raise gcode_error
       try :
         feedrate = self.state.values['feedrate']
         dda_speed = CalculateDDASpeed(

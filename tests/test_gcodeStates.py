@@ -75,39 +75,33 @@ class s3gHelperFunctionTests(unittest.TestCase):
   def test_lose_position_no_axes(self):
     position = {
         'X' : 0,
-        'Y' : 1,
-        'Z' : 2,
-        'A' : 3,
-        'B' : 4,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
         }
     for key in position:
       setattr(self.g.position, key, position[key])
     axes = []
-    expected_position = [0, 1, 2, 3, 4]
     self.g.LosePosition(axes)
-    self.assertEqual(expected_position, self.g.GetPosition())
+    for axis in ['X', 'Y', 'Z', 'A', 'B']:
+      self.assertEqual(getattr(self.g.position, axis), 0)
 
   def test_lose_position_minimal_codes(self):
     position = {
         'X' : 0,
-        'Y' : 1,
-        'Z' : 2,
-        'A' : 3,
-        'B' : 4,
+        'Y' : 0,
+        'Z' : 0,
+        'A' : 0,
+        'B' : 0,
         }
     for key in position:
       setattr(self.g.position, key, position[key])
-    expected_position = {
-        'X' : None,
-        'Y' : 1,
-        'Z' : 2,
-        'A' : 3,
-        'B' : 4,
-        }
     axes = ['X']
     self.g.LosePosition(axes)
-    for key in expected_position:
-      self.assertEqual(getattr(self.g.position, key), expected_position[key])
+    self.assertEqual(None, getattr(self.g.position, 'X'))
+    for axis in ['Y', 'Z', 'A', 'B']:
+      self.assertEqual(0, getattr(self.g.position, axis))
 
   def test_set_build_name(self):
     build_name = 'test'
@@ -169,8 +163,10 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'A' : 3,
         'B' : 4,
         }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.SetPosition, codes)
-  
+    self.g.SetPosition(codes)
+    expected_position = [None, None, None, 3, 4]
+    self.assertEqual(expected_position, self.g.position.ToList())
+ 
   def test_set_position_x_y_z(self):
     codes = {
         'X' : 0,
@@ -187,10 +183,11 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'Y' : 1,
         'Z' : 2,
         'A' : 3,
+        'B' : 4,
         'Q' : -1,
         }
     self.g.SetPosition(codes)
-    expected_position = [0, 1, 2, 3, None]
+    expected_position = [0, 1, 2, 3, 4]
     self.assertEqual(expected_position, self.g.position.ToList())
 
 class TestProfileInformationParsing(unittest.TestCase):

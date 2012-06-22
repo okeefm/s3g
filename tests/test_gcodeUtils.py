@@ -410,6 +410,9 @@ def generic_zero_move_test(state):
 def generic_calculate_dda_speed_good_result(state):
   """This function is used to test both replicator single and dual profiles
   while calculating DDA speeds
+
+  @param state state: A state machine that houses either a replicator single or
+      dual profile.
   """
   # TODO: These cases assume a replicator with specific steps_per_mm
   cases = [
