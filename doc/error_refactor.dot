@@ -15,15 +15,14 @@ digraph
   "ParameterError" [shape=diamond];
   "MachineTransmissionError" [shape=diamond];
   "ExtendedStopError";
-  "BufferOverflowError";
   "TransmissionError";
-  "ExternalStopError";
   "SDCardError";
   "ExtendedStopError";
   "BuildCancelError";
   "GenericError" -> "RecoverableError";
   "CRCMismatchError" -> "RecoverableError";
   "TimeoutError" -> "RecoverableError";
+  "BufferOverflowError" -> "RecoverableError";
   "DownstreamTimeoutError" -> "MachineTransmissionError";
   "ToolLockError" ->  "MachineTransmissionError";
 
