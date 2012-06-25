@@ -84,50 +84,61 @@ There are several commands that require a list of axes as input.  This parameter
     ['x', 'y', 'z', 'a', 'b']
 
 # Error handling
-The s3g module will raise an exception if it encounters a problem during transmission. Conditions, such as timeouts, bad packets being received from the bot and poorly formatted parameters all can cause the s3g module to raise exceptions.  Some of these states are recoverable, while some require a machine restart.  We can categorize s3g's error states into the following (NB: You can always explore s3g/errors.py to see a more detailed description of all of s3g's errors):
+The s3g module will raise an exception if it encounters a problem during transmission. Conditions, such as timeouts, bad packets being received from the bot and poorly formatted parameters all can cause the s3g module to raise exceptions.  Some of these states are recoverable, while some require a machine restart.  We can categorize s3g's error states into the following:
 
 TODO: This is largely duplicated in the errors.py doc, consider rewriting as a summary of the base error types only.
 
-## Parameter Errors
-Parameter errors are raised when the 
+## Buffer Overflow Error (used internally)
+A Buffer Overflow Error is raised when the machine has full buffer.
 
-    Bad Point Length
-    EEPROM Read/Write length too long
-    Bad Tool Index
-    Bad button name
+## Retryable Errors (used internally)
+Retryable Errors are non-catastrophic errors raised by s3g.  While alone they cannot cause s3g to terminate, an aggregate of 5 errors will cause s3g to quit.
+
+    Packet Decode Errors
+    Generic Errors
+    CRC Mismatch Errors
+    Timeout Errors
 
 ## Packet Decode Errors (used internally):
-Packet decode errors are raised if there is a problem evaluating a return packet from an s3g Host. These errors are hand
+Packet decode errors are raised if there is a problem evaluating a return packet from an s3g Host:
 
     Bad Packet Lengths
     Bad Packet Field Lenghts
     Bad Packet CRCs
     Bad Packet Headers
 
-## Response Errors
-These errors are caused by:
-
-    Buffer Overflows
-    Build Cancels
-    Timeouts
-    Generic Errors
-
-## Transmission Errors
-Transmission Errors are thrown when s3g encounters too many errors when decoding a packet from the machine
+## Transmission Errors:
+Transmission Errors are thrown when more than 5 Retryable Errors are raised.
 
 ## Protocol Errors
-These errors are caused by:
+These errors are caused by ostensibly well formed packets returned from the machine, but with incorrect data:
 
     Bad Heat Element Ready Responses
     Bad EEPROM Read/Write Lengths
+    UnrecognizedResponseError
+
+## Parameter Errors
+Parameter errors are raised when imporperly formatted arguments are passed into an s3g function.
+
+    Bad Point Length
+    EEPROM Read/Write length too long
+    Bad Tool Index
+    Bad button name
+
+## ToolBusError (used internally):
+Tool Bus errors are raised when the machine cannot communicate with its toolbus.
+
+    Downstream Timeout Error
+    Tool Lock Error
 
 ## Other Errors
 Bot generated errors will throw their own specific errors, such as:
 
     SD Card Errors
     Extended Stop Errors
+    Build Cancel Errors
 
-##GCode Errors
+## GCode Errors
 GCode errors are thrown when reading through a GCode file and parsing out g/m codes and comments.
 Cause By:
 
@@ -135,8 +146,11 @@ Cause By:
     Bad Codes
     Codes That Are Repeated Multiple Times On A Single Line
     M And G Codes Present On The Same Line
-    
-##S3G Stream Reading Errors
+   
+## External Stop Error
+An External Stop Error is raised when an external thread sets the External Stop Flag in s3g.Writer.StreamWriter to true, which terminates the Stream Writer's packet sending process.
+ 
+## S3G Stream Reading Errors
 These errors are thrown when the s3g module encounters errors during s3g stream parsing.  
 Caused By:
 
