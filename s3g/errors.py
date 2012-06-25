@@ -1,13 +1,22 @@
 from constants import *
 
-class PacketDecodeError(Exception):
+class RetryableError(Exception):
+  """
+  RetryableError is a generic error that other errors inherit from.  An error is considered
+  retryable if it does not cause the state machine to halt.
+  """
+
+class PacketDecodeError(RetryableError):
   """
   Error that occured when evaluating a packet. These errors are caused by problems that
   are potentially recoverable.
   """
-  def __init__(self, value):
-    self.value = value
-    self.__name__= 'PacketDecodeError'     
+  def __init__(self, actual, expected):
+    self.value = {
+        'ExpectedValue' : expected,
+        'ActualValue'   : actual,
+        }
+
   def __str__(self):
     return str(self.value)
 
@@ -15,82 +24,37 @@ class PacketLengthError(PacketDecodeError):
   """
   Signifies an error in the length of a packet
   """
-  def __init__(self, length, expected_length):
-    self.length = length
-    self.expected_length = expected_length
-    self.value = {'LENGTH': self.length, 'EXPECTED LENGTH':self.expected_length}
-    self.__name__ = 'PacketLengthError'
 
 class PacketLengthFieldError(PacketDecodeError):
   """
   Signifies an error in a specific field of the packet (i.e. the payload isnt the correct length
   """
-  def __init__(self, length, expected_length):
-    self.length = length
-    self.expected_length = expected_length
-    self.value = {'LENGTH':self.length, 'EXPECTED LENGTH':self.expected_length}
-    self.__name__ = 'PacketLengthFieldError'
 
 class PacketHeaderError(PacketDecodeError):
   """
   Signifies an incorrect header on a packet
   """
-  def __init__(self, header, expected_header):
-    self.header = header
-    self.expected_header = expected_header
-    self.value = {'HEADER':self.header, 'EXPECTED HEADER':self.expected_header}
-    self.__name__ = 'PacketHeaderError'
 
 class PacketCRCError(PacketDecodeError):
   """
   Signifies a mismatch in expected and actual CRCs
   """
-  def __init__(self, crc, expected_crc):
-    self.crc = crc
-    self.expected_crc = expected_crc
-    self.value = {'CRC':self.crc, 'EXPECTED CRC':self.expected_crc}
-    self.__name__ = 'PacketCRCError'
 
-class ResponseError(Exception):
-  """
-  Errors that represent failures returned by the machine
-  """
-  def __init__(self, value):
-     self.value = value
-  def __str__(self):
-    return str(self.value)
-
-class BufferOverflowError(ResponseError):
-  """
-  Signifies a reported overflow of the buffer from the bot
-  """
-  def __init__(self):
-    self.value = 'BufferOverflow'
-
-class GenericError(ResponseError):
+class GenericError(RetryableError):
   """
   A generic error reported by the bot
   """
   def __init__(self, value):
     self.value = value
-    self.__name__ = 'RetryError'
 
-class CRCMismatchError(ResponseError):
+class CRCMismatchError(RetryableError):
   """
   Signifies a bad crc code was received by the bot
   """
   def __init__(self, value):
     self.value = value
-    self.__name__ = 'CRCMismatchError'
 
-class BuildCancelledError(ResponseError):
-  """
-  Signifies the cancellation of a build
-  """
-  def __init__(self):
-    self.value = 'BuildCancelled'
-
-class TimeoutError(ResponseError):
+class TimeoutError(RetryableError):
   """
   Signifies that a packet has taken too long to be received
   """
@@ -101,10 +65,16 @@ class TimeoutError(ResponseError):
         'DATA LENGTH':self.data_length,  
         'DECODER STATE':self.decoder_state
         }
-    self.__name__ = 'TimeoutError'
 
-  def __str__(self):
-    return str(self.value)
+class BufferOverflowError(Exception):
+  """
+  Signifies a reported overflow of the buffer from the bot
+  """
+
+class BuildCancelledError(Exception):
+  """
+  Signifies the cancellation of a build
+  """
 
 class TransmissionError(IOError):
   """
@@ -121,13 +91,19 @@ class TransmissionError(IOError):
                               #TransmissionErrors can contain
                               #a list of proximate errors that caused this
 
-class DownstreamTimeoutError(TransmissionError):
+class ToolBusError(IOError):
+  """
+  A toolbus error signifies a transmission error between the machine and its
+  toolbus.
+  """
+
+class DownstreamTimeoutError(ToolBusError):
   """
   Signifiees the machine cannot communicate with the tool
   due to a communication timeout.
   """
 
-class ToolLockError(TransmissionError):
+class ToolLockError(ToolBusError):
   """
   Signifies the machine cannot communicate with the tool
   due to the tool being locked
@@ -137,8 +113,6 @@ class ExtendedStopError(Exception):
   """
   An extended stop error is thrown if there was a problem executing an extended stop on the machine.
   """
-  def __str__(self):
-    return 'ExtendedStop'
 
 class SDCardError(Exception):
   """

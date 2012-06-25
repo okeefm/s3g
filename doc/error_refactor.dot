@@ -19,10 +19,10 @@ digraph
   "SDCardError";
   "ExtendedStopError";
   "BuildCancelError";
+  "BufferOverflowError";
   "GenericError" -> "RecoverableError";
   "CRCMismatchError" -> "RecoverableError";
   "TimeoutError" -> "RecoverableError";
-  "BufferOverflowError" -> "RecoverableError";
   "DownstreamTimeoutError" -> "MachineTransmissionError";
   "ToolLockError" ->  "MachineTransmissionError";
 
