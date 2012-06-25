@@ -12,8 +12,6 @@ class s3g(object):
   def __init__(self):
     self.writer = None
 
-    self.logger = logging.getLogger('s3g_output_stats')
-
     # TODO: Move these to constants file.
     self.ExtendedPointLength = 5
     self.PointLength = 3
