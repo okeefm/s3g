@@ -131,7 +131,7 @@ class GcodeParser(object):
       except KeyError:
         valTable[codes[a]] = [a]
     for val in valTable:
-      self.s3g.SetPotentiometerValue(valTable[val], int(val))
+      self.s3g.SetPotentiometerValue(valTable[val], val)
 
   def FindAxesMaximums(self, codes, flags, command):
     """Moves the given axes in the position direction until a timeout
@@ -220,7 +220,7 @@ class GcodeParser(object):
     self.s3g.WaitForToolReady(
         codes['T'],
         self.state.wait_for_ready_packet_delay,
-        int(timeout)
+        timeout
         )
 
   def WaitForPlatformReady(self, codes, flags, comment):
@@ -236,7 +236,7 @@ class GcodeParser(object):
     self.s3g.WaitForPlatformReady(
         codes['T'],
         self.state.wait_for_ready_packet_delay,
-        int(timeout)
+        timeout
         )
 
   def DisableAxes(self, codes, flags, comment):
@@ -257,7 +257,7 @@ class GcodeParser(object):
         row,
         col,
         comment,
-        int(codes['P']),
+        codes['P'],
         clear_existing,
         last_in_group,
         wait_for_button,
@@ -266,7 +266,7 @@ class GcodeParser(object):
   def PlaySong(self, codes, flags, comment):
     """Plays a song as a certain register on the bot.
     """
-    self.s3g.QueueSong(int(codes['P']))
+    self.s3g.QueueSong(codes['P'])
 
   def SetBuildPercentage(self, codes, flags, comment):
     """Sets the build percentage to a certain percentage.
@@ -276,7 +276,7 @@ class GcodeParser(object):
     if percentage > 100 or percentage < 0:
       raise BadPercentageError
 
-    self.s3g.SetBuildPercent(int(percentage))
+    self.s3g.SetBuildPercent(percentage)
 
     # Side effect: If the build percentage is 0 or 100, then also send a build start or build end notification.
     # TODO: Should this be called first? is order of operations important?
@@ -371,14 +371,14 @@ class GcodeParser(object):
     a specific temperature.  We set the state's tool_idnex to be the
     'T' code (if present) and use that tool_index when heating.
     """
-    self.s3g.SetToolheadTemperature(codes['T'], int(codes['S']))
+    self.s3g.SetToolheadTemperature(codes['T'], codes['S'])
 
   def SetPlatformTemperature(self, codes, flags, comment):
     """Sets the platform temperature for a specific toolhead to a specific 
     temperature.  We set the state's tool_index to be the 'T' code (if present)
     and use that tool_index when heating.
     """
-    self.s3g.SetPlatformTemperature(codes['T'], int(codes['S']))
+    self.s3g.SetPlatformTemperature(codes['T'], codes['S'])
 
   def LoadPosition(self, codes, flags, comment):
     """Loads the home positions for the XYZ axes from the eeprom

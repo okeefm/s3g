@@ -105,7 +105,7 @@ class ParseCommandTests(unittest.TestCase):
     for command in cases:
       self.assertRaises(ValueError, s3g.Gcode.ParseCommand, command)
 
-  def test_single_code_accepts_lowercase(self):
+  def test_single_flag_accepts_lowercase(self):
     command = 'g'
     expected_codes = {}
     expected_flags = ['G']
@@ -114,7 +114,7 @@ class ParseCommandTests(unittest.TestCase):
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
 
-  def test_single_code_no_value(self):
+  def test_single_flag(self):
     command = 'G'
     expected_codes = {}
     expected_flags = ['G']
@@ -123,7 +123,7 @@ class ParseCommandTests(unittest.TestCase):
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
 
-  def test_single_code_with_value(self):
+  def test_single_integer_code(self):
     command = 'G0'
     expected_codes = {'G' : 0}
     expected_flags = []
@@ -131,8 +131,19 @@ class ParseCommandTests(unittest.TestCase):
     codes, flags = s3g.Gcode.ParseCommand(command)
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
+    self.assertEquals(int, type(codes['G']))
 
-  def test_single_code_leading_whitespace(self):
+  def test_single_float_code(self):
+    command = 'G0.1234'
+    expected_codes = {'G' : 0.1234}
+    expected_flags = []
+
+    codes, flags = s3g.Gcode.ParseCommand(command)
+    self.assertEquals(expected_codes, codes)
+    self.assertEquals(expected_flags, flags)
+    self.assertEquals(float, type(codes['G']))
+
+  def test_single_integer_code_leading_whitespace(self):
     command = '\t\t\t G0'
     expected_codes = {'G' : 0}
     expected_flags = []
@@ -140,6 +151,7 @@ class ParseCommandTests(unittest.TestCase):
     codes, flags = s3g.Gcode.ParseCommand(command)
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
+    self.assertEquals(int, type(codes['G']))
 
   def test_repeated_code(self):
     command = 'G0 G0'
@@ -154,19 +166,21 @@ class ParseCommandTests(unittest.TestCase):
     self.assertRaises(s3g.Gcode.MultipleCommandCodeError, s3g.Gcode.ParseCommand, command)
 
   def test_many_codes_and_flags(self):
-    command = 'M0 X1 Y2 Z3 F4 A B'
+    command = 'M0 X1.1 Y2.2 Z3.3 F4.4 A B'
     expected_codes = {
       'M' : 0,
-      'X' : 1,
-      'Y' : 2,
-      'Z' : 3,
-      'F' : 4,
+      'X' : 1.1,
+      'Y' : 2.2,
+      'Z' : 3.3,
+      'F' : 4.4,
     }
     expected_flags = ['A','B']
 
     codes, flags = s3g.Gcode.ParseCommand(command)
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
+    for code in zip(expected_codes.values(), codes.values()):
+      self.assertEquals(type(code[0]), type(code[1]))
 
 class CheckForExtraneousCodesTests(unittest.TestCase):
   def test_no_codes(self):

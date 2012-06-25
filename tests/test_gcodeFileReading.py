@@ -10,6 +10,7 @@ except ImportError:
 import mock
 
 import s3g
+import warnings
 
 class SingleHeadReading(unittest.TestCase):
 
@@ -36,13 +37,16 @@ class SingleHeadReading(unittest.TestCase):
 
 
   def test_single_head_skeinforge_single_20mm_box(self):
-    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_single_extrusion_20mm_box.gcode'), self.p) 
+      ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
+        'doc', 'gcode_samples', 'skeinforge_single_extrusion_20mm_box.gcode'), self.p) 
 
   def test_single_head_skeinforge_single_snake(self):
-    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_single_extrusion_snake.gcode'), self.p) 
+      ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
+        'doc', 'gcode_samples', 'skeinforge_single_extrusion_snake.gcode'), self.p) 
 
   def test_single_head_miracle_grue(self):
-    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode'), self.p) 
+      ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
+        'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode'), self.p) 
 
 class DualHeadReading(unittest.TestCase):
 
@@ -68,16 +72,27 @@ class DualHeadReading(unittest.TestCase):
     self.p = None
 
   def test_dual_head_skeinforge_hilbert_cube(self):
-    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_dual_extrusion_hilbert_cube.gcode'), self.p) 
+      ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
+        'doc', 'gcode_samples', 'skeinforge_dual_extrusion_hilbert_cube.gcode'), self.p) 
 
   def test_single_head_skeinforge_single_20mm_box(self):
-    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_single_extrusion_20mm_box.gcode'), self.p) 
+    with warnings.catch_warnings():
+      #warnings.filterwarnings("ignore", category=FutureWarning)
+      warnings.filterwarnings("ignore",
+        "We are allowing commands that do not have T codes defined even though they " +\
+        "should to pass through currently due to skeinforge compatability issues.  Once " +\
+        "skeinforge has been fixed, these commands WILL cause errors.")
+
+      ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
+        'doc', 'gcode_samples', 'skeinforge_single_extrusion_20mm_box.gcode'), self.p) 
 
   def test_single_head_skeinforge_single_snake(self):
-    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'skeinforge_single_extrusion_snake.gcode'), self.p) 
+      ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
+        'doc', 'gcode_samples', 'skeinforge_single_extrusion_snake.gcode'), self.p) 
 
   def test_single_head_miracle_grue(self):
-    ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode'), self.p) 
+      ExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
+        'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode'), self.p) 
 
 def ExecuteFile(theFile, parser):
   for line in parser.state.profile.values['print_start_sequence']:
