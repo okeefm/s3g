@@ -466,27 +466,23 @@ class GcodeParser(object):
     """Turn the extruder off
     This is a stub, since we dropped support for this function
     """
-    self._log.warning('{"event":"passing_over_code", "code":%s}\n'
-        %(codes['M']))
+    self._log.warning('{"event":"passing_over_code", "code":103}\n')
 
   def ExtruderOnReverse(self, codes, flags, comment):
     """Turn the extruder on turning backward
     This is a stub, since we dropped support for this function
     """
-    self._log.warning('{"event":"passing_over_code", "code":%s}\n'
-        %(codes['M']))
+    self._log.warning('{"event":"passing_over_code", "code":102}\n')
 
   def ExtruderOnForward(self, codes, flags, comment):
     """Turn the extruder on turning forward
     This is a stub, since we dropped support for this function
     """
-    self._log.warning('{"event":"passing_over_code", "code":%s}\n'
-        %(codes['M']))
+    self._log.warning('{"event":"passing_over_code", "code":101}\n')
 
   def GetTemperature(self, codes, flags, comment):
     """This gets the temperature from a toolhead
     We do not support this command, and only have a stub because
     skeinforge likes to include it in its files
     """
-    self._log.warning('{"event":"passing_over_code", "code":%s}\n'
-        %(codes['M']))
+    self._log.warning('{"event":"passing_over_code", "code":105}\n')
