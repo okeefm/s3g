@@ -18,14 +18,14 @@ class GcodeStates(object):
         }
 
     self.offsetPosition = {
-        0   :   {
+        1   :   {
                 'X' : 0,
                 'Y' : 0,
                 'Z' : 0,
                 'A' : 0,
                 'B' : 0,
                 },
-        1   :   {
+        2   :   {
                 'X' : 0,
                 'Y' : 0,
                 'Z' : 0,
@@ -37,7 +37,7 @@ class GcodeStates(object):
     self.values = {}
     self.wait_for_ready_packet_delay = 100  #ms
     self.wait_for_ready_timeout =   480  #seconds
-    self.offset_register = None   #Curent offset register
+    self.offset_register = None #Curent offset register
   
   def LosePosition(self, axes):
     """Given a set of axes, loses the position of

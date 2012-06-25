@@ -25,8 +25,8 @@ class GcodeParser(object):
       1   : [self.LinearInterpolation,         'XYZABEF', ''],
       4   : [self.Dwell,                       'P',       ''],
       10  : [self.StoreOffsets,                'XYZP',    ''],
-      54  : [self.UseP0Offsets,                '',        ''],
-      55  : [self.UseP1Offsets,                '',        ''],
+      54  : [self.UseP1Offsets,                '',        ''],
+      55  : [self.UseP2Offsets,                '',        ''],
       92  : [self.SetPosition,                 'XYZABE',  ''],
       130 : [self.SetPotentiometerValues,      'XYZAB',   ''],
       161 : [self.FindAxesMinimums,            'F',       'XYZ'],
@@ -196,15 +196,15 @@ class GcodeParser(object):
     stepped_position = MultiplyVector(self.state.GetPosition(), self.state.GetAxesValues('steps_per_mm'))
     self.s3g.SetExtendedPosition(stepped_position)
       
-  def UseP0Offsets(self, codes, flags, comment):
+  def UseP1Offsets(self, codes, flags, comment):
     """Sets the state machine to use the P0 offset.
     """
-    self.state.offset_register = 0
+    self.state.offset_register = 1
 
-  def UseP1Offsets(self, codes, flags, comment):
+  def UseP2Offsets(self, codes, flags, comment):
     """Sets the state machine to use the P1 offset.
     """
-    self.state.offset_register = 1
+    self.state.offset_register = 2
 
   def WaitForToolReady(self, codes, flags, comment):
     """
@@ -291,7 +291,12 @@ class GcodeParser(object):
     We subtract one from the 'P' code because skeining engines store 
     designate P1 as the 0'th offset and P2 as the 1'th offset....dumb
     """
-    self.state.StoreOffset(codes['P']-1, [codes['X'], codes['Y'], codes['Z']])
+    valid_offsets = (1, 2)
+    if codes['P'] not in valid_offsets:
+      gcode_error = InvalidOffsetError()
+      gcode_error.values['InvalidOffset'] = codes['P']
+      raise gcode_error
+    self.state.StoreOffset(codes['P'], [codes['X'], codes['Y'], codes['Z']])
 
   def LinearInterpolation(self, codes, flags, comment):
     """Movement command that has two flavors: E and AB commands.

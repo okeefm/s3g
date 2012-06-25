@@ -130,6 +130,12 @@ class CalculateHomingDDAError(GcodeError):
   passed in.
   """
 
+class InvalidOffsetError(GcodeError):
+  """
+  An InvalidOffsetError is raised when an offset defined by the P code in a G10 command
+  is not a valid value (1, 2)
+  """
+
 class TCodeNotDefinedWarning:
   """
   A TCodeNotDefinedWarning is raised when a command is executed that should have a T command

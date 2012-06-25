@@ -196,14 +196,16 @@ class gcodeTests(unittest.TestCase):
         }
     self.assertRaises(KeyError, self.g.StoreOffsets, codes, [],  '')
 
-  def test_store_offsets_all_codes_defined(self):
-    self.g.state.offsetPosition[0] = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'B' : 0,
+  def test_store_offsets_bad_offset(self):
+    codes = {
+        'P' : 0,
+        'X' : 1,
         }
+    flags = []
+    comments = ''
+    self.assertRaises(s3g.Gcode.InvalidOffsetError, self.g.StoreOffsets, codes, flags, comments)
+
+  def test_store_offsets_all_codes_defined(self):
     codes = {
         'X' : 1,
         'Y' : 2,
@@ -212,14 +214,14 @@ class gcodeTests(unittest.TestCase):
         }
     self.g.StoreOffsets(codes, [], '')
     expectedOffsets = {
-        0: {
+        1: {
             'X' : 1,
             'Y' : 2,
             'Z' : 3,
             'A' : 0,
             'B' : 0,
             },
-        1:  {
+        2:  {
             'X' : 0,
             'Y' : 0,
             'Z' : 0,
@@ -229,27 +231,27 @@ class gcodeTests(unittest.TestCase):
         }
     self.assertEqual(expectedOffsets, self.g.state.offsetPosition)
 
-  def test_use_p1_offsets_all_codes_accounted_for(self):
+  def test_use_p2_offsets_all_codes_accounted_for(self):
     codes = ''
     flags = ''
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[55][1])
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[55][2])
 
-  def test_use_p1_offsets(self):
+  def test_use_p2_offsets(self):
     codes = {}
-    self.g.UseP1Offsets(codes, [], '')
-    self.assertEqual(1, self.g.state.offset_register)
+    self.g.UseP2Offsets(codes, [], '')
+    self.assertEqual(2, self.g.state.offset_register)
 
-  def test_use_p0_offsets_all_codes_accounted_for(self):
+  def test_use_p1_offsets_all_codes_accounted_for(self):
     codes = ''
     flags = ''
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[54][1])
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[55][2])
+    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[54][2])
 
-  def test_use_p0_offsets(self):
+  def test_use_p1_offsets(self):
     codes = {}
-    self.g.UseP0Offsets(codes, [], '')
-    self.assertEqual(0, self.g.state.offset_register) 
+    self.g.UseP1Offsets(codes, [], '')
+    self.assertEqual(1, self.g.state.offset_register) 
 
   def test_set_position_all_codes_accounted_for(self):
     codes = 'XYZABE'
