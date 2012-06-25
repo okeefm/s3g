@@ -1,6 +1,6 @@
 # s3g
 
-The s3g module is designed to communicate with a Makerbot Printer using via s3g Packets.  The main objective of this module is to both transform certain actions (i.e. move-to-a-position, heat-up-a-toolhead) into packets of information to be sent and to decode packets of information received from a printer into human parsable formats.  
+The s3g module is designed to communicate with a Makerbot Printer via s3g Packets.  The main objectives of this module are to  transform certain actions (i.e. move-to-a-position, heat-up-a-toolhead) into packets of information to be sent and to decode packets of information received from a printer into human parsable formats.  
 
 To connect to a machine, you will need the following module:
 
@@ -79,7 +79,7 @@ Extended points are expressed as a list of x, y, a, and b coordinates:
     [x, y, z, a, b]
 
 ## Axes Lists
-There are several commands that require a list of axes as input.  This parameter is passed as a python list of strings, where each axes is its own separate string.  To pass in all axes:
+There are several commands that require a list of axes as input.  This parameter is passed as a python list of strings, where each axis is its own separate string.  To pass in all axes:
 
     ['x', 'y', 'z', 'a', 'b']
 

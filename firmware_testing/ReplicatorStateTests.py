@@ -26,15 +26,34 @@ import matplotlib.pyplot as plt
 from coding import *
 
 
-eeprom_map = 0x018A
-acceleration_map_start = 0x016E
+axis_length_offsets = {
+  'x_axis':[0x0, '<I'],
+  'y_axis':[0x04, '<I'],
+  'z_axis':[0x08, '<I'],
+  'a_axis':[0x012, '<I'],
+  'b_axis':[0x016, '<I']
+  }
 eeprom_acceleration_offsets = {
-  'active':0x00, 
-  'default_rate':0x02, 
-  'axis_rate':0x04, 
-  'axis_jerk':0x0E, 
-  'minimum_speed':0x16, 
-  'defaults_flag':0x18}
+  'active':[0x00,'<B'], 
+  'default_rate':[0x02,'<h'], 
+  'x_axis_rate':[0x04, '<h'], 
+  'y_axis_rate':[0x06, '<h'], 
+  'z_axis_rate':[0x08, '<h'], 
+  'a_axis_rate':[0x0A, '<h'], 
+  'b_axis_rate':[0x0C, '<h'], 
+  'x_axis_jerk':[0x0E, '<BB'],
+  'y_axis_jerk':[0x10, '<BB'],
+  'z_axis_jerk':[0x12, '<BB'],
+  'a_axis_jerk':[0x14, '<BB'],
+  'b_axis_jerk':[0x16, '<BB'],
+  'minimum_speed':[0x18, '<h'], 
+  'defaults_flag':[0x1A, '<B']
+  }
+eeprom_map =[
+  {'name':'acceleration_settings', 'offset':0x016E, 'variables':eeprom_acceleration_offsets},
+  {'name':'axis_lengths', 'offset':0x018C, 'variables':axis_length_offsets},
+  {'name':'first_boot_flag', 'offset':0x0156, 'variables':{'first_boot':[0, '>B']}}
+  ] 
 
 class ReplicatorStateTests(unittest.TestCase):
 
@@ -48,25 +67,53 @@ class ReplicatorStateTests(unittest.TestCase):
   
   def tearDown(self):
     self.s3g.file.close()
+  
+  def ReadEEpromVariable(self, map_dict, variable):
+    """
+    read a variable stored in eeprom
+    @param name: dictionary value for eeprom_map 'name'
+    @param variable: dictionary value for 'variable' sub set in eeprom_map dict
+    """
+    offset = map_dict['offset'] + map_dict['variables'][variable][0]
+    data_type = map_dict['variables'][variable][1]
+    data = UnpackResponse(data_type, self.s3g.ReadFromEEPROM(offset, struct.calcsize(data_type)))
+    print [variable, data]
 
+  def CheckVariableRange(self, data, map_dict, variable):
+    """
+    read a variable stored in eeprom
+    @param name: dictionary value for eeprom_map 'name'
+    @param variable: dictionary value for 'variable' sub set in eeprom_map dict
+    """
+
+    valid_range = map_dict['variables'][variable][2]
+    self.assertTrue(data in valid_range)
+    
   def EEpromCheckForValidEntries(self):
     """
-    This test checks eeprom values for acceleration
+    This test checks eeprom values 
     Additionaly eeprom checks may be added in the future
     """
-    # TODO: refine check ranges using motor data    
 
+    for field in eeprom_map:
+      for var in field['variables']:
+        data = self.ReadEEpromVariable(field, var)
+
+    """
     # acceleration on/off
     data = UnpackResponse('B', self.s3g.ReadFromEEPROM(acceleration_map_start + eeprom_acceleration_offsets['active'], 1)) 
+    print data[0]
     self.assertTrue( data[0] in [0,1])
 
     # default acceleration rate
     data = UnpackResponse('h', self.s3g.ReadFromEEPROM(acceleration_map_start + eeprom_acceleration_offsets['default_rate'], 2))
+    print data[0]
     self.assertTrue(data[0] in range(0,5000))
 
     # default axis acceleration rates
     for i in range(0,10, 2): 
       data = UnpackResponse('h', self.s3g.ReadFromEEPROM(acceleration_map_start+eeprom_acceleration_offsets['axis_rate'] +i, 2))
+      print data[0]
       self.assertTrue(data[0] in range(0,5000))
 
     # default axis jerk rates
@@ -74,15 +121,19 @@ class ReplicatorStateTests(unittest.TestCase):
       data = self.s3g.ReadFromEEPROM(acceleration_map_start + eeprom_acceleration_offsets['axis_jerk']+ i, 2) 
       byte_data = UnpackResponse('BB', data);
       float_data = (float(byte_data[0]) + float(byte_data[1]) / 256.0)
+      print float_data
       self.assertTrue(float_data > 0.0 and float_data < 40.0)
 
     # default minimum speed
     data = UnpackResponse('h', self.s3g.ReadFromEEPROM(acceleration_map_start+eeprom_acceleration_offsets['minimum_speed'], 2))
+    print data[0]
     self.assertTrue(data[0] in range(0,40))
 
     # acceleration defaults initialized flag
     data = UnpackResponse('B', self.s3g.ReadFromEEPROM(acceleration_map_start+eeprom_acceleration_offsets['defaults_flag'], 1))
+    print data[0]
     self.assertTrue(data[0] in [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80])
+    """
 
   def EEpromTestResetToFactory(self):
 
@@ -197,7 +248,7 @@ if __name__ == '__main__':
   del sys.argv[1:]
 
   tests = unittest.TestSuite()
-  tests.addTest(ReplicatorStateTests('EEpromTestResetToFactory'))
+  tests.addTest(ReplicatorStateTests('EEpromCheckForValidEntries'))
 
   unittest.TextTestRunner(verbosity=2).run(tests)
 

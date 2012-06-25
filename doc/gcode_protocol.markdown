@@ -13,7 +13,7 @@ These are the rules for this interpreter:
 The interpreter state machine stores these states:
 
 * Machine position (x,y,z,a,b)
-* Offset register (0, 1)
+* Offset register (1, 2)
 * Toolhead index (0, 1)
 * Toolhead RPM
 * Toolhead direction
@@ -51,9 +51,10 @@ Here is some vocabulary, that should be used when talking about the protocol:
  <td>A comment is a user readable block of text used to clarify what a section of code does. Comments are also used by some commands to specify a filename or message that should be displayed on a machine's interface LCD.
  <td>(embedded comment) G1 ;This G1 is a comment</td>
 </tr>
-<td>Variable</td>
-<td>A variable is a placeholder in a line of gcode that can be replaced by a value during run time.  Variables can exist anywhere in the Gcode line.  A variable should only be an interger value (1, 2, 3...) up to 5399, and should be preceeded by a '#'.</td>
-<td>#0</td>
+<tr>
+ <td>Variable</td>
+ <td>A variable is a placeholder in a line of gcode that can be replaced by a value during run time.  Variables can be anywhere in the entirety of the line of Gcode.  A variable can be a string of any size, but must be prefixed by a '#' sign.<td>
+<td>#0, #TEMPERATURE, #FOO</td>
 </tr>
 </table>
 
@@ -91,8 +92,10 @@ These are the rules used to parse commands:
 * Upper and lower case codes and flag names are accepted, and will silently be converted to uppercase.
 * Each G and M code has a list of required and optional codes and flags. Codes and flags that are not supported by the G or M code are considered an error.
 
-## Variable Substitution                                                                                                                                                 
-During Line Execution, prior to parsing out the comments/commands, all variables that are defined in an environment dict passed into the ExecuteLine function are replaced with their defined values.
+## Variable Substitution
+The gcode parser has an internal variable, called an environemnt.  The environment is a python dict that defines all variables encased in a Gcode File.  During Line Execution, prior to parsing out the comments/commands, all variables defined in the environment are replaced by their defined value.  If any variables present in a line of Gcode are undefined in the environment, the parser will throw an UndefinedVariableError.  While variables contained within the line of Gcode must be prefixed by a '#', the variables defined in the environment do not need to be delineated (i.e. The variable '#FOO' is defined as 'FOO' in the environment).
+
+NB: The environment defaults to an empty python dict.
 
 # Supported G Codes
 
@@ -150,7 +153,7 @@ Parameters
     rate = F
 
 ## G4 - Dwell
-If a toolhead is not enabled, this command simply pauses motion for the specified time. If a toolhead is enabled, then this command extrudes at the current rate and direction for the specified time, but does not move the toolhead.
+Tells the machine to pause for a certain amount of time.
 
 Registers
 
@@ -169,7 +172,7 @@ Save the specified XYZ offsets to an offset register. When the register is activ
 
 Registers
 
-    P: (code) Coordinate offset register to write to (0, 1)
+    P: (code) Coordinate offset register to write to (1, 2)
     X: (code) X offset, in mm
     Y: (code) Y offset, in mm
     Z: (code) Z offset, in mm
@@ -178,25 +181,7 @@ S3g Output (none)
 
 Parameters (none)
 
-## G21 - Programming in milimeters
-Instruct the machine that all distances are in milimeters. This command is ignored; the only coordinate system supported is mm.
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
-## G54 - Use coordinage system from G10 P0 (toolhead 0?)
-Consider all future positions to be offset by the values stored in the position register P0.
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
-## G55 - Use coordinage system from G10 P1 (toolhead 1?)
+## G54 - Use coordinate system from G10 P1
 Consider all future positions to be offset by the values stored in the position register P1.
 
 Registers (none)
@@ -205,15 +190,14 @@ S3g Output (none)
 
 Parameters (none)
 
-## G90 - Absolute programming
-Instruct the machine that all distances are absolute. This command is ignored; the only programming mode is absolute.
+## G55 - Use coordinate system from G10 P2
+Consider all future positions to be offset by the values stored in the position register P2.
 
 Registers (none)
 
 S3g Output (none)
 
 Parameters (none)
-
 
 ## G92 - Position register: Set the specified axes positions to the given position
 Sets the position of the state machine and the bot.
@@ -237,7 +221,7 @@ Registers
 
 S3g Output
 
-    SetPosition(position)
+    SetExtendedPosition(position)
 
 Parameters
 
@@ -254,7 +238,7 @@ Registers
 
 S3g Output
 
-    SetPosition(position)
+    SetExtendedPosition(position)
 
 Parameters
 
@@ -287,7 +271,7 @@ Instruct the machine to home the specified axes to their minimum position.
 
 Registers
 
-    D: (code, optional) Movement DDA speed in microseconds/step
+    F: (code) Desired feedrate (mm/min) for this command
     X: (flag, optional) If present, home the x axis to its minimum position
     Y: (flag, optional) If present, home the y axis to its minimum position
     Z: (flag, optional) If present, home the z axis to its minimum position
@@ -299,27 +283,28 @@ S3g Output
 Parameters
 
     axes = List Of All Present Axes
-    feedrate = F
-    timeout = Hardcoded timeout of 60 seconds
+    feedrate = The calculated DDA speed for F.  We always use the minimum feedrate (relative to the desired feedrate and maximum feedrates of all homing axes) and the limiting axis' spm constant.  If no limiting axis is present, we default to the first axis' spm constant.
+    timeout = Timeout specified in the machine profile
 
 ## G162 - Home given axes to maximum
 Instruct the machine to home the specified axes to their maximum position.
 
 Registers
 
-    D: (code, optional) Movement DDA speed in microseconds/step
+    F: (code) Desired feedrate (mm/min) for this command
     X: (flag, optional) If present, home the x axis to its maximum position
     Y: (flag, optional) If present, home the y axis to its maximum position
     Z: (flag, optional) If present, home the z axis to its maximum position
 
 S3g Output
 
-    FindAxesMaximums(axes, feedrate)
+    FindAxesMaximums(axes, feedrate, timeout)
 
 Parameters
 
     axes = List Of All Present Axes
-    feedrate = F
+    feedrate = The calculated DDA speed for F.  We always use the minimum feedrate (relative to the desired feedrate and maximum feedrates of all homing axes) and the limiting axis' spm constant.  If no limiting axis is present, we default to the first axis' spm constant.
+    timeout = Timeout specified in the machine profile
 
 # Supported M Codes
 
@@ -452,6 +437,36 @@ Parameters
     tool_index = 0
     temperature = S
 
+## M126 - Enable Extra Output
+Enables an extra output attached to a specific toolhead.
+
+Registers
+
+    T: (code) The toolhead that the extra output we want to enable is attached to.
+
+S3g Output
+
+    ToggleExtraOutput(tool_index, True)
+
+Parameters
+
+    tool_index = T
+
+## M127 - Disable Extra Output 
+Disables an extra output attached to a specific toolhead.
+
+Registers
+
+    T: (code) The toolhead that the extra output we want to disable is attached to
+
+S3g Output
+
+    ToggleExtraOutput(tool_index, False)
+
+Parameters
+
+    tool_index = T
+
 ## M132 - Load current home position from EEPROM
 Recalls current home position from the EEPROM and waits for the buffer to empty
 
@@ -477,11 +492,11 @@ Instruct the machine to wait for the toolhead to reach its target temperature
 Registers
 
     T: (code) The extruder to wait for.
-    P: (code, optional) If present, sets the time limit that we wait for.
+    P: (code, optional) If present, sets the time limit that we wait for.  Otherwise, use a timeout coded into the Gcode State Machine.
 
 S3g Output
 
-    WaitForPlatformReady(tool_index, delay, timeout)
+    WaitForToolReady(tool_index, delay, timeout)
 
 Parameters
 
@@ -495,7 +510,7 @@ Instruct the machine to wait for the platform to reach its target temperature
 Registers
 
     T: (code) The platform to wait for.
-    P: (code, optional) If present, sets the time limit that we wait for.
+    P: (code, optional) If present, sets the time limit that we wait for.  Otherwise, use a timeout coded into the Gcode State Machine.
 
 S3g Output
 
@@ -550,7 +565,7 @@ Disables the extruder motor
 
 Registers
 
-    T: (code, optional) If present, first change to the specified tool
+    T: (code) First change to the specified tool
 
 S3g Output (none)
 

@@ -3,7 +3,6 @@ host_query_command_dict = {
   'INIT'                      : 1,
   'GET_AVAILABLE_BUFFER_SIZE' : 2,
   'CLEAR_BUFFER'              : 3,
-  'GET_POSITION'              : 4,
   'ABORT_IMMEDIATELY'         : 7,
   'PAUSE'                     : 8,
   'TOOL_QUERY'                : 10,
@@ -23,8 +22,6 @@ host_query_command_dict = {
 }
 
 host_action_command_dict = {
-  'QUEUE_POINT'               : 129,
-  'SET_POSITION'              : 130,
   'FIND_AXES_MINIMUMS'        : 131,
   'FIND_AXES_MAXIMUMS'        : 132,
   'DELAY'                     : 133,
@@ -72,7 +69,7 @@ slave_action_command_dict = {
   'SET_MOTOR_1_SPEED_RPM'      : 6,
   'TOGGLE_MOTOR_1'             : 10,
   'TOGGLE_FAN'                 : 12,
-  'TOGGLE_VALVE'               : 13,
+  'TOGGLE_EXTRA_OUTPUT'        : 13,
   'SET_SERVO_1_POSITION'       : 14,
   'PAUSE'                      : 23,
   'ABORT'                      : 24,

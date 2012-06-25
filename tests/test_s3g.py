@@ -241,27 +241,6 @@ class S3gTests(unittest.TestCase):
     payload = Encoder.DecodePacket(packet)
     self.assertEquals(payload[0], constants.host_query_command_dict['GET_AVAILABLE_BUFFER_SIZE'])
 
-  def test_get_position(self):
-    position = [1, -2, 3]
-    endstop_states = Encoder.EncodeAxes(['x','y'])
-    
-    response_payload = bytearray()
-    response_payload.append(constants.response_code_dict['SUCCESS'])
-    response_payload.extend(Encoder.EncodeInt32(position[0]))
-    response_payload.extend(Encoder.EncodeInt32(position[1]))
-    response_payload.extend(Encoder.EncodeInt32(position[2]))
-    response_payload.append(endstop_states)
-    self.outputstream.write(Encoder.EncodePayload(response_payload))
-    self.outputstream.seek(0)
-
-    [returned_position, returned_endstop_states] = self.r.GetPosition()
-    self.assertEquals(returned_position, position)
-    self.assertEquals(returned_endstop_states, endstop_states)
-
-    packet = bytearray(self.inputstream.getvalue())
-    payload = Encoder.DecodePacket(packet)
-    self.assertEquals(payload[0], constants.host_query_command_dict['GET_POSITION'])
-
   def test_abort_immediately(self):
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
@@ -521,54 +500,6 @@ class S3gTests(unittest.TestCase):
     payload = Encoder.DecodePacket(packet)
     self.assertEquals(payload[0], constants.host_action_command_dict['BUILD_END_NOTIFICATION'])
     self.assertEquals(payload[1], 0)
-
-  def test_queue_point_short_length(self):
-    point = [0,1]
-    rate = 500
-    self.assertRaises(errors.PointLengthError, self.r.QueuePoint, point, rate)
-
-  def test_queue_point_long_length(self):
-    point = [0, 1, 2, 3]
-    rate = 500
-    self.assertRaises(errors.PointLengthError, self.r.QueuePoint, point, rate)
-
-  def test_queue_point(self):
-    target = [1,-2,3]
-    velocity = 6
-
-    self.outputstream.write(Encoder.EncodePayload([constants.response_code_dict['SUCCESS']]))
-    self.outputstream.seek(0)
-
-    self.r.QueuePoint(target, velocity)
-
-    packet = bytearray(self.inputstream.getvalue())
-    payload = Encoder.DecodePacket(packet)
-
-    self.assertEquals(payload[0], constants.host_action_command_dict['QUEUE_POINT'])
-    for i in range(0, 3):
-      self.assertEquals(payload[(i*4+1):(i*4+5)], Encoder.EncodeInt32(target[i]))
-    self.assertEquals(payload[13:17], Encoder.EncodeInt32(velocity))
-
-  def test_set_position_short_length(self):
-    self.assertRaises(errors.PointLengthError, self.r.SetPosition, [1, 2])
-
-  def test_set_position_long_length(self):
-    self.assertRaises(errors.PointLengthError, self.r.SetPosition, [1, 2, 3, 4])
-
-  def test_set_position(self):
-    target = [1,-2,3]
-
-    self.outputstream.write(Encoder.EncodePayload([constants.response_code_dict['SUCCESS']]))
-    self.outputstream.seek(0)
-
-    self.r.SetPosition(target)
-
-    packet = bytearray(self.inputstream.getvalue())
-    payload = Encoder.DecodePacket(packet)
-
-    self.assertEquals(payload[0], constants.host_action_command_dict['SET_POSITION'])
-    for i in range(0, 3):
-      self.assertEquals(payload[(i*4+1):(i*4+5)], Encoder.EncodeInt32(target[i]))
 
   def test_find_axes_minimums(self):
     axes = ['x', 'y', 'z', 'b']
@@ -1531,14 +1462,14 @@ class S3gTests(unittest.TestCase):
       self.outputstream.seek(0)
       self.inputstream.seek(0)
  
-      self.r.ToggleValve(tool_index, fan_state)
+      self.r.ToggleExtraOutput(tool_index, fan_state)
  
       packet = bytearray(self.inputstream.getvalue())
       payload = Encoder.DecodePacket(packet)
  
       self.assertEquals(payload[0], constants.host_action_command_dict['TOOL_ACTION_COMMAND'])
       self.assertEquals(payload[1], tool_index)
-      self.assertEquals(payload[2], constants.slave_action_command_dict['TOGGLE_VALVE'])
+      self.assertEquals(payload[2], constants.slave_action_command_dict['TOGGLE_EXTRA_OUTPUT'])
       self.assertEquals(payload[3], 1)
       self.assertEquals(payload[4], fan_state)
 

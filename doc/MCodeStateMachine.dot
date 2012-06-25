@@ -21,6 +21,8 @@ digraph
   "109_IS_S_REGISTER_DEFINED?" [shape=rectangle];
   "133_IS_T_REGISTER_DEFINED?" [shape=rectangle];
   "134_IS_T_REGISTER_DEFINED?" [shape=rectangle];
+  "133_IS_P_REGISTER_DEFINED?" [shape=rectangle];
+  "134_IS_P_REGISTER_DEFINED?" [shape=rectangle];
   "135_IS_T_REGISTER_DEFINED?" [shape=rectangle];
   "IS_P_CODE_0?" [shape=rectangle];
   "IS_P_CODE_100?" [shape=rectangle];

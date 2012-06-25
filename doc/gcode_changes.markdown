@@ -15,35 +15,48 @@ Previously, whenever the Gcode Parser encountered a T command, the internal Gcod
 ###Mandatory T codes
 All G and M codes that include a T code must now include that code.  If excluded, a MissingCodeError will be thrown.
 
-##Gcode Chanages
+##Gcode Changes
 ###M161 Find Axes Minimums
+Change
+
+    When executing a G161 command, the F code is compared against each maximum feedrate thats being moved.  If any maximum feedrate is less than the desired feedrate, we use that maximum feedrate and associated steps_per_mm constant to calculate the DDA speed.
+
+
+###M126 Enable Extra Output
+
 Addition
 
-    Added a D command, which specifies a DDA speed in microseconds/step to move at
+    This command was previously called Enable Valve.  There has been a general namespace change, and there are no longer 'valves' on machines, but instead extra outputs.  Thus, this command has been renamed to Enable Extra Output.
 
-Removals
+Removal
 
-    The F command which specified a feedrate to move at.  In order to derive a feedrate, a displacement vector needs to be calculated between the current position and the position the machine is traveling to.  This is impossible with the G161 command, since the State Machine has no idea where it is moving to when this action starts.  Due to the displacement vector being the sine qua non of DDA calculations, a DDA speed must be explicitely specified instead of derived (this in turn makes the specified feedrate useless) 
+    None.
+
+###M127 Disable Extra Output 
+
+Addition
+
+    This command was previously called Disable Valve.  There has been a general namespace change, and there are no longer 'valves' on machines, but instead extra outputs.  Thus, this command has been renamed to Disable Extra Output.
+
+Removal
+
+    None.
 
 ###M162 Find Axes Maximums
-Addition
+Change
 
-    Added a D command, which specifies a DDA speed in microseconds/step to move at
-
-Removals
-
-    The F command which specified a feedrate to move at.  In order to derive a feedrate, a displacement vector needs to be calculated between the current position and the position the machine is traveling to.  This is impossible with the G162 command, since the State Machine has no idea where it is moving to when this action starts.  Due to the displacement vector being the sine qua non of DDA calculations, a DDA speed must be explicitely specified instead of derived (this in turn makes the specified feedrate useless) 
+    When executing a G162 command, the F code is compared against each maximum feedrate thats being moved.  If any maximum feedrate is less than the desired feedrate, we use that maximum feedrate and associated steps_per_mm constant to calculate the DDA speed.
 
 ##Gcode Command Additions
 ###M133 Wait For Tool Ready
 Reason for Addition:
 
-    The M6 code is a generic Wait For Tool command that will wait for all tools to heat up in with a given index.  This command was deemed to open ended, and bifurcated into a Wait For Tool command and a Wait For Platform command.
+    The M6 code is a generic Wait For Tool command that will wait for all tools with a given index to heat up.  This command was deemed too open ended, and bifurcated into a Wait For Tool command and a Wait For Platform command.
 
 ###M134 Wait For Platform Ready
 Reason for Addition:
 
-    The M6 code is a generic Wait For Tool command, that will wait for all tools in with a given index.  This command was deemed to open ended, and bifurcated into a Wait For Tool command and a Wait For Platform command.
+    The M6 code is a generic Wait For Tool command, that will wait for all tools with a given index.  This command was deemed too open ended, and bifurcated into a Wait For Tool command and a Wait For Platform command.
 
 ###M135 Change Tool
 Reason For Addition:
@@ -64,6 +77,24 @@ Reason for Removal:
 
     This code took the same code path as the G1 command, and only differed by using a baked in constant written into the machine profile.  Due to its redundancy, it was removed.
 
+###G21 Programming in Milimteres
+Status:
+
+    This code has been totally removed, and will throw an error if used.
+
+Reason For Removal:
+
+    S3g's parser only supports programming in milimeters, so this code was not necessary.
+
+###G90 Absolute Programming
+Status:
+
+    This code has been totally removed, and will throw an error if used.
+
+Reason For Removal:
+
+    S3g's parser only supports absolute programming, so this code was not necessary.
+
 ###M6 Wait For Toolhead
 Status:
 
@@ -80,7 +111,7 @@ Status:
 
 Reason For Removal:
 
-    This code used to be the goto method for changing the tool_index (as in, if we wanted to change from tool_index 0 to 1, we would add an M6 command with a defined T code.  This is using the code for an unintended purpose, so after moving away from that paradigm, this command was reduced to an RPM command.  S3g's parser can only handle 5d commands and not RPM commands, so this command was removed.
+    This code used to be the goto method for changing the tool_index (as in, if we wanted to change from tool_index 0 to 1, we would add an M108 command with a defined T code.  This is using the code for an unintended purpose, so after moving away from that paradigm, this command was reduced to an RPM command.  S3g's parser can only handle 5d commands and not RPM commands, so this command was removed.
 
 ###M101 Extruder On Forward
 Status:

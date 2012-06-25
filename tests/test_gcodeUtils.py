@@ -105,7 +105,7 @@ class ParseCommandTests(unittest.TestCase):
     for command in cases:
       self.assertRaises(ValueError, s3g.Gcode.ParseCommand, command)
 
-  def test_single_code_accepts_lowercase(self):
+  def test_single_flag_accepts_lowercase(self):
     command = 'g'
     expected_codes = {}
     expected_flags = ['G']
@@ -114,7 +114,7 @@ class ParseCommandTests(unittest.TestCase):
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
 
-  def test_single_code_no_value(self):
+  def test_single_flag(self):
     command = 'G'
     expected_codes = {}
     expected_flags = ['G']
@@ -123,7 +123,7 @@ class ParseCommandTests(unittest.TestCase):
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
 
-  def test_single_code_with_value(self):
+  def test_single_integer_code(self):
     command = 'G0'
     expected_codes = {'G' : 0}
     expected_flags = []
@@ -131,8 +131,19 @@ class ParseCommandTests(unittest.TestCase):
     codes, flags = s3g.Gcode.ParseCommand(command)
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
+    self.assertEquals(int, type(codes['G']))
 
-  def test_single_code_leading_whitespace(self):
+  def test_single_float_code(self):
+    command = 'G0.1234'
+    expected_codes = {'G' : 0.1234}
+    expected_flags = []
+
+    codes, flags = s3g.Gcode.ParseCommand(command)
+    self.assertEquals(expected_codes, codes)
+    self.assertEquals(expected_flags, flags)
+    self.assertEquals(float, type(codes['G']))
+
+  def test_single_integer_code_leading_whitespace(self):
     command = '\t\t\t G0'
     expected_codes = {'G' : 0}
     expected_flags = []
@@ -140,6 +151,7 @@ class ParseCommandTests(unittest.TestCase):
     codes, flags = s3g.Gcode.ParseCommand(command)
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
+    self.assertEquals(int, type(codes['G']))
 
   def test_repeated_code(self):
     command = 'G0 G0'
@@ -154,19 +166,21 @@ class ParseCommandTests(unittest.TestCase):
     self.assertRaises(s3g.Gcode.MultipleCommandCodeError, s3g.Gcode.ParseCommand, command)
 
   def test_many_codes_and_flags(self):
-    command = 'M0 X1 Y2 Z3 F4 A B'
+    command = 'M0 X1.1 Y2.2 Z3.3 F4.4 A B'
     expected_codes = {
       'M' : 0,
-      'X' : 1,
-      'Y' : 2,
-      'Z' : 3,
-      'F' : 4,
+      'X' : 1.1,
+      'Y' : 2.2,
+      'Z' : 3.3,
+      'F' : 4.4,
     }
     expected_flags = ['A','B']
 
     codes, flags = s3g.Gcode.ParseCommand(command)
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
+    for code in zip(expected_codes.values(), codes.values()):
+      self.assertEquals(type(code[0]), type(code[1]))
 
 class CheckForExtraneousCodesTests(unittest.TestCase):
   def test_no_codes(self):
@@ -419,7 +433,7 @@ def generic_calculate_dda_speed_good_result(state):
     [[200,0,0,0,0], [100,0,0,0,0], 200, 30000000/(state.profile.values['axes']['X']['steps_per_mm']*100)],    # Single axis, reverse motion
     [[0,0,0,0,0],   [1,1,1,0,0],   100, 2598.0762113533156],        # Multiple axis, forward motion
     ]
-
+  
   for case in cases:
     dda_speed = s3g.Gcode.CalculateDDASpeed(
         case[0], 
@@ -430,72 +444,128 @@ def generic_calculate_dda_speed_good_result(state):
     #Return a generator of the expected and calculated DDA speed
     yield case[3], dda_speed
 
+class CalculateDDASpeed(unittest.TestCase):
+  def test_calculate_dda_speed(self):
+    feedrate = 100
+    spm = 100.0
+    secondConst = 60
+    microSecondConst = 1000000
+    expected_dda_speed = secondConst * microSecondConst / (feedrate*abs(spm))
+    self.assertEqual(expected_dda_speed, s3g.Gcode.ComputeDDASpeed(feedrate, spm))
+
 class VariableSubstituteTest(unittest.TestCase):
 
-  def test_variable_substitution_blank_line_no_environment(self):
+  def test_blank_line_no_environment(self):
     environment = {}
     line = ''
     replaced_line =s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(line, replaced_line)
 
-  def test_variable_substitution_no_variables_no_environment(self):
+  def test_no_variables_no_environment(self):
     environment = {}
     line = "161 X Y Z"
     replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(line, replaced_line)
 
-  def test_variable_substitution_no_variables_has_environment(self):
+  def test_can_read_multiple_variable_types(self):
     environment = {
-        '#0'  : '-1'
+        '1' : '-1',
+        'foo' : '-2',
+        }
+    line = '#1 #foo'
+    expected_line = '-1 -2'
+    self.assertEqual(expected_line, s3g.Gcode.VariableSubstitute(line, environment))
+
+  def test_no_variables_has_environment(self):
+    environment = {
+        '0'  : '-1'
         }
     line = "G161 X Y Z"
     replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(line, replaced_line)
 
-  def test_variable_substitution_line_has_varibles_no_environment(self):
-    environment = {}
-    line = "#1"
-    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
-    self.assertEqual(line, replaced_line)
-
-  def test_variale_substitution_variables_has_environment_no_matching_variables(self):
-    environment = {'#1' : '-1'}
+  def test_variables_has_environment_no_matching_variables(self):
+    environment = {'1' : '-1'}
     line = '#2'
-    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
-    self.assertEqual(line, replaced_line)
+    self.assertRaises(s3g.Gcode.UndefinedVariableError, s3g.Gcode.VariableSubstitute, line, environment)
 
-  def test_variable_substitution_line_and_environment_has_variables(self):
-    environment = {'#1' : '-1'}
+  def test_line_and_environment_has_variables(self):
+    environment = {'1' : '-1'}
     line = '#1'
     expected_line = '-1'
     replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(expected_line, replaced_line)
 
-  def test_variable_substitution_line_has_more_variables_than_environment(self):
-    environment = {'#1' : '-1'}
-    line = '#1 #2'
-    expected_line = '-1 #2'
-    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
-    self.assertEqual(expected_line, replaced_line)
-
-  def test_variable_substitution_line_has_less_variables_than_environment(self):
+  def test_line_has_less_variables_than_environment(self):
     environment = {
-        '#1'  : '-1',
-        '#2'  : '-2',
+        '1'  : '-1',
+        '2'  : '-2',
         }
     line = '#1'
     expected_line = '-1'
     replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(expected_line, replaced_line) 
 
-  def test_variable_substitution_can_substitute_multiple_lines(self):
+  def test_can_substitute_multiple_lines(self):
     environment = {
-        '#1'  : '-1',
+        '1'  : '-1',
         }
     line = '#1 #1'
     expected_line = '-1 -1'
     replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
     self.assertEqual(expected_line, replaced_line)
+
+  def test_can_substitute_multiple_variables(self):
+    environment = {
+        '1'  : '-1',
+        '2'  : '-2',
+        }
+    line = '#1 #2'
+    expected_line = '-1 -2'
+    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
+    self.assertEqual(expected_line, replaced_line)
+
+  def test_can_substitute_multiple_variables_multiple_times(self):
+    environment = {
+        'FOO' : '-1',
+        '42'  : '-2',
+        }
+    line = '#FOO #42 #FOO #42'
+    expected_line = '-1 -2 -1 -2'
+    self.assertEqual(expected_line, s3g.Gcode.VariableSubstitute(line, environment))
+
+class CalculateHomingDDASpeed(unittest.TestCase):
+  def test_calculate_homing_dda_speed_max_feedrates_empty(self):
+    feedrate = 10
+    max_feedrates = []
+    spm_list = [1, 2, 3, 4, 5]
+    self.assertRaises(s3g.Gcode.CalculateHomingDDAError, s3g.Gcode.CalculateHomingDDASpeed, feedrate, max_feedrates, spm_list)
+
+  def test_calculate_homing_dda_speed_spm_list_empty(self):
+    feedrate = 10
+    max_feedrates = [1, 2, 3, 4, 5]
+    spm_list = []
+    self.assertRaises(s3g.Gcode.CalculateHomingDDAError, s3g.Gcode.CalculateHomingDDASpeed, feedrate, max_feedrates, spm_list)
+
+  def test_calculate_homing_dda_speed_uneven_lists(self):
+    feedrate = 10
+    max_feedrates = [1, 2, 3, 4, 5]
+    spm_list = [1, 2, 3, 4]
+    self.assertRaises(s3g.Gcode.CalculateHomingDDAError, s3g.Gcode.CalculateHomingDDASpeed, feedrate, max_feedrates, spm_list)
+
+  def test_calculate_homing_dda_speed_safe_feedrate(self):
+    feedrate = 10
+    max_feedrates = [100, 200, 300, 400, 500]
+    spm_list = [1, 2, 3, 4, 5]
+    expected_dda = s3g.Gcode.ComputeDDASpeed(feedrate, spm_list[0])
+    self.assertEqual(expected_dda, s3g.Gcode.CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list))
+
+  def test_calculate_homing_dda_speed_unsafe_feedrate(self):
+    feedrate = 600
+    max_feedrates = [100, 200, 300, 400, 500]
+    spm_list = [1, 2, 3, 4, 5]
+    expected_dda = s3g.Gcode.ComputeDDASpeed(max_feedrates[0], spm_list[0])
+    self.assertEqual(expected_dda, s3g.Gcode.CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list))
  
 if __name__ == "__main__":
   unittest.main()

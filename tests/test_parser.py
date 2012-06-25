@@ -19,25 +19,40 @@ class gcodeTests(unittest.TestCase):
     self.g.s3g = self.mock
     profile = s3g.Profile("ReplicatorDual")
     self.g.state.profile = profile
-    self.environment = {}
 
   def tearDown(self):
     self.mock = None
     self.g = None
 
+  def test_unrecognized_command_test_g_command(self):
+    cmd = 999
+    command = 'G' + str(cmd)
+    try:
+      self.g.ExecuteLine(command)
+    except s3g.Gcode.UnrecognizedCommandError as e:
+      self.assertEqual(e.values['UnrecognizedCommand'], cmd)
+
+  def test_unrecognized_command_test_m_command(self):
+    cmd = 999
+    command = 'M' + str(cmd)
+    try:
+      self.g.ExecuteLine(command)
+    except s3g.Gcode.UnrecognizedCommandError as e:
+      self.assertEqual(e.values['UnrecognizedCommand'], cmd)
+
   def test_check_cant_read_non_unicde_non_ascii(self):
     command = 92
-    self.assertRaises(s3g.Gcode.ImproperGcodeEncodingError, self.g.ExecuteLine, command, self.environment)
+    self.assertRaises(s3g.Gcode.ImproperGcodeEncodingError, self.g.ExecuteLine, command)
 
   def test_check_can_read_unicode(self):
     command = "G92 X0 Y0 Z0 A0 B0"
     command = unicode(command)
-    self.g.ExecuteLine(command, self.environment)
+    self.g.ExecuteLine(command)
     self.mock.SetExtendedPosition.assert_called_once_with([0,0,0,0,0])
 
   def test_check_can_read_ascii(self):
     command = "G92 X0 Y0 Z0 A0 B0"
-    self.g.ExecuteLine(command, self.environment)
+    self.g.ExecuteLine(command)
     self.mock.SetExtendedPosition.assert_called_once_with([0,0,0,0,0])
 
   def test_check_gcode_errors_are_recorded_correctly(self):
@@ -49,7 +64,7 @@ class gcodeTests(unittest.TestCase):
         }
 
     try:
-      self.g.ExecuteLine(command, self.environment)
+      self.g.ExecuteLine(command)
     except s3g.Gcode.GcodeError as e:
       self.assertEqual(expectedValues, e.values)
     else:
@@ -58,19 +73,19 @@ class gcodeTests(unittest.TestCase):
 
   def test_check_gcode_extraneous_codes_gets_called(self):
     command = "G161 Q1" # Note: this assumes that G161 does not accept a Q code
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command, self.environment)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
   def test_check_gcode_extraneous_flags_gets_called(self):
     command = "G161 Q" # Note: this assumes that G161 does not accept a Q flag
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command, self.environment)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
   def test_check_mcode_extraneous_codes_gets_called(self):
     command = "M18 Q4" # Note: This assumes that M6 does not accept an X code
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command, self.environment)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
   def test_check_mcode_extraneous_flags_gets_called(self):
     command = "M18 Q" # Note: This assumes that M6 does not accept an X flag
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command, self.environment)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
 
   def test_disable_axes(self):
     flags = ['A','B','X','Y','Z']
@@ -181,14 +196,16 @@ class gcodeTests(unittest.TestCase):
         }
     self.assertRaises(KeyError, self.g.StoreOffsets, codes, [],  '')
 
-  def test_store_offsets_all_codes_defined(self):
-    self.g.state.offsetPosition[0] = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'B' : 0,
+  def test_store_offsets_bad_offset(self):
+    codes = {
+        'P' : 0,
+        'X' : 1,
         }
+    flags = []
+    comments = ''
+    self.assertRaises(s3g.Gcode.InvalidOffsetError, self.g.StoreOffsets, codes, flags, comments)
+
+  def test_store_offsets_all_codes_defined(self):
     codes = {
         'X' : 1,
         'Y' : 2,
@@ -197,14 +214,14 @@ class gcodeTests(unittest.TestCase):
         }
     self.g.StoreOffsets(codes, [], '')
     expectedOffsets = {
-        0: {
+        1: {
             'X' : 1,
             'Y' : 2,
             'Z' : 3,
             'A' : 0,
             'B' : 0,
             },
-        1:  {
+        2:  {
             'X' : 0,
             'Y' : 0,
             'Z' : 0,
@@ -214,50 +231,27 @@ class gcodeTests(unittest.TestCase):
         }
     self.assertEqual(expectedOffsets, self.g.state.offsetPosition)
 
-  def test_use_p1_offsets_all_codes_accounted_for(self):
+  def test_use_p2_offsets_all_codes_accounted_for(self):
     codes = ''
     flags = ''
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[55][1])
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[55][2])
 
-  def test_use_p1_offsets(self):
+  def test_use_p2_offsets(self):
     codes = {}
-    self.g.UseP1Offsets(codes, [], '')
-    self.assertEqual(1, self.g.state.offset_register)
+    self.g.UseP2Offsets(codes, [], '')
+    self.assertEqual(2, self.g.state.offset_register)
 
-  def test_use_p0_offsets_all_codes_accounted_for(self):
+  def test_use_p1_offsets_all_codes_accounted_for(self):
     codes = ''
     flags = ''
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[54][1])
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[55][2])
+    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[54][2])
 
-  def test_use_p0_offsets(self):
+  def test_use_p1_offsets(self):
     codes = {}
-    self.g.UseP0Offsets(codes, [], '')
-    self.assertEqual(0, self.g.state.offset_register) 
-
-  def test_absolute_programming_all_codes_accounted_for(self):
-    codes = ''
-    flags = ''
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[90][1])
-
-  def test_absolute_programming(self):
-    oldState = copy.deepcopy(self.g.state.values)
-    self.g.AbsoluteProgramming({}, [], "")
-    newState = self.g.state.values
-    self.assertEqual(oldState, newState)
-
-  def test_milimeter_programming_all_codes_accounted_for(self):
-    codes = ''
-    flags = ''
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[21][1])
-    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[21][2])
-
-  def test_milimeter_programming(self):
-    oldState = copy.deepcopy(self.g.state.values)
-    self.g.MilimeterProgramming({}, [], "")
-    newState = self.g.state.values
-    self.assertEqual(oldState, newState)
+    self.g.UseP1Offsets(codes, [], '')
+    self.assertEqual(1, self.g.state.offset_register) 
 
   def test_set_position_all_codes_accounted_for(self):
     codes = 'XYZABE'
@@ -372,7 +366,7 @@ class gcodeTests(unittest.TestCase):
     Tests to make sure that throwing all registers in a command doesnt raise an
     extra register error.
     """
-    codes = 'D'
+    codes = 'F'
     flags = 'XYZ'
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[161][1])
     self.assertEqual(sorted(flags), sorted(self.g.GCODE_INSTRUCTIONS[161][2]))
@@ -385,39 +379,39 @@ class gcodeTests(unittest.TestCase):
           'A' : 4,
           'B' : 5,
           }
-    dda_speed = 5
-    codes = {'D':dda_speed}
+    feedrate = 512
+    codes = {'F':feedrate}
     flags = ['X', 'Y', 'Z']
     axes = flags
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMinimums(codes, flags, '')
-    self.mock.FindAxesMinimums.assert_called_once_with(axes, dda_speed, timeout)
-    expectedPosition = {
-        'X'   :   None,
-        'Y'   :   None,
-        'Z'   :   None,
-        'A'   :   4,
-        'B'   :   5,
+    params = self.mock.mock_calls[0][1]
+    self.assertEqual(params[0], flags)
+    expected_position = {
+        'X' : None,
+        'Y' : None,
+        'Z' : None,
+        'A' : 4,  
+        'B' : 5,
         }
-    self.assertEqual(expectedPosition, self.g.state.position)
+    self.assertEqual(expected_position, self.g.state.position)
 
   def test_find_axes_minimum_no_axes(self):
-    dda_speed = 5
-    codes = {'D' : dda_speed}
+    feedrate = 5
+    codes = {'F' : feedrate}
     axes = []
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMinimums(codes, [], '')
-    self.mock.FindAxesMinimums.assert_called_once_with(axes, dda_speed, timeout)
+    self.assertTrue(len(self.mock.mock_calls) == 0)
 
-  def test_find_axes_minimum_no_d_code(self):
+  def test_find_axes_minimum_no_F_code(self):
     codes = {}
-    flags = []
+    flags = ['X', 'Y']
     comments = ''
     self.assertRaises(KeyError, self.g.FindAxesMinimums, codes, flags, comments)
 
-
   def test_find_axes_maximums_all_codes_accounted_for(self):
-    codes = 'D'
+    codes = 'F'
     flags = 'XYZ'
     self.assertEqual(sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[162][1]))
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[162][2])
@@ -430,14 +424,15 @@ class gcodeTests(unittest.TestCase):
         'A'   :   4,
         'B'   :   5
         }
-    dda_speed = 5
-    codes = {'D' : dda_speed}
+    feedrate = 5
+    codes = {'F' : feedrate}
     flags = ['X', 'Y', 'Z']
     axes = flags
     feedrate = 0
     timeout = self.g.state.profile.values['find_axis_maximum_timeout']
     self.g.FindAxesMaximums(codes, flags, '')
-    self.mock.FindAxesMaximums.assert_called_once_with(axes, dda_speed, timeout)
+    params = self.mock.mock_calls[0][1]
+    self.assertEqual(params[0], flags)
     expectedPosition = {
         'X'   :   None,
         'Y'   :   None,
@@ -448,16 +443,17 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(expectedPosition, self.g.state.position)
 
   def test_find_axes_maximum_no_axes(self):
-    dda_speed = 5
-    codes = {'D' : dda_speed}
+    feedrate = 5
+    codes = {'F' : feedrate}
     axes = []
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.FindAxesMaximums(codes, [], '')
-    self.mock.FindAxesMaximums.assert_called_once_with(axes, dda_speed, timeout)
+    calls = self.mock.mock_calls
+    self.assertTrue(len(calls) == 0)
 
-  def test_find_axes_maximum_no_d_code(self):
+  def test_find_axes_maximum_no_f_code(self):
     codes = {}
-    flags = []
+    flags = ['X', 'Y']
     comments = ''
     self.assertRaises(KeyError, self.g.FindAxesMaximums, codes, flags, comments)
 
@@ -1023,6 +1019,46 @@ class gcodeTests(unittest.TestCase):
   def test_build_end_notification(self):
     self.g.BuildEndNotification()
     self.mock.BuildEndNotification.assert_called_once_with()
+
+  def test_enable_extra_device_all_codes_accounted_for(self):
+    codes = 'T'
+    flags = ''
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[126][1])
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[126][2])
+
+  def test_enable_extra_device_no_t_code(self):
+    codes = {}
+    flags = []
+    comments = ''
+    self.assertRaises(KeyError, self.g.EnableExtraOutput, codes, flags, comments)
+ 
+  def test_enable_extra_device_t_code_defined(self):
+    tool_index = 2
+    codes = {'T'  : tool_index}
+    flags = []
+    comments = ''
+    self.g.EnableExtraOutput(codes, flags, comments)
+    self.mock.ToggleExtraOutput.assert_called_once_with(tool_index, True)
+
+  def test_disable_extra_device_all_codes_accounted_for(self):
+    codes = 'T'
+    flags = ''
+    self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[127][1])
+    self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[127][2])
+
+  def test_disable_extra_device_no_t_code(self):
+    codes = {}
+    flags = []
+    comments = ''
+    self.assertRaises(KeyError, self.g.DisableExtraOutput, codes, flags, comments)
+
+  def test_disable_extra_device_t_code_defined(self):
+    tool_index = 2
+    codes = {'T'  : tool_index}
+    flags = []
+    comments = ''
+    self.g.DisableExtraOutput(codes, flags, comments)
+    self.mock.ToggleExtraOutput.assert_called_once_with(tool_index, False)
 
 if __name__ == "__main__":
   unittest.main()

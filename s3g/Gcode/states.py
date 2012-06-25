@@ -5,9 +5,11 @@ variables.
 
 from utils import *
 from errors import *
+import logging
 
 class GcodeStates(object):
   def __init__(self):
+    self._log = logging.getLogger(self.__class__.__name__)
     self.profile = None
     self.position = {    #Position, In MM!!
         'X' : None,
@@ -18,14 +20,14 @@ class GcodeStates(object):
         }
 
     self.offsetPosition = {
-        0   :   {
+        1   :   {
                 'X' : 0,
                 'Y' : 0,
                 'Z' : 0,
                 'A' : 0,
                 'B' : 0,
                 },
-        1   :   {
+        2   :   {
                 'X' : 0,
                 'Y' : 0,
                 'Z' : 0,
@@ -37,13 +39,14 @@ class GcodeStates(object):
     self.values = {}
     self.wait_for_ready_packet_delay = 100  #ms
     self.wait_for_ready_timeout =   480  #seconds
-    self.offset_register = None   #Curent offset register
+    self.offset_register = None #Curent offset register
   
   def LosePosition(self, axes):
     """Given a set of axes, loses the position of
     those axes.
     @param list axes: A list of axes to lose
     """
+    self._log.info('{"event":"gcode_state_change", "change":"lose_position"}\n')
     for axis in axes:
       self.position[axis] = None
 
@@ -84,22 +87,35 @@ class GcodeStates(object):
     axes = ['X','Y','Z','A','B']  
     for i in range(len(offsets)):
       self.offsetPosition[register][axes[i]] = offsets[i]
+    self._log.info('{"event":"gcode_state_change", "change":"store_offsets", "register": %i, "new offsets": [%i, %i, %i, %i, %i]}\n'
+        %(
+            register, 
+            self.offsetPosition[register]['X'], 
+            self.offsetPosition[register]['Y'], 
+            self.offsetPosition[register]['Z'],
+            self.offsetPosition[register]['A'],
+            self.offsetPosition[register]['B'],
+          ))
 
   def SetBuildName(self, build_name):
     if not isinstance(build_name, str):
       raise TypeError
     else:
+      self._log.info('{"event":"gcode_state_change", "change":"build_name"}\n')
       self.values['build_name'] = build_name
+
 
   def GetAxesValues(self, key):
     """
-    Given a key, returns a list of all 
-    axis values for that key.  If an axis
-    if missing from the machine profile, put a 0
-    in its place.
-    @param string key: the key to use when ascertaining
-      info for each axis
-    @return list: List of values for the key of each axis
+    Given a key, queries the current profile's axis list
+    for the information associated with that key.  This function
+    always asks the profile for information regarding the axes:
+    X, Y, Z, A, B.  For compatability issues, if one of these axes is 
+    not present in the profile, we add a 0 for that value.
+
+    @param string key: The information we want to get from each axis
+    @return list: List of information retrieved from each axis attached to
+        a profile.
     """ 
     axes = ['X', 'Y', 'Z', 'A', 'B']
     values = []
@@ -109,3 +125,19 @@ class GcodeStates(object):
       else:
         values.append(0)
     return values
+  
+  def GetAxesFeedrateAndSPM(self, axes):
+    """
+    Given a set of axes, returns their max feedrates and SPM values
+
+    @param string list axes: A list of axes
+    @return tuple: A tuple comprised of feedrates and spm values.
+    """
+    if not isinstance(axes, list):
+      raise ValueError
+    feedrates = []
+    spm = []
+    for axis in axes:
+      feedrates.append(self.profile.values['axes'][axis]['max_feedrate'])
+      spm.append(self.profile.values['axes'][axis]['steps_per_mm'])
+    return feedrates, spm
