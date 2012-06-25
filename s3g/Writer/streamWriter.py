@@ -14,15 +14,15 @@ class StreamWriter(AbstractWriter):
 
     @param string file File object to interact with
     """
+    self._log = logging.getLogger(self.__class__.__name__)
     self.file = file
-
+    self._log.info('{"event":"begin_writing_to_stream", "stream":%s}'
+        %(str(self.file)))
     self.total_retries = 0
     self.total_overflows = 0
     self.external_stop = False
-    self._log = logging.getLogger(self.__class__.__name__)
 
   def ExternalStop(self):
-    self._log.error('{"event":external_stop"}\n')
     self.external_stop = True
 
   # TODO: test me
@@ -49,6 +49,7 @@ class StreamWriter(AbstractWriter):
     received_errors = []
     while True:
       if self.external_stop:
+        self._log.error('{"event":"external_stop"}\n')
         raise ExternalStopError
       decoder = Encoder.PacketStreamDecoder()
       self.file.write(packet)
