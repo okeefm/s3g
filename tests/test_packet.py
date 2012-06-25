@@ -150,7 +150,7 @@ class PacketStreamDecoderTests(unittest.TestCase):
     self.s.ParseByte(len(payload))
     for i in range (0, len(payload)):
       self.s.ParseByte(payload[i])
-    self.assertRaises(errors.ProtocolError, Encoder.CheckResponseCode, payload[0])
+    self.assertRaises(errors.UnknownResponseError, Encoder.CheckResponseCode, payload[0])
 
   def test_accept_packet(self):
     payload = bytearray()

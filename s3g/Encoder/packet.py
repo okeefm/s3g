@@ -52,24 +52,24 @@ def CheckResponseCode(response_code):
     return
 
   elif response_code == constants.response_code_dict['GENERIC_ERROR']:
-    raise errors.GenericError('Generic error reported by toolhead, try sending packet again')
+    raise errors.GenericError()
 
   elif response_code == constants.response_code_dict['ACTION_BUFFER_OVERFLOW']:
     raise errors.BufferOverflowError()
 
   elif response_code == constants.response_code_dict['CRC_MISMATCH']:
-    raise errors.CRCMismatchError('CRC mismatch error reported by toolhead, try sending packet again')
+    raise errors.CRCMismatchError()
 
   elif response_code == constants.response_code_dict['DOWNSTREAM_TIMEOUT']:
-    raise errors.DownstreamTimeoutError('Downstream (tool network) timout, cannot communicate with tool')
+    raise errors.DownstreamTimeoutError()
 
   elif response_code == constants.response_code_dict['TOOL_LOCK_TIMEOUT']:
-    raise errors.ToolLockError('Tool lock timeout, cannot communicate with tool.')
+    raise errors.ToolLockError()
 
   elif response_code == constants.response_code_dict['CANCEL_BUILD']:
     raise errors.BuildCancelledError()
 
-  raise errors.ProtocolError('Response code 0x%02X not understood'%(response_code))
+  raise errors.UnknownResponseError()
 
 class PacketStreamDecoder(object):
   """

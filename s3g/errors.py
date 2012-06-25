@@ -44,15 +44,11 @@ class GenericError(RetryableError):
   """
   A generic error reported by the bot
   """
-  def __init__(self, value):
-    self.value = value
 
 class CRCMismatchError(RetryableError):
   """
-  Signifies a bad crc code was received by the bot
+  Signifies a bad crc code was received by the machine
   """
-  def __init__(self, value):
-    self.value = value
 
 class TimeoutError(RetryableError):
   """
@@ -65,6 +61,12 @@ class TimeoutError(RetryableError):
         'DATA LENGTH':self.data_length,  
         'DECODER STATE':self.decoder_state
         }
+
+class UnknownResponseError(RetryableError):
+  """
+  An UnknownResponseError is thrown the machine responds with a value
+  that is not known to s3g.
+  """
 
 class BufferOverflowError(Exception):
   """
@@ -121,10 +123,11 @@ class SDCardError(Exception):
   """
   def __init__(self, response_code):
     self.response_code = response_code
-    try:
-      self.response_code_string = (key for key,value in sd_error_dict.items() if value==response_code).next()
-    except StopIteration:
-      self.response_code_string = ''
+    self.response_code_string = 'RESPONSE_CODE_NOT_RECOGNIZED'
+    #Do a reverse lookup
+    for key, val in sd_error_dict.items():
+      if val == response_code:
+        self.response_code_string = key
 
   def __str__(self):
     return self.response_code_string
