@@ -27,12 +27,16 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'X' : 0,
         'Y' : 0,
         'Z' : 0,
+        'A' : 0,
+        'B' : 0,
         }
     self.g.StoreOffset(offset, offsets)
     expectedOffset = {
         'X' : 1,
         'Y' : 2,
         'Z' : 3,
+        'A' : 0,
+        'B' : 0,
         }
     self.assertEqual(expectedOffset, self.g.offsetPosition[0])
 

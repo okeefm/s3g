@@ -5,9 +5,11 @@ variables.
 
 from utils import *
 from errors import *
+import logging
 
 class GcodeStates(object):
   def __init__(self):
+    self._log = logging.getLogger(self.__class__.__name__)
     self.profile = None
     self.position = {    #Position, In MM!!
         'X' : None,
@@ -44,6 +46,7 @@ class GcodeStates(object):
     those axes.
     @param list axes: A list of axes to lose
     """
+    self._log.info('{"event":"gcode_state_change", "change":"lose_position"}\n')
     for axis in axes:
       self.position[axis] = None
 
@@ -84,11 +87,21 @@ class GcodeStates(object):
     axes = ['X','Y','Z','A','B']  
     for i in range(len(offsets)):
       self.offsetPosition[register][axes[i]] = offsets[i]
+    self._log.info('{"event":"gcode_state_change", "change":"store_offsets", "register": %i, "new offsets": [%i, %i, %i, %i, %i]}\n'
+        %(
+            register, 
+            self.offsetPosition[register]['X'], 
+            self.offsetPosition[register]['Y'], 
+            self.offsetPosition[register]['Z'],
+            self.offsetPosition[register]['A'],
+            self.offsetPosition[register]['B'],
+          ))
 
   def SetBuildName(self, build_name):
     if not isinstance(build_name, str):
       raise TypeError
     else:
+      self._log.info('{"event":"gcode_state_change", "change":"build_name"}\n')
       self.values['build_name'] = build_name
 
 

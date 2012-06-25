@@ -3,6 +3,7 @@
 from states import *
 from utils import *
 from errors import *
+import logging
 import time
 
 class GcodeParser(object):
@@ -15,6 +16,7 @@ class GcodeParser(object):
     self.s3g = None
     self.environment = {}
     self.line_number = 1
+    self._log = logging.getLogger(self.__class__.__name__)
 
     # Note: The datastructure looks like this:
     # [0] : command name
@@ -59,8 +61,10 @@ class GcodeParser(object):
     """
     #If command is in unicode, encode it into ascii
     if isinstance(command, unicode):
+      self._log.warning('{"event":"encoding_gcode_into_utf8"}\n')
       command = command.encode("utf8")
     elif not isinstance(command, str):
+      self._log.error('{"event":"gcode_file_in_improper_format"}\n')
       raise ImproperGcodeEncodingError
 
     try:
@@ -75,6 +79,8 @@ class GcodeParser(object):
           self.GCODE_INSTRUCTIONS[codes['G']][0](codes, flags, comment)
 
         else:
+          self._log.error('{"event":"unrecognized_command", "command":%s}\n'
+              %(codes['G']))
           gcode_error = UnrecognizedCommandError()
           gcode_error.values['UnrecognizedCommand'] = codes['G']
           raise gcode_error
@@ -86,6 +92,8 @@ class GcodeParser(object):
           self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
 
         else:
+          self._log.error('{"event":"unrecognized_command", "command":%s}\n'
+              %(codes['M']))
           gcode_error = UnrecognizedCommandError()
           gcode_error.values['UnrecognizedCommand'] = codes['M']
           raise gcode_error
@@ -93,6 +101,7 @@ class GcodeParser(object):
       # Not a G or M code, should we throw here?
       else:
         if len(codes) + len(flags) > 0:
+          self._log.error('{"event":"extraneous_code"}\n')
           gcode_error = ExtraneousCodeError()
           raise gcode_error
 
@@ -100,16 +109,21 @@ class GcodeParser(object):
           pass
     except KeyError as e:
       if e[0] == 'T':
+        self._log.warning('{"event":"t_code_not_defined"}\n')
         TCodeNotDefinedWarning()
       else:
+        self._log.error('{"event":"missing_code_error", "missing_code":%s}\n'
+            %(e[0]))
         gcode_error = MissingCodeError()
         gcode_error.values['MissingCode'] = e[0]
         gcode_error.values['LineNumber'] = self.line_number
         gcode_error.values['Command'] = command
         raise gcode_error
     except VectorLengthZeroError:
+      self._log.warning('{"event":vector_length_zero_error"}\n')
       pass
     except GcodeError as gcode_error:
+      self._log.error('{"event":"gcode_error"}\n')
       gcode_error.values['Command'] = command
       gcode_error.values['LineNumber'] = self.line_number
       raise gcode_error
@@ -187,12 +201,19 @@ class GcodeParser(object):
         self.state.position['A'] = codes['E']
       elif self.state.values['tool_index'] == 1:
         self.state.position['B'] = codes['E']
-
     else:
       if 'A' in codes:
         self.state.position['A'] = codes['A']
       if 'B' in codes:
         self.state.position['B'] = codes['B']
+    self._log.info('{"event":"gcode_state_change", "change":"set_position", "new_position: [%i, %i, %i, %i, %i]"}\n'
+        %(
+            self.state.position['X'], 
+            self.state.position['Y'],
+            self.state.position['Z'],
+            self.state.position['A'],
+            self.state.position['B'],
+            ))
     stepped_position = MultiplyVector(self.state.GetPosition(), self.state.GetAxesValues('steps_per_mm'))
     self.s3g.SetExtendedPosition(stepped_position)
       
@@ -200,11 +221,15 @@ class GcodeParser(object):
     """Sets the state machine to use the P0 offset.
     """
     self.state.offset_register = 1
+    self._log.info('{"event":"gcode_state_change", "change":"offset_register", "new_offset_register": %i}\n'
+        %(self.state.offset_register))
 
   def UseP2Offsets(self, codes, flags, comment):
     """Sets the state machine to use the P1 offset.
     """
     self.state.offset_register = 2
+    self._log.info('{"event":"gcode_state_change", "change":"offset_register", "new_offset_register": %i}\n'
+        %(self.state.offset_register))
 
   def WaitForToolReady(self, codes, flags, comment):
     """
@@ -307,6 +332,8 @@ class GcodeParser(object):
     """
     if 'F' in codes:
       self.state.values['feedrate'] = codes['F']
+      self._log.info('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}\n'
+          %(codes['F']))
     if len(ParseOutAxes(codes)) > 0 or 'E' in codes:
       current_position = self.state.GetPosition()
       for axis in ['X', 'Y', 'Z']:
@@ -338,6 +365,14 @@ class GcodeParser(object):
         if 'B' in codes:
           self.state.position['B'] = codes['B']
 
+      self._log.info('{"event":"gcode_state_change", "change":"set_position", "new_position": [%i, %i, %i, %i, %i]"}\n'
+        %(
+            self.state.position['X'], 
+            self.state.position['Y'],
+            self.state.position['Z'],
+            self.state.position['A'],
+            self.state.position['B'],
+            ))
       try :
         feedrate = self.state.values['feedrate']
         dda_speed = CalculateDDASpeed(
@@ -396,21 +431,26 @@ class GcodeParser(object):
     """Sends a chagne tool command to the machine.
     """
     self.state.values['tool_index'] = codes['T']
+    self._log.info('{"event":"gcode_state_change", "change":"tool_change", "new_tool_index":%i}\n'
+        %(codes['T']))
     self.s3g.ChangeTool(codes['T'])
 
   def BuildStartNotification(self):
     """Sends a build start notification command to the machine.
     """
+    self._log.info('{"event":"build_start"}\n')
     try:
       self.s3g.BuildStartNotification(self.state.values['build_name'])
     except KeyError:
+      self._log.info('{"event":"no_build_name_defined"}\n')
       raise NoBuildNameError
 
   def BuildEndNotification(self):
     """Sends a build end notification command to the machine
     """
+    self._log.info('{"event":"build_end"}\n')
     self.state.values['build_name'] = None
-
+    self._log.info('{"event":"gcode_state_change", "change":"remove_build_name"}\n')
     self.s3g.BuildEndNotification()
 
   def EnableExtraOutput(self, codes, flags, comment):
@@ -431,23 +471,23 @@ class GcodeParser(object):
     """Turn the extruder off
     This is a stub, since we dropped support for this function
     """
-    pass
+    self._log.warning('{"event":"passing_over_code", "code":103}\n')
 
   def ExtruderOnReverse(self, codes, flags, comment):
     """Turn the extruder on turning backward
     This is a stub, since we dropped support for this function
     """
-    pass
+    self._log.warning('{"event":"passing_over_code", "code":102}\n')
 
   def ExtruderOnForward(self, codes, flags, comment):
     """Turn the extruder on turning forward
     This is a stub, since we dropped support for this function
     """
-    pass
+    self._log.warning('{"event":"passing_over_code", "code":101}\n')
 
   def GetTemperature(self, codes, flags, comment):
     """This gets the temperature from a toolhead
     We do not support this command, and only have a stub because
     skeinforge likes to include it in its files
     """
-    pass
+    self._log.warning('{"event":"passing_over_code", "code":105}\n')
