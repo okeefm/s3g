@@ -13,7 +13,7 @@ digraph
   "PacketDecodeError" [shape=diamond];
   "ProtocolError" [shape=diamond]; 
   "ParameterError" [shape=diamond];
-  "MachineTransmissionError" [shape=diamond];
+  "ToolBusError" [shape=diamond];
   "ExtendedStopError";
   "TransmissionError";
   "SDCardError";
@@ -23,8 +23,8 @@ digraph
   "GenericError" -> "RecoverableError";
   "CRCMismatchError" -> "RecoverableError";
   "TimeoutError" -> "RecoverableError";
-  "DownstreamTimeoutError" -> "MachineTransmissionError";
-  "ToolLockError" ->  "MachineTransmissionError";
+  "DownstreamTimeoutError" -> "ToolBusError";
+  "ToolLockError" ->  "ToolBusError";
 
   "PacketDecodeError" -> "RecoverableError";
   "PacketLengthError" -> "PacketDecodeError";
@@ -34,6 +34,7 @@ digraph
 
   "HeatElementReadyError" -> "ProtocolError";
   "EEPROMMismatchError" ->  "ProtocolError";
+  "UnrecognizedResponseError" -> "ProtocolError";
 
   "ButtonError" -> "ParameterError";
   "EEPROMLengthError" -> "ParameterError";

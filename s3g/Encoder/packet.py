@@ -69,7 +69,7 @@ def CheckResponseCode(response_code):
   elif response_code == constants.response_code_dict['CANCEL_BUILD']:
     raise errors.BuildCancelledError()
 
-  raise errors.UnknownResponseError()
+  raise errors.UnknownResponseError(response_code)
 
 class PacketStreamDecoder(object):
   """

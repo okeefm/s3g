@@ -62,11 +62,6 @@ class TimeoutError(RetryableError):
         'DECODER STATE':self.decoder_state
         }
 
-class UnknownResponseError(RetryableError):
-  """
-  An UnknownResponseError is thrown the machine responds with a value
-  that is not known to s3g.
-  """
 
 class BufferOverflowError(Exception):
   """
@@ -151,6 +146,12 @@ class HeatElementReadyError(ProtocolError):
 
 class EEPROMMismatchError(ProtocolError):
   """An EEPROM mismatch error is raised when the length of the information written to the eeprom doesnt match the length of the information passed into WriteToEEPROM
+  """
+
+class UnknownResponseError(ProtocolError):
+  """
+  An UnknownResponseError is thrown the machine responds with a value
+  that is not known to s3g.
   """
 
 class ParameterError(ValueError):
