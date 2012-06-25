@@ -123,6 +123,7 @@ class SDCardError(Exception):
     for key, val in sd_error_dict.items():
       if val == response_code:
         self.response_code_string = key
+        break
 
   def __str__(self):
     return self.response_code_string
