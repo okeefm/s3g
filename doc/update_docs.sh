@@ -7,6 +7,8 @@ dot SendCommand.dot -Tpng > SendCommand.png
 dot CheckResponseCode.dot -Tpng > CheckResponseCode.png
 dot GCodeStateMachine.dot -Tpng > GCodeStateMachine.png
 dot MCodeStateMachine.dot -Tpng > MCodeStateMachine.png
+dot s3gErrors.dot -Tpng > s3gErrors.png
+dot CurrentErrors.dot -Tpng > CurrentErrors.png
 
 mscgen -i HostCommandSuccess.msc -T png
 mscgen -i ToolCommandSuccess.msc -T png

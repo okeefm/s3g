@@ -91,7 +91,7 @@ class StreamWriter(AbstractWriter):
 
         time.sleep(.2)
 
-      except (errors.PacketDecodeError, errors.GenericError, errors.TimeoutError, errors.CRCMismatchError) as e:
+      except errors.RetryableError as e:
         # Sent a packet to the host, but got a malformed response or timed out waiting
         # for a reply. Retry immediately.
 
@@ -100,7 +100,7 @@ class StreamWriter(AbstractWriter):
 
         self.total_retries += 1
         retry_count += 1
-        received_errors.append(e.__name__)
+        received_errors.append(e.__class__.__name__)
 
       except Exception as e:
         # Other exceptions are propigated upwards.
