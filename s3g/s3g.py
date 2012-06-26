@@ -2,8 +2,10 @@
 import struct
 import time
 import logging
+import serial
 
 import Encoder
+import Writer 
 from constants import *
 from errors import *
 
@@ -15,6 +17,16 @@ class s3g(object):
     # TODO: Move these to constants file.
     self.ExtendedPointLength = 5
     self.PointLength = 3
+  
+  @classmethod
+  def fromFilename(cls, port, b=115200, t=.2):
+    """Constructs and returns an s3g object connected to the 
+    passed @port
+    """
+    ob = s3g()
+    f = serial.Serial(port, baudrate=b, timeout=t)
+    ob.writer = Writer.StreamWriter(f)
+    return ob
 
   def GetVersion(self):
     """
