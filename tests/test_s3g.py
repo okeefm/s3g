@@ -6,7 +6,32 @@ sys.path.append(lib_path)
 import unittest
 import io
 
+import serial
 from s3g import Writer, constants, s3g, errors, Encoder
+
+class TestFromFileName(unittest.TestCase):
+  def setUp(self):
+    self.obj = s3g.from_filename(None)
+
+  def tearDown(self):
+    self.obj = None
+
+  def test_from_filename_gets_correct_objects(self):
+    self.assertTrue(isinstance(self.obj, s3g))
+    self.assertTrue(isinstance(self.obj.writer, Writer.StreamWriter))
+    self.assertTrue(isinstance(self.obj.writer.file, serial.Serial))
+
+  def test_from_filename_minimal_constructor(self):
+    self.assertEqual(self.obj.writer.file.port, None)
+    self.assertEqual(self.obj.writer.file.baudrate, 115200)
+    self.assertEqual(self.obj.writer.file.timeout, .2)
+
+  def test_from_filename_use_all_parameters(self):
+    baudrate = 9800
+    timeout = 5
+    self.obj = s3g.from_filename(None, baudrate=9800, timeout=5)
+    self.assertEqual(self.obj.writer.file.baudrate, baudrate)
+    self.assertEqual(self.obj.writer.file.timeout, timeout)
 
 class S3gTests(unittest.TestCase):
   """
