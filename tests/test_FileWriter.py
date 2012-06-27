@@ -20,13 +20,13 @@ class s3gFileWriterTests(unittest.TestCase):
     self.inputstream = None
 
   def test_build_and_send_query_packet_not_implemented(self):
-    self.assertRaises(NotImplementedError, self.w.SendQueryPayload, [42])
+    self.assertRaises(NotImplementedError, self.w.send_query_payload, [42])
 
   def test_build_and_send_action_payload(self):
     data = 'abcde'
     expected_payload = bytearray(data)
 
-    self.w.SendActionPayload(data)
+    self.w.send_action_payload(data)
 
     self.inputstream.seek(0)
     payload = self.inputstream.getvalue()

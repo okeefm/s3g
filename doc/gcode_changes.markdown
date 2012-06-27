@@ -10,7 +10,7 @@ The following commands will make the Gcode Parser lose its location:
     * M132
 
 ###Tool Changes
-Previously, whenever the Gcode Parser encountered a T command, the internal Gcode State Machine would be updated with that tool_index, and a ChangeTool command would be sent to the machine.  This caused an excessive amount of bloat to the parser, so we now only change the tool_index and send a ChangeTool command to the machine is we receive the new M135 ChangeTool command.  However, due to our need to support E commands, we still update the Gcode State Machine's tool_index.
+Previously, whenever the Gcode Parser encountered a T command, the internal Gcode State Machine would be updated with that tool_index, and a change_tool command would be sent to the machine.  This caused an excessive amount of bloat to the parser, so we now only change the tool_index and send a change_tool command to the machine is we receive the new M135 change_tool command.  However, due to our need to support E commands, we still update the Gcode State Machine's tool_index.
 
 ###Mandatory T codes
 All G and M codes that include a T code must now include that code.  If excluded, a MissingCodeError will be thrown.

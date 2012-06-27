@@ -103,7 +103,7 @@ The master is allowed to attemt re-transmission if and only if it receives two s
 
 Here is a reference implementation of a packet send state machine:
 
-![SendCommand state machine diagram](https://github.com/makerbot/s3g/raw/master/doc/SendCommand.png)
+![send_command state machine diagram](https://github.com/makerbot/s3g/raw/master/doc/send_command.png)
 
 
 # Packet formats
@@ -401,7 +401,7 @@ Response
 
     uint16: Firmware Version
 
-## 01 - Init: Initialize firmware to boot state
+## 01 - init: Initialize firmware to boot state
 Initialization consists of:
 
     * Resetting all axes positions to 0
@@ -434,10 +434,10 @@ Payload (0 bytes)
 
 Response (0 bytes)
 
-## 08 - Pause/resume: Halt execution temporarily
+## 08 - pause/resume: Halt execution temporarily
 This function is inteded to be called infrequently by the end user in order to make build-time adjustments during a print. It differs from 'Abort Immediately', in that the command buffers and heaters are not disabled.
 
-On Pause, it stops all stepper movement and halts extrusion.
+On pause, it stops all stepper movement and halts extrusion.
 On Resume, it restarts extrusion and resumes movement.
 
 Payload (0 bytes)
@@ -521,7 +521,7 @@ Response
 
     uint8: SD response code
 
-## 17 - Reset
+## 17 - reset
 Call a soft reset. This calls all reset functions on the bot. Same as abort.
 
 Payload (0 bytes)
@@ -741,12 +741,12 @@ Payload
 
 Response (0 bytes)
 
-## 133 - Delay: Pause all motion for the specified time
+## 133 - delay: pause all motion for the specified time
 Halt all motion for the specified amount of time.
 
 Payload
 
-    uint32: Delay, in microseconds
+    uint32: delay, in microseconds
 
 Response (0 bytes)
 
@@ -767,7 +767,7 @@ This command halts machine motion until the specified toolhead reaches a ready s
 Payload
 
     uint8: Tool ID of the tool to wait for
-    uint16: Delay between query packets sent to the tool, in ms (nominally 100 ms)
+    uint16: delay between query packets sent to the tool, in ms (nominally 100 ms)
     uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
 
 Response (0 bytes)
@@ -849,7 +849,7 @@ Payload
 Response (0 bytes)
 
 ## 140 - Set extended position
-Reset the current position of the axes to the given values.
+reset the current position of the axes to the given values.
 
 Payload
 
@@ -867,7 +867,7 @@ This command halts machine motion until the specified tool device reaches a read
 Payload
 
     uint8: Tool ID of the build platform to wait for
-    uint16: Delay between query packets sent to the tool, in ms (nominally 100 ms)
+    uint16: delay between query packets sent to the tool, in ms (nominally 100 ms)
     uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
 
 Response (0 bytes)
@@ -1117,7 +1117,7 @@ Response (0 bytes)
 
 TODO: List of available songs?
 
-## 152 - Reset to Factory
+## 152 - reset to Factory
 Calls a factory reset on the eeprom. Resets all values to their "factory" settings. A soft reset of the board is also called.
 
 Payload
@@ -1369,7 +1369,7 @@ Response
 
 # Tool Action Commands
 
-## 01 - Init: Initialize firmware to boot state
+## 01 - init: Initialize firmware to boot state
 Initialization resets the toolhead and all processes it controls to the boot state.  some examples of processes that will be reset are:
 
     * Resetting target temperatures to 0
@@ -1483,7 +1483,7 @@ Payload
 
 Response (0 bytes)
 
-## 23 - Pause/resume: Halt execution temporarily
+## 23 - pause/resume: Halt execution temporarily
 This function is inteded to be called infrequently by the end user in order to make build-time adjustments during a print.
 
 Payload (0 bytes)

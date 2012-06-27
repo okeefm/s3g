@@ -42,7 +42,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
 
   def test_get_position_unspecified_axis_location(self):
     self.g.position['X'] = None
-    self.assertRaises(Gcode.UnspecifiedAxisLocationError, self.g.GetPosition)
+    self.assertRaises(Gcode.UnspecifiedAxisLocationError, self.g.get_position)
 
   def test_get_position_no_offsets(self):
     self.g.position = {
@@ -54,7 +54,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
         }
     self.g.ofset_register = None
     expectedPosition = [0, 1, 2, 3, 4]
-    self.assertEqual(expectedPosition, self.g.GetPosition())
+    self.assertEqual(expectedPosition, self.g.get_position())
 
   def test_get_position_with_offset(self):
     self.g.position = {
@@ -73,7 +73,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
         }
     self.g.offset_register = 0
     expectedPosition = [100, 201, 302, 403, 504]
-    self.assertEqual(expectedPosition, self.g.GetPosition())
+    self.assertEqual(expectedPosition, self.g.get_position())
   
   def test_set_position_no_axes(self):
     self.g.position = {
@@ -84,7 +84,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'B' : 4,
         }
     axes = {}
-    self.g.SetPosition(axes)
+    self.g.set_position(axes)
     self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.position)
 
   def test_set_position_minimal_axes(self):
@@ -96,7 +96,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'B' : 4,
         }
     axes = {'X' : -1}
-    self.g.SetPosition(axes)
+    self.g.set_position(axes)
     self.assertEqual({'X' : -1, 'Y' : 1, 'Z' : 2, 'A' : 3, 'B' : 4}, self.g.position)
 
   def test_set_position(self):
@@ -114,7 +114,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'A' : 8,
         'B' : 9, 
         }
-    self.g.SetPosition(axes)
+    self.g.set_position(axes)
     self.assertEqual({'X' : 5, 'Y' : 6, 'Z' : 7, 'A' : 8, 'B' : 9}, self.g.position)
 
   def test_lose_position(self):
@@ -126,7 +126,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
           'B' : 5,
           }
     axes = ['X', 'Y', 'Z', 'A', 'B']
-    self.g.LosePosition(axes)
+    self.g.lose_position(axes)
     for key in self.g.position:
       self.assertTrue(self.g.position[key] == None)
 
@@ -146,7 +146,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'A' : 3,
         'B' : 4, 
         }
-    self.g.LosePosition(axes)
+    self.g.lose_position(axes)
     self.assertEqual(expectedPosition, self.g.position)
 
   def test_lose_position_minimal_codes(self):
@@ -165,17 +165,17 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'B' : 4,
         }
     axes = ['X']
-    self.g.LosePosition(axes)
+    self.g.lose_position(axes)
     self.assertEqual(expectedPosition, self.g.position)
 
   def test_set_build_name(self):
     build_name = 'test'
-    self.g.SetBuildName(build_name)
+    self.g.set_build_name(build_name)
     self.assertEqual(self.g.values['build_name'], build_name)
 
   def test_set_build_name_non_string(self):
     build_name = 9
-    self.assertRaises(TypeError, self.g.SetBuildName, build_name)
+    self.assertRaises(TypeError, self.g.set_build_name, build_name)
 
 class TestProfileInformationParsing(unittest.TestCase):
 
@@ -189,7 +189,7 @@ class TestProfileInformationParsing(unittest.TestCase):
 
   def test_get_axes_values_key_error(self):
     key = 'this_is_going_to_fail_;('
-    self.assertRaises(KeyError, self.g.GetAxesValues, key)
+    self.assertRaises(KeyError, self.g.get_axes_values, key)
 
   def test_get_axes_values(self):
     key = 'steps_per_mm'
@@ -200,7 +200,7 @@ class TestProfileInformationParsing(unittest.TestCase):
         -96.275,
         -96.275,
         ]
-    self.assertEqual(expected_values, self.g.GetAxesValues(key))
+    self.assertEqual(expected_values, self.g.get_axes_values(key))
 
 class MachineProfileWith4Axes(unittest.TestCase):
   def setUp(self):
@@ -220,7 +220,7 @@ class MachineProfileWith4Axes(unittest.TestCase):
         -96.275,
         0,
         ]
-    self.assertEqual(expected_values, self.g.GetAxesValues(key))
+    self.assertEqual(expected_values, self.g.get_axes_values(key))
    
 class GetAxesFeedrateSPM(unittest.TestCase):
 
@@ -234,21 +234,21 @@ class GetAxesFeedrateSPM(unittest.TestCase):
 
   def test_get_axes_feedrate_and_spm_non_listed_axes(self):
     axes = 'XYZ'
-    self.assertRaises(ValueError, self.g.GetAxesFeedrateAndSPM, axes)
+    self.assertRaises(ValueError, self.g.get_axes_feedrate_and_SPM, axes)
 
   def test_get_axes_feedrate_and_spm_no_axes(self):
     axes = []
-    feedrate, spm = self.g.GetAxesFeedrateAndSPM(axes)
+    feedrate, spm = self.g.get_axes_feedrate_and_SPM(axes)
     for l in (feedrate, spm):
       self.assertEqual(l, [])
 
   def test_get_axes_feedrate_and_spm_bad_axes(self):
     axes = ['q']
-    self.assertRaises(KeyError, self.g.GetAxesFeedrateAndSPM, axes)
+    self.assertRaises(KeyError, self.g.get_axes_feedrate_and_SPM, axes)
 
   def test_get_axes_feedrate_and_spm_one_axis(self):
     axes = ['X']
-    feedrate, spm = self.g.GetAxesFeedrateAndSPM(axes)
+    feedrate, spm = self.g.get_axes_feedrate_and_SPM(axes)
     expected_feedrate = [12450]
     expected_spm = [94.139]
     self.assertEqual(expected_feedrate, feedrate)
@@ -256,7 +256,7 @@ class GetAxesFeedrateSPM(unittest.TestCase):
 
   def test_get_axes_feedrate_and_spm_many_axes(self):
     axes = ['X', 'Y', 'Z']
-    feedrate, spm = self.g.GetAxesFeedrateAndSPM(axes)
+    feedrate, spm = self.g.get_axes_feedrate_and_SPM(axes)
     expected_feedrate = [12450, 12450, 1170]
     expected_spm = [94.139, 94.139, 400]
     self.assertEqual(expected_feedrate, feedrate)

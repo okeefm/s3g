@@ -36,15 +36,15 @@ class StreamWriterTests(unittest.TestCase):
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['CRC_MISMATCH'])
     for i in range(3):
-      self.outputstream.write(Encoder.EncodePayload(response_payload))
+      self.outputstream.write(Encoder.encode_payload(response_payload))
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['GENERIC_ERROR'])
     for i in range(2):
-      self.outputstream.write(Encoder.EncodePayload(response_payload))
+      self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
     payload = 'asdf'
     try:
-      self.w.SendCommand(payload) 
+      self.w.send_command(payload) 
     except errors.TransmissionError as e:
       self.assertEqual(expected_errors, e.value)
 
@@ -57,11 +57,11 @@ class StreamWriterTests(unittest.TestCase):
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
     response_payload.extend('12345')
-    self.outputstream.write(Encoder.EncodePayload(response_payload))
+    self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
 
-    self.assertEqual(response_payload, self.w.SendCommand(payload))
-    self.assertEqual(Encoder.EncodePayload(payload), self.inputstream.getvalue())
+    self.assertEqual(response_payload, self.w.send_command(payload))
+    self.assertEqual(Encoder.encode_payload(payload), self.inputstream.getvalue())
 
   def test_send_packet_timeout(self):
     """
@@ -69,10 +69,10 @@ class StreamWriterTests(unittest.TestCase):
     payload packet in it.
     """
     payload = 'abcde'
-    packet = Encoder.EncodePayload(payload)
-    expected_packet = Encoder.EncodePayload(payload)
+    packet = Encoder.encode_payload(payload)
+    expected_packet = Encoder.encode_payload(payload)
 
-    self.assertRaises(errors.TransmissionError,self.w.SendPacket, packet)
+    self.assertRaises(errors.TransmissionError,self.w.send_packet, packet)
 
     self.inputstream.seek(0)
     for i in range (0, constants.max_retry_count):
@@ -85,8 +85,8 @@ class StreamWriterTests(unittest.TestCase):
     number of errors.
     """
     payload = 'abcde'
-    packet = Encoder.EncodePayload(payload)
-    expected_packet = Encoder.EncodePayload(payload)
+    packet = Encoder.encode_payload(payload)
+    expected_packet = Encoder.encode_payload(payload)
 
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
@@ -94,10 +94,10 @@ class StreamWriterTests(unittest.TestCase):
 
     for i in range (0, constants.max_retry_count - 1):
       self.outputstream.write('a')
-    self.outputstream.write(Encoder.EncodePayload(response_payload))
+    self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
 
-    self.assertEquals(response_payload, self.w.SendPacket(packet))
+    self.assertEquals(response_payload, self.w.send_packet(packet))
 
     self.inputstream.seek(0)
     for i in range (0, constants.max_retry_count - 1):
@@ -110,15 +110,15 @@ class StreamWriterTests(unittest.TestCase):
     verify that it works correctly.
     """
     payload = 'abcde'
-    packet = Encoder.EncodePayload(payload)
+    packet = Encoder.encode_payload(payload)
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
     response_payload.extend('12345')
-    self.outputstream.write(Encoder.EncodePayload(response_payload))
+    self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
 
-    self.assertEquals(response_payload, self.w.SendPacket(packet))
-    self.assertEquals(Encoder.EncodePayload(payload), self.inputstream.getvalue())
+    self.assertEquals(response_payload, self.w.send_packet(packet))
+    self.assertEquals(Encoder.encode_payload(payload), self.inputstream.getvalue())
 
   # TODO: Test timing based errors- can we send half a response, get it to re-send, then send a regular response?
 
@@ -137,7 +137,7 @@ class StreamWriterTests(unittest.TestCase):
 
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
-    self.outputstream.write(Encoder.EncodePayload(response_payload))
+    self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
 
     payload = struct.pack(
@@ -149,9 +149,9 @@ class StreamWriterTests(unittest.TestCase):
     )
       
 
-    self.w.SendActionPayload(payload)
+    self.w.send_action_payload(payload)
 
-    self.assertEquals(Encoder.EncodePayload(expected_payload), self.inputstream.getvalue())
+    self.assertEquals(Encoder.encode_payload(expected_payload), self.inputstream.getvalue())
 
   def test_build_and_send_query_payload_with_null_terminated_string(self):
     cmd = constants.host_query_command_dict['GET_NEXT_FILENAME']
@@ -167,7 +167,7 @@ class StreamWriterTests(unittest.TestCase):
     response_payload.append(constants.response_code_dict['SUCCESS'])
     response_payload.append(constants.sd_error_dict['SUCCESS'])
     response_payload.extend(filename)
-    self.outputstream.write(Encoder.EncodePayload(response_payload))
+    self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
 
     payload = struct.pack(
@@ -175,9 +175,9 @@ class StreamWriterTests(unittest.TestCase):
       cmd,
       flag,
     )
-    self.assertEqual(response_payload, self.w.SendQueryPayload(payload))
+    self.assertEqual(response_payload, self.w.send_query_payload(payload))
 
-    self.assertEqual(Encoder.EncodePayload(payload), self.inputstream.getvalue())
+    self.assertEqual(Encoder.encode_payload(payload), self.inputstream.getvalue())
     
 
   def test_build_and_send_query_payload(self):
@@ -192,8 +192,8 @@ class StreamWriterTests(unittest.TestCase):
 
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
-    response_payload.extend(Encoder.EncodeUint16(botVersion))
-    self.outputstream.write(Encoder.EncodePayload(response_payload))
+    response_payload.extend(Encoder.encode_uint16(botVersion))
+    self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
 
     payload = struct.pack(
@@ -202,24 +202,24 @@ class StreamWriterTests(unittest.TestCase):
       s3gVersion,
     )
 
-    self.assertEquals(response_payload, self.w.SendQueryPayload(payload))
-    self.assertEquals(Encoder.EncodePayload(expected_payload), self.inputstream.getvalue())
+    self.assertEquals(response_payload, self.w.send_query_payload(payload))
+    self.assertEquals(Encoder.encode_payload(expected_payload), self.inputstream.getvalue())
 
   def test_external_stop(self):
-    self.w.ExternalStop()
+    self.w.external_stop = True
     self.assertTrue(self.w.external_stop)
 
   def test_external_stop_works_precondition(self):
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
-    self.outputstream.write(Encoder.EncodePayload(response_payload))
+    self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
-    self.w.ExternalStop()
-    self.assertRaises(Writer.ExternalStopError, self.w.SendCommand, 'asdf')
+    self.w.external_stop = True
+    self.assertRaises(Writer.ExternalStopError, self.w.send_command, 'asdf')
 
   def delay_and_external_stop_in_thread(self):
     time.sleep(constants.timeout_length)
-    self.w.ExternalStop()
+    self.w.external_stop = True
 
   def test_delay_and_external_stop_in_thread(self):
     self.assertFalse(self.w.external_stop)
@@ -230,7 +230,7 @@ class StreamWriterTests(unittest.TestCase):
     t = threading.Thread(target=self.delay_and_external_stop_in_thread)
     try:
       t.start()
-      self.w.SendPacket('')
+      self.w.send_packet('')
     except Writer.ExternalStopError:
       self.assertTrue(self.w.external_stop)
     t.join()    #Kill that thread!

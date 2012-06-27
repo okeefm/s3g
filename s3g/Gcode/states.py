@@ -8,6 +8,11 @@ from errors import *
 import logging
 
 class GcodeStates(object):
+  """ 
+  Object for storing gcoder state variables for use
+  in parsing a gcode file. some gcode commands require state
+  konwledge to be packetized properly.
+  """
   def __init__(self):
     self._log = logging.getLogger(self.__class__.__name__)
     self.profile = None
@@ -41,7 +46,7 @@ class GcodeStates(object):
     self.wait_for_ready_timeout =   480  #seconds
     self.offset_register = None #Curent offset register
   
-  def LosePosition(self, axes):
+  def lose_position(self, axes):
     """Given a set of axes, loses the position of
     those axes.
     @param list axes: A list of axes to lose
@@ -50,7 +55,7 @@ class GcodeStates(object):
     for axis in axes:
       self.position[axis] = None
 
-  def SetPosition(self, axes):
+  def set_position(self, axes):
     """Given a dict of axes and positions, sets
     those axes in the dict to their position.
     @param dict axes: Dict of axes and positions
@@ -58,7 +63,7 @@ class GcodeStates(object):
     for axis in axes:
         self.position[axis] = axes[axis]
 
-  def GetPosition(self):
+  def get_position(self):
     """Gets a usable position in steps to send to the machine by applying 
     the applicable offsetes.  The offsets applied are the ones that are in 
     use by the machine via G54/G55 command.  If no G54/G55 commands have b
@@ -97,7 +102,7 @@ class GcodeStates(object):
             self.offsetPosition[register]['B'],
           ))
 
-  def SetBuildName(self, build_name):
+  def set_build_name(self, build_name):
     if not isinstance(build_name, str):
       raise TypeError
     else:
@@ -105,7 +110,7 @@ class GcodeStates(object):
       self.values['build_name'] = build_name
 
 
-  def GetAxesValues(self, key):
+  def get_axes_values(self, key):
     """
     Given a key, queries the current profile's axis list
     for the information associated with that key.  This function
@@ -126,12 +131,13 @@ class GcodeStates(object):
         values.append(0)
     return values
   
-  def GetAxesFeedrateAndSPM(self, axes):
+  def get_axes_feedrate_and_SPM(self, axes):
     """
-    Given a set of axes, returns their max feedrates and SPM values
-
+    Given a set of axes, returns their max feedrates and 
+    steps per mm (SPM) values
+	
     @param string list axes: A list of axes
-    @return tuple: A tuple comprised of feedrates and spm values.
+    @return tuple: A tuple of feedrates and spm values.
     """
     if not isinstance(axes, list):
       raise ValueError

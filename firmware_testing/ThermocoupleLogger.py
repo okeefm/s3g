@@ -31,7 +31,7 @@ def GetThermocoupleReads():
 
   while 1:
     try:
-      raw_temp = s3g_port.GetToolheadTemperature(0)
+      raw_temp = s3g_port.get_toolhead_temperature(0)
       log_file.writerow([time.time()-start_time, raw_temp])
       time.sleep(0.245)
       print "channel 0 %d   %f" % (raw_temp, time.time()-start_time)
@@ -42,8 +42,8 @@ def GetThermocoupleReads():
 def setUp():
   file = serial.Serial(options.serialPort, '115200', timeout=1)
   s3g_port.writer = s3g.Writer.StreamWriter(file)
-  s3g_port.SetExtendedPosition([0, 0, 0, 0, 0])
-  s3g_port.AbortImmediately()
+  s3g_port.set_extended_position([0, 0, 0, 0, 0])
+  s3g_port.abort_immediately()
   time.sleep(2)
 
 def tearDown():

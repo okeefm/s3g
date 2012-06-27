@@ -24,37 +24,37 @@ class GcodeParser(object):
     # [2] : allowed flags
 
     self.GCODE_INSTRUCTIONS = {
-      1   : [self.LinearInterpolation,         'XYZABEF', ''],
-      4   : [self.Dwell,                       'P',       ''],
-      10  : [self.StoreOffsets,                'XYZP',    ''],
-      54  : [self.UseP1Offsets,                '',        ''],
-      55  : [self.UseP2Offsets,                '',        ''],
-      92  : [self.SetPosition,                 'XYZABE',  ''],
-      130 : [self.SetPotentiometerValues,      'XYZAB',   ''],
-      161 : [self.FindAxesMinimums,            'F',       'XYZ'],
-      162 : [self.FindAxesMaximums,            'F',       'XYZ'],
+      1   : [self.linear_interpolation,         'XYZABEF', ''],
+      4   : [self.dwell,                       'P',       ''],
+      10  : [self.store_offsets,                'XYZP',    ''],
+      54  : [self.use_p1_offsets,                '',        ''],
+      55  : [self.use_p2_offsets,                '',        ''],
+      92  : [self.set_position,                 'XYZABE',  ''],
+      130 : [self.set_potentiometer_values,      'XYZAB',   ''],
+      161 : [self.find_axes_minimums,            'F',       'XYZ'],
+      162 : [self.find_axes_maximums,            'F',       'XYZ'],
 }
 
     self.MCODE_INSTRUCTIONS = {
-       18  : [self.DisableAxes,                '',        'XYZAB'],
-       70  : [self.DisplayMessage,             'P',       ''],
-       72  : [self.PlaySong,                   'P',       ''],
-       73  : [self.SetBuildPercentage,         'P',       ''],
-       101 : [self.ExtruderOnForward,          '',        ''], #This command is explicitely ignored
-       102 : [self.ExtruderOnReverse,          '',        ''], #This command is explicitely ignored
-       103 : [self.ExtruderOff,                'T',       ''],       #This command is explicitely ignored
-       104 : [self.SetToolheadTemperature,     'ST',      ''],
-       105 : [self.GetTemperature,             '',        ''],
-       109 : [self.SetPlatformTemperature,     'ST',      ''],
-       126 : [self.EnableExtraOutput,          'T',       ''],
-       127 : [self.DisableExtraOutput,         'T',       ''],
-       132 : [self.LoadPosition,               '',        'XYZAB'],
-       133 : [self.WaitForToolReady,           'PT',      ''],
-       134 : [self.WaitForPlatformReady,       'PT',      ''],
-       135 : [self.ChangeTool,                 'T',       ''],
+       18  : [self.disable_axes,                '',        'XYZAB'],
+       70  : [self.display_message,             'P',       ''],
+       72  : [self.play_song,                   'P',       ''],
+       73  : [self.set_build_percentage,         'P',       ''],
+       101 : [self.extruder_on_forward,          '',        ''], #This command is explicitely ignored
+       102 : [self.extruder_on_reverse,          '',        ''], #This command is explicitely ignored
+       103 : [self.extruder_off,                'T',       ''],       #This command is explicitely ignored
+       104 : [self.set_toolhead_temperature,     'ST',      ''],
+       105 : [self.get_temperature,             '',        ''],
+       109 : [self.set_platform_temperature,     'ST',      ''],
+       126 : [self.enable_extra_output,          'T',       ''],
+       127 : [self.disable_extra_output,         'T',       ''],
+       132 : [self.Load_position,               '',        'XYZAB'],
+       133 : [self.wait_for_tool_ready,           'PT',      ''],
+       134 : [self.wait_for_platform_ready,       'PT',      ''],
+       135 : [self.change_tool,                 'T',       ''],
     }
 
-  def ExecuteLine(self, command):
+  def execute_line(self, command):
     """
     Execute a line of gcode
     @param string command Gcode command to execute
@@ -68,14 +68,14 @@ class GcodeParser(object):
       raise ImproperGcodeEncodingError
 
     try:
-      command = VariableSubstitute(command, self.environment) 
+      command = variable_substitute(command, self.environment) 
 
-      codes, flags, comment = ParseLine(command)
+      codes, flags, comment = parse_line(command)
 
       if 'G' in codes:
         if codes['G'] in self.GCODE_INSTRUCTIONS:
-          CheckForExtraneousCodes(codes.keys(), self.GCODE_INSTRUCTIONS[codes['G']][1])
-          CheckForExtraneousCodes(flags, self.GCODE_INSTRUCTIONS[codes['G']][2])
+          check_for_extraneous_codes(codes.keys(), self.GCODE_INSTRUCTIONS[codes['G']][1])
+          check_for_extraneous_codes(flags, self.GCODE_INSTRUCTIONS[codes['G']][2])
           self.GCODE_INSTRUCTIONS[codes['G']][0](codes, flags, comment)
 
         else:
@@ -87,8 +87,8 @@ class GcodeParser(object):
 
       elif 'M' in codes:
         if codes['M'] in self.MCODE_INSTRUCTIONS:
-          CheckForExtraneousCodes(codes.keys(), self.MCODE_INSTRUCTIONS[codes['M']][1])
-          CheckForExtraneousCodes(flags, self.MCODE_INSTRUCTIONS[codes['M']][2])
+          check_for_extraneous_codes(codes.keys(), self.MCODE_INSTRUCTIONS[codes['M']][1])
+          check_for_extraneous_codes(flags, self.MCODE_INSTRUCTIONS[codes['M']][2])
           self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
 
         else:
@@ -129,7 +129,7 @@ class GcodeParser(object):
       raise gcode_error
     self.line_number += 1
 
-  def SetPotentiometerValues(self, codes, flags, comment):
+  def set_potentiometer_values(self, codes, flags, comment):
     """Given a set of codes, sets the machine's potentiometer value to a specified value in the codes
 
     @param dict codes: Codes parsed out of the gcode command
@@ -137,7 +137,7 @@ class GcodeParser(object):
     #Put all values in a hash table
     valTable = {}
     #For each code in codes thats an axis:
-    for a in ParseOutAxes(codes):
+    for a in parse_out_axes(codes):
       #Try to append it to the appropriate list
       try:
         valTable[codes[a]].append(a)
@@ -145,45 +145,45 @@ class GcodeParser(object):
       except KeyError:
         valTable[codes[a]] = [a]
     for val in valTable:
-      self.s3g.SetPotentiometerValue(valTable[val], val)
+      self.s3g.set_potentiometer_value(valTable[val], val)
 
-  def FindAxesMaximums(self, codes, flags, command):
+  def find_axes_maximums(self, codes, flags, command):
     """Moves the given axes in the position direction until a timeout
     or endstop is reached
     This function loses the state machine's position.
     """
-    axes = ParseOutAxes(flags)
+    axes = parse_out_axes(flags)
     if len(axes) == 0:
       return
-    self.state.LosePosition(flags)
+    self.state.lose_position(flags)
     #We need some axis information to calc the DDA speed
-    axes_feedrates, axes_SPM = self.state.GetAxesFeedrateAndSPM(axes)
-    dda_speed = CalculateHomingDDASpeed(
+    axes_feedrates, axes_SPM = self.state.get_axes_feedrate_and_SPM(axes)
+    dda_speed = calculate_homing_DDA_speed(
         codes['F'], 
         axes_feedrates,
         axes_SPM
         )
-    self.s3g.FindAxesMaximums(axes, dda_speed, self.state.profile.values['find_axis_maximum_timeout'])
+    self.s3g.find_axes_maximums(axes, dda_speed, self.state.profile.values['find_axis_maximum_timeout'])
 
-  def FindAxesMinimums(self, codes, flags, comment):
+  def find_axes_minimums(self, codes, flags, comment):
     """Moves the given axes in the negative direction until a timeout
     or endstop is reached.
     This function loses the state machine's position.
     """
-    axes = ParseOutAxes(flags)
+    axes = parse_out_axes(flags)
     if len(axes) == 0:
       return
-    self.state.LosePosition(flags) 
+    self.state.lose_position(flags) 
     #We need some axis information to calc the DDA speed
-    axes_feedrates, axes_SPM = self.state.GetAxesFeedrateAndSPM(axes)
-    dda_speed = CalculateHomingDDASpeed(
+    axes_feedrates, axes_SPM = self.state.get_axes_feedrate_and_SPM(axes)
+    dda_speed = calculate_homing_DDA_speed(
         codes['F'], 
         axes_feedrates,
         axes_SPM
         )
-    self.s3g.FindAxesMinimums(axes, dda_speed, self.state.profile.values['find_axis_minimum_timeout'])
+    self.s3g.find_axes_minimums(axes, dda_speed, self.state.profile.values['find_axis_minimum_timeout'])
 
-  def SetPosition(self, codes, flags, comment):
+  def set_position(self, codes, flags, comment):
     """Explicitely sets the position of the state machine and bot
     to the given point
     """
@@ -214,24 +214,24 @@ class GcodeParser(object):
             self.state.position['A'],
             self.state.position['B'],
             ))
-    stepped_position = MultiplyVector(self.state.GetPosition(), self.state.GetAxesValues('steps_per_mm'))
-    self.s3g.SetExtendedPosition(stepped_position)
+    stepped_position = multiply_vector(self.state.get_position(), self.state.get_axes_values('steps_per_mm'))
+    self.s3g.set_extended_position(stepped_position)
       
-  def UseP1Offsets(self, codes, flags, comment):
+  def use_p1_offsets(self, codes, flags, comment):
     """Sets the state machine to use the P0 offset.
     """
     self.state.offset_register = 1
     self._log.info('{"event":"gcode_state_change", "change":"offset_register", "new_offset_register": %i}\n'
         %(self.state.offset_register))
 
-  def UseP2Offsets(self, codes, flags, comment):
+  def use_p2_offsets(self, codes, flags, comment):
     """Sets the state machine to use the P1 offset.
     """
     self.state.offset_register = 2
     self._log.info('{"event":"gcode_state_change", "change":"offset_register", "new_offset_register": %i}\n'
         %(self.state.offset_register))
 
-  def WaitForToolReady(self, codes, flags, comment):
+  def wait_for_tool_ready(self, codes, flags, comment):
     """
     Waits for a toolhead for some amount of time.  If either of 
     these codes are not defined (T and P respectively), the 
@@ -242,13 +242,13 @@ class GcodeParser(object):
     else:
       timeout = self.state.wait_for_ready_timeout
 
-    self.s3g.WaitForToolReady(
+    self.s3g.wait_for_tool_ready(
         codes['T'],
         self.state.wait_for_ready_packet_delay,
         timeout
         )
 
-  def WaitForPlatformReady(self, codes, flags, comment):
+  def wait_for_platform_ready(self, codes, flags, comment):
     """
     Waits for a platform for some amount of time.  If either
     of these codes are not defined (T and P respectively), the
@@ -258,18 +258,18 @@ class GcodeParser(object):
       timeout = codes['P']
     else:
       timeout = self.state.wait_for_ready_timeout
-    self.s3g.WaitForPlatformReady(
+    self.s3g.wait_for_platform_ready(
         codes['T'],
         self.state.wait_for_ready_packet_delay,
         timeout
         )
 
-  def DisableAxes(self, codes, flags, comment):
+  def disable_axes(self, codes, flags, comment):
     """Disables a set of axes on the bot
     """
-    self.s3g.ToggleAxes(ParseOutAxes(flags), False)
+    self.s3g.toggle_axes(parse_out_axes(flags), False)
 
-  def DisplayMessage(self, codes, flags, comment):
+  def display_message(self, codes, flags, comment):
     """Given a comment, displays a message on the bot.
     """
     row = 0 # As per the gcode protocol
@@ -278,7 +278,7 @@ class GcodeParser(object):
     last_in_group = True #If true, signifies this is the last in a group
     wait_for_button = False #If true, signifies a button wait
 
-    self.s3g.DisplayMessage(
+    self.s3g.display_message(
         row,
         col,
         comment,
@@ -288,12 +288,12 @@ class GcodeParser(object):
         wait_for_button,
       )
 
-  def PlaySong(self, codes, flags, comment):
+  def play_song(self, codes, flags, comment):
     """Plays a song as a certain register on the bot.
     """
-    self.s3g.QueueSong(codes['P'])
+    self.s3g.queue_song(codes['P'])
 
-  def SetBuildPercentage(self, codes, flags, comment):
+  def set_build_percentage(self, codes, flags, comment):
     """Sets the build percentage to a certain percentage.
     """
     percentage = codes['P']
@@ -301,17 +301,17 @@ class GcodeParser(object):
     if percentage > 100 or percentage < 0:
       raise BadPercentageError
 
-    self.s3g.SetBuildPercent(percentage)
+    self.s3g.set_build_percent(percentage)
 
     # Side effect: If the build percentage is 0 or 100, then also send a build start or build end notification.
     # TODO: Should this be called first? is order of operations important?
     if 0 == percentage:
-      self.BuildStartNotification()
+      self.build_start_notification()
 
     elif 100 == percentage:
-      self.BuildEndNotification()
+      self.build_end_notification()
 
-  def StoreOffsets(self, codes, flags, comment):
+  def store_offsets(self, codes, flags, comment):
     """Given XYZ offsets, stores those offsets in the state machine.
     We subtract one from the 'P' code because skeining engines store 
     designate P1 as the 0'th offset and P2 as the 1'th offset....dumb
@@ -323,7 +323,7 @@ class GcodeParser(object):
       raise gcode_error
     self.state.StoreOffset(codes['P'], [codes['X'], codes['Y'], codes['Z']])
 
-  def LinearInterpolation(self, codes, flags, comment):
+  def linear_interpolation(self, codes, flags, comment):
     """Movement command that has two flavors: E and AB commands.
     E Commands require a preset toolhead to use, and simply increment
     that toolhead's coordinate.
@@ -334,8 +334,8 @@ class GcodeParser(object):
       self.state.values['feedrate'] = codes['F']
       self._log.info('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}\n'
           %(codes['F']))
-    if len(ParseOutAxes(codes)) > 0 or 'E' in codes:
-      current_position = self.state.GetPosition()
+    if len(parse_out_axes(codes)) > 0 or 'E' in codes:
+      current_position = self.state.get_position()
       for axis in ['X', 'Y', 'Z']:
         if axis in codes:
           self.state.position[axis] = codes[axis]
@@ -375,18 +375,18 @@ class GcodeParser(object):
             ))
       try :
         feedrate = self.state.values['feedrate']
-        dda_speed = CalculateDDASpeed(
+        dda_speed = calculate_DDA_speed(
             current_position, 
-            self.state.GetPosition(), 
+            self.state.get_position(), 
             feedrate,
-            self.state.GetAxesValues('max_feedrate'),
-            self.state.GetAxesValues('steps_per_mm'),
+            self.state.get_axes_values('max_feedrate'),
+            self.state.get_axes_values('steps_per_mm'),
             )
-        stepped_point = MultiplyVector(
-            self.state.GetPosition(), 
-            self.state.GetAxesValues('steps_per_mm')
+        stepped_point = multiply_vector(
+            self.state.get_position(), 
+            self.state.get_axes_values('steps_per_mm')
             )
-        self.s3g.QueueExtendedPoint(stepped_point, dda_speed)
+        self.s3g.queue_extended_point(stepped_point, dda_speed)
 
       except KeyError as e:
         if e[0] == 'feedrate': # A key error would return 'feedrate' as the missing key,
@@ -396,7 +396,7 @@ class GcodeParser(object):
           e = KeyError('F')
         raise e
 
-  def Dwell(self, codes, flags, comment):
+  def dwell(self, codes, flags, comment):
     """Pauses the machine for a specified amount of miliseconds
     Because s3g takes in microseconds, we convert miliseconds into
     microseconds and send it off.
@@ -404,88 +404,88 @@ class GcodeParser(object):
     microConstant = 1000000
     miliConstant = 1000
     d = codes['P'] * microConstant/miliConstant
-    self.s3g.Delay(d)
+    self.s3g.delay(d)
 
-  def SetToolheadTemperature(self, codes, flags, comment):
+  def set_toolhead_temperature(self, codes, flags, comment):
     """Sets the toolhead temperature for a specific toolhead to
     a specific temperature.  We set the state's tool_idnex to be the
     'T' code (if present) and use that tool_index when heating.
     """
-    self.s3g.SetToolheadTemperature(codes['T'], codes['S'])
+    self.s3g.set_toolhead_temperature(codes['T'], codes['S'])
 
-  def SetPlatformTemperature(self, codes, flags, comment):
+  def set_platform_temperature(self, codes, flags, comment):
     """Sets the platform temperature for a specific toolhead to a specific 
     temperature.  We set the state's tool_index to be the 'T' code (if present)
     and use that tool_index when heating.
     """
-    self.s3g.SetPlatformTemperature(codes['T'], codes['S'])
+    self.s3g.set_platform_temperature(codes['T'], codes['S'])
 
-  def LoadPosition(self, codes, flags, comment):
+  def Load_position(self, codes, flags, comment):
     """Loads the home positions for the XYZ axes from the eeprom
     """
-    axes = ParseOutAxes(flags)
-    self.state.LosePosition(axes)
-    self.s3g.RecallHomePositions(axes)
+    axes = parse_out_axes(flags)
+    self.state.lose_position(axes)
+    self.s3g.recall_home_positions(axes)
 
-  def ChangeTool(self, codes, flags, comments):
+  def change_tool(self, codes, flags, comments):
     """Sends a chagne tool command to the machine.
     """
     self.state.values['tool_index'] = codes['T']
     self._log.info('{"event":"gcode_state_change", "change":"tool_change", "new_tool_index":%i}\n'
         %(codes['T']))
-    self.s3g.ChangeTool(codes['T'])
+    self.s3g.change_tool(codes['T'])
 
-  def BuildStartNotification(self):
+  def build_start_notification(self):
     """Sends a build start notification command to the machine.
     """
     self._log.info('{"event":"build_start"}\n')
     try:
-      self.s3g.BuildStartNotification(self.state.values['build_name'])
+      self.s3g.build_start_notification(self.state.values['build_name'])
     except KeyError:
       self._log.info('{"event":"no_build_name_defined"}\n')
       raise NoBuildNameError
 
-  def BuildEndNotification(self):
+  def build_end_notification(self):
     """Sends a build end notification command to the machine
     """
     self._log.info('{"event":"build_end"}\n')
     self.state.values['build_name'] = None
     self._log.info('{"event":"gcode_state_change", "change":"remove_build_name"}\n')
-    self.s3g.BuildEndNotification()
+    self.s3g.build_end_notification()
 
-  def EnableExtraOutput(self, codes, flags, comment):
+  def enable_extra_output(self, codes, flags, comment):
     """
     Enables an extra output attached to a certain toolhead
     of the machine
     """
-    self.s3g.ToggleExtraOutput(codes['T'], True)
+    self.s3g.toggle_extra_output(codes['T'], True)
 
-  def DisableExtraOutput(self, codes, flags, comment):
+  def disable_extra_output(self, codes, flags, comment):
     """
     Disables an extra output attached to a certain toolhead
     of the machine
     """
-    self.s3g.ToggleExtraOutput(codes['T'], False)
+    self.s3g.toggle_extra_output(codes['T'], False)
 
-  def ExtruderOff(self, codes, flags, comment):
+  def extruder_off(self, codes, flags, comment):
     """Turn the extruder off
     This is a stub, since we dropped support for this function
     """
     self._log.warning('{"event":"passing_over_code", "code":103}\n')
 
-  def ExtruderOnReverse(self, codes, flags, comment):
+  def extruder_on_reverse(self, codes, flags, comment):
     """Turn the extruder on turning backward
     This is a stub, since we dropped support for this function
     """
     self._log.warning('{"event":"passing_over_code", "code":102}\n')
 
-  def ExtruderOnForward(self, codes, flags, comment):
+  def extruder_on_forward(self, codes, flags, comment):
     """Turn the extruder on turning forward
     This is a stub, since we dropped support for this function
     """
     self._log.warning('{"event":"passing_over_code", "code":101}\n')
 
-  def GetTemperature(self, codes, flags, comment):
+  def get_temperature(self, codes, flags, comment):
     """This gets the temperature from a toolhead
     We do not support this command, and only have a stub because
     skeinforge likes to include it in its files

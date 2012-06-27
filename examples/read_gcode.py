@@ -11,4 +11,4 @@ with open(file) as lines:
   g = s3g.GcodeStateMachine()
 
   for line in lines:
-    g.ExecuteLine(line)
+    g.execute_line(line)

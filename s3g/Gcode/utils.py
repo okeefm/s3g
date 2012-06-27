@@ -4,7 +4,7 @@ import exceptions
 from errors import *
 from .. import errors
 
-def ExtractComments(line):
+def extract_comments(line):
   """
   Parse a line of gcode, stripping semicolon and parenthesis-separated comments from it.
   @param string line gcode line to read in
@@ -35,7 +35,7 @@ def ExtractComments(line):
    
   return command, comment
 
-def ParseCommand(command):
+def parse_command(command):
   """
   Parse the command portion of a gcode line, and return a dictionary of found codes and their respective values, and a list of found flags. Codes with integer values will have an integer type, while codes with float values will have a float type
   @param string command Command portion of a gcode line
@@ -80,19 +80,19 @@ def ParseCommand(command):
 
   return codes, flags
 
-def ParseLine(line):
+def parse_line(line):
   """
   Parse a line of gcode into a map of codes, and a comment field.
   @param string line: line of gcode to parse
   @return tuple containing a dict of codes, a list of flags, and a comment string
   """
 
-  command, comment = ExtractComments(line)
-  codes, flags = ParseCommand(command)
+  command, comment = extract_comments(line)
+  codes, flags = parse_command(command)
 
   return codes, flags, comment
 
-def CheckForExtraneousCodes(codes, allowed_codes):
+def check_for_extraneous_codes(codes, allowed_codes):
   """ Check that all of the codes are expected for this command.
 
   Throws an InvalidCodeError if an unexpected code was found
@@ -111,7 +111,7 @@ def CheckForExtraneousCodes(codes, allowed_codes):
     gcode_error.values['InvalidCodes'] = code
     raise gcode_error
 
-def ParseOutAxes(codes):
+def parse_out_axes(codes):
   """Given a list of codes, returns a list of all present axes
 
   @param list codes: Codes parsed out of the gcode command
@@ -121,7 +121,7 @@ def ParseOutAxes(codes):
   parsedAxes = set(axesCodes) & set(codes)
   return list(sorted(parsedAxes))
 
-def VariableSubstitute(line, environment):
+def variable_substitute(line, environment):
   """
   Given a dict of variables and their definitions with a line ,
   replace all instances of variables with their respective 
@@ -139,7 +139,7 @@ def VariableSubstitute(line, environment):
     raise UndefinedVariableError
   return line
 
-def CalculateVectorDifference(minuend, subtrahend):
+def calculate_vector_difference(minuend, subtrahend):
   """ Given two 5d vectors represented as lists, calculates their
   difference (minued - subtrahend)
 
@@ -159,7 +159,7 @@ def CalculateVectorDifference(minuend, subtrahend):
   return difference
 
 
-def MultiplyVector(factor_a, factor_b):
+def multiply_vector(factor_a, factor_b):
   """ Given two 5d vectors represented as lists, calculates their product.
 
   @param list factor_b: 5D vector
@@ -174,7 +174,7 @@ def MultiplyVector(factor_a, factor_b):
   return product 
 
 
-def CalculateVectorMagnitude(vector):
+def calculate_vector_magnitude(vector):
   """ Given a 5D vector represented as a list, calculate its magnitude
   
   @param list vector: A 5D vector
@@ -192,7 +192,7 @@ def CalculateVectorMagnitude(vector):
   return magnitude
 
 
-def CalculateUnitVector(vector):
+def calculate_unit_vector(vector):
   """ Calculate the unit vector of a given 5D vector
 
   @param list vector: A 5D vector
@@ -201,7 +201,7 @@ def CalculateUnitVector(vector):
   if len(vector) != 5:
     raise errors.PointLengthError("Expected list of length 5, got length %i"%(len(vector)))
 
-  magnitude = CalculateVectorMagnitude(vector)
+  magnitude = calculate_vector_magnitude(vector)
 
   # Check if this is a null vector
   if magnitude == 0:
@@ -214,7 +214,7 @@ def CalculateUnitVector(vector):
   return unitVector
 
 
-def GetSafeFeedrate(displacement_vector, max_feedrates, target_feedrate):
+def get_safe_feedrate(displacement_vector, max_feedrates, target_feedrate):
   """Given a displacement vector and target feedrate, calculates the fastest safe feedrate
 
   @param list displacement_vector: 5d Displacement vector to consider, in mm
@@ -224,7 +224,7 @@ def GetSafeFeedrate(displacement_vector, max_feedrates, target_feedrate):
   """
 
   # Calculate the axis components of each vector
-  magnitude = CalculateVectorMagnitude(displacement_vector)
+  magnitude = calculate_vector_magnitude(displacement_vector)
 
   # TODO: What kind of error to throw here?
   if magnitude == 0:
@@ -245,7 +245,7 @@ def GetSafeFeedrate(displacement_vector, max_feedrates, target_feedrate):
 
   return actual_feedrate
 
-def FindLongestAxis(vector):
+def find_longest_axis(vector):
   """ Determine the index of the longest axis in a 5D vector.
 
   @param list vector: A 5D vector
@@ -261,7 +261,7 @@ def FindLongestAxis(vector):
 
   return max_value_index
 
-def CalculateDDASpeed(initial_position, target_position, target_feedrate, max_feedrates, steps_per_mm):
+def calculate_DDA_speed(initial_position, target_position, target_feedrate, max_feedrates, steps_per_mm):
   """ Given an initial position, target position, and target feedrate, calculate an achievable
   travel speed.
 
@@ -274,28 +274,28 @@ def CalculateDDASpeed(initial_position, target_position, target_feedrate, max_fe
   """
 
   # First, figure out where we are moving to. 
-  displacement_vector = CalculateVectorDifference(target_position, initial_position)
+  displacement_vector = calculate_vector_difference(target_position, initial_position)
 
   # Throw an error if we aren't moving anywhere
   # TODO: Should we do something else here?
-  if CalculateVectorMagnitude(displacement_vector) == 0:
+  if calculate_vector_magnitude(displacement_vector) == 0:
     raise VectorLengthZeroError
 
   # Now, correct the target speedrate to account for the maximum feedrate
-  actual_feedrate = GetSafeFeedrate(displacement_vector, max_feedrates, target_feedrate)
+  actual_feedrate = get_safe_feedrate(displacement_vector, max_feedrates, target_feedrate)
 
   # Find the magnitude of the longest displacement axis. this axis has the most steps to move
-  displacement_vector_steps = MultiplyVector(displacement_vector, steps_per_mm) 
-  longest_axis = FindLongestAxis(displacement_vector_steps)
+  displacement_vector_steps = multiply_vector(displacement_vector, steps_per_mm) 
+  longest_axis = find_longest_axis(displacement_vector_steps)
 
-  fastest_feedrate = float(abs(displacement_vector[longest_axis]))/CalculateVectorMagnitude(displacement_vector)*actual_feedrate
+  fastest_feedrate = float(abs(displacement_vector[longest_axis]))/calculate_vector_magnitude(displacement_vector)*actual_feedrate
 
   # Now we know the feedrate of the fastest axis, in mm/min. Convert it to us/step. 
-  dda_speed = ComputeDDASpeed(fastest_feedrate, abs(steps_per_mm[longest_axis]))
+  dda_speed = compute_DDA_speed(fastest_feedrate, abs(steps_per_mm[longest_axis]))
 
   return dda_speed
 
-def ComputeDDASpeed(feedrate, spm):
+def compute_DDA_speed(feedrate, spm):
   """
   Given a feedrate in mm/min, and SPM in steps/mm, calculate its DDA
   speed, in microSeconds/step.
@@ -309,7 +309,7 @@ def ComputeDDASpeed(feedrate, spm):
   dda_speed = second_const * micro_second_const/(feedrate*spm)
   return dda_speed
 
-def CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list):
+def calculate_homing_DDA_speed(feedrate, max_feedrates, spm_list):
   """
   Given a set of feedrates and spm values, calculates the homing DDA speed
   We always use the limiting axis' feedrate and SPM 
@@ -332,5 +332,5 @@ def CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list):
     if usable_feedrate > max_feedrate:
       usable_feedrate = max_feedrate
       usable_spm = spm
-  dda_speed = ComputeDDASpeed(usable_feedrate, usable_spm)
+  dda_speed = compute_DDA_speed(usable_feedrate, usable_spm)
   return dda_speed

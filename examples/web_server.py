@@ -44,9 +44,9 @@ if __name__ == '__main__':
         t = threading.Timer(2.0, update_temp_thread)
         t.start()
 
-        tool_0_temp_data.append([len(tool_0_temp_data), r.GetToolheadTemperature(0)])
-        tool_1_temp_data.append([len(tool_1_temp_data), r.GetToolheadTemperature(1)])
-        platform_temp_data.append([len(platform_temp_data), r.GetPlatformTemperature(0)])
+        tool_0_temp_data.append([len(tool_0_temp_data), r.get_toolhead_temperature(0)])
+        tool_1_temp_data.append([len(tool_1_temp_data), r.get_toolhead_temperature(1)])
+        platform_temp_data.append([len(platform_temp_data), r.get_platform_temperature(0)])
 
 #        if (tool_0_temp_data != None):
 #            if (len(tool_0_temp_data) > 200):
@@ -63,8 +63,8 @@ if __name__ == '__main__':
             # If the request was for a temperature, handle it.
             print s.path
             if s.path == '/temp':
-#                tool_0_temp_data.append([len(tool_0_temp_data), r.GetToolheadTemperature(0)])
-#                tool_1_temp_data.append([len(tool_1_temp_data), r.GetToolheadTemperature(1)])
+#                tool_0_temp_data.append([len(tool_0_temp_data), r.get_toolhead_temperature(0)])
+#                tool_1_temp_data.append([len(tool_1_temp_data), r.get_toolhead_temperature(1)])
  
                 #if (tool_0_temp_data != None):
                 #    if (len(tool_0_temp_data) > 200):

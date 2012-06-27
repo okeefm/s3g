@@ -23,7 +23,7 @@ class EndOfFileError(S3gStreamError):
 class NotToolActionCmdError(S3gStreamError):
   """
   A NotToolActionCmdError is thrown when an action command is passed in into 
-  ParseToolAction that is not a ToolActionCommand
+  ParseToolAction that is not a tool_action_command
   """
 
 class BadCommandError(S3gStreamError):

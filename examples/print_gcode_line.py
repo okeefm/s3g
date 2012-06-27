@@ -29,4 +29,4 @@ parser = s3g.Gcode.GcodeParser()
 parser.state.profile = s3g.Profile(options.machine)
 parser.s3g = s
 
-parser.ExecuteLine(options.input_line)
+parser.execute_line(options.input_line)

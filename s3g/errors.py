@@ -146,7 +146,7 @@ class HeatElementReadyError(ProtocolError):
   """
 
 class EEPROMMismatchError(ProtocolError):
-  """An EEPROM mismatch error is raised when the length of the information written to the eeprom doesnt match the length of the information passed into WriteToEEPROM
+  """An EEPROM mismatch error is raised when the length of the information written to the eeprom doesnt match the length of the information passed into write_to_EEPROM
   """
 
 class UnknownResponseError(ProtocolError):
@@ -167,7 +167,7 @@ class ParameterError(ValueError):
 
 class ButtonError(ParameterError):
   """
-  A bad button error is raised when a button that is not of type up, down, left, right or center is passed into WaitForButton
+  A bad button error is raised when a button that is not of type up, down, left, right or center is passed into wait_for_button
   """
 
 class EEPROMLengthError(ParameterError):

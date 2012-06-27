@@ -13,66 +13,66 @@ import s3g
 class ExtractCommentsTests(unittest.TestCase):
   def test_empty_string(self):
     line = ''
-    [command, comment] = s3g.Gcode.ExtractComments(line)
+    [command, comment] = s3g.Gcode.extract_comments(line)
     assert '' == command
     assert '' == comment
 
   def test_semicolon_only(self):
     line = ';'
-    [command, comment] = s3g.Gcode.ExtractComments(line)
+    [command, comment] = s3g.Gcode.extract_comments(line)
     assert '' == command
     assert '' == comment
     
   def test_semicolon_with_data(self):
     line = ';;asdf'
-    [command, comment] = s3g.Gcode.ExtractComments(line)
+    [command, comment] = s3g.Gcode.extract_comments(line)
     assert '' == command
     assert ';asdf' == comment
 
   def test_parens_after_semicolon_ignored(self):
     line = ';)))'
-    [command, comment] = s3g.Gcode.ExtractComments(line)
+    [command, comment] = s3g.Gcode.extract_comments(line)
     assert '' == command
     assert ')))' == comment
 
   def test_right_paren_only(self):
     line = '('
-    [command, comment] = s3g.Gcode.ExtractComments(line)
+    [command, comment] = s3g.Gcode.extract_comments(line)
     assert '' == command
     assert '' == comment
 
   def test_right_paren_with_comment(self):
     line = '(comment'
-    [command, comment] = s3g.Gcode.ExtractComments(line)
+    [command, comment] = s3g.Gcode.extract_comments(line)
     assert '' == command
     assert 'comment' == comment
 
   def test_command_left_paren(self):
     line = 'command)'
-    self.assertRaises(s3g.Gcode.CommentError, s3g.Gcode.ExtractComments, line)
+    self.assertRaises(s3g.Gcode.CommentError, s3g.Gcode.extract_comments, line)
 
   def test_closed_parens(self):
     line = '()'
-    [command, comment] = s3g.Gcode.ExtractComments(line)
+    [command, comment] = s3g.Gcode.extract_comments(line)
     assert '' == command
     assert '' == comment
  
   def test_closed_parens_with_nested_parens(self):
     line = '(())'
-    [command, comment] = s3g.Gcode.ExtractComments(line)
+    [command, comment] = s3g.Gcode.extract_comments(line)
     assert '' == command
     assert '' == comment
 
   def test_command_closed_parens_with_comment(self):
     line = 'commanda(comment)commandb'
 
-    [command, comment] = s3g.Gcode.ExtractComments(line)
+    [command, comment] = s3g.Gcode.extract_comments(line)
     assert 'commandacommandb' == command
     assert 'comment' == comment
 
   def test_comment_left_and_semicolon(self):
     line = 'asdf(qwer);testing'
-    [command, comment] = s3g.Gcode.ExtractComments(line)
+    [command, comment] = s3g.Gcode.extract_comments(line)
     self.assertEqual('asdf', command)
     self.assertEqual('testingqwer', comment)
 
@@ -80,7 +80,7 @@ class ParseCommandTests(unittest.TestCase):
   def test_empty_string(self):
     command = ''
 
-    codes, flags = s3g.Gcode.ParseCommand(command)
+    codes, flags = s3g.Gcode.parse_command(command)
     assert {} == codes
     assert [] == flags 
 
@@ -91,7 +91,7 @@ class ParseCommandTests(unittest.TestCase):
     ]
 
     for command in cases:
-      self.assertRaises(s3g.Gcode.InvalidCodeError, s3g.Gcode.ParseCommand, command)
+      self.assertRaises(s3g.Gcode.InvalidCodeError, s3g.Gcode.parse_command, command)
 
   def test_single_code_garbage_value(self):
     cases = [
@@ -103,14 +103,14 @@ class ParseCommandTests(unittest.TestCase):
     ]
 
     for command in cases:
-      self.assertRaises(ValueError, s3g.Gcode.ParseCommand, command)
+      self.assertRaises(ValueError, s3g.Gcode.parse_command, command)
 
   def test_single_flag_accepts_lowercase(self):
     command = 'g'
     expected_codes = {}
     expected_flags = ['G']
 
-    codes, flags = s3g.Gcode.ParseCommand(command)
+    codes, flags = s3g.Gcode.parse_command(command)
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
 
@@ -119,7 +119,7 @@ class ParseCommandTests(unittest.TestCase):
     expected_codes = {}
     expected_flags = ['G']
 
-    codes, flags = s3g.Gcode.ParseCommand(command)
+    codes, flags = s3g.Gcode.parse_command(command)
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
 
@@ -128,7 +128,7 @@ class ParseCommandTests(unittest.TestCase):
     expected_codes = {'G' : 0}
     expected_flags = []
 
-    codes, flags = s3g.Gcode.ParseCommand(command)
+    codes, flags = s3g.Gcode.parse_command(command)
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
     self.assertEquals(int, type(codes['G']))
@@ -138,7 +138,7 @@ class ParseCommandTests(unittest.TestCase):
     expected_codes = {'G' : 0.1234}
     expected_flags = []
 
-    codes, flags = s3g.Gcode.ParseCommand(command)
+    codes, flags = s3g.Gcode.parse_command(command)
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
     self.assertEquals(float, type(codes['G']))
@@ -148,22 +148,22 @@ class ParseCommandTests(unittest.TestCase):
     expected_codes = {'G' : 0}
     expected_flags = []
 
-    codes, flags = s3g.Gcode.ParseCommand(command)
+    codes, flags = s3g.Gcode.parse_command(command)
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
     self.assertEquals(int, type(codes['G']))
 
   def test_repeated_code(self):
     command = 'G0 G0'
-    self.assertRaises(s3g.Gcode.RepeatCodeError, s3g.Gcode.ParseCommand, command)
+    self.assertRaises(s3g.Gcode.RepeatCodeError, s3g.Gcode.parse_command, command)
 
   def test_reject_both_g_and_m_code(self):
     command = 'G0 M0'
-    self.assertRaises(s3g.Gcode.MultipleCommandCodeError, s3g.Gcode.ParseCommand, command)
+    self.assertRaises(s3g.Gcode.MultipleCommandCodeError, s3g.Gcode.parse_command, command)
 
   def test_reject_both_g_and_m_code(self):
     command = 'M0 G0'
-    self.assertRaises(s3g.Gcode.MultipleCommandCodeError, s3g.Gcode.ParseCommand, command)
+    self.assertRaises(s3g.Gcode.MultipleCommandCodeError, s3g.Gcode.parse_command, command)
 
   def test_many_codes_and_flags(self):
     command = 'M0 X1.1 Y2.2 Z3.3 F4.4 A B'
@@ -176,7 +176,7 @@ class ParseCommandTests(unittest.TestCase):
     }
     expected_flags = ['A','B']
 
-    codes, flags = s3g.Gcode.ParseCommand(command)
+    codes, flags = s3g.Gcode.parse_command(command)
     self.assertEquals(expected_codes, codes)
     self.assertEquals(expected_flags, flags)
     for code in zip(expected_codes.values(), codes.values()):
@@ -186,64 +186,64 @@ class CheckForExtraneousCodesTests(unittest.TestCase):
   def test_no_codes(self):
     codes = {}
     allowed_codes = ''
-    s3g.Gcode.CheckForExtraneousCodes(codes, allowed_codes)
+    s3g.Gcode.check_for_extraneous_codes(codes, allowed_codes)
 
   def test_extra_code_with_g_code(self):
     codes = {'G' : 0, 'X' : 0}
     allowed_codes = 'X'
-    s3g.Gcode.CheckForExtraneousCodes(codes.keys(), allowed_codes)
+    s3g.Gcode.check_for_extraneous_codes(codes.keys(), allowed_codes)
 
   def test_extra_code_With_m_code(self):
     codes = {'M' : 0, 'X' : 0}
     allowed_codes = 'X'
-    s3g.Gcode.CheckForExtraneousCodes(codes.keys(), allowed_codes)
+    s3g.Gcode.check_for_extraneous_codes(codes.keys(), allowed_codes)
   
   def test_extra_code_no_allowed_codes(self):
     codes = {'X' : 0}
     allowed_codes = ''
-    self.assertRaises(s3g.Gcode.InvalidCodeError, s3g.Gcode.CheckForExtraneousCodes, codes.keys(), allowed_codes)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, s3g.Gcode.check_for_extraneous_codes, codes.keys(), allowed_codes)
 
   def test_extra_code_some_allowed_codes(self):
     codes = {'X' : 0, 'A' : 2}
     allowed_codes = 'XYZ'
-    self.assertRaises(s3g.Gcode.InvalidCodeError, s3g.Gcode.CheckForExtraneousCodes, codes.keys(), allowed_codes)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, s3g.Gcode.check_for_extraneous_codes, codes.keys(), allowed_codes)
 
   def test_all_allowed_codes(self):
     codes = {'X' : 0, 'Y' : 2, 'Z' : 3}
     allowed_codes = 'XYZ'
-    s3g.Gcode.CheckForExtraneousCodes(codes.keys(), allowed_codes)
+    s3g.Gcode.check_for_extraneous_codes(codes.keys(), allowed_codes)
 
   def test_fewer_than_all_allowed_codes(self):
     codes = {'X' : 0, 'Y' : 2}
     allowed_codes = 'XYZ'
-    s3g.Gcode.CheckForExtraneousCodes(codes.keys(), allowed_codes)
+    s3g.Gcode.check_for_extraneous_codes(codes.keys(), allowed_codes)
 
 class ParseOutAxesTests(unittest.TestCase):
   def test_empty_set(self):
     codes = {}
-    parsed_axes = s3g.Gcode.ParseOutAxes(codes)
+    parsed_axes = s3g.Gcode.parse_out_axes(codes)
     self.assertEqual([], parsed_axes)
 
   def test_parse_out_axes_reject_non_axis(self):
     non_axes = set(string.uppercase) - set('XYZAB')
 
     for non_axis in non_axes:
-      parsed_axes = s3g.Gcode.ParseOutAxes([non_axis])
+      parsed_axes = s3g.Gcode.parse_out_axes([non_axis])
       self.assertEquals(parsed_axes, [])
 
   def test_parse_out_axes_single_axis(self):
     codes = {'X':True}
-    parsed_axes = s3g.Gcode.ParseOutAxes(codes)
+    parsed_axes = s3g.Gcode.parse_out_axes(codes)
     self.assertEqual(['X'], parsed_axes)
 
   def test_parse_out_axes(self):
     codes = {'X':True, 'Y':True, 'Z':True, 'A':True, 'B':True}
-    parsedAxes = s3g.Gcode.ParseOutAxes(codes)
+    parsedAxes = s3g.Gcode.parse_out_axes(codes)
     self.assertEqual(['A', 'B', 'X', 'Y', 'Z'], parsedAxes)
 
 class CalculateVectorMagnitudeTests(unittest.TestCase):
   def test_reject_non_5d_lists(self):
-    self.assertRaises(s3g.PointLengthError, s3g.Gcode.CalculateVectorMagnitude, range(0,4))
+    self.assertRaises(s3g.PointLengthError, s3g.Gcode.calculate_vector_magnitude, range(0,4))
 
   def test_makes_good_results(self):
     cases = [
@@ -253,14 +253,14 @@ class CalculateVectorMagnitudeTests(unittest.TestCase):
     ]
 
     for case in cases:
-      self.assertEquals(case[1], s3g.Gcode.CalculateVectorMagnitude(case[0]))
+      self.assertEquals(case[1], s3g.Gcode.calculate_vector_magnitude(case[0]))
 
 class CalculateVectorDifferenceTests(unittest.TestCase):
   def test_reject_non_5d_list(self):
-    self.assertRaises(s3g.PointLengthError, s3g.Gcode.CalculateVectorDifference, range(4), range(5))
+    self.assertRaises(s3g.PointLengthError, s3g.Gcode.calculate_vector_difference, range(4), range(5))
 
   def test_reject_non_5d_list(self):
-    self.assertRaises(s3g.PointLengthError, s3g.Gcode.CalculateVectorDifference, range(5), range(4))
+    self.assertRaises(s3g.PointLengthError, s3g.Gcode.calculate_vector_difference, range(5), range(4))
 
   def test_good_result(self):
     cases = [
@@ -270,18 +270,18 @@ class CalculateVectorDifferenceTests(unittest.TestCase):
     ]
 
     for case in cases:
-      diff = s3g.Gcode.CalculateVectorDifference(case[0], case[1])
+      diff = s3g.Gcode.calculate_vector_difference(case[0], case[1])
       self.assertEqual(case[2], diff)
 
 class CalculateUnitVectorTests(unittest.TestCase):
   def test_reject_non_5d_list(self):
-    self.assertRaises(s3g.PointLengthError, s3g.Gcode.CalculateUnitVector, range(4))
+    self.assertRaises(s3g.PointLengthError, s3g.Gcode.calculate_unit_vector, range(4))
  
   def test_null_vector(self):
     vector = [0,0,0,0,0]
     expected_unit_vector = [0,0,0,0,0]
 
-    unit_vector = s3g.Gcode.CalculateUnitVector(vector)
+    unit_vector = s3g.Gcode.calculate_unit_vector(vector)
     self.assertEquals(expected_unit_vector, unit_vector)
  
   def test_good_result(self):
@@ -292,34 +292,34 @@ class CalculateUnitVectorTests(unittest.TestCase):
     ]
 
     for case in cases:
-      unit_vector = s3g.Gcode.CalculateUnitVector(case[0])
+      unit_vector = s3g.Gcode.calculate_unit_vector(case[0])
       self.assertEqual(case[1], unit_vector)
 
 class GetSafeFeedrateTests(unittest.TestCase):
   def test_reject_non_5d_list(self):
-    self.assertRaises(s3g.PointLengthError, s3g.Gcode.GetSafeFeedrate, range(4), range(5), 0)
+    self.assertRaises(s3g.PointLengthError, s3g.Gcode.get_safe_feedrate, range(4), range(5), 0)
 
   def test_zero_displacement(self):
     point = [0, 0, 0, 0, 0]
     max_feedrates = [1, 1, 1, 1, 1]
     feedrate = 1
-    self.assertRaises(s3g.Gcode.VectorLengthZeroError, s3g.Gcode.GetSafeFeedrate, point, max_feedrates, feedrate)
+    self.assertRaises(s3g.Gcode.VectorLengthZeroError, s3g.Gcode.get_safe_feedrate, point, max_feedrates, feedrate)
 
   def test_negative_feedrate(self):
     point = [1, 1, 1, 1, 1]
     max_feedrates = [1, 1, 1, 1, 1]
     feedrate = -1
-    self.assertRaises(s3g.Gcode.InvalidFeedrateError, s3g.Gcode.GetSafeFeedrate, point, max_feedrates, feedrate)
+    self.assertRaises(s3g.Gcode.InvalidFeedrateError, s3g.Gcode.get_safe_feedrate, point, max_feedrates, feedrate)
 
   def test_zero_feedrate(self):
     point = [1, 1, 1, 1, 1]
     max_feedrates = [1, 1, 1, 1, 1]
     feedrate = 0
-    self.assertRaises(s3g.Gcode.InvalidFeedrateError, s3g.Gcode.GetSafeFeedrate, point, max_feedrates, feedrate)
+    self.assertRaises(s3g.Gcode.InvalidFeedrateError, s3g.Gcode.get_safe_feedrate, point, max_feedrates, feedrate)
 
   def test_good_result(self):
     # Note: All of these cases use integers, and would fail if the float() casts
-    #       were to be remvoed from GetSafeFeedrate. Try it.
+    #       were to be remvoed from get_safe_feedrate. Try it.
     cases = [
       [[1,  0, 0, 0, 0],    # Single axis: Move under the max feedrate
        [10, 0, 0, 0, 0],
@@ -341,11 +341,11 @@ class GetSafeFeedrateTests(unittest.TestCase):
        10, pow(55,.5)/5],
     ]
     for case in cases:
-      self.assertEquals(case[3], s3g.Gcode.GetSafeFeedrate(case[0], case[1], case[2]))
+      self.assertEquals(case[3], s3g.Gcode.get_safe_feedrate(case[0], case[1], case[2]))
 
 class FindLongestAxisTests(unittest.TestCase):
   def test_reject_non_5d_list(self):
-    self.assertRaises(s3g.PointLengthError, s3g.Gcode.FindLongestAxis, range(4))
+    self.assertRaises(s3g.PointLengthError, s3g.Gcode.find_longest_axis, range(4))
 
   def test_good_result(self):
     cases = [
@@ -357,7 +357,7 @@ class FindLongestAxisTests(unittest.TestCase):
     ]
 
     for case in cases:
-      self.assertEqual(case[1], s3g.Gcode.FindLongestAxis(case[0]))
+      self.assertEqual(case[1], s3g.Gcode.find_longest_axis(case[0]))
 
 class CalculateDDASpeedTestsWithReplicatorDual(unittest.TestCase):
   def setUp(self):
@@ -413,12 +413,12 @@ def generic_zero_move_test(state):
   target_position =  [0,0,0,0,0]
   target_feedrate = 0
 
-  s3g.Gcode.CalculateDDASpeed(
+  s3g.Gcode.calculate_DDA_speed(
       initial_position, 
       target_position, 
       target_feedrate, 
-      state.GetAxesValues('max_feedrate'), 
-      state.GetAxesValues('steps_per_mm')
+      state.get_axes_values('max_feedrate'), 
+      state.get_axes_values('steps_per_mm')
       )
 
 def generic_calculate_dda_speed_good_result(state):
@@ -435,36 +435,36 @@ def generic_calculate_dda_speed_good_result(state):
     ]
   
   for case in cases:
-    dda_speed = s3g.Gcode.CalculateDDASpeed(
+    dda_speed = s3g.Gcode.calculate_DDA_speed(
         case[0], 
         case[1], 
         case[2], 
-        state.GetAxesValues('max_feedrate'), 
-        state.GetAxesValues('steps_per_mm'))
+        state.get_axes_values('max_feedrate'), 
+        state.get_axes_values('steps_per_mm'))
     #Return a generator of the expected and calculated DDA speed
     yield case[3], dda_speed
 
-class CalculateDDASpeed(unittest.TestCase):
+class calculate_DDA_speed(unittest.TestCase):
   def test_calculate_dda_speed(self):
     feedrate = 100
     spm = 100.0
     secondConst = 60
     microSecondConst = 1000000
     expected_dda_speed = secondConst * microSecondConst / (feedrate*abs(spm))
-    self.assertEqual(expected_dda_speed, s3g.Gcode.ComputeDDASpeed(feedrate, spm))
+    self.assertEqual(expected_dda_speed, s3g.Gcode.compute_DDA_speed(feedrate, spm))
 
 class VariableSubstituteTest(unittest.TestCase):
 
   def test_blank_line_no_environment(self):
     environment = {}
     line = ''
-    replaced_line =s3g.Gcode.VariableSubstitute(line, environment)
+    replaced_line =s3g.Gcode.variable_substitute(line, environment)
     self.assertEqual(line, replaced_line)
 
   def test_no_variables_no_environment(self):
     environment = {}
     line = "161 X Y Z"
-    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
+    replaced_line = s3g.Gcode.variable_substitute(line, environment)
     self.assertEqual(line, replaced_line)
 
   def test_can_read_multiple_variable_types(self):
@@ -474,26 +474,26 @@ class VariableSubstituteTest(unittest.TestCase):
         }
     line = '#1 #foo'
     expected_line = '-1 -2'
-    self.assertEqual(expected_line, s3g.Gcode.VariableSubstitute(line, environment))
+    self.assertEqual(expected_line, s3g.Gcode.variable_substitute(line, environment))
 
   def test_no_variables_has_environment(self):
     environment = {
         '0'  : '-1'
         }
     line = "G161 X Y Z"
-    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
+    replaced_line = s3g.Gcode.variable_substitute(line, environment)
     self.assertEqual(line, replaced_line)
 
   def test_variables_has_environment_no_matching_variables(self):
     environment = {'1' : '-1'}
     line = '#2'
-    self.assertRaises(s3g.Gcode.UndefinedVariableError, s3g.Gcode.VariableSubstitute, line, environment)
+    self.assertRaises(s3g.Gcode.UndefinedVariableError, s3g.Gcode.variable_substitute, line, environment)
 
   def test_line_and_environment_has_variables(self):
     environment = {'1' : '-1'}
     line = '#1'
     expected_line = '-1'
-    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
+    replaced_line = s3g.Gcode.variable_substitute(line, environment)
     self.assertEqual(expected_line, replaced_line)
 
   def test_line_has_less_variables_than_environment(self):
@@ -503,7 +503,7 @@ class VariableSubstituteTest(unittest.TestCase):
         }
     line = '#1'
     expected_line = '-1'
-    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
+    replaced_line = s3g.Gcode.variable_substitute(line, environment)
     self.assertEqual(expected_line, replaced_line) 
 
   def test_can_substitute_multiple_lines(self):
@@ -512,7 +512,7 @@ class VariableSubstituteTest(unittest.TestCase):
         }
     line = '#1 #1'
     expected_line = '-1 -1'
-    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
+    replaced_line = s3g.Gcode.variable_substitute(line, environment)
     self.assertEqual(expected_line, replaced_line)
 
   def test_can_substitute_multiple_variables(self):
@@ -522,7 +522,7 @@ class VariableSubstituteTest(unittest.TestCase):
         }
     line = '#1 #2'
     expected_line = '-1 -2'
-    replaced_line = s3g.Gcode.VariableSubstitute(line, environment)
+    replaced_line = s3g.Gcode.variable_substitute(line, environment)
     self.assertEqual(expected_line, replaced_line)
 
   def test_can_substitute_multiple_variables_multiple_times(self):
@@ -532,40 +532,40 @@ class VariableSubstituteTest(unittest.TestCase):
         }
     line = '#FOO #42 #FOO #42'
     expected_line = '-1 -2 -1 -2'
-    self.assertEqual(expected_line, s3g.Gcode.VariableSubstitute(line, environment))
+    self.assertEqual(expected_line, s3g.Gcode.variable_substitute(line, environment))
 
-class CalculateHomingDDASpeed(unittest.TestCase):
+class calculate_homing_DDA_speed(unittest.TestCase):
   def test_calculate_homing_dda_speed_max_feedrates_empty(self):
     feedrate = 10
     max_feedrates = []
     spm_list = [1, 2, 3, 4, 5]
-    self.assertRaises(s3g.Gcode.CalculateHomingDDAError, s3g.Gcode.CalculateHomingDDASpeed, feedrate, max_feedrates, spm_list)
+    self.assertRaises(s3g.Gcode.CalculateHomingDDAError, s3g.Gcode.calculate_homing_DDA_speed, feedrate, max_feedrates, spm_list)
 
   def test_calculate_homing_dda_speed_spm_list_empty(self):
     feedrate = 10
     max_feedrates = [1, 2, 3, 4, 5]
     spm_list = []
-    self.assertRaises(s3g.Gcode.CalculateHomingDDAError, s3g.Gcode.CalculateHomingDDASpeed, feedrate, max_feedrates, spm_list)
+    self.assertRaises(s3g.Gcode.CalculateHomingDDAError, s3g.Gcode.calculate_homing_DDA_speed, feedrate, max_feedrates, spm_list)
 
   def test_calculate_homing_dda_speed_uneven_lists(self):
     feedrate = 10
     max_feedrates = [1, 2, 3, 4, 5]
     spm_list = [1, 2, 3, 4]
-    self.assertRaises(s3g.Gcode.CalculateHomingDDAError, s3g.Gcode.CalculateHomingDDASpeed, feedrate, max_feedrates, spm_list)
+    self.assertRaises(s3g.Gcode.CalculateHomingDDAError, s3g.Gcode.calculate_homing_DDA_speed, feedrate, max_feedrates, spm_list)
 
   def test_calculate_homing_dda_speed_safe_feedrate(self):
     feedrate = 10
     max_feedrates = [100, 200, 300, 400, 500]
     spm_list = [1, 2, 3, 4, 5]
-    expected_dda = s3g.Gcode.ComputeDDASpeed(feedrate, spm_list[0])
-    self.assertEqual(expected_dda, s3g.Gcode.CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list))
+    expected_dda = s3g.Gcode.compute_DDA_speed(feedrate, spm_list[0])
+    self.assertEqual(expected_dda, s3g.Gcode.calculate_homing_DDA_speed(feedrate, max_feedrates, spm_list))
 
   def test_calculate_homing_dda_speed_unsafe_feedrate(self):
     feedrate = 600
     max_feedrates = [100, 200, 300, 400, 500]
     spm_list = [1, 2, 3, 4, 5]
-    expected_dda = s3g.Gcode.ComputeDDASpeed(max_feedrates[0], spm_list[0])
-    self.assertEqual(expected_dda, s3g.Gcode.CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list))
+    expected_dda = s3g.Gcode.compute_DDA_speed(max_feedrates[0], spm_list[0])
+    self.assertEqual(expected_dda, s3g.Gcode.calculate_homing_DDA_speed(feedrate, max_feedrates, spm_list))
  
 if __name__ == "__main__":
   unittest.main()

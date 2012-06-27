@@ -31,18 +31,18 @@ _Note: Replace port with your serial port (example: '/dev/tty.usbmodemfd121')_
 Home the x, y, and z axes:
 
 ```python
-r.FindAxesMaximums(['x', 'y'], 500, 60)
-r.FindAxesMinimums(['z'], 500, 60)
-r.RecallHomePositions(['x', 'y', 'z', 'a', 'b'])
+r.find_axes_maximums(['x', 'y'], 500, 60)
+r.find_axes_minimums(['z'], 500, 60)
+r.recall_home_positions(['x', 'y', 'z', 'a', 'b'])
 ```
 
 Instruct the machine to move in a square pattern:
 
 ```python
-r.QueueExtendedPoint([2000,0,5000,0,0], 400)
-r.QueueExtendedPoint([2000,2000,5000,0,0], 400)
-r.QueueExtendedPoint([0,2000,5000,0,0], 400)
-r.QueueExtendedPoint([0,0,5000,0,0], 400)
+r.queue_extended_point([2000,0,5000,0,0], 400)
+r.queue_extended_point([2000,2000,5000,0,0], 400)
+r.queue_extended_point([0,2000,5000,0,0], 400)
+r.queue_extended_point([0,0,5000,0,0], 400)
 ```
 
 _Note: All points are in steps, and all speeds are in DDA. This is s3g, not gcode!_
@@ -50,16 +50,16 @@ _Note: All points are in steps, and all speeds are in DDA. This is s3g, not gcod
 Now, instruct the machine to heat toolhead 0, wait up to 5 minutes for it to reach temperature, then extrude for 12.5 seconds:
 
 ```python
-r.SetToolheadTemperature(0, 220)
-r.WaitForToolReady(0,100,5*60)
-r.QueueExtendedPoint([0,0,5000,-5000,0], 2500)
+r.set_toolhead_temperature(0, 220)
+r.wait_for_tool_ready(0,100,5*60)
+r.queue_extended_point([0,0,5000,-5000,0], 2500)
 ```
 
 Finally, don't forget to turn off the toolhead heater, and disable the stepper motors:
 
 ```python
-r.SetToolheadTemperature(0,0)
-r.ToggleAxes(['x','y','z','a','b'],False)
+r.set_toolhead_temperature(0,0)
+r.toggle_axes(['x','y','z','a','b'],False)
 ```
 
 Those are the basics of how to control a machine. For more details, consult the [s3g protocol](https://github.com/makerbot/s3g/blob/master/doc/s3g_protocol.markdown) and the [s3g source](https://github.com/makerbot/s3g/blob/master/s3g/s3g.py).

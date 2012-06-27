@@ -3,9 +3,9 @@ from crc import *
 from .. import errors
 from .. import constants
 
-def EncodePayload(payload):
+def encode_payload(payload):
   """
-  Encode a packet that contains the given payload
+  Encode passed payload into a packet.
   @param payload Command payload, 1 - n bytes describing the command to send
   @return bytearray containing the packet
   """
@@ -20,10 +20,11 @@ def EncodePayload(payload):
 
   return packet
 
-def DecodePacket(packet):
+def decode_packet(packet):
   """
-  Non-streaming packet decoder. Accepts a byte array containing a single
-  packet, and attempts to parse the packet and return the payload.
+  Decode a packet from a payload.Non-streaming packet decoder. 
+  Accepts a byte array containing a single packet, and attempts
+  to parse the packet and return the payload.
   @param packet byte array containing the input packet
   @return payload of the packet
   """
@@ -44,7 +45,7 @@ def DecodePacket(packet):
   return packet[2:(len(packet)-1)]
 
 
-def CheckResponseCode(response_code):
+def check_response_code(response_code):
   """
   Check the response code, and return if succesful, or raise an appropriate exception
   """
@@ -84,7 +85,7 @@ class PacketStreamDecoder(object):
     self.payload = bytearray()
     self.expected_length = 0
 
-  def ParseByte(self, byte):
+  def parse_byte(self, byte):
     """
     Entry point, call for each byte added to the stream.
     @param byte Byte to add to the stream

@@ -28,7 +28,7 @@ class gcodeTests(unittest.TestCase):
     cmd = 999
     command = 'G' + str(cmd)
     try:
-      self.g.ExecuteLine(command)
+      self.g.execute_line(command)
     except s3g.Gcode.UnrecognizedCommandError as e:
       self.assertEqual(e.values['UnrecognizedCommand'], cmd)
 
@@ -36,24 +36,24 @@ class gcodeTests(unittest.TestCase):
     cmd = 999
     command = 'M' + str(cmd)
     try:
-      self.g.ExecuteLine(command)
+      self.g.execute_line(command)
     except s3g.Gcode.UnrecognizedCommandError as e:
       self.assertEqual(e.values['UnrecognizedCommand'], cmd)
 
   def test_check_cant_read_non_unicde_non_ascii(self):
     command = 92
-    self.assertRaises(s3g.Gcode.ImproperGcodeEncodingError, self.g.ExecuteLine, command)
+    self.assertRaises(s3g.Gcode.ImproperGcodeEncodingError, self.g.execute_line, command)
 
   def test_check_can_read_unicode(self):
     command = "G92 X0 Y0 Z0 A0 B0"
     command = unicode(command)
-    self.g.ExecuteLine(command)
-    self.mock.SetExtendedPosition.assert_called_once_with([0,0,0,0,0])
+    self.g.execute_line(command)
+    self.mock.set_extended_position.assert_called_once_with([0,0,0,0,0])
 
   def test_check_can_read_ascii(self):
     command = "G92 X0 Y0 Z0 A0 B0"
-    self.g.ExecuteLine(command)
-    self.mock.SetExtendedPosition.assert_called_once_with([0,0,0,0,0])
+    self.g.execute_line(command)
+    self.mock.set_extended_position.assert_called_once_with([0,0,0,0,0])
 
   def test_check_gcode_errors_are_recorded_correctly(self):
     command = "G161 Q1" #NOTE: this assumes that G161 does not accept a Q code
@@ -64,7 +64,7 @@ class gcodeTests(unittest.TestCase):
         }
 
     try:
-      self.g.ExecuteLine(command)
+      self.g.execute_line(command)
     except s3g.Gcode.GcodeError as e:
       self.assertEqual(expectedValues, e.values)
     else:
@@ -73,32 +73,32 @@ class gcodeTests(unittest.TestCase):
 
   def test_check_gcode_extraneous_codes_gets_called(self):
     command = "G161 Q1" # Note: this assumes that G161 does not accept a Q code
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.execute_line, command)
 
   def test_check_gcode_extraneous_flags_gets_called(self):
     command = "G161 Q" # Note: this assumes that G161 does not accept a Q flag
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.execute_line, command)
 
   def test_check_mcode_extraneous_codes_gets_called(self):
     command = "M18 Q4" # Note: This assumes that M6 does not accept an X code
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.execute_line, command)
 
   def test_check_mcode_extraneous_flags_gets_called(self):
     command = "M18 Q" # Note: This assumes that M6 does not accept an X flag
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.ExecuteLine, command)
+    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.execute_line, command)
 
   def test_disable_axes(self):
     flags = ['A','B','X','Y','Z']
 
-    self.g.DisableAxes({}, flags, '')
-    self.mock.ToggleAxes.assert_called_once_with(flags, False)
+    self.g.disable_axes({}, flags, '')
+    self.mock.toggle_axes.assert_called_once_with(flags, False)
 
 
   def test_display_message_missing_timeout(self):
     codes = {}
     flags = []
     comment = 'asdf'
-    self.assertRaises(KeyError, self.g.DisplayMessage, codes, flags, comment)
+    self.assertRaises(KeyError, self.g.display_message, codes, flags, comment)
 
   def test_display_message(self):
     row = 0 # As specified in the gcode protocol
@@ -112,8 +112,8 @@ class gcodeTests(unittest.TestCase):
     codes = {'P' : timeout}
     comment = message
 
-    self.g.DisplayMessage(codes, [], comment)
-    self.mock.DisplayMessage.assert_called_once_with(
+    self.g.display_message(codes, [], comment)
+    self.mock.display_message.assert_called_once_with(
       row,
       col,
       message,
@@ -126,32 +126,32 @@ class gcodeTests(unittest.TestCase):
   def test_play_song_missing_song_id(self):
     codes = {}
 
-    self.assertRaises(KeyError, self.g.PlaySong, codes, [], '')
+    self.assertRaises(KeyError, self.g.play_song, codes, [], '')
 
   def test_play_song(self):
     song_id = 2
     codes = {'P' : song_id}
 
-    self.g.PlaySong(codes, [], '')
-    self.mock.QueueSong.assert_called_once_with(song_id)
+    self.g.play_song(codes, [], '')
+    self.mock.queue_song.assert_called_once_with(song_id)
 
   def test_set_build_percentage_missing_percent(self):
     codes = {}
-    self.assertRaises(KeyError, self.g.SetBuildPercentage, codes, [], '')
+    self.assertRaises(KeyError, self.g.set_build_percentage, codes, [], '')
 
   def test_set_build_percentage_negative_percent(self):
     build_percentage = -1
     codes = {'P' : build_percentage}
     flags = []
     comments = ''
-    self.assertRaises(s3g.Gcode.BadPercentageError, self.g.SetBuildPercentage, codes, flags, comments)
+    self.assertRaises(s3g.Gcode.BadPercentageError, self.g.set_build_percentage, codes, flags, comments)
 
   def test_set_build_percentage_too_high_percent(self):
     build_percentage = 100.1
     codes = {'P' : build_percentage}
     flags = []
     comments = ''
-    self.assertRaises(s3g.Gcode.BadPercentageError, self.g.SetBuildPercentage, codes, flags, comments)
+    self.assertRaises(s3g.Gcode.BadPercentageError, self.g.set_build_percentage, codes, flags, comments)
 
   def test_set_build_percentage_0_percent(self):
     build_percentage = 0
@@ -159,9 +159,9 @@ class gcodeTests(unittest.TestCase):
 
     self.g.state.values['build_name'] = 'test'
 
-    self.g.SetBuildPercentage(codes, [], '')
-    self.mock.SetBuildPercent.assert_called_once_with(build_percentage)
-    self.mock.BuildStartNotification.assert_called_once_with(self.g.state.values['build_name'])
+    self.g.set_build_percentage(codes, [], '')
+    self.mock.set_build_percent.assert_called_once_with(build_percentage)
+    self.mock.build_start_notification.assert_called_once_with(self.g.state.values['build_name'])
 
   def test_set_build_percentage_100_percent(self):
     build_percentage = 100
@@ -169,9 +169,9 @@ class gcodeTests(unittest.TestCase):
     flags = []
     comments = ''
 
-    self.g.SetBuildPercentage(codes, flags, comments)
-    self.mock.SetBuildPercent.assert_called_once_with(build_percentage)
-    self.mock.BuildEndNotification.assert_called_once_with()
+    self.g.set_build_percentage(codes, flags, comments)
+    self.mock.set_build_percent.assert_called_once_with(build_percentage)
+    self.mock.build_end_notification.assert_called_once_with()
     self.assertEqual(None, self.g.state.values['build_name'])
 
   def test_store_offsets_all_codes_accounted_for(self):
@@ -186,7 +186,7 @@ class gcodeTests(unittest.TestCase):
         'Y' : 0,
         'P' : 1,
         }
-    self.assertRaises(KeyError, self.g.StoreOffsets, codes, [], '')
+    self.assertRaises(KeyError, self.g.store_offsets, codes, [], '')
 
   def test_store_offsets_no_p(self):
     codes = {
@@ -194,7 +194,7 @@ class gcodeTests(unittest.TestCase):
         'Y' : 0,
         'Z' : 0,
         }
-    self.assertRaises(KeyError, self.g.StoreOffsets, codes, [],  '')
+    self.assertRaises(KeyError, self.g.store_offsets, codes, [],  '')
 
   def test_store_offsets_bad_offset(self):
     codes = {
@@ -203,7 +203,7 @@ class gcodeTests(unittest.TestCase):
         }
     flags = []
     comments = ''
-    self.assertRaises(s3g.Gcode.InvalidOffsetError, self.g.StoreOffsets, codes, flags, comments)
+    self.assertRaises(s3g.Gcode.InvalidOffsetError, self.g.store_offsets, codes, flags, comments)
 
   def test_store_offsets_all_codes_defined(self):
     codes = {
@@ -212,7 +212,7 @@ class gcodeTests(unittest.TestCase):
         'Z' : 3,
         'P' : 1,
         }
-    self.g.StoreOffsets(codes, [], '')
+    self.g.store_offsets(codes, [], '')
     expectedOffsets = {
         1: {
             'X' : 1,
@@ -239,7 +239,7 @@ class gcodeTests(unittest.TestCase):
 
   def test_use_p2_offsets(self):
     codes = {}
-    self.g.UseP2Offsets(codes, [], '')
+    self.g.use_p2_offsets(codes, [], '')
     self.assertEqual(2, self.g.state.offset_register)
 
   def test_use_p1_offsets_all_codes_accounted_for(self):
@@ -250,7 +250,7 @@ class gcodeTests(unittest.TestCase):
 
   def test_use_p1_offsets(self):
     codes = {}
-    self.g.UseP1Offsets(codes, [], '')
+    self.g.use_p1_offsets(codes, [], '')
     self.assertEqual(1, self.g.state.offset_register) 
 
   def test_set_position_all_codes_accounted_for(self):
@@ -264,14 +264,14 @@ class gcodeTests(unittest.TestCase):
         'A' : 0,
         'E' : 0,
         }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.SetPosition, codes, [], '')
+    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.set_position, codes, [], '')
 
   def test_set_position_b_and_e_codes(self):
     codes = {
         'B' : 0,
         'E' : 0,
         }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.SetPosition, codes, [], '')
+    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.set_position, codes, [], '')
 
   def test_set_position_a_and_b_and_e_codes(self):
     codes = {
@@ -279,13 +279,13 @@ class gcodeTests(unittest.TestCase):
         'B' : 0,
         'E' : 0,
         }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.SetPosition, codes, [], '')
+    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.set_position, codes, [], '')
 
   def test_set_position_e_code_no_tool_index(self):
     codes = {
         'E' : 0
         }
-    self.assertRaises(s3g.Gcode.NoToolIndexError, self.g.SetPosition, codes, [], '')
+    self.assertRaises(s3g.Gcode.NoToolIndexError, self.g.set_position, codes, [], '')
 
   def test_set_position_e_code_tool_index_defined(self):
     initialPosition = [1, 2, 3, 4, 5]
@@ -301,11 +301,11 @@ class gcodeTests(unittest.TestCase):
         'E' : -1,
         }
     expectedPosition = [1, 2, 3, -1, 5]
-    spmList = self.g.state.GetAxesValues('steps_per_mm')
+    spmList = self.g.state.get_axes_values('steps_per_mm')
     for i in range(len(expectedPosition)):
       expectedPosition[i] *= spmList[i]
-    self.g.SetPosition(codes, [], '')
-    self.mock.SetExtendedPosition.assert_called_once_with(expectedPosition)
+    self.g.set_position(codes, [], '')
+    self.mock.set_extended_position.assert_called_once_with(expectedPosition)
 
   def test_set_position_a_and_b_codes(self):
     codes = { 
@@ -315,13 +315,13 @@ class gcodeTests(unittest.TestCase):
         'A' : 3,
         'B' : 4,
         }
-    self.g.SetPosition(codes, [], '')
+    self.g.set_position(codes, [], '')
     self.assertEqual({'X':0,'Y':1,'Z':2,'A':3,'B':4}, self.g.state.position)
     expectedPosition = [0, 1, 2, 3, 4]
-    spmList = self.g.state.GetAxesValues('steps_per_mm')
+    spmList = self.g.state.get_axes_values('steps_per_mm')
     for i in range(len(spmList)):
       expectedPosition[i] *= spmList[i]
-    self.mock.SetExtendedPosition.assert_called_once_with(expectedPosition)
+    self.mock.set_extended_position.assert_called_once_with(expectedPosition)
 
   def test_set_potentiometer_values_all_codes_accounted_for(self):
     codes = 'XYZAB'
@@ -331,15 +331,15 @@ class gcodeTests(unittest.TestCase):
 
   def test_set_potentiometer_values_no_codes(self):
     codes = {'G' : 130}
-    self.g.SetPotentiometerValues(codes, [], '')
+    self.g.set_potentiometer_values(codes, [], '')
     self.assertEqual(self.mock.mock_calls, [])
 
   def test_set_potentiometer_values_one_axis(self):
     codes = {'G' : 130, 'X' : 0}
     axes = ['X']
     val = 0
-    self.g.SetPotentiometerValues(codes, [], '')
-    self.mock.SetPotentiometerValue.assert_called_once_with(axes, val)
+    self.g.set_potentiometer_values(codes, [], '')
+    self.mock.set_potentiometer_value.assert_called_once_with(axes, val)
   
   def test_set_potentiometer_values_all_axes(self):
     codes = {'X' : 0, 'Y' : 1, 'Z' : 2, 'A': 3, 'B' : 4} 
@@ -350,16 +350,16 @@ class gcodeTests(unittest.TestCase):
         [['A'], 3],
         [['B'], 4],
         ]
-    self.g.SetPotentiometerValues(codes, [], '')
+    self.g.set_potentiometer_values(codes, [], '')
     for i in range(len(expected)):
-      self.assertEqual(self.mock.mock_calls[i], mock.call.SetPotentiometerValue(expected[i][0], expected[i][1]))
+      self.assertEqual(self.mock.mock_calls[i], mock.call.set_potentiometer_value(expected[i][0], expected[i][1]))
 
   def test_set_potentiometer_values_all_codes_same(self):
     codes = {'X' : 0, 'Y' : 0, 'Z' : 0, 'A' : 0, 'B' : 0}
-    self.g.SetPotentiometerValues(codes, [], '')
+    self.g.set_potentiometer_values(codes, [], '')
     axes = ['X', 'Y', 'Z', 'A', 'B']
     val = 0
-    self.mock.SetPotentiometerValue.called_once_with(axes, val)
+    self.mock.set_potentiometer_value.called_once_with(axes, val)
 
   def test_find_axes_minimums_all_codes_accounted_for(self):
     """
@@ -384,7 +384,7 @@ class gcodeTests(unittest.TestCase):
     flags = ['X', 'Y', 'Z']
     axes = flags
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
-    self.g.FindAxesMinimums(codes, flags, '')
+    self.g.find_axes_minimums(codes, flags, '')
     params = self.mock.mock_calls[0][1]
     self.assertEqual(params[0], flags)
     expected_position = {
@@ -401,14 +401,14 @@ class gcodeTests(unittest.TestCase):
     codes = {'F' : feedrate}
     axes = []
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
-    self.g.FindAxesMinimums(codes, [], '')
+    self.g.find_axes_minimums(codes, [], '')
     self.assertTrue(len(self.mock.mock_calls) == 0)
 
   def test_find_axes_minimum_no_F_code(self):
     codes = {}
     flags = ['X', 'Y']
     comments = ''
-    self.assertRaises(KeyError, self.g.FindAxesMinimums, codes, flags, comments)
+    self.assertRaises(KeyError, self.g.find_axes_minimums, codes, flags, comments)
 
   def test_find_axes_maximums_all_codes_accounted_for(self):
     codes = 'F'
@@ -430,7 +430,7 @@ class gcodeTests(unittest.TestCase):
     axes = flags
     feedrate = 0
     timeout = self.g.state.profile.values['find_axis_maximum_timeout']
-    self.g.FindAxesMaximums(codes, flags, '')
+    self.g.find_axes_maximums(codes, flags, '')
     params = self.mock.mock_calls[0][1]
     self.assertEqual(params[0], flags)
     expectedPosition = {
@@ -447,7 +447,7 @@ class gcodeTests(unittest.TestCase):
     codes = {'F' : feedrate}
     axes = []
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
-    self.g.FindAxesMaximums(codes, [], '')
+    self.g.find_axes_maximums(codes, [], '')
     calls = self.mock.mock_calls
     self.assertTrue(len(calls) == 0)
 
@@ -455,7 +455,7 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     flags = ['X', 'Y']
     comments = ''
-    self.assertRaises(KeyError, self.g.FindAxesMaximums, codes, flags, comments)
+    self.assertRaises(KeyError, self.g.find_axes_maximums, codes, flags, comments)
 
   def test_linear_interpolation_all_codes_accounted_for(self):
     codes = 'XYZABEF'
@@ -469,7 +469,7 @@ class gcodeTests(unittest.TestCase):
       self.g.state.position[axis] = 0
     curPosition = self.g.state.position
     codes = {'F':feedrate}
-    self.g.LinearInterpolation(codes, [], '')
+    self.g.linear_interpolation(codes, [], '')
     self.assertEqual(curPosition, self.g.state.position)
     self.assertEqual(feedrate, self.g.state.values['feedrate'])
 
@@ -488,7 +488,7 @@ class gcodeTests(unittest.TestCase):
         'Z' : 2,
         'A' : 3,
     }
-    self.assertRaises(KeyError, self.g.LinearInterpolation, codes, [], '')
+    self.assertRaises(KeyError, self.g.linear_interpolation, codes, [], '')
 
   def test_linear_interpolation_no_feedrate_last_feedrate_set(self):
     feedrate = 50
@@ -513,15 +513,15 @@ class gcodeTests(unittest.TestCase):
         'E' : extrusion_length
         }
 
-    self.g.LinearInterpolation(codes, [], '')
-    ddaFeedrate = s3g.Gcode.CalculateDDASpeed(
+    self.g.linear_interpolation(codes, [], '')
+    ddaFeedrate = s3g.Gcode.calculate_DDA_speed(
         initialPosition, 
         expectedPoint, 
         feedrate,
-        self.g.state.GetAxesValues('max_feedrate'),
-        self.g.state.GetAxesValues('steps_per_mm'),
+        self.g.state.get_axes_values('max_feedrate'),
+        self.g.state.get_axes_values('steps_per_mm'),
         )
-    spmList = self.g.state.GetAxesValues('steps_per_mm')
+    spmList = self.g.state.get_axes_values('steps_per_mm')
 
     # Gcode works in steps, so we need to convert the expected position to steps
     for i in range(len(expectedPoint)):
@@ -548,7 +548,7 @@ class gcodeTests(unittest.TestCase):
         'A' : 0,
         'F' : 0,
         }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
+    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.linear_interpolation, codes, [], '')
 
   def test_linear_interpolation_e_and_b_codes_present(self):
     self.g.state.position = {
@@ -566,7 +566,7 @@ class gcodeTests(unittest.TestCase):
         'B' : 0,
         'F' : 0,
         }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
+    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.linear_interpolation, codes, [], '')
 
   def test_linear_interpolation_e_and_a_and_b_present(self):
     self.g.state.position = {
@@ -585,7 +585,7 @@ class gcodeTests(unittest.TestCase):
         'B' : 0,
         'F' : 0,
         }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
+    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.linear_interpolation, codes, [], '')
 
   def test_linear_interpolation_e_code_no_toolhead(self):
     self.g.state.position = {
@@ -602,7 +602,7 @@ class gcodeTests(unittest.TestCase):
         'E' : 0,
         'F' : 0,
         }
-    self.assertRaises(s3g.Gcode.NoToolIndexError, self.g.LinearInterpolation, codes, [], '')
+    self.assertRaises(s3g.Gcode.NoToolIndexError, self.g.linear_interpolation, codes, [], '')
 
   def test_linear_interpolation_e_code(self):
     initialPosition = [5, 4, 3, 2, 1]
@@ -623,18 +623,18 @@ class gcodeTests(unittest.TestCase):
         'E' : expectedPoint[3],
         'F' : feedrate,
         }
-    self.g.LinearInterpolation(codes, [], '')
-    dda_speed = s3g.Gcode.CalculateDDASpeed(
+    self.g.linear_interpolation(codes, [], '')
+    dda_speed = s3g.Gcode.calculate_DDA_speed(
         initialPosition, 
         expectedPoint, 
         feedrate,
-        self.g.state.GetAxesValues('max_feedrate'),
-        self.g.state.GetAxesValues('steps_per_mm')
+        self.g.state.get_axes_values('max_feedrate'),
+        self.g.state.get_axes_values('steps_per_mm')
         )
-    spmList = self.g.state.GetAxesValues('steps_per_mm')
+    spmList = self.g.state.get_axes_values('steps_per_mm')
     for i in range(len(expectedPoint)):
       expectedPoint[i] *= spmList[i]
-    self.mock.QueueExtendedPoint.assert_called_once_with(expectedPoint, dda_speed)
+    self.mock.queue_extended_point.assert_called_once_with(expectedPoint, dda_speed)
 
   def test_linear_interpolation_a_and_b(self):
     self.g.state.position = {
@@ -649,7 +649,7 @@ class gcodeTests(unittest.TestCase):
         'B' : 0,
         'F' : 0,
         }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.LinearInterpolation, codes, [], '')
+    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.linear_interpolation, codes, [], '')
 
   def test_linear_interpolation_a(self):
     initialPosition = [5, 4, 3, 2, 1]
@@ -669,19 +669,19 @@ class gcodeTests(unittest.TestCase):
         'A' : expected_position[3],
         'F' : feedrate,
         }
-    self.g.LinearInterpolation(codes, [], '')
+    self.g.linear_interpolation(codes, [], '')
     # TODO: Clean up all of these implementations
-    dda_speed = s3g.Gcode.CalculateDDASpeed(
+    dda_speed = s3g.Gcode.calculate_DDA_speed(
         initialPosition, 
         expected_position, 
         feedrate,
-        self.g.state.GetAxesValues('max_feedrate'),
-        self.g.state.GetAxesValues('steps_per_mm'),
+        self.g.state.get_axes_values('max_feedrate'),
+        self.g.state.get_axes_values('steps_per_mm'),
         ) 
-    spmList = self.g.state.GetAxesValues('steps_per_mm')
+    spmList = self.g.state.get_axes_values('steps_per_mm')
     for i in range(len(expected_position)):
       expected_position[i] *= spmList[i]
-    self.mock.QueueExtendedPoint.assert_called_once_with(expected_position, dda_speed)
+    self.mock.queue_extended_point.assert_called_once_with(expected_position, dda_speed)
 
   def test_linear_interpolation_b(self):
     initial_position = [5, 4, 3, 2, 1]
@@ -701,18 +701,18 @@ class gcodeTests(unittest.TestCase):
         'B' : expected_position[4],
         'F' : feedrate,
         }
-    self.g.LinearInterpolation(codes, [], '')
-    dda_speed = s3g.Gcode.CalculateDDASpeed(
+    self.g.linear_interpolation(codes, [], '')
+    dda_speed = s3g.Gcode.calculate_DDA_speed(
         initial_position, 
         expected_position, 
         feedrate,
-        self.g.state.GetAxesValues('max_feedrate'),
-        self.g.state.GetAxesValues('steps_per_mm'),
+        self.g.state.get_axes_values('max_feedrate'),
+        self.g.state.get_axes_values('steps_per_mm'),
         )
-    spmList = self.g.state.GetAxesValues('steps_per_mm')
+    spmList = self.g.state.get_axes_values('steps_per_mm')
     for i in range(len(expected_position)):
       expected_position[i] *= spmList[i]
-    self.mock.QueueExtendedPoint.assert_called_once_with(expected_position, dda_speed)
+    self.mock.queue_extended_point.assert_called_once_with(expected_position, dda_speed)
 
   def test_dwell_all_codes_accounted_for(self):
     codes = 'P'
@@ -722,15 +722,15 @@ class gcodeTests(unittest.TestCase):
 
   def test_dwell_no_p(self):
     codes = {}
-    self.assertRaises(KeyError, self.g.Dwell, codes, [], '')
+    self.assertRaises(KeyError, self.g.dwell, codes, [], '')
 
   def test_dwell(self):
     codes = {'P'  : 10}
     miliConstant = 1000
     microConstant = 1000000
     d = 10 * microConstant / miliConstant
-    self.g.Dwell(codes, [], '')
-    self.mock.Delay.assert_called_once_with(d)
+    self.g.dwell(codes, [], '')
+    self.mock.delay.assert_called_once_with(d)
 
   def test_set_toolhead_temperature_all_codes_accounted_for(self):
     codes = 'ST'
@@ -740,19 +740,19 @@ class gcodeTests(unittest.TestCase):
 
   def test_set_toolhead_temperature_no_s_code(self):
     codes = {'T'  : 2}
-    self.assertRaises(KeyError, self.g.SetToolheadTemperature, codes, [], '')
+    self.assertRaises(KeyError, self.g.set_toolhead_temperature, codes, [], '')
 
   def test_set_toolhead_temperature_no_t_code(self):
     codes = {'S'  : 100}
-    self.assertRaises(KeyError, self.g.SetToolheadTemperature, codes, [], '')
+    self.assertRaises(KeyError, self.g.set_toolhead_temperature, codes, [], '')
 
   def test_set_toolhead_temperature_all_code_defined(self):
     tool_index=0
     temperature = 100
 
     codes = {'S'  : temperature, 'T' :  tool_index}
-    self.g.SetToolheadTemperature(codes, [], '')
-    self.mock.SetToolheadTemperature.assert_called_once_with(tool_index, temperature)
+    self.g.set_toolhead_temperature(codes, [], '')
+    self.mock.set_toolhead_temperature.assert_called_once_with(tool_index, temperature)
 
   def test_set_toolhead_temperature_doesnt_update_state_machine(self):
     tool_index = 0
@@ -760,7 +760,7 @@ class gcodeTests(unittest.TestCase):
     codes = {'S':temperature, 'T':tool_index}
     flags = []
     comments = ''
-    self.g.SetToolheadTemperature(codes, flags, comments)
+    self.g.set_toolhead_temperature(codes, flags, comments)
     self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_set_platform_temperature_all_codes_accounted_for(self):
@@ -772,18 +772,18 @@ class gcodeTests(unittest.TestCase):
 
   def test_set_platform_temperature_no_s_code(self):
     codes = {'T'  : 2}
-    self.assertRaises(KeyError, self.g.SetPlatformTemperature, codes, [], '')
+    self.assertRaises(KeyError, self.g.set_platform_temperature, codes, [], '')
 
   def test_set_platform_temperature_no_t_code(self):
     codes = {'S'  : 100}
-    self.assertRaises(KeyError, self.g.SetPlatformTemperature, codes, [], '')
+    self.assertRaises(KeyError, self.g.set_platform_temperature, codes, [], '')
 
   def test_set_platform_temperature_all_code_defined(self):
     tool_index=0  
     temperature = 42
     codes = {'S'  : temperature,  'T' : tool_index}
-    self.g.SetPlatformTemperature(codes, [], '')
-    self.mock.SetPlatformTemperature.assert_called_once_with(tool_index, temperature)
+    self.g.set_platform_temperature(codes, [], '')
+    self.mock.set_platform_temperature.assert_called_once_with(tool_index, temperature)
 
   def test_set_platform_temperature_doesnt_update_state_machine(self):
     tool_index = 0
@@ -791,7 +791,7 @@ class gcodeTests(unittest.TestCase):
     codes = {'S':temperature, 'T':tool_index}
     flags = []
     comments = ''
-    self.g.SetPlatformTemperature(codes, flags, comments)
+    self.g.set_platform_temperature(codes, flags, comments)
     self.assertTrue('tool_index' not in self.g.state.values)
     
 
@@ -809,7 +809,7 @@ class gcodeTests(unittest.TestCase):
         'A' : 4,
         'B' : 5,
         }
-    self.g.LoadPosition({}, ['X', 'Y', 'Z', 'A', 'B'], '')
+    self.g.Load_position({}, ['X', 'Y', 'Z', 'A', 'B'], '')
     expectedPosition = {
         'X' : None,
         'Y' : None,
@@ -818,14 +818,14 @@ class gcodeTests(unittest.TestCase):
         'B' : None,
         }
     self.assertEqual(expectedPosition, self.g.state.position)
-    self.mock.RecallHomePositions.assert_called_once_with(sorted(['X', 'Y', 'Z', 'A', 'B']))    
+    self.mock.recall_home_positions.assert_called_once_with(sorted(['X', 'Y', 'Z', 'A', 'B']))    
 
   def test_extruder_on_forward(self):
     oldState = copy.deepcopy(self.g.state.values)
     codes = {}
     flags = []
     comments = ''
-    self.g.ExtruderOnForward(codes, flags, comments)
+    self.g.extruder_on_forward(codes, flags, comments)
     newState = self.g.state.values
     self.assertEqual(oldState, newState)
 
@@ -834,7 +834,7 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     flags = []
     comments = ''
-    self.g.ExtruderOnReverse(codes, flags, comments)
+    self.g.extruder_on_reverse(codes, flags, comments)
     newState = self.g.state.values
     self.assertEqual(oldState, newState)
 
@@ -843,7 +843,7 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     flags = []
     comments = ''
-    self.g.ExtruderOff(codes, flags, comments)
+    self.g.extruder_off(codes, flags, comments)
     newState = self.g.state.values
     self.assertEqual(oldState, newState)
 
@@ -852,7 +852,7 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     flags = []
     comments = ''
-    self.g.GetTemperature(codes, flags, comments)
+    self.g.get_temperature(codes, flags, comments)
     newState = self.g.state.values
     self.assertEqual(oldState, newState)
 
@@ -866,15 +866,15 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     flags = []
     comments = ''
-    self.assertRaises(KeyError, self.g.ChangeTool, codes, flags, comments)
+    self.assertRaises(KeyError, self.g.change_tool, codes, flags, comments)
 
   def test_tool_change(self):
     tool_index = 2
     codes = {'T':tool_index}
     flags = []
     comments = ''
-    self.g.ChangeTool(codes, flags, comments)
-    self.mock.ChangeTool.assert_called_once_with(tool_index)
+    self.g.change_tool(codes, flags, comments)
+    self.mock.change_tool.assert_called_once_with(tool_index)
     self.assertEqual(self.g.state.values['tool_index'], tool_index)
 
   def test_wait_for_tool_ready_all_codes_accounted_for(self):
@@ -887,15 +887,15 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     flags = []
     comment = ''
-    self.assertRaises(KeyError, self.g.WaitForToolReady, codes, flags, comment)
+    self.assertRaises(KeyError, self.g.wait_for_tool_ready, codes, flags, comment)
 
   def test_wait_for_tool_ready_no_p_code(self):
     tool_index=0
     codes = {'T'  : tool_index}
     flags = []
     comment = ''
-    self.g.WaitForToolReady(codes, flags, comment)
-    self.mock.WaitForToolReady.assert_called_once_with(
+    self.g.wait_for_tool_ready(codes, flags, comment)
+    self.mock.wait_for_tool_ready.assert_called_once_with(
       tool_index,
       self.g.state.wait_for_ready_packet_delay,
       self.g.state.wait_for_ready_timeout
@@ -906,7 +906,7 @@ class gcodeTests(unittest.TestCase):
     codes = {'P' : timeout}
     flags = []
     comment = ''
-    self.assertRaises(KeyError, self.g.WaitForToolReady, codes, flags, comment)
+    self.assertRaises(KeyError, self.g.wait_for_tool_ready, codes, flags, comment)
 
   def test_wait_for_tool_ready_all_codes_defined(self):
     tool_index=0
@@ -917,8 +917,8 @@ class gcodeTests(unittest.TestCase):
         }
     flags = []
     comments = ''
-    self.g.WaitForToolReady(codes, flags, comments)
-    self.mock.WaitForToolReady.assert_called_once_with(
+    self.g.wait_for_tool_ready(codes, flags, comments)
+    self.mock.wait_for_tool_ready.assert_called_once_with(
         tool_index, 
         self.g.state.wait_for_ready_packet_delay,
         timeout
@@ -930,7 +930,7 @@ class gcodeTests(unittest.TestCase):
     codes = {'T':tool_index, 'P':timeout}
     flags = []
     comments = ''
-    self.g.WaitForToolReady(codes, flags, comments)
+    self.g.wait_for_tool_ready(codes, flags, comments)
     self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_wait_for_platform_ready_all_codes_accounted_for(self):
@@ -945,7 +945,7 @@ class gcodeTests(unittest.TestCase):
     comments = ''
     self.assertRaises(
         KeyError, 
-        self.g.WaitForPlatformReady, 
+        self.g.wait_for_platform_ready, 
         codes, 
         flags, 
         comments
@@ -956,8 +956,8 @@ class gcodeTests(unittest.TestCase):
     codes = {'T'  : tool_index}
     flags = []
     comments = ''
-    self.g.WaitForPlatformReady(codes, flags, comments)
-    self.mock.WaitForPlatformReady.assert_called_once_with(
+    self.g.wait_for_platform_ready(codes, flags, comments)
+    self.mock.wait_for_platform_ready.assert_called_once_with(
         tool_index,
         self.g.state.wait_for_ready_packet_delay,
         self.g.state.wait_for_ready_timeout
@@ -970,7 +970,7 @@ class gcodeTests(unittest.TestCase):
     comments = ''
     self.assertRaises(
         KeyError, 
-        self.g.WaitForPlatformReady, 
+        self.g.wait_for_platform_ready, 
         codes, 
         flags, 
         comments
@@ -985,8 +985,8 @@ class gcodeTests(unittest.TestCase):
         }
     flags = []
     comments = ''
-    self.g.WaitForPlatformReady(codes, flags, comments)
-    self.mock.WaitForPlatformReady.assert_called_once_with(
+    self.g.wait_for_platform_ready(codes, flags, comments)
+    self.mock.wait_for_platform_ready.assert_called_once_with(
         tool_index,
         self.g.state.wait_for_ready_packet_delay,
         timeout,
@@ -998,14 +998,14 @@ class gcodeTests(unittest.TestCase):
     codes = {'T':tool_index, 'P':timeout}
     flags = []
     comments = ''
-    self.g.WaitForPlatformReady(codes, flags, comments)
+    self.g.wait_for_platform_ready(codes, flags, comments)
     self.assertTrue('tool_index' not in self.g.state.values)
 
   def test_build_start_notification(self):
     name = 'test'
     self.g.state.values['build_name'] = name
-    self.g.BuildStartNotification()
-    self.mock.BuildStartNotification.assert_called_once_with(name)
+    self.g.build_start_notification()
+    self.mock.build_start_notification.assert_called_once_with(name)
 
   def test_build_start_notification_no_build_name_set(self):
     codes = {}
@@ -1013,12 +1013,12 @@ class gcodeTests(unittest.TestCase):
     comments = ''
     self.assertRaises(
         s3g.Gcode.NoBuildNameError, 
-        self.g.BuildStartNotification, 
+        self.g.build_start_notification, 
         )
     
   def test_build_end_notification(self):
-    self.g.BuildEndNotification()
-    self.mock.BuildEndNotification.assert_called_once_with()
+    self.g.build_end_notification()
+    self.mock.build_end_notification.assert_called_once_with()
 
   def test_enable_extra_device_all_codes_accounted_for(self):
     codes = 'T'
@@ -1030,15 +1030,15 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     flags = []
     comments = ''
-    self.assertRaises(KeyError, self.g.EnableExtraOutput, codes, flags, comments)
+    self.assertRaises(KeyError, self.g.enable_extra_output, codes, flags, comments)
  
   def test_enable_extra_device_t_code_defined(self):
     tool_index = 2
     codes = {'T'  : tool_index}
     flags = []
     comments = ''
-    self.g.EnableExtraOutput(codes, flags, comments)
-    self.mock.ToggleExtraOutput.assert_called_once_with(tool_index, True)
+    self.g.enable_extra_output(codes, flags, comments)
+    self.mock.toggle_extra_output.assert_called_once_with(tool_index, True)
 
   def test_disable_extra_device_all_codes_accounted_for(self):
     codes = 'T'
@@ -1050,15 +1050,15 @@ class gcodeTests(unittest.TestCase):
     codes = {}
     flags = []
     comments = ''
-    self.assertRaises(KeyError, self.g.DisableExtraOutput, codes, flags, comments)
+    self.assertRaises(KeyError, self.g.disable_extra_output, codes, flags, comments)
 
   def test_disable_extra_device_t_code_defined(self):
     tool_index = 2
     codes = {'T'  : tool_index}
     flags = []
     comments = ''
-    self.g.DisableExtraOutput(codes, flags, comments)
-    self.mock.ToggleExtraOutput.assert_called_once_with(tool_index, False)
+    self.g.disable_extra_output(codes, flags, comments)
+    self.mock.toggle_extra_output.assert_called_once_with(tool_index, False)
 
 if __name__ == "__main__":
   unittest.main()

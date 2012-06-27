@@ -3,7 +3,7 @@ import array
 
 from .. import errors
 
-def EncodeInt32(number):
+def encode_int32(number):
   """
   Encode a 32-bit signed integer as a 4-byte string
   @param number 
@@ -11,7 +11,7 @@ def EncodeInt32(number):
   """
   return struct.pack('<i', number)
 
-def EncodeUint32(number):
+def encode_uint32(number):
   """
   Encode a 32-bit unsigned integer as a 4-byte string
   @param number 
@@ -19,7 +19,7 @@ def EncodeUint32(number):
   """
   return struct.pack('<I', number)
 
-def DecodeInt32(data):
+def decode_int32(data):
   """
   Decode a 4-byte string into a 32-bit signed integer
   @param data: byte array of size 4 that represents the integer
@@ -29,7 +29,7 @@ def DecodeInt32(data):
     data = array.array('B', data)
   return struct.unpack('<i', data)[0]
 
-def EncodeInt16(number):
+def encode_int16(number):
   """
   Encode a 16-bit signed integer as a 2-byte string
   @param number 
@@ -37,7 +37,7 @@ def EncodeInt16(number):
   """
   return struct.pack('<h', number)
 
-def EncodeUint16(number):
+def encode_uint16(number):
   """
   Encode a 16-bit unsigned integer as a 2-byte string
   @param number 
@@ -45,7 +45,7 @@ def EncodeUint16(number):
   """
   return struct.pack('<H', number)
 
-def DecodeUint16(data):
+def decode_uint16(data):
   """
   Decode a 2-byte string as a 16-bit integer
   @param data byte array of size 2 that represents the integer
@@ -56,7 +56,7 @@ def DecodeUint16(data):
     data = array.array('B', data)
   return struct.unpack('<H', data)[0]
     
-def EncodeAxes(axes):
+def encode_axes(axes):
   """
   Encode an array of axes names into an axis bitfield
   @param axes Array of axis names ['x', 'y', ...] 
@@ -80,7 +80,7 @@ def EncodeAxes(axes):
   return bitfield
 
 
-def UnpackResponse(format, data):
+def unpack_response(format, data):
   """
   Attempt to unpack the given data using the specified format. Throws a protocol
   error if the unpacking fails.
@@ -96,7 +96,7 @@ def UnpackResponse(format, data):
     raise errors.ProtocolError("Unexpected data returned from machine. Expected length=%i, got=%i, error=%s"%
       (struct.calcsize(format),len(data),str(e)))
 
-def UnpackResponseWithString(format, data):
+def unpack_response_with_string(format, data):
   """
   Attempt to unpack the given data using the specified format, and with a trailing,
   null-terminated string. Throws a protocol error if the unpacking fails.
@@ -115,6 +115,6 @@ def UnpackResponseWithString(format, data):
   elif (data[-1]) != 0:
     raise errors.ProtocolError("Expected null terminated string.")
 
-  output = UnpackResponse(format, data[0:struct.calcsize(format)])
+  output = unpack_response(format, data[0:struct.calcsize(format)])
   output += data[struct.calcsize(format):],
   return output

@@ -22,22 +22,19 @@ class StreamWriter(AbstractWriter):
     self.total_overflows = 0
     self.external_stop = False
 
-  def ExternalStop(self):
-    self.external_stop = True
+  # TODO: test me
+  def send_query_payload(self, payload):
+    return self.send_command(payload)
 
   # TODO: test me
-  def SendQueryPayload(self, payload):
-    return self.SendCommand(payload)
+  def send_action_payload(self, payload):
+    self.send_command(payload)
 
-  # TODO: test me
-  def SendActionPayload(self, payload):
-    self.SendCommand(payload)
+  def send_command(self, payload):
+    packet = Encoder.encode_payload(payload)
+    return self.send_packet(packet)
 
-  def SendCommand(self, payload):
-    packet = Encoder.EncodePayload(payload)
-    return self.SendPacket(packet)
-
-  def SendPacket(self, packet):
+  def send_packet(self, packet):
     """
     Attempt to send a packet to the machine, retrying up to 5 times if an error
     occurs.
@@ -72,9 +69,9 @@ class StreamWriter(AbstractWriter):
             data = self.file.read(1)
 
           data = ord(data)
-          decoder.ParseByte(data)
+          decoder.parse_byte(data)
        
-        Encoder.CheckResponseCode(decoder.payload[0])        
+        Encoder.check_response_code(decoder.payload[0])        
  
         # TODO: Should we chop the response code?
         return decoder.payload

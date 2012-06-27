@@ -32,11 +32,11 @@ parser.s3g = r
 
 if options.start_end_sequences:
   for line in parser.state.profile.values['print_start_sequence']:
-    parser.ExecuteLine(line)
+    parser.execute_line(line)
 with open(options.filename) as f:
   for line in f:
     print line,
-    parser.ExecuteLine(line)
+    parser.execute_line(line)
 if options.start_end_sequences:
   for line in parser.state.profile.values['print_end_sequence']:
-    parser.ExecuteLine(line)
+    parser.execute_line(line)

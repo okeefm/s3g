@@ -126,7 +126,7 @@ Registers
 
 S3g Output
 
-    QueueExtendedPoint(point, rate)
+    queue_extended_point(point, rate)
 
 Parameters
 
@@ -145,27 +145,27 @@ Registers
 
 S3g Output
 
-    QueueExtendedPoint(point, rate)
+    queue_extended_point(point, rate)
 
 Parameters
 
     point = [x, y, z]
     rate = F
 
-## G4 - Dwell
+## G4 - dwell
 Tells the machine to pause for a certain amount of time.
 
 Registers
 
-    P: (code) Dwell time, in ms
+    P: (code) dwell time, in ms
 
 S3g Output
 
-    Delay(delay)
+    delay(delay)
 
 Parameters
     
-    Delay = P
+    delay = P
 
 ## G10 - Store offsets to position register
 Save the specified XYZ offsets to an offset register. When the register is activated by a G54 or G55 command, apply this offset to every position before sending it to the machine.
@@ -221,7 +221,7 @@ Registers
 
 S3g Output
 
-    SetExtendedPosition(position)
+    set_extended_position(position)
 
 Parameters
 
@@ -238,7 +238,7 @@ Registers
 
 S3g Output
 
-    SetExtendedPosition(position)
+    set_extended_position(position)
 
 Parameters
 
@@ -258,7 +258,7 @@ Registers
 
 S3g Output
 
-    SetPotentiometerValue(axes, val)
+    set_potentiometer_value(axes, val)
 
 Parameters
 
@@ -278,7 +278,7 @@ Registers
 
 S3g Output
 
-    FindAxesMinimums(axes, feedrate, timeout)
+    find_axes_minimums(axes, feedrate, timeout)
 
 Parameters
 
@@ -298,7 +298,7 @@ Registers
 
 S3g Output
 
-    FindAxesMaximums(axes, feedrate, timeout)
+    find_axes_maximums(axes, feedrate, timeout)
 
 Parameters
 
@@ -321,7 +321,7 @@ Registers
 
 S3g Output
 
-    ToggleAxes(axes, False)
+    toggle_axes(axes, False)
 
 Parameters
 
@@ -338,7 +338,7 @@ Registers
 
 S3g Output
 
-    DisplayMessage(row, col, message, timeout, clear_existing, last_in_group, wait_for_button)
+    display_message(row, col, message, timeout, clear_existing, last_in_group, wait_for_button)
 
 Parameters
 
@@ -359,7 +359,7 @@ Registers
 
 S3g Output
 
-    QueueSong(song_id)
+    queue_song(song_id)
 
 Parameter
 
@@ -374,7 +374,7 @@ Registers
 
 S3g Output
 
-    SetBuildPercent(percent)
+    set_build_percent(percent)
 
 Parameters
 
@@ -386,7 +386,7 @@ Registers (none)
 
 S3g Output
 
-    BuildStartNotification(build name)
+    build_start_notification(build name)
 
 Parameters
 
@@ -398,7 +398,7 @@ Registers (none)
 
 S3g Output
 
-    BuildEndNotification()
+    build_end_notification()
 
 Parameters (none)
 
@@ -413,7 +413,7 @@ Registers
 
 S3g Output
 
-    SetToolheadTemperature(tool_index, temperature)
+    set_toolhead_temperature(tool_index, temperature)
 
 Parameters
 
@@ -430,7 +430,7 @@ Registers
 
 S3g Output
 
-    SetPlatformTemperature(tool_index, temperature)
+    set_platform_temperature(tool_index, temperature)
 
 Parameters
 
@@ -446,7 +446,7 @@ Registers
 
 S3g Output
 
-    ToggleExtraOutput(tool_index, True)
+    toggle_extra_output(tool_index, True)
 
 Parameters
 
@@ -461,7 +461,7 @@ Registers
 
 S3g Output
 
-    ToggleExtraOutput(tool_index, False)
+    toggle_extra_output(tool_index, False)
 
 Parameters
 
@@ -480,7 +480,7 @@ Registers
 
 S3g Output
 
-    RecallHomePositions(axes)
+    recall_home_positions(axes)
 
 Parameters
 
@@ -496,7 +496,7 @@ Registers
 
 S3g Output
 
-    WaitForToolReady(tool_index, delay, timeout)
+    wait_for_tool_ready(tool_index, delay, timeout)
 
 Parameters
 
@@ -514,7 +514,7 @@ Registers
 
 S3g Output
 
-    WaitForPlatformReady(tool_index, delay, timeout)
+    wait_for_platform_ready(tool_index, delay, timeout)
 
 Parameters
 
@@ -533,7 +533,7 @@ Registers
 
 S3g Output
 
-    ChangeTool(tool_index)
+    change_tool(tool_index)
 
 Parameters
 

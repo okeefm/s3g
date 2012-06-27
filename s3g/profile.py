@@ -21,7 +21,7 @@ class Profile(object):
     with open(path) as f:
       self.values = json.load(f) 
 
-def ListProfiles():
+def list_profiles():
   """
   Looks in the ./profiles directory for all files that
   end in .json and returns that list.
