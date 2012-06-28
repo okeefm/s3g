@@ -646,6 +646,20 @@ class S3gTests(unittest.TestCase):
     for i in range(0, 5):
       self.assertEquals(Encoder.encode_int32(target[i]), payload[(i*4+1):(i*4+5)])
 
+  def test_from_filename(self):
+	""" test the from_filename s3g factory."""
+	# test we get null for a bad filename
+	testS3g = s3g.from_filename('/dev/nonexist')
+	self.assertEquals(testS3g, None)
+
+	#test we get a real device on a specific test machine
+	#del s3g.Writer.StreamWriter
+	#import mock as s3g.Writer.StreamWriter
+	#local_known_bot_port= '/dev/mock_fake_port')
+	#testS3g = s3g.from_filename(local_known_bot_port)
+	#self.assertEqual(isinstance(testS3g,s3g), True)
+	
+
   def test_get_toolhead_version(self):
     tool_index = 2
     version = 0x5DD5
