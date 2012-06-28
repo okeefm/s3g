@@ -447,38 +447,38 @@ class gcodeTests(unittest.TestCase):
         'P' : 1,
         }
     self.g.StoreOffsets(codes, [], '')
-    p0Offset = s3g.Gcode.Point()
     p1Offset = s3g.Gcode.Point()
+    p2Offset = s3g.Gcode.Point()
     for axis, offset in zip(['X', 'Y', 'Z'], [xOff, yOff, zOff]):
-      setattr(p0Offset, axis, offset)
+      setattr(p1Offset, axis, offset)
+      setattr(p2Offset, axis, 0)  #The p2 offset is [0, 0, 0, 0, 0]
+    for axis in ['A', 'B']: #There are no A/B offsets
       setattr(p1Offset, axis, 0)
-    for axis in ['A', 'B']:
-      setattr(p0Offset, axis, 0)
-      setattr(p1Offset, axis, 0)
-    self.assertEqual(p0Offset.ToList(), self.g.state.offsetPosition[0].ToList())
+      setattr(p2Offset, axis, 0)
     self.assertEqual(p1Offset.ToList(), self.g.state.offsetPosition[1].ToList())
+    self.assertEqual(p2Offset.ToList(), self.g.state.offsetPosition[2].ToList())
 
-  def test_use_p1_offsets_all_codes_accounted_for(self):
+  def test_use_p2_offsets_all_codes_accounted_for(self):
     codes = ''
     flags = ''
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[55][1])
     self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[55][2])
 
-  def test_use_p1_offsets(self):
+  def test_use_p2_offsets(self):
     codes = {}
-    self.g.UseP1Offsets(codes, [], '')
-    self.assertEqual(1, self.g.state.offset_register)
+    self.g.UseP2Offsets(codes, [], '')
+    self.assertEqual(2, self.g.state.offset_register)
 
-  def test_use_p0_offsets_all_codes_accounted_for(self):
+  def test_use_p1_offsets_all_codes_accounted_for(self):
     codes = ''
     flags = ''
     self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[54][1])
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[55][2])
+    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[54][2])
 
-  def test_use_p0_offsets(self):
+  def test_use_p1_offsets(self):
     codes = {}
-    self.g.UseP0Offsets(codes, [], '')
-    self.assertEqual(0, self.g.state.offset_register) 
+    self.g.UseP1Offsets(codes, [], '')
+    self.assertEqual(1, self.g.state.offset_register) 
 
   def test_set_position_all_codes_accounted_for(self):
     codes = 'XYZABE'

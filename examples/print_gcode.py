@@ -29,8 +29,6 @@ parser = s3g.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
 parser.state.profile = s3g.Profile(options.machine)
 parser.s3g = r
-profile = s3g.Profile("ReplicatorSingle")
-parser.state.profile = profile
 
 if options.start_end_sequences:
   for line in parser.state.profile.values['print_start_sequence']:

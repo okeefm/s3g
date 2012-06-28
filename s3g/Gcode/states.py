@@ -6,15 +6,17 @@ variables.
 from utils import *
 from errors import *
 from point import *
+import logging
 
 class GcodeStates(object):
   def __init__(self):
+    self._log = logging.getLogger(self.__class__.__name__)
     self.profile = None
     self.position = Point()    #Position, In MM!!
 
     self.offsetPosition = {
-        0   :   Point(),
         1   :   Point(),
+        2   :   Point(),
         }
     
     #Set offsets to 0
@@ -25,13 +27,14 @@ class GcodeStates(object):
     self.values = {}
     self.wait_for_ready_packet_delay = 100  #ms
     self.wait_for_ready_timeout =   480  #seconds
-    self.offset_register = None   #Curent offset register
+    self.offset_register = None #Curent offset register
   
   def LosePosition(self, axes):
     """Given a set of axes, loses the position of
     those axes.
     @param list axes: A list of axes to lose
     """
+    self._log.info('{"event":"gcode_state_change", "change":"lose_position"}\n')
     for axis in axes:
       setattr(self.position, axis, None)
 
@@ -61,6 +64,7 @@ class GcodeStates(object):
     if not isinstance(build_name, str):
       raise TypeError
     else:
+      self._log.info('{"event":"gcode_state_change", "change":"build_name"}\n')
       self.values['build_name'] = build_name
 
   def SetPosition(self, codes):

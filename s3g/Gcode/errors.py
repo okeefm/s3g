@@ -106,7 +106,7 @@ class NoBuildNameError(GcodeError):
   started without a build name set
   """
 
-class ImproperGcodeEncodingError(TypeError):
+class ImproperGcodeEncodingError(GcodeError):
   """
   An ImproperGcodeEncodingError is thrown when a Gcode Command is encountered that is not 
   encoded in either ASCII or unicode.
@@ -128,6 +128,12 @@ class CalculateHomingDDAError(GcodeError):
   """
   A CalculateHomingDDAError is raised when an empty max_feedrates list or spm_list has been
   passed in.
+  """
+
+class InvalidOffsetError(GcodeError):
+  """
+  An InvalidOffsetError is raised when an offset defined by the P code in a G10 command
+  is not a valid value (1, 2)
   """
 
 class TCodeNotDefinedWarning:

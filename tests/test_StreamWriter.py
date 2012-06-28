@@ -30,12 +30,16 @@ class StreamWriterTests(unittest.TestCase):
         'CRCMismatchError',
         'CRCMismatchError',
         'CRCMismatchError',
-        'CRCMismatchError',
-        'CRCMismatchError',
+        'GenericError',
+        'GenericError',
         ]
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['CRC_MISMATCH'])
-    for i in range(5):
+    for i in range(3):
+      self.outputstream.write(Encoder.EncodePayload(response_payload))
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['GENERIC_ERROR'])
+    for i in range(2):
       self.outputstream.write(Encoder.EncodePayload(response_payload))
     self.outputstream.seek(0)
     payload = 'asdf'

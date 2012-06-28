@@ -13,7 +13,7 @@ These are the rules for this interpreter:
 The interpreter state machine stores these states:
 
 * Machine position (x,y,z,a,b)
-* Offset register (0, 1)
+* Offset register (1, 2)
 * Toolhead index (0, 1)
 * Toolhead RPM
 * Toolhead direction
@@ -153,7 +153,7 @@ Parameters
     rate = F
 
 ## G4 - Dwell
-If a toolhead is not enabled, this command simply pauses motion for the specified time. If a toolhead is enabled, then this command extrudes at the current rate and direction for the specified time, but does not move the toolhead.
+Tells the machine to pause for a certain amount of time.
 
 Registers
 
@@ -172,7 +172,7 @@ Save the specified XYZ offsets to an offset register. When the register is activ
 
 Registers
 
-    P: (code) Coordinate offset register to write to (0, 1)
+    P: (code) Coordinate offset register to write to (1, 2)
     X: (code) X offset, in mm
     Y: (code) Y offset, in mm
     Z: (code) Z offset, in mm
@@ -181,8 +181,8 @@ S3g Output (none)
 
 Parameters (none)
 
-## G54 - Use coordinage system from G10 P0 (toolhead 0?)
-Consider all future positions to be offset by the values stored in the position register P0.
+## G54 - Use coordinate system from G10 P1
+Consider all future positions to be offset by the values stored in the position register P1.
 
 Registers (none)
 
@@ -190,8 +190,8 @@ S3g Output (none)
 
 Parameters (none)
 
-## G55 - Use coordinage system from G10 P1 (toolhead 1?)
-Consider all future positions to be offset by the values stored in the position register P1.
+## G55 - Use coordinate system from G10 P2
+Consider all future positions to be offset by the values stored in the position register P2.
 
 Registers (none)
 
@@ -492,7 +492,7 @@ Instruct the machine to wait for the toolhead to reach its target temperature
 Registers
 
     T: (code) The extruder to wait for.
-    P: (code, optional) If present, sets the time limit that we wait for.
+    P: (code, optional) If present, sets the time limit that we wait for.  Otherwise, use a timeout coded into the Gcode State Machine.
 
 S3g Output
 
@@ -510,7 +510,7 @@ Instruct the machine to wait for the platform to reach its target temperature
 Registers
 
     T: (code) The platform to wait for.
-    P: (code, optional) If present, sets the time limit that we wait for.
+    P: (code, optional) If present, sets the time limit that we wait for.  Otherwise, use a timeout coded into the Gcode State Machine.
 
 S3g Output
 
@@ -565,7 +565,7 @@ Disables the extruder motor
 
 Registers
 
-    T: (code, optional) If present, first change to the specified tool
+    T: (code) First change to the specified tool
 
 S3g Output (none)
 

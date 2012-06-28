@@ -51,7 +51,7 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'A' : 400,
         'B' : 500,
         }
-    self.g.offset_register = 0
+    self.g.offset_register = 1
     for key in offsetPosition:
       setattr(self.g.offsetPosition[self.g.offset_register], key, offsetPosition[key])
     expectedPosition = [100, 201, 302, 403, 504]

@@ -1,3 +1,6 @@
+
+import exceptions
+
 from errors import *
 from .. import errors
 
@@ -34,10 +37,9 @@ def ExtractComments(line):
 
 def ParseCommand(command):
   """
-  Parse the command portion of a gcode line, and return a dictionary of code names to
-  values.
+  Parse the command portion of a gcode line, and return a dictionary of found codes and their respective values, and a list of found flags. Codes with integer values will have an integer type, while codes with float values will have a float type
   @param string command Command portion of a gcode line
-  @return dict Dictionary of commands, and their values (if any)
+  @return tuple containing a dict of codes, list of flags.
   """
   codes = {}
   flags = []
@@ -71,7 +73,10 @@ def ParseCommand(command):
       flags.append(code)
 
     else:
-      codes[code] = float(pair[1:])
+      try:
+        codes[code] = int(pair[1:])
+      except exceptions.ValueError:
+        codes[code] = float(pair[1:])
 
   return codes, flags
 
@@ -79,7 +84,7 @@ def ParseLine(line):
   """
   Parse a line of gcode into a map of codes, and a comment field.
   @param string line: line of gcode to parse
-  @return tuple containing a dict of codes, a dict of flags, and a comment string
+  @return tuple containing a dict of codes, a list of flags, and a comment string
   """
 
   command, comment = ExtractComments(line)
