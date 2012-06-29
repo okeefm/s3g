@@ -31,6 +31,14 @@ class Skeinforge50Preprocessor(Preprocessor):
         }
 
   def process_file(self, input_path, output_path):
+    """
+    Given a filepath, reads each line of that file and, if necessary, 
+    transforms it into another format.  If either of these filepaths
+    do not lead to .gcode files, we throw a NotGCodeFileError.
+
+    @param input_path: The input file path
+    @param output_path: The output file path
+    """
     for path in (input_path, output_path):
       name, ext = os.path.splitext(path)
       if ext != '.gcode':
@@ -48,6 +56,13 @@ class Skeinforge50Preprocessor(Preprocessor):
         o.write(line)            
 
   def _transform_m105(self, input_line):
+    """
+    Given a line that has the string "M105" in it, transforms it into
+    the proper output.
+
+    @param str input_line: The line to be transformed
+    @return str: The transformed line
+    """
     codes, flags, comments = Gcode.parse_line(input_line)
     if 'M' in codes and codes['M'] == 105:
       return_line = ''
@@ -56,6 +71,13 @@ class Skeinforge50Preprocessor(Preprocessor):
     return return_line 
 
   def _transform_m101(self, input_line):
+    """
+    Given a line that has the string "M101" in it, transforms it into
+    the proper output.
+
+    @param str input_line: The line to be transformed
+    @return str: The transformed line
+    """
     codes, flags, comments = Gcode.parse_line(input_line)
     if 'M' in codes and codes['M'] == 101:
       return_line = ''
@@ -64,6 +86,13 @@ class Skeinforge50Preprocessor(Preprocessor):
     return return_line
 
   def _transform_m103(self, input_line):
+    """
+    Given a line that has the string "M103" in it, transforms it into
+    the proper output.
+
+    @param str input_line: The line to be transformed
+    @return str: The transformed line
+    """
     codes, flags, comments = Gcode.parse_line(input_line)
     if 'M' in codes and codes['M'] == 103:
       return_line = ''
@@ -72,6 +101,13 @@ class Skeinforge50Preprocessor(Preprocessor):
     return return_line
 
   def _transform_m108(self, input_line):
+    """
+    Given a line that has the string "M108" in it, transforms it into
+    the proper output.
+
+    @param str input_line: The line to be transformed
+    @return str: The transformed line
+    """
     codes, flags, comments = Gcode.parse_line(input_line)
     #Since were using variable_replace in gcode.utils, we need to make the codes dict 
     #a dictionary of only strings
@@ -89,4 +125,3 @@ class Skeinforge50Preprocessor(Preprocessor):
         transformed_line += '; ' + comments
       transformed_line += '\n'
     return transformed_line
-
