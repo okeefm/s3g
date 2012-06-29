@@ -55,6 +55,7 @@ class Skeinforge50Preprocessor(Preprocessor):
 
     @param str line: Line to transform
     @return str: Transformed line
+    """
     for key in self.code_map:
       if key in line:
         #transform the line
