@@ -22,15 +22,13 @@ class s3g(object):
   def from_filename(cls, port, baudrate=115200, timeout=.2):
     """Constructs and returns an s3g object connected to the 
     passed file endpoint passed as a string @port (ie 'COM0' or '/dev/tty9')
-    
-	@return None on error, otherwise a complete s3g object
-	"""
+
+    @return s3g object, equipped with a StreamWrtier directed at port.
+	  """
+
     r = s3g()
-    try: 
-      s = serial.Serial(port, baudrate=baudrate, timeout=timeout)
-      r.writer = Writer.StreamWriter(s)
-    except serial.SerialException:    
-      r = None 
+    s = serial.Serial(port, baudrate=baudrate, timeout=timeout)
+    r.writer = Writer.StreamWriter(s)
     return r
 
   def get_version(self):

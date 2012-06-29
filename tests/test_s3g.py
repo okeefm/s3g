@@ -34,12 +34,8 @@ class TestFromFileName(unittest.TestCase):
     self.assertEqual(self.obj.writer.file.timeout, timeout)
 
   def test_from_filename_none_case(self):
-	""" test the from_filename s3g factory."""
-	# test we get null for a bad filename
-	testS3g = s3g.from_filename('/dev/nonexist')
-	self.assertEquals(testS3g, None)
-
-
+	  """ test the from_filename s3g factory."""
+	  self.assertRaises(serial.serialutil.SerialException, s3g.from_filename, "/dev/this_is_hopefully_not_a_real_port")
 
 class S3gTests(unittest.TestCase):
   """
