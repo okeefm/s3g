@@ -2,7 +2,7 @@
 S3g has support for a preprocessor to run transformations on a gcode file.
 
 ##Architecture
-All preprocessors should inherit from the Preprocessor python class in s3g/preprocessors.  The preprocessor class has only two functions which all inheritors must implement:
+All preprocessors should inherit from the Preprocessor python class in s3g/Preprocessors/.  The preprocessor class has only two functions which all inheritors must implement:
 
 ###__init__(self)
 The main constructor.
