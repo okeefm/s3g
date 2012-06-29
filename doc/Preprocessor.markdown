@@ -19,3 +19,11 @@ We encourage users to add preprocessors of their own into s3g.  However, extensi
 ##List of Preprocessors
 ###Preprocessor
 An interface that all preprocessors inherit from.
+
+###Skeinforge 50 Preprocessor
+A preprocessor that is meant to be run on a .gcode file skeined by skeinforge-50 WITHOUT start and end gcodes.
+
+    * Removes M105
+    * Removes M101
+    * Removes M103
+    * Replaces M108 with M135
