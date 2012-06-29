@@ -89,3 +89,4 @@ class Skeinforge50Preprocessor(Preprocessor):
         transformed_line += '; ' + comments
       transformed_line += '\n'
     return transformed_line
+
