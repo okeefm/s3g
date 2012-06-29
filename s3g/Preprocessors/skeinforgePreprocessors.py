@@ -47,13 +47,20 @@ class Skeinforge50Preprocessor(Preprocessor):
     with contextlib.nested(open(input_path), open(output_path, 'w')) as (i, o):
       #For each line in the input file
       for read_line in i:
-        line = read_line
-        #For each code we want to transform
-        for key in self.code_map:
-          if key in read_line:
-            #Transform the line
-            line = self.code_map[key](read_line)
+        line = self._transform_line(read_line)
         o.write(line)            
+
+  def _transform_line(self, line):
+    """Given a line, transforms that line into its correct output
+
+    @param str line: Line to transform
+    @return str: Transformed line
+    for key in self.code_map:
+      if key in line:
+        #transform the line
+        line = self.code_map[key](line)
+        break
+    return line
 
   def _transform_m105(self, input_line):
     """

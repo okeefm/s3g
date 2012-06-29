@@ -77,6 +77,16 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
     for key in input_output_dict:
       self.assertEqual(input_output_dict[key], self.sp._transform_m108(key))
 
+  def test_transform_line(self):
+    inputs = [
+        ['M108 T0\n', 'M135 T0\n'],
+        ['M101\n'     , ''],
+        ['M105\n'     , ''],
+        ['M162 X Y Z' , 'M162 X Y Z'],
+        ]
+    for i in inputs:
+      self.assertEqual(i[1], self.sp._transform_line(i[0]))
+
   def test_process_file_input_doesnt_exist(self):
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
       pass
