@@ -332,7 +332,7 @@ class gcodeTests(unittest.TestCase):
   def test_set_potentiometer_values_no_codes(self):
     codes = {'G' : 130}
     self.g.set_potentiometer_values(codes, [], '')
-    self.assertEqual(self.mock.mock_calls, [])
+    self.assertEqual(self.mock.call_count, 0)
 
   def test_set_potentiometer_values_one_axis(self):
     codes = {'G' : 130, 'X' : 0}
@@ -344,15 +344,15 @@ class gcodeTests(unittest.TestCase):
   def test_set_potentiometer_values_all_axes(self):
     codes = {'X' : 0, 'Y' : 1, 'Z' : 2, 'A': 3, 'B' : 4} 
     expected = [
-        [['X'], 0],
-        [['Y'], 1],
-        [['Z'], 2],
-        [['A'], 3],
-        [['B'], 4],
+        (['X'], 0),
+        (['Y'], 1),
+        (['Z'], 2),
+        (['A'], 3),
+        (['B'], 4),
         ]
     self.g.set_potentiometer_values(codes, [], '')
     for i in range(len(expected)):
-      self.assertEqual(self.mock.mock_calls[i], mock.call.set_potentiometer_value(expected[i][0], expected[i][1]))
+      self.assertEqual(self.mock.method_calls[i], ('set_potentiometer_value', expected[i], {}))
 
   def test_set_potentiometer_values_all_codes_same(self):
     codes = {'X' : 0, 'Y' : 0, 'Z' : 0, 'A' : 0, 'B' : 0}
@@ -385,7 +385,7 @@ class gcodeTests(unittest.TestCase):
     axes = flags
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.find_axes_minimums(codes, flags, '')
-    params = self.mock.mock_calls[0][1]
+    params = self.mock.method_calls[0][1]
     self.assertEqual(params[0], flags)
     expected_position = {
         'X' : None,
@@ -402,7 +402,7 @@ class gcodeTests(unittest.TestCase):
     axes = []
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.find_axes_minimums(codes, [], '')
-    self.assertTrue(len(self.mock.mock_calls) == 0)
+    self.assertEqual(self.mock.call_count, 0)
 
   def test_find_axes_minimum_no_F_code(self):
     codes = {}
@@ -431,7 +431,7 @@ class gcodeTests(unittest.TestCase):
     feedrate = 0
     timeout = self.g.state.profile.values['find_axis_maximum_timeout']
     self.g.find_axes_maximums(codes, flags, '')
-    params = self.mock.mock_calls[0][1]
+    params = self.mock.method_calls[0][1]
     self.assertEqual(params[0], flags)
     expectedPosition = {
         'X'   :   None,
@@ -448,7 +448,7 @@ class gcodeTests(unittest.TestCase):
     axes = []
     timeout = self.g.state.profile.values['find_axis_minimum_timeout']
     self.g.find_axes_maximums(codes, [], '')
-    calls = self.mock.mock_calls
+    calls = self.mock.method_calls
     self.assertTrue(len(calls) == 0)
 
   def test_find_axes_maximum_no_f_code(self):
@@ -526,7 +526,7 @@ class gcodeTests(unittest.TestCase):
     # Gcode works in steps, so we need to convert the expected position to steps
     for i in range(len(expectedPoint)):
       expectedPoint[i] *= spmList[i]
-    actual_params = self.mock.mock_calls[0][1]
+    actual_params = self.mock.method_calls[0][1]
 
     for expected, actual in zip(expectedPoint, actual_params[0]):
       self.assertAlmostEquals(expected, actual)
