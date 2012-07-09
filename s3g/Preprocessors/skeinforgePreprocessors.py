@@ -28,6 +28,7 @@ class Skeinforge50Preprocessor(Preprocessor):
         'M105'    :     self._transform_m105,
         'M101'    :     self._transform_m101,
         'M103'    :     self._transform_m103,
+        'M104'    :     self._transform_m104,
         }
 
   def process_file(self, input_path, output_path):
@@ -63,9 +64,30 @@ class Skeinforge50Preprocessor(Preprocessor):
         break
     return line
 
+  def _transform_m104(self, input_line):
+    """
+    Given a line that has an "M104" command, transforms it into 
+    the proper output.  Skeinforge-50 has a tendency to output
+    M104 commands at the end of a print to cool down the extruder.
+    However, it tends to omit the obligatory T code required by s3g's
+    Gcode parser.  So, we totally remove this line if there is no T 
+    code, and keep this line if there is a T code.
+
+    @param str input_line: The line to be transformed
+    @return str: The transformed line
+    """
+    codes, flags, comments = Gcode.parse_line(input_line)
+    if 'M' not in codes or codes['M'] != 104:
+      return_line = input_line
+    elif 'T' in codes:
+      return_line = input_line
+    else:
+      return_line = ''
+    return return_line      
+
   def _transform_m105(self, input_line):
     """
-    Given a line that has the string "M105" in it, transforms it into
+    Given a line that has an "M105" command, transforms it into
     the proper output.
 
     @param str input_line: The line to be transformed
@@ -80,7 +102,7 @@ class Skeinforge50Preprocessor(Preprocessor):
 
   def _transform_m101(self, input_line):
     """
-    Given a line that has the string "M101" in it, transforms it into
+    Given a line that has an "M101" command, transforms it into
     the proper output.
 
     @param str input_line: The line to be transformed
@@ -95,7 +117,7 @@ class Skeinforge50Preprocessor(Preprocessor):
 
   def _transform_m103(self, input_line):
     """
-    Given a line that has the string "M103" in it, transforms it into
+    Given a line that has an "M103" command, transforms it into
     the proper output.
 
     @param str input_line: The line to be transformed
@@ -110,7 +132,7 @@ class Skeinforge50Preprocessor(Preprocessor):
 
   def _transform_m108(self, input_line):
     """
-    Given a line that has the string "M108" in it, transforms it into
+    Given a line that has an "M108" command, transforms it into
     the proper output.
 
     @param str input_line: The line to be transformed

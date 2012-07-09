@@ -27,6 +27,23 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
   def tearDown(self):
     self.sp = None
 
+  def test_transform_m104_non_m104_command(self):
+    input_string = 'G1;M104\n'
+    expected_string = 'G1;M104\n'
+    got_string = self.sp._transform_m104(input_string)
+    self.assertEqual(expected_string, got_string)
+
+  def test_transoform_m104_command_has_t_code(self):
+    input_string = 'M104 T2 S0\n'
+    expected_string = 'M104 T2 S0\n'
+    got_string = self.sp._transform_m104(input_string)
+    self.assertEqual(expected_string, got_string)
+
+  def test_transform_m104_command_no_t_code(self):
+    input_string = 'M104 S0\n'
+    expected_string = '\n'
+    got_string = self.sp._transform_m104(input_string)
+
   def test_transform_m105_non_m105_command(self):
     input_string = 'G1;M105\n'
     expected_string = 'G1;M105\n'
