@@ -305,7 +305,7 @@ class GcodeParser(object):
       self._log.info('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}\n'
           %(codes['F']))
     if len(ParseOutAxes(codes)) > 0 or 'E' in codes:
-      if 'A' and 'B' in codes:
+      if 'A' in codes and 'B' in codes:
         gcode_error = ConflictingCodesError()
         gcode_error.values['ConflictingCodes'] = ['A', 'B']
         raise gcode_error

@@ -238,6 +238,25 @@ class TestLinearInterpolation(unittest.TestCase):
     comments = ''
     self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.LinearInterpolation, codes, flags, comments)
 
+  def test_linear_interpolation_a_code_doesnt_throw_conflicting_codes_error(self):
+    codes = {
+        'A' : 10,
+        'F' : 100,
+        }
+    flags = []
+    comments = ''
+    self.g.LinearInterpolation(codes, flags, comments)
+
+
+  def test_linear_interpolation_b_code_doesnt_throw_conflicting_codes_error(self):
+    codes = {
+        'B' : 10,
+        'F' : 100,
+        }
+    flags = []
+    comments = ''
+    self.g.LinearInterpolation(codes, flags, comments)
+
   def test_linear_interpolation_good_input(self):
     feedrate = 10
     codes = {
