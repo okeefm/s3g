@@ -19,6 +19,11 @@ class Point(object):
     return [self.X, self.Y, self.Z, self.A, self.B]
 
   def SetPoint(self, codes):
+    """Given a set of codes with defined values, sets this point's
+    axes to those values.
+
+    @param dict codes: The codes that may or may not contain axes values
+    """
     for axis in ['X', 'Y', 'Z', 'A', 'B']:
       if axis in codes:
         setattr(self, axis, codes[axis])
