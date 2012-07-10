@@ -569,6 +569,6 @@ class CalculateHomingDDASpeed(unittest.TestCase):
     spm_list = [1, 2, 3, 4, 5]
     expected_dda = s3g.Gcode.ComputeDDASpeed(max_feedrates[0], spm_list[0])
     self.assertEqual(expected_dda, s3g.Gcode.CalculateHomingDDASpeed(feedrate, max_feedrates, spm_list))
- 
+
 if __name__ == "__main__":
   unittest.main()

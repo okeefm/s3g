@@ -20,9 +20,16 @@ class GcodeStates(object):
         }
     
     #Set offsets to 0
-    for axis in ['X', 'Y', 'Z', 'A', 'B']:
-      for key in self.offsetPosition:
-        setattr(self.offsetPosition[key], axis, 0)
+    for key in self.offsetPosition:
+      self.offsetPosition[key].SetPoint(
+          {
+            'X' : 0,
+            'Y' : 0,
+            'Z' : 0,
+            'A' : 0,
+            'B' : 0,
+          }
+        )
 
     self.values = {}
     self.wait_for_ready_packet_delay = 100  #ms
@@ -77,10 +84,6 @@ class GcodeStates(object):
     @param dict codes:  A dictionary that contains axes and their 
         defined positions
     """
-    for axis in ['X', 'Y', 'Z']:
-      if axis in codes:
-        setattr(self.position, axis, codes[axis])
-
     if 'E' in codes:
       if 'A' in codes or 'B' in codes:
         gcode_error = ConflictingCodesError()
@@ -97,10 +100,7 @@ class GcodeStates(object):
       elif self.values['tool_index'] == 1:
         setattr(self.position, 'B', codes['E'])
 
-    if 'A' in codes:
-        setattr(self.position, 'A', codes['A'])
-    if 'B' in codes:
-        setattr(self.position, 'B', codes['B'])
+    self.position.SetPoint(codes)
 
   def GetAxesValues(self, key):
     """

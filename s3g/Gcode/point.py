@@ -17,3 +17,8 @@ class Point(object):
 
   def ToList(self):
     return [self.X, self.Y, self.Z, self.A, self.B]
+
+  def SetPoint(self, codes):
+    for axis in ['X', 'Y', 'Z', 'A', 'B']:
+      if axis in codes:
+        setattr(self, axis, codes[axis])

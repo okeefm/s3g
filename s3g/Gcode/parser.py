@@ -289,9 +289,7 @@ class GcodeParser(object):
     """Given XYZ offsets and an offset index, stores those 
     offsets in the state machine.
     """
-    for axis in ['X', 'Y', 'Z', 'A', 'B']:
-      if axis in codes:
-        setattr(self.state.offsetPosition[codes['P']], axis, codes[axis])
+    self.state.offsetPosition[codes['P']].SetPoint(codes)
 
   def LinearInterpolation(self, codes, flags, comment):
     """Movement command that has two flavors: E and AB commands.
