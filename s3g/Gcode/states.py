@@ -43,7 +43,7 @@ class GcodeStates(object):
 
     self.values = {}
     self.wait_for_ready_packet_delay = 100  #ms
-    self.wait_for_ready_timeout =   480  #seconds
+    self.wait_for_ready_timeout =   600  #seconds
     self.offset_register = None #Curent offset register
   
   def lose_position(self, axes):
