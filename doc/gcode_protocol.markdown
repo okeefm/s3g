@@ -538,35 +538,3 @@ S3g Output
 Parameters
 
     tool_index = T
-
-# Ignored M codes
-These codes will not cause an error if encountered, but do not get evaluated. This is because some skeining engines are buggy and produce them.
-
-## M101 - Turn extruder on, forward
-Set the extruder direction to clockwise
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
-## M102 - Turn extruder on, reverse
-Set the extruder direction to counter-clockwise
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
-## M103 - Turn extruder off
-Disables the extruder motor
-
-Registers
-
-    T: (code) First change to the specified tool
-
-S3g Output (none)
-
-Parameters (none)
