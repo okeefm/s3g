@@ -97,9 +97,11 @@ class DualHeadReading(unittest.TestCase):
 def ExecuteFile(theFile, parser):
   for line in parser.state.profile.values['print_start_sequence']:
     parser.execute_line(line)
+  parser.line_number = 1    #For better debugging, since the start.gcode is included in this number
   with open(theFile) as f:
     for line in f:
       parser.execute_line(line)
+  parser.line_number = 1    #For better debugging, since the start.gcode is included in this number
   for line in parser.state.profile.values['print_end_sequence']:
     parser.execute_line(line)
 
