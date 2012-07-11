@@ -62,7 +62,7 @@ r.set_toolhead_temperature(0,0)
 r.toggle_axes(['x','y','z','a','b'],False)
 ```
 
-Those are the basics of how to control a machine. For more details, consult the [s3g protocol](https://github.com/makerbot/s3g/blob/master/doc/s3g_protocol.markdown) and the [s3g source](https://github.com/makerbot/s3g/blob/master/s3g/s3g.py).
+Those are the basics of how to control a machine. For more details, consult the [s3g protocol](https://github.com/makerbot/s3g/blob/master/doc/s3g_protocol.md) and the [s3g source](https://github.com/makerbot/s3g/blob/master/s3g/s3g.py).
 
 # Data types
 There are a few specific data formats that are used throughout this module, that warrant further explanation here.

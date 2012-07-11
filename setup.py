@@ -9,6 +9,6 @@ setup(
     url='http://github.com/makerbot/s3g',
     license='LICENSE.txt',
     description='.',
-    long_description=open('readme.markdown').read(),
+    long_description=open('README.md').read(),
 )
 
