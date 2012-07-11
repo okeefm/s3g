@@ -71,7 +71,6 @@
     "M135 T0",
     "G1 Z0.2      (Position Height)",
     "G1 A2.0      (Create Anchor)",
-    "M101         (Start Extruder)",
     "(**** end of start.gcode ****)"
   ],
   "print_end_sequence"   : [

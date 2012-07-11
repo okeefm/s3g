@@ -40,11 +40,7 @@ class GcodeParser(object):
        70  : [self.display_message,             'P',       ''],
        72  : [self.play_song,                   'P',       ''],
        73  : [self.set_build_percentage,         'P',       ''],
-       101 : [self.extruder_on_forward,          '',        ''], #This command is explicitely ignored
-       102 : [self.extruder_on_reverse,          '',        ''], #This command is explicitely ignored
-       103 : [self.extruder_off,                'T',       ''],       #This command is explicitely ignored
        104 : [self.set_toolhead_temperature,     'ST',      ''],
-       105 : [self.get_temperature,             '',        ''],
        109 : [self.set_platform_temperature,     'ST',      ''],
        126 : [self.enable_extra_output,          'T',       ''],
        127 : [self.disable_extra_output,         'T',       ''],
@@ -402,28 +398,3 @@ class GcodeParser(object):
     of the machine
     """
     self.s3g.toggle_extra_output(codes['T'], False)
-
-  def extruder_off(self, codes, flags, comment):
-    """Turn the extruder off
-    This is a stub, since we dropped support for this function
-    """
-    self._log.warning('{"event":"passing_over_code", "code":103}\n')
-
-  def extruder_on_reverse(self, codes, flags, comment):
-    """Turn the extruder on turning backward
-    This is a stub, since we dropped support for this function
-    """
-    self._log.warning('{"event":"passing_over_code", "code":102}\n')
-
-  def extruder_on_forward(self, codes, flags, comment):
-    """Turn the extruder on turning forward
-    This is a stub, since we dropped support for this function
-    """
-    self._log.warning('{"event":"passing_over_code", "code":101}\n')
-
-  def get_temperature(self, codes, flags, comment):
-    """This gets the temperature from a toolhead
-    We do not support this command, and only have a stub because
-    skeinforge likes to include it in its files
-    """
-    self._log.warning('{"event":"passing_over_code", "code":105}\n')

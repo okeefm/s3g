@@ -661,42 +661,6 @@ class gcodeTests(unittest.TestCase):
     self.assertEqual(expectedPosition, self.g.state.position.ToList())
     self.mock.recall_home_positions.assert_called_once_with(sorted(['X', 'Y', 'Z', 'A', 'B']))    
 
-  def test_extruder_on_forward(self):
-    oldState = copy.deepcopy(self.g.state.values)
-    codes = {}
-    flags = []
-    comments = ''
-    self.g.extruder_on_forward(codes, flags, comments)
-    newState = self.g.state.values
-    self.assertEqual(oldState, newState)
-
-  def test_extruder_on_reverse(self):
-    oldState = copy.deepcopy(self.g.state.values)
-    codes = {}
-    flags = []
-    comments = ''
-    self.g.extruder_on_reverse(codes, flags, comments)
-    newState = self.g.state.values
-    self.assertEqual(oldState, newState)
-
-  def test_extruder_off(self):
-    oldState = copy.deepcopy(self.g.state.values)
-    codes = {}
-    flags = []
-    comments = ''
-    self.g.extruder_off(codes, flags, comments)
-    newState = self.g.state.values
-    self.assertEqual(oldState, newState)
-
-  def test_get_temperature(self):
-    oldState = copy.deepcopy(self.g.state.values)
-    codes = {}
-    flags = []
-    comments = ''
-    self.g.get_temperature(codes, flags, comments)
-    newState = self.g.state.values
-    self.assertEqual(oldState, newState)
-
   def test_tool_change_all_codes_accounted_for(self):
     codes = 'T'
     flags = ''
