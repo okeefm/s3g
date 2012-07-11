@@ -23,6 +23,7 @@ An interface that all preprocessors inherit from.
 ###Skeinforge 50 Preprocessor
 A preprocessor that is meant to be run on a .gcode file skeined by skeinforge-50 WITHOUT start and end gcodes.
 
+    * Removes M104 commands if they do not include a T code
     * Removes M105
     * Removes M101
     * Removes M103
