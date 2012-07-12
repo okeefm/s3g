@@ -10,6 +10,15 @@ class Uploader(object):
         os.path.abspath(os.path.dirname(__file__)), 'avrdude.conf')
 
   def get_machine_board_profile(self, machine):
+    """
+    Given a machine name, retrieves the associated .json file and parsed
+    out its values.
+    TODO: Replace this with a profile object from ../, but that requires
+      a profile refactor to take an absolute path
+  
+    @param str machine: The machine we want information about
+    @return dict values: The values parsed out of the machine board profile
+    """
     extension = '.json'
     path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), 'machine_board_profiles', machine+extension)
@@ -18,6 +27,12 @@ class Uploader(object):
     return values
 
   def list_versions(self, machine):
+    """
+    Given a machine name, returns all possible versions we can upload to
+
+    @param str machine: The machine we want information about
+    @return list versions: The versions we can upload
+    """
     values = self.get_machine_board_profile(machine)
     versions = []
     for version in values['versions']:
@@ -25,6 +40,11 @@ class Uploader(object):
     return versions
 
   def list_machines(self):
+    """
+    Lists all the machines we can upload firmware to
+
+    @return list machines: The machines we can upload firmware to
+    """
     profile_ext = '.json'
     files = os.listdir(
         os.path.join(os.path.abspath(os.path.dirname(__file__)), 'machine_board_profiles'))
@@ -36,6 +56,14 @@ class Uploader(object):
     return machines
    
   def parse_command(self, port, machine, version):
+    """
+    Given a port, machine name and version number parses out a command that invokes avrdude
+
+    @param str port: The port the machine is connected to
+    @param str machine: The machine we are uploading to
+    @param str version: The version of firmware we want to upload to
+    @return str command: The command that invokes avrdude
+    """
     values = self.get_machine_board_profile(machine)
     try:
       hex_file = str(values['versions'][version])
@@ -61,5 +89,13 @@ class Uploader(object):
     return [process] + flags
 
   def upload(self, port, machine, version):
+    """
+    Given a port, machine name and version number, invokes avrdude to upload a specific firmware
+    version to a specific type of machine.
+
+    @param str port: The port the machine is connected to
+    @param str machine: The machine we are uploading to
+    @param str version: The version of firmware we want to upload to
+    """
     call = self.parse_command(port, machine, version)
     subprocess.check_call(call)
