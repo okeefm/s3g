@@ -5,6 +5,7 @@
   "versions"  :
     {
       "5.1" : "Mighty-mb40-v5.1.hex",
-      "5.2" : "Mighty-mb40-v5.2.hex"
+      "5.2" : "Mighty-mb40-v5.2.hex",
+      "5.5" : "Mighty-mb40-v5.5.hex"
     }
 }

@@ -43,16 +43,17 @@ class Uploader(object):
       raise UnknownVersionError
     hex_file_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), 'machine_board_profiles', hex_file)
-    process = "avrdude"
+    process = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), 'avrdude')
     flags = []
     #get the part
-    flags.append('-c'+str(values['part']))
+    flags.append('-p'+str(values['part']))
     #get the baudrate
     flags.append('-b'+str(values['baudrate']))
     #get the config
     flags.append('-C'+self.conf_path)
     #get the programmer
-    flags.append('-p'+str(values['programmer']))
+    flags.append('-c'+str(values['programmer']))
     #get the port
     flags.append('-P'+port)
     #get the operation
