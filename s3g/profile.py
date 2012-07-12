@@ -16,8 +16,7 @@ class Profile(object):
         os.path.abspath(os.path.dirname(__file__)),'profiles' + os.path.sep)  #Path of the profiles directory
     extension = '.json'
     path = self.path+name+extension
-    self._log.info('{"event":"open_profile", "path":%s}'
-        %(path))
+    self._log.info('{"event":"open_profile", "path":%s}', path)
     with open(path) as f:
       self.values = json.load(f) 
 
