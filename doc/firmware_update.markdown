@@ -1,6 +1,18 @@
 #Firmware Update
 The s3g driver has the capability of uploading firmware to a machine via AVRDude, an external firmware uploading utility.  
 
+##Definitions
+<table>
+<tr>
+  <th>Name</th>
+  <th>Definition</th>
+</tr>
+<tr>
+  <td>Machine Board Profile</td>
+  <td>A .json file that contains information about a specific machine's board.</td>
+</tr>
+</table>
+
 ##Uploading
 To upload firmware, an uploader object must first be created:
 
