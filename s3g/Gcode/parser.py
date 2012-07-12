@@ -40,15 +40,11 @@ class GcodeParser(object):
        70  : [self.display_message,             'P',       ''],
        72  : [self.play_song,                   'P',       ''],
        73  : [self.set_build_percentage,         'P',       ''],
-       101 : [self.extruder_on_forward,          '',        ''], #This command is explicitely ignored
-       102 : [self.extruder_on_reverse,          '',        ''], #This command is explicitely ignored
-       103 : [self.extruder_off,                'T',       ''],       #This command is explicitely ignored
        104 : [self.set_toolhead_temperature,     'ST',      ''],
-       105 : [self.get_temperature,             '',        ''],
        109 : [self.set_platform_temperature,     'ST',      ''],
        126 : [self.enable_extra_output,          'T',       ''],
        127 : [self.disable_extra_output,         'T',       ''],
-       132 : [self.Load_position,               '',        'XYZAB'],
+       132 : [self.load_position,               '',        'XYZAB'],
        133 : [self.wait_for_tool_ready,           'PT',      ''],
        134 : [self.wait_for_platform_ready,       'PT',      ''],
        135 : [self.change_tool,                 'T',       ''],
@@ -187,33 +183,7 @@ class GcodeParser(object):
     """Explicitely sets the position of the state machine and bot
     to the given point
     """
-    for axis in ['X', 'Y', 'Z']:
-      if axis in codes:
-        self.state.position[axis] = codes[axis]
-    if 'E' in codes:
-      if 'A' in codes or 'B' in codes:
-        gcode_error = ConflictingCodesError()
-        gcode_error.values['ConflictingCodes'] = ['E', 'A', 'B']
-        raise gcode_error    
-      if not 'tool_index' in self.state.values:
-        raise NoToolIndexError
-      elif self.state.values['tool_index'] == 0:
-        self.state.position['A'] = codes['E']
-      elif self.state.values['tool_index'] == 1:
-        self.state.position['B'] = codes['E']
-    else:
-      if 'A' in codes:
-        self.state.position['A'] = codes['A']
-      if 'B' in codes:
-        self.state.position['B'] = codes['B']
-    self._log.info('{"event":"gcode_state_change", "change":"set_position", "new_position: [%i, %i, %i, %i, %i]"}\n'
-        %(
-            self.state.position['X'], 
-            self.state.position['Y'],
-            self.state.position['Z'],
-            self.state.position['A'],
-            self.state.position['B'],
-            ))
+    self.state.set_position(codes)
     stepped_position = multiply_vector(self.state.get_position(), self.state.get_axes_values('steps_per_mm'))
     self.s3g.set_extended_position(stepped_position)
       
@@ -312,16 +282,10 @@ class GcodeParser(object):
       self.build_end_notification()
 
   def store_offsets(self, codes, flags, comment):
-    """Given XYZ offsets, stores those offsets in the state machine.
-    We subtract one from the 'P' code because skeining engines store 
-    designate P1 as the 0'th offset and P2 as the 1'th offset....dumb
+    """Given XYZ offsets and an offset index, stores those 
+    offsets in the state machine.
     """
-    valid_offsets = (1, 2)
-    if codes['P'] not in valid_offsets:
-      gcode_error = InvalidOffsetError()
-      gcode_error.values['InvalidOffset'] = codes['P']
-      raise gcode_error
-    self.state.StoreOffset(codes['P'], [codes['X'], codes['Y'], codes['Z']])
+    self.state.offsetPosition[codes['P']].SetPoint(codes)
 
   def linear_interpolation(self, codes, flags, comment):
     """Movement command that has two flavors: E and AB commands.
@@ -335,44 +299,12 @@ class GcodeParser(object):
       self._log.info('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}\n'
           %(codes['F']))
     if len(parse_out_axes(codes)) > 0 or 'E' in codes:
-      current_position = self.state.get_position()
-      for axis in ['X', 'Y', 'Z']:
-        if axis in codes:
-          self.state.position[axis] = codes[axis]
-
-      if 'E' in codes:
-        if 'A' in codes or 'B' in codes:
-          gcode_error = ConflictingCodesError()
-          gcode_error.values['ConflictingCodes'] = ['E', 'A', 'b']
-          raise gcode_error
-
-        if not 'tool_index' in self.state.values:
-          raise NoToolIndexError
-
-        elif self.state.values['tool_index'] == 0:
-          self.state.position['A'] = codes['E']
-
-        elif self.state.values['tool_index'] == 1:
-          self.state.position['B'] = codes['E']
-
-      elif 'A' in codes and 'B' in codes:
+      if 'A' in codes and 'B' in codes:
         gcode_error = ConflictingCodesError()
         gcode_error.values['ConflictingCodes'] = ['A', 'B']
         raise gcode_error
-      else:
-        if 'A' in codes:
-          self.state.position['A'] = codes['A']
-        if 'B' in codes:
-          self.state.position['B'] = codes['B']
-
-      self._log.info('{"event":"gcode_state_change", "change":"set_position", "new_position": [%i, %i, %i, %i, %i]"}\n'
-        %(
-            self.state.position['X'], 
-            self.state.position['Y'],
-            self.state.position['Z'],
-            self.state.position['A'],
-            self.state.position['B'],
-            ))
+      current_position = self.state.get_position()
+      self.state.set_position(codes)
       try :
         feedrate = self.state.values['feedrate']
         dda_speed = calculate_DDA_speed(
@@ -420,7 +352,7 @@ class GcodeParser(object):
     """
     self.s3g.set_platform_temperature(codes['T'], codes['S'])
 
-  def Load_position(self, codes, flags, comment):
+  def load_position(self, codes, flags, comment):
     """Loads the home positions for the XYZ axes from the eeprom
     """
     axes = parse_out_axes(flags)
@@ -466,28 +398,3 @@ class GcodeParser(object):
     of the machine
     """
     self.s3g.toggle_extra_output(codes['T'], False)
-
-  def extruder_off(self, codes, flags, comment):
-    """Turn the extruder off
-    This is a stub, since we dropped support for this function
-    """
-    self._log.warning('{"event":"passing_over_code", "code":103}\n')
-
-  def extruder_on_reverse(self, codes, flags, comment):
-    """Turn the extruder on turning backward
-    This is a stub, since we dropped support for this function
-    """
-    self._log.warning('{"event":"passing_over_code", "code":102}\n')
-
-  def extruder_on_forward(self, codes, flags, comment):
-    """Turn the extruder on turning forward
-    This is a stub, since we dropped support for this function
-    """
-    self._log.warning('{"event":"passing_over_code", "code":101}\n')
-
-  def get_temperature(self, codes, flags, comment):
-    """This gets the temperature from a toolhead
-    We do not support this command, and only have a stub because
-    skeinforge likes to include it in its files
-    """
-    self._log.warning('{"event":"passing_over_code", "code":105}\n')

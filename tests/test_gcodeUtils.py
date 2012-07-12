@@ -424,6 +424,9 @@ def generic_zero_move_test(state):
 def generic_calculate_dda_speed_good_result(state):
   """This function is used to test both replicator single and dual profiles
   while calculating DDA speeds
+
+  @param state state: A state machine that houses either a replicator single or
+      dual profile.
   """
   # TODO: These cases assume a replicator with specific steps_per_mm
   cases = [
@@ -566,6 +569,6 @@ class calculate_homing_DDA_speed(unittest.TestCase):
     spm_list = [1, 2, 3, 4, 5]
     expected_dda = s3g.Gcode.compute_DDA_speed(max_feedrates[0], spm_list[0])
     self.assertEqual(expected_dda, s3g.Gcode.calculate_homing_DDA_speed(feedrate, max_feedrates, spm_list))
- 
+
 if __name__ == "__main__":
   unittest.main()

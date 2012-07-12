@@ -20,11 +20,11 @@ NB: All of the following items are considered on the same 'level' (as in, they a
 
 ###Axis:
   A description for an axis.
-
+  
     Key: Name of this Axis (i.e. "X", "Y", "A")
     Value: A Dictionary of the Following Keys with appropriate Values:
-        * Key: "length" 
-          Value: The Length of this axis in mm as an integer
+        * Key: "platform_length" 
+          Value: The Length of the platform for this axis (NB:It is not necessary for A/B axes to have these values defined
         * Key:"max_feedrate"
           Value: The maximum feedrate this axis can use in mm/min as an integer
         * Key: "steps_per_mm" 
@@ -79,12 +79,6 @@ NB: All of the following items are considered on the same 'level' (as in, they a
 
     Key: "print_end_sequence"
     Value: An Array of Strings that are Gcode Commands
-
-###Rapid Movement Feedrate:
-  The Feedrate used when Executing a G0 (Rapid Movement) Command.
-
-    Key: "rapid_movement_feedrate"
-    Value: An Integer Value of a Feedrate in mm/min
 
 ###Find Axis Minimum Timeout:
   The Timeout used when the Machine Attempts to Find the Axis Minimum.

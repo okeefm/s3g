@@ -104,6 +104,42 @@ Reason For Removal:
 
     This code used to be a generic Wait For Toolhead command, that would wait for both a platform and a toolhead.  This funcationality was broken out into two separate commands (M133/134), which will wait for a Tool or a Platform, respectively.
 
+###M101 Extruder On Forward
+Status:
+
+    This code has been totally removed, and will throw an error if used.
+
+Reason For Removal:
+
+    This command is an RPM command.  We do not support RPM commands.
+
+###M102 Extruder On Reverse
+Status:
+
+    This code has been totally removed, and will throw an error if used.
+
+Reason For Removal:
+
+    This command is an RPM command.  We do not support RPM commands.
+
+###M103 Extruder Off
+Status:
+
+    This code has been totally removed, and will throw an error if used.
+
+Reason For Removal:
+
+    This command is an RPM command.  We do not support RPM commands.
+
+###M105 Get Temperature
+Status:
+
+    This code has been totally removed, and will throw an error if used.
+
+Reason for Removal:
+
+    This code is a query command, and should never have been implemented.  It was kept in for skeinforge compatability.
+
 ###M108 Set Extruder Speed
 Status:
 
@@ -112,31 +148,4 @@ Status:
 Reason For Removal:
 
     This code used to be the goto method for changing the tool_index (as in, if we wanted to change from tool_index 0 to 1, we would add an M108 command with a defined T code.  This is using the code for an unintended purpose, so after moving away from that paradigm, this command was reduced to an RPM command.  S3g's parser can only handle 5d commands and not RPM commands, so this command was removed.
-
-###M101 Extruder On Forward
-Status:
-
-    This command is ignored.  Skeinforge-47 currently throws these commands into its skeined files, so throwing errors would remove compatability with skeinforge-47.
-
-Reason For Ignore:
-
-    This command is an RPM command.  We do not support RPM commands (But cannot remove this command due to legacy compatability), so we ignore it.
-
-###M102 Extruder On Reverse
-Status:
-
-    This command is ignored.  Skeinforge-47 currently throws these commands into its skeined files, so throwing errors would remove compatability with skeinforge-47.
-
-Reason For Ignore:
-
-    This command is an RPM command.  We do not support RPM commands (But cannot remove this command due to legacy compatability), so we ignore it.
-
-###M103 Extruder Off
-Status:
-
-    This command is ignored.  Skeinforge-47 currently throws these commands into its skeined files, so throwing errors would remove compatability with skeinforge-47.
-
-Reason For Ignore:
-
-    This command is an RPM command.  We do not support RPM commands (But cannot remove this command due to legacy compatability), so we ignore it.
 
