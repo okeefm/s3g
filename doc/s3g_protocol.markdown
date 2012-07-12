@@ -740,6 +740,17 @@ Response
     uint32: Number of packet retries on the tool network 
     uint32: Number of bytes received over the tool network that were discarded as noise
 
+## 27 - Get advanced version number
+returns the main version numbers along with an internal version number
+
+Payload (0 bytes)
+
+Response
+
+    uint16_t Firmware Version
+    uint16_t Internal Version
+    uint16_t Reserved for future use
+
 # Host Buffered Commands
 
 ## 131 - Find axes minimums: Move specified axes in the negative direction until their limit switch is triggered.
@@ -769,7 +780,7 @@ Halt all motion for the specified amount of time.
 
 Payload
 
-    uint32: delay, in microseconds
+    uint32: delay, in milliseconds
 
 Response (0 bytes)
 
@@ -935,7 +946,7 @@ Set the value of the digital potentiometers that control the voltage reference f
 
 Payload
 
-    uint8: Axes bitfield to specify which axes' potentiometers to set. Any axis with a bit set should have it's potentiometer set.
+    uint8: axis value (valid range 0-4) which axis pot to set
     uint8: value (valid range 0-127), values over max will be capped at max
 
 Response (0 bytes)
