@@ -315,16 +315,16 @@ class s3g(object):
 
     self.writer.SendActionPayload(payload)
 
-  def SetPotentiometerValue(self, axes, value):
+  def SetPotentiometerValue(self, axis, value):
     """
     Sets the value of the digital potentiometers that control the voltage references for the botsteps
-    @param list axes: Array of axis names ['x', 'y', ...] whose potentiometers should be set
+    @param axis: Axis whose potentiometers should be set
     @param int value: The value to set the digital potentiometer to.
     """
     payload = struct.pack(
       '<BBB',
       host_action_command_dict['SET_POT_VALUE'], 
-      Encoder.EncodeAxes(axes), 
+      axis, 
       value
     )
 

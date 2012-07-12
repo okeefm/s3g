@@ -268,6 +268,16 @@ Response code values can be as follows:
  <td>Cancel build</td>
  <td>Yes</td>
 </tr>
+<tr>
+ <td>0x8A</td>
+ <td>Bot is Building from SD</td>
+ <td>No</td>
+</tr>
+<tr>
+ <td>0x8B</td>
+ <td>Bot is shutdown due to Overheat</td>
+ <td>No</td>
+</tr>
 </table>
 
 _Historical note: Firmware versions prior to 2.9 did not have the high bit set for error codes. This was changed to avoid having the response code conflict with tool indexes on the tool network_ 
@@ -715,6 +725,19 @@ Response
  <td></td>
 </tr>
 </table>
+
+## 24 - Get print statistics
+Gathers statistics about the currently building print if a build is active, or the last print if there is no active build
+
+Payload (0 bytes)
+
+Response
+
+    uint8 : Build State (paused, running, finished_normally, canceled, none)
+    uint8 : Hours elapsed on print
+    uint8 : Minutes elapsed on print (add hours for total time)
+    uint32: Line Number (number of commands processed)
+    uint32: Reserved for Future Use
 
 ## 26 - Get communication statistics
 Gathers statistics about communication over the tool network. This wass intended for use while troubleshooting Gen3/4 machines.
