@@ -126,9 +126,9 @@ print "commands/sec, velocity, distance, command_length," + \
 
 for test_state in test_states:
 
-    r.FindAxesMaximums(['x','y'],500,60)
-    r.SetExtendedPosition([0,0,0,0,0])
-    while not r.IsFinished():
+    r.find_axes_maximums(['x','y'],500,60)
+    r.set_extended_position([0,0,0,0,0])
+    while not r.is_finished():
         pass
 
     generator = LineGenerator(test_state[0], test_state[1], test_state[2])
@@ -145,7 +145,7 @@ for test_state in test_states:
  
         try:
             queue_start_time = time.time()
-            r.QueuePoint(target, int(velocity))
+            r.queue_extended_point(target, int(velocity))
             queue_times.append(time.time() - queue_start_time)
  
             command_count += 1
@@ -155,10 +155,10 @@ for test_state in test_states:
  
         except KeyboardInterrupt, SystemExit:
             print 'shutting down'
-            r.ToggleAxes(['x','y','z','a','b'],False)
+            r.toggle_axes(['x','y','z','a','b'],False)
             exit(1)
 
-    while not r.IsFinished():
+    while not r.is_finished():
         pass
     total_time = time.time() - start_time
 
@@ -179,5 +179,5 @@ for test_state in test_states:
 
 
 
-r.ToggleAxes(['x','y','z','a','b'],False)
+r.toggle_axes(['x','y','z','a','b'],False)
 """

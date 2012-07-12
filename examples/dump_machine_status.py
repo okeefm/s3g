@@ -30,45 +30,45 @@ file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 r = s3g.s3g()
 r.writer = s3g.Writer.StreamWriter(file)
 
-print "firmware version: %i"%(r.GetVersion())
-print "build name: %s"%(r.GetBuildName())
+print "firmware version: %i"%(r.get_version())
+print "build name: %s"%(r.get_build_name())
 
 try:
-  sd_name = r.GetNextFilename(True)
+  sd_name = r.get_next_filename(True)
   print "SD Card name: " + sd_name
   while True:
-    filename = r.GetNextFilename(False)
+    filename = r.get_next_filename(False)
     if filename == '\x00':
       break
     print '  ' + filename
 except s3g.SDCardError:
   print "SD Card error"
 
-print "Available buffer size=%i"%(r.GetAvailableBufferSize())
+print "Available buffer size=%i"%(r.get_available_buffer_size())
 
-print "get_position:", r.GetPosition()
-print "get_extended_position:", r.GetExtendedPosition()
+print "get_position:", r.get_position()
+print "get_extended_position:", r.get_extended_position()
 
 for tool_index in range(0, options.toolheads):
   print "Tool %i"%(tool_index)
-  print "  Version=%i"%(r.GetToolheadVersion(tool_index))
-  print "  Extruder_temp=%i"%(r.GetToolheadTemperature(tool_index))
-  print "  Extruder_target=%i"%(r.GetToolheadTargetTemperature(tool_index))
-  print "  Extruder_ready?=%s"%(r.IsToolReady(tool_index))
-  print "  Platform_temp=%i"%(r.GetPlatformTemperature(tool_index))
-  print "  Platform_target=%i"%(r.GetPlatformTargetTemperature(tool_index))
-  print "  Platform_ready?=%s"%(r.IsPlatformReady(tool_index))
+  print "  Version=%i"%(r.get_toolhead_version(tool_index))
+  print "  Extruder_temp=%i"%(r.get_toolhead_temperature(tool_index))
+  print "  Extruder_target=%i"%(r.get_toolhead_target_temperature(tool_index))
+  print "  Extruder_ready?=%s"%(r.is_tool_ready(tool_index))
+  print "  Platform_temp=%i"%(r.get_platform_temperature(tool_index))
+  print "  Platform_target=%i"%(r.get_platform_target_temperature(tool_index))
+  print "  Platform_ready?=%s"%(r.is_platform_ready(tool_index))
 
 
 if options.dump_eeprom:
   print "Host EEPROM memory map:"
   for offset in range(0, 1024, 16):
-    data = r.ReadFromEEPROM(offset, 16)
+    data = r.read_from_EEPROM(offset, 16)
     print '%04x'%(offset), binascii.hexlify(buffer(data))
 
   for tool_index in range(0, options.toolheads):
     print "Tool %i EEPROM memory map:"%(tool_index)
     for offset in range(0, 1024, 16):
-      data = r.ReadFromToolheadEEPROM(tool_index, offset, 16)
+      data = r.read_from_toolhead_EEPROM(tool_index, offset, 16)
       print '%04x'%(offset), binascii.hexlify(buffer(data))
 

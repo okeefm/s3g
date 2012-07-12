@@ -2,8 +2,10 @@
 import struct
 import time
 import logging
+import serial
 
 import Encoder
+import Writer 
 from constants import *
 from errors import *
 
@@ -12,13 +14,24 @@ class s3g(object):
   def __init__(self):
     self.writer = None
 
-    self.logger = logging.getLogger('s3g_output_stats')
-
     # TODO: Move these to constants file.
-    self.ExtendedPointLength = 5
-    self.PointLength = 3
+    self.extendedPointLength = 5
+    self.pointLength = 3
+  
+  @classmethod
+  def from_filename(cls, port, baudrate=115200, timeout=.2):
+    """Constructs and returns an s3g object connected to the 
+    passed file endpoint passed as a string @port (ie 'COM0' or '/dev/tty9')
 
-  def GetVersion(self):
+    @return s3g object, equipped with a StreamWrtier directed at port.
+	  """
+
+    r = s3g()
+    s = serial.Serial(port, baudrate=baudrate, timeout=timeout)
+    r.writer = Writer.StreamWriter(s)
+    return r
+
+  def get_version(self):
     """
     Get the firmware version number of the connected machine
     @return Version number
@@ -29,13 +42,11 @@ class s3g(object):
       s3g_version,
     )
 
-    response = self.writer.SendQueryPayload(payload)
-
-    [response_code, version] = Encoder.UnpackResponse('<BH', response)
-
+    response = self.writer.send_query_payload(payload)
+    [response_code, version] = Encoder.unpack_response('<BH', response)
     return version
 
-  def CaptureToFile(self, filename):
+  def capture_to_file(self, filename):
     """
     Capture all subsequent commands up to the 'end capture' command to a file with the given filename on an SD card.
     @param str filename: The name of the file to write to on the SD card
@@ -47,13 +58,13 @@ class s3g(object):
     payload += filename
     payload += '\x00'
 
-    response = self.writer.SendQueryPayload(payload)
+    response = self.writer.send_query_payload(payload)
 
-    [response_code, sd_response_code] = Encoder.UnpackResponse('<BB', response)
+    [response_code, sd_response_code] = Encoder.unpack_response('<BB', response)
     if sd_response_code != sd_error_dict['SUCCESS']:
       raise SDCardError(sd_response_code)
 
-  def EndCaptureToFile(self):
+  def end_capture_to_file(self):
     """
     Send the end capture signal to the bot, so it stops capturing data and writes all commands out to a file on the SD card
     @return The number of bytes written to file
@@ -63,14 +74,14 @@ class s3g(object):
       host_query_command_dict['END_CAPTURE'],
     )
 
-    response = self.writer.SendQueryPayload(payload)
+    response = self.writer.send_query_payload(payload)
     
-    [response_code, sdResponse] = Encoder.UnpackResponse('<BI', response)
+    [response_code, sdResponse] = Encoder.unpack_response('<BI', response)
     return sdResponse
 
-  def Reset(self):
+  def reset(self):
     """
-    Reset the bot, unless the bot is waiting to tell us a build is cancelled.
+    reset the bot, unless the bot is waiting to tell us a build is cancelled.
     """
     payload = struct.pack(
       '<B',
@@ -78,10 +89,9 @@ class s3g(object):
     )
 
     # TODO: mismatch here.
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-
-  def IsFinished(self):
+  def is_finished(self):
     """
     Checks if the steppers are still executing a command
     """
@@ -90,12 +100,12 @@ class s3g(object):
       host_query_command_dict['IS_FINISHED'],
     )
 
-    response = self.writer.SendQueryPayload(payload)
+    response = self.writer.send_query_payload(payload)
     
-    [response_code, isFinished] = Encoder.UnpackResponse('<B?', response)
+    [response_code, isFinished] = Encoder.unpack_response('<B?', response)
     return isFinished
 
-  def ClearBuffer(self):
+  def clear_buffer(self):
     """
     Clears the buffer of all commands
     """
@@ -105,11 +115,11 @@ class s3g(object):
     )
 
     # TODO: mismatch here.
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def Pause(self):
+  def pause(self):
     """
-    Pause the machine
+    pause the machine
     """
     payload = struct.pack(
       '<B',
@@ -117,9 +127,9 @@ class s3g(object):
     )
 
     # TODO: mismatch here.
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def GetCommunicationStats(self):
+  def get_communication_stats(self):
     """
     Get some communication statistics about traffic on the tool network from the Host.
     """
@@ -128,14 +138,14 @@ class s3g(object):
       host_query_command_dict['GET_COMMUNICATION_STATS'],
     )
      
-    response = self.writer.SendQueryPayload(payload)
+    response = self.writer.send_query_payload(payload)
 
     [response_code,
      packetsReceived,
      packetsSent,
      nonResponsivePacketsSent,
      packetRetries,
-     noiseBytes] = Encoder.UnpackResponse('<BLLLLL', response)
+     noiseBytes] = Encoder.unpack_response('<BLLLLL', response)
 
     info = {
     'PacketsReceived' : packetsReceived,
@@ -146,7 +156,7 @@ class s3g(object):
     }
     return info
 
-  def GetMotherboardStatus(self):
+  def get_motherboard_status(self):
     """
     Retrieve bits of information about the motherboard
     @return: A python dictionary of various flags and whether theywere set or not at reset
@@ -158,10 +168,10 @@ class s3g(object):
       host_query_command_dict['GET_MOTHERBOARD_STATUS'],
     )
   
-    response = self.writer.SendQueryPayload(payload)
+    response = self.writer.send_query_payload(payload)
     
 
-    [response_code, bitfield] = Encoder.UnpackResponse('<BB', response)
+    [response_code, bitfield] = Encoder.unpack_response('<BB', response)
 
     flags = {
     'POWER_ERROR'   : 1 == ((bitfield >> 7) & 0x01),
@@ -169,7 +179,7 @@ class s3g(object):
     }
     return flags
 
-  def ExtendedStop(self, halt_steppers, clear_buffer):
+  def extended_stop(self, halt_steppers, clear_buffer):
     """
     Stop the stepper motor motion and/or reset the command buffer.  This differs from the 
     reset and abort commands in that a soft reset of all functions isnt called.
@@ -188,14 +198,14 @@ class s3g(object):
       bitfield,
     )
 
-    response = self.writer.SendQueryPayload(payload)
+    response = self.writer.send_query_payload(payload)
 
-    [response_code, extended_stop_response] = Encoder.UnpackResponse('<BB', response)
+    [response_code, extended_stop_response] = Encoder.unpack_response('<BB', response)
 
     if extended_stop_response != 0:
       raise ExtendedStopError
 
-  def WaitForPlatformReady(self, tool_index, delay, timeout):
+  def wait_for_platform_ready(self, tool_index, delay, timeout):
     """
     Halts the machine until the specified toolhead reaches a ready state, or if the
     timeout is reached.  Toolhead is ready if its temperature is within a specified
@@ -212,9 +222,9 @@ class s3g(object):
       timeout
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
     
-  def WaitForToolReady(self, tool_index, delay, timeout):
+  def wait_for_tool_ready(self, tool_index, delay, timeout):
     """
     Halts the machine until the specified toolhead reaches a ready state, or if the
     timeout is reached.  Toolhead is ready if its temperature is within a specified
@@ -231,12 +241,12 @@ class s3g(object):
       timeout
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def Delay(self, delay):
+  def delay(self, delay):
     """
     Halts all motion for the specified amount of time
-    @param int delay: Delay time, in microseconds
+    @param int delay: delay time, in microseconds
     """
     payload = struct.pack(
       '<BI',
@@ -244,9 +254,9 @@ class s3g(object):
       delay
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def ChangeTool(self, tool_index):
+  def change_tool(self, tool_index):
     """
     Change to the specified toolhead
     @param int tool_index: toolhead index
@@ -257,16 +267,16 @@ class s3g(object):
       tool_index
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def ToggleAxes(self, axes, enable):
+  def toggle_axes(self, axes, enable):
     """
     Used to explicitly power steppers on or off.
     @param list axes: Array of axis names ['x', 'y', ...] to configure
     @param boolean enable: If true, enable all selected axes. Otherwise, disable the selected
            axes.
     """
-    axes_bitfield = Encoder.EncodeAxes(axes)
+    axes_bitfield = Encoder.encode_axes(axes)
     if enable:
       axes_bitfield |= 0x80
 
@@ -276,10 +286,9 @@ class s3g(object):
       axes_bitfield
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-
-  def QueueExtendedPointNew(self, position, duration, relative_axes):
+  def queue_extended_point_new(self, position, duration, relative_axes):
     """
     Queue a position with the new style!  Moves to a certain position over a given duration
     with either relative or absolute positioning.  Relative vs. Absolute positioning
@@ -289,7 +298,7 @@ class s3g(object):
     @param int duration: The total duration of the move in miliseconds
     @param list relative_axes: Array of axes whose coordinates should be considered relative
     """
-    if len(position) != self.ExtendedPointLength:
+    if len(position) != self.extendedPointLength:
       raise PointLengthError(len(position))
 
     payload = struct.pack(
@@ -297,12 +306,12 @@ class s3g(object):
       host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'],
       position[0], position[1], position[2], position[3], position[4],
       duration, 
-      Encoder.EncodeAxes(relative_axes)
+      Encoder.encode_axes(relative_axes)
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
   
-  def StoreHomePositions(self, axes):
+  def store_home_positions(self, axes):
     """
     Write the current axes locations to the EEPROM as the home position
     @param list axes: Array of axis names ['x', 'y', ...] whose position should be saved
@@ -310,12 +319,12 @@ class s3g(object):
     payload = struct.pack(
       '<BB',
       host_action_command_dict['STORE_HOME_POSITIONS'], 
-      Encoder.EncodeAxes(axes)
+      Encoder.encode_axes(axes)
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def SetPotentiometerValue(self, axis, value):
+  def set_potentiometer_value(self, axis, value):
     """
     Sets the value of the digital potentiometers that control the voltage references for the botsteps
     @param axis: Axis whose potentiometers should be set
@@ -328,10 +337,10 @@ class s3g(object):
       value
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
     
 
-  def SetBeep(self, frequency, duration):
+  def set_beep(self, frequency, duration):
     """
     Play a tone of the specified frequency for the specified duration.
     @param int frequency: Frequency of the tone, in hz
@@ -345,9 +354,9 @@ class s3g(object):
       0x00
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def SetRGBLED(self, r, g, b, blink):
+  def set_RGB_LED(self, r, g, b, blink):
     """
     Set the brightness and blink rate for RBG LEDs
     @param int r: The r value (0-255) for the LEDs
@@ -365,9 +374,9 @@ class s3g(object):
       0x00
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def RecallHomePositions(self, axes):
+  def recall_home_positions(self, axes):
     """
     Recall and move to the home positions written to the EEPROM
     @param axes: Array of axis names ['x', 'y', ...] whose position should be saved
@@ -375,12 +384,12 @@ class s3g(object):
     payload = struct.pack(
       '<BB',
       host_action_command_dict['RECALL_HOME_POSITIONS'], 
-      Encoder.EncodeAxes(axes)
+      Encoder.encode_axes(axes)
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def Init(self):
+  def init(self):
     """
     Initialize the machine to a default state
     """
@@ -389,9 +398,9 @@ class s3g(object):
       host_query_command_dict['INIT']
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def ToolQuery(self, tool_index, command, tool_payload = None):
+  def tool_query(self, tool_index, command, tool_payload = None):
     """
     Query a toolhead for some information
     @param int tool_index: toolhead index
@@ -413,9 +422,9 @@ class s3g(object):
     if tool_payload != None:
        payload += tool_payload
 
-    return self.writer.SendQueryPayload(payload)
+    return self.writer.send_query_payload(payload)
 
-  def ReadFromEEPROM(self, offset, length):
+  def read_from_EEPROM(self, offset, length):
     """
     Read some data from the machine. The data structure is implementation specific.
     @param byte offset: EEPROM location to begin reading from
@@ -432,11 +441,11 @@ class s3g(object):
       length
     )
 
-    response = self.writer.SendQueryPayload(payload)
+    response = self.writer.send_query_payload(payload)
 
     return response[1:]
 
-  def WriteToEEPROM(self, offset, data):
+  def write_to_EEPROM(self, offset, data):
     """
     Write some data to the machine. The data structure is implementation specific.
     @param byte offset: EEPROM location to begin writing to
@@ -454,12 +463,12 @@ class s3g(object):
 
     payload += data
 
-    response = self.writer.SendQueryPayload(payload)
+    response = self.writer.send_query_payload(payload)
 
     if response[1] != len(data):
       raise EEPROMMismatchError(response[1])
 
-  def GetAvailableBufferSize(self):
+  def get_available_buffer_size(self):
     """
     Gets the available buffer size
     @return Available buffer size, in bytes
@@ -469,28 +478,12 @@ class s3g(object):
       host_query_command_dict['GET_AVAILABLE_BUFFER_SIZE'],
     )
 
-    response = self.writer.SendQueryPayload(payload)
-    [response_code, buffer_size] = Encoder.UnpackResponse('<BI', response)
+    response = self.writer.send_query_payload(payload)
+    [response_code, buffer_size] = Encoder.unpack_response('<BI', response)
 
     return buffer_size
 
-  def GetPosition(self):
-    """
-    Gets the current machine position
-    @return tuple containing the 3D position the machine is currently located at, 
-    and the endstop states.
-    """
-    payload = struct.pack(
-      '<B',
-      host_query_command_dict['GET_POSITION']
-    )
-
-    response = self.writer.SendQueryPayload(payload)
-    [response_code, x, y, z, axes_bits] = Encoder.UnpackResponse('<BiiiB', response)
-
-    return [x, y, z], axes_bits
-
-  def AbortImmediately(self):
+  def abort_immediately(self):
     """
     Stop the machine by disabling steppers, clearing the command buffers, and 
     instructing the toolheads to shut down
@@ -500,9 +493,9 @@ class s3g(object):
       host_query_command_dict['ABORT_IMMEDIATELY']
     )
 
-    resposne = self.writer.SendQueryPayload(payload)
+    resposne = self.writer.send_query_payload(payload)
 
-  def PlaybackCapture(self, filename):
+  def playback_capture(self, filename):
     """
     Instruct the machine to play back (build) a file from it's SD card.
     @param str filename: Name of the file to print. Should have been retrieved by 
@@ -515,14 +508,14 @@ class s3g(object):
     payload += filename
     payload += '\x00'
 
-    response = self.writer.SendQueryPayload(payload)
+    response = self.writer.send_query_payload(payload)
 
-    [response_code, sd_response_code] = Encoder.UnpackResponse('<BB', response)
+    [response_code, sd_response_code] = Encoder.unpack_response('<BB', response)
 
     if sd_response_code != sd_error_dict['SUCCESS']:
       raise SDCardError(sd_response_code)
 
-  def GetNextFilename(self, reset):
+  def get_next_filename(self, reset):
     """
     Get the next filename from the machine
     @param boolean reset: If true, reset the file index to zero and return the first 
@@ -539,16 +532,16 @@ class s3g(object):
       flag,
     )
 
-    response = self.writer.SendQueryPayload(payload)
+    response = self.writer.send_query_payload(payload)
    
-    [response_code, sd_response_code, filename] = Encoder.UnpackResponseWithString('<BB', response)
+    [response_code, sd_response_code, filename] = Encoder.unpack_response_with_string('<BB', response)
 
     if sd_response_code != sd_error_dict['SUCCESS']:
       raise SDCardError(sd_response_code)
 
     return filename
 
-  def GetBuildName(self):
+  def get_build_name(self):
     """
     Get the build name of the file printing on the machine, if any.
     @param str filename: The filename of the current print 
@@ -558,12 +551,12 @@ class s3g(object):
       host_query_command_dict['GET_BUILD_NAME']
     )
 
-    response = self.writer.SendQueryPayload(payload)
-    [response_code, filename] = Encoder.UnpackResponseWithString('<B', response)
+    response = self.writer.send_query_payload(payload)
+    [response_code, filename] = Encoder.unpack_response_with_string('<B', response)
 
     return filename
 
-  def GetExtendedPosition(self):
+  def get_extended_position(self):
     """
     Gets the current machine position
     @return tuple position: containing the 5D position the machine is currently located
@@ -574,50 +567,15 @@ class s3g(object):
       host_query_command_dict['GET_EXTENDED_POSITION'],
     )
 
-    response = self.writer.SendQueryPayload(payload)
+    response = self.writer.send_query_payload(payload)
   
     [response_code,
      x, y, z, a, b,
-     endstop_states] = Encoder.UnpackResponse('<BiiiiiH', response)
+     endstop_states] = Encoder.unpack_response('<BiiiiiH', response)
 
     return [x, y, z, a, b], endstop_states
 
-  # TODO: Change all references to position
-  def QueuePoint(self, point, rate):
-    """
-    Move the toolhead to a new position at the given rate
-    @param list position array 3D position to move to. All dimension should be in steps.
-    @param double rate: Movement speed, in steps/??
-    """
-    if len(point) != self.PointLength:
-      raise PointLengthError(len(point))
-
-    payload = struct.pack(
-      '<BiiiI',
-      host_action_command_dict['QUEUE_POINT'],
-      point[0], point[1], point[2],
-      rate
-    )
-
-    self.writer.SendActionPayload(payload)
-
-  def SetPosition(self, position):
-    """
-    Inform the machine that it should consider this p
-    @param list position: 3D position to set the machine to, in steps.
-    """
-    if len(position) != self.PointLength:
-      raise PointLengthError(len(position))
-
-    payload = struct.pack(
-      '<Biii',
-      host_action_command_dict['SET_POSITION'],
-      position[0], position[1], position[2],
-    )
-
-    self.writer.SendActionPayload(payload)
-
-  def FindAxesMinimums(self, axes, rate, timeout):
+  def find_axes_minimums(self, axes, rate, timeout):
     """
     Move the toolhead in the negativedirection, along the specified axes,
     until an endstop is reached or a timeout occurs.
@@ -628,14 +586,14 @@ class s3g(object):
     payload = struct.pack(
       '<BBIH',
       host_action_command_dict['FIND_AXES_MINIMUMS'],
-      Encoder.EncodeAxes(axes),
+      Encoder.encode_axes(axes),
       rate,
       timeout
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
   
-  def FindAxesMaximums(self, axes, rate, timeout):
+  def find_axes_maximums(self, axes, rate, timeout):
     """
     Move the toolhead in the positive direction, along the specified axes,
     until an endstop is reached or a timeout occurs.
@@ -646,14 +604,14 @@ class s3g(object):
     payload = struct.pack(
       '<BBIH',
       host_action_command_dict['FIND_AXES_MAXIMUMS'],
-      Encoder.EncodeAxes(axes),
+      Encoder.encode_axes(axes),
       rate,
       timeout
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def ToolActionCommand(self, tool_index, command, tool_payload = ''):
+  def tool_action_command(self, tool_index, command, tool_payload = ''):
     """
     Send a command to a toolhead
     @param int tool_index: toolhead index
@@ -674,15 +632,15 @@ class s3g(object):
     if tool_payload != '':
       payload += tool_payload
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def QueueExtendedPoint(self, position, rate):
+  def queue_extended_point(self, position, rate):
     """
     Move the toolhead to a new position at the given rate
     @param list position: 5D position to move to. All dimension should be in steps.
     @param double rate: Movement speed, in steps/??
     """
-    if len(position) != self.ExtendedPointLength:
+    if len(position) != self.extendedPointLength:
       raise PointLengthError(len(position))
 
     payload = struct.pack(
@@ -692,14 +650,14 @@ class s3g(object):
       rate
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def SetExtendedPosition(self, position):
+  def set_extended_position(self, position):
     """
     Inform the machine that it should consider this point its current point
     @param list position: 5D position to set the machine to, in steps.
     """
-    if len(position) != self.ExtendedPointLength:
+    if len(position) != self.extendedPointLength:
       raise PointLengthError(len(position))
 
     payload = struct.pack(
@@ -708,9 +666,9 @@ class s3g(object):
       position[0], position[1], position[2], position[3], position[4],
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def WaitForButton(self, button, timeout, ready_on_timeout, reset_on_timeout, clear_screen):
+  def wait_for_button(self, button, timeout, ready_on_timeout, reset_on_timeout, clear_screen):
     """
     Wait until a user either presses a button on the interface board, or a timeout occurs
     @param str button: A button, must be one of the following: up, down, left, right center.
@@ -750,9 +708,9 @@ class s3g(object):
       optionsField
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def ResetToFactory(self):
+  def reset_to_factory(self):
     """
     Calls factory reset on the EEPROM.  Resets all values to their factory settings.  Also soft resets the board
     """
@@ -762,9 +720,9 @@ class s3g(object):
       0x00
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def QueueSong(self, song_id):
+  def queue_song(self, song_id):
     """
     Play predefined sogns on the piezo buzzer
     @param int songId: The id of the song to play.
@@ -775,9 +733,9 @@ class s3g(object):
       song_id
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def SetBuildPercent(self, percent):
+  def set_build_percent(self, percent):
     """
     Sets the percentage done for the current build.  This value is displayed on the interface board's screen.
     @param int percent: Percent of the build done (0-100)
@@ -789,9 +747,9 @@ class s3g(object):
       0x00
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def DisplayMessage(self, row, col, message, timeout, clear_existing, last_in_group, wait_for_button):
+  def display_message(self, row, col, message, timeout, clear_existing, last_in_group, wait_for_button):
     """
     Display a message to the screen
     @param int row: Row to draw the message at
@@ -822,9 +780,9 @@ class s3g(object):
     payload += message
     payload += '\x00'
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def BuildStartNotification(self, build_name):
+  def build_start_notification(self, build_name):
     """
     Notify the machine that a build has been started
     @param str build_name Name of the build
@@ -838,9 +796,9 @@ class s3g(object):
     payload += build_name
     payload += '\x00'
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def BuildEndNotification(self):
+  def build_end_notification(self):
     """
     Notify the machine that a build has been stopped.
     """
@@ -850,9 +808,9 @@ class s3g(object):
       0,
     )
 
-    self.writer.SendActionPayload(payload)
+    self.writer.send_action_payload(payload)
 
-  def GetToolheadVersion(self, tool_index):
+  def get_toolhead_version(self, tool_index):
     """
     Get the firmware version number of the specified toolhead
     @return double Version number
@@ -862,20 +820,20 @@ class s3g(object):
       s3g_version
     )
    
-    response = self.ToolQuery(tool_index,slave_query_command_dict['GET_VERSION'], payload)
-    [response_code, version] = Encoder.UnpackResponse('<BH', response)
+    response = self.tool_query(tool_index,slave_query_command_dict['GET_VERSION'], payload)
+    [response_code, version] = Encoder.unpack_response('<BH', response)
 
     return version
 
-  def GetPIDState(self, tool_index):
+  def get_PID_state(self, tool_index):
     """
     Retrieve the state variables of the PID controller.  This is intended for tuning the PID Constants
     @param int tool_index: Which tool index to query for information
     @return dictionary The terms associated with the tool_index'sError Term, Delta Term, Last Output 
       and the platform's Error Term, Delta Term and Last Output
     """
-    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PID_STATE'])
-    [response_code, exError, exDelta, exLast, plError, plDelta, plLast] = Encoder.UnpackResponse('<Bhhhhhh', response)
+    response = self.tool_query(tool_index, slave_query_command_dict['GET_PID_STATE'])
+    [response_code, exError, exDelta, exLast, plError, plDelta, plLast] = Encoder.unpack_response('<Bhhhhhh', response)
     PIDVals = {
       "ExtruderError"          : exError,
       "ExtruderDelta"          : exDelta,
@@ -886,7 +844,7 @@ class s3g(object):
     }
     return PIDVals
 
-  def GetToolStatus(self, tool_index):
+  def get_tool_status(self, tool_index):
     """
     Retrieve some information about the tool
     @param int tool_index: The tool we would like to query for information
@@ -903,9 +861,9 @@ class s3g(object):
         The extruder heater will fail if an error is detected with the sensor (thermocouple) or 
         if the temperature reading appears to be unreasonable
     """
-    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOL_STATUS'])
+    response = self.tool_query(tool_index, slave_query_command_dict['GET_TOOL_STATUS'])
 
-    [resonse_code, bitfield] = Encoder.UnpackResponse('<BB', response)
+    [resonse_code, bitfield] = Encoder.unpack_response('<BB', response)
 
 #    bitfield = Encoder.DecodeBitfield8(bitfield)
 
@@ -920,7 +878,7 @@ class s3g(object):
     }
     return returnDict
   
-  def SetServo1Position(self, tool_index, theta):
+  def set_servo1_position(self, tool_index, theta):
     """
     Sets the tool_index's servo as position 1 to a certain angle 
     @param int tool_index: The tool that will be set
@@ -931,24 +889,24 @@ class s3g(object):
       theta
     )
 
-    self.ToolActionCommand(tool_index, slave_action_command_dict['SET_SERVO_1_POSITION'], payload)
+    self.tool_action_command(tool_index, slave_action_command_dict['SET_SERVO_1_POSITION'], payload)
 
-  def ToolheadAbort(self, tool_index):
+  def toolhead_abort(self, tool_index):
     """
     Used to terminate a build during printing.  Disables any engaged heaters and motors
     @param int tool_index: the tool which is to be aborted
     """
-    self.ToolActionCommand(tool_index, slave_action_command_dict['ABORT'])
+    self.tool_action_command(tool_index, slave_action_command_dict['ABORT'])
 
-  def ToolheadPause(self, tool_index):
+  def toolhead_pause(self, tool_index):
     """
     This function is intended to be called infrequently by the end user to pause the toolhead 
     and make various adjustments during a print
     @param int tool_index: The tool which is to be paused
     """
-    self.ToolActionCommand(tool_index, slave_action_command_dict['PAUSE'])
+    self.tool_action_command(tool_index, slave_action_command_dict['PAUSE'])
 
-  def ToggleMotor1(self, tool_index, toggle, direction):
+  def toggle_motor1(self, tool_index, toggle, direction):
     """
     Toggles the motor of a certain toolhead to be either on or off.  Can also set direction.
     @param int tool_index: the tool's motor that will be set
@@ -966,9 +924,9 @@ class s3g(object):
       bitfield,
     )
 
-    self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_MOTOR_1'], payload)
+    self.tool_action_command(tool_index, slave_action_command_dict['TOGGLE_MOTOR_1'], payload)
 
-  def SetMotor1SpeedRPM(self, tool_index, duration):
+  def set_motor1_speed_RPM(self, tool_index, duration):
     """
     This sets the motor speed as an RPM value
     @param int tool_index : The tool's motor that will be set
@@ -979,37 +937,37 @@ class s3g(object):
       duration
     )
 
-    self.ToolActionCommand(tool_index, slave_action_command_dict['SET_MOTOR_1_SPEED_RPM'], payload)
+    self.tool_action_command(tool_index, slave_action_command_dict['SET_MOTOR_1_SPEED_RPM'], payload)
 
-  def GetMotor1Speed(self, tool_index):
+  def get_motor1_speed(self, tool_index):
     """
     Gets the toohead's motor speed in Rotations per Minute (RPM)
     @param int tool_index: The tool index that will be queried for Motor speed
     @return int Duration of each rotation, in miliseconds
     """
-    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_MOTOR_1_SPEED_RPM'])
-    [response_code, speed] = Encoder.UnpackResponse('<BI', response)
+    response = self.tool_query(tool_index, slave_query_command_dict['GET_MOTOR_1_SPEED_RPM'])
+    [response_code, speed] = Encoder.unpack_response('<BI', response)
     return speed
 
-  def GetToolheadTemperature(self, tool_index):
+  def get_toolhead_temperature(self, tool_index):
     """
     Retrieve the toolhead temperature
     @param int tool_index: Toolhead Index
     @return int temperature: reported by the toolhead
     """
-    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOLHEAD_TEMP'])
-    [response_code, temperature] = Encoder.UnpackResponse('<BH', response)
+    response = self.tool_query(tool_index, slave_query_command_dict['GET_TOOLHEAD_TEMP'])
+    [response_code, temperature] = Encoder.unpack_response('<BH', response)
 
     return temperature
 
-  def IsToolReady(self, tool_index):
+  def is_tool_ready(self, tool_index):
     """
     Determine if the tool is at temperature, and is therefore ready to be used.
     @param int tool_index: Toolhead Index
     @return boolean isReady: True if tool is done heating, false otherwise
     """
-    response = self.ToolQuery(tool_index, slave_query_command_dict['IS_TOOL_READY'])
-    [response_code, ready] = Encoder.UnpackResponse('<BB', response)
+    response = self.tool_query(tool_index, slave_query_command_dict['IS_TOOL_READY'])
+    [response_code, ready] = Encoder.unpack_response('<BB', response)
 
     isReady = False
     if ready == 1:
@@ -1021,7 +979,7 @@ class s3g(object):
 
     return isReady
 
-  def ReadFromToolheadEEPROM(self, tool_index, offset, length):
+  def read_from_toolhead_EEPROM(self, tool_index, offset, length):
     """
     Read some data from the toolhead. The data structure is implementation specific.
     @param byte offset: EEPROM location to begin reading from
@@ -1037,11 +995,11 @@ class s3g(object):
       length
     )
 
-    response = self.ToolQuery(tool_index, slave_query_command_dict['READ_FROM_EEPROM'], payload)
+    response = self.tool_query(tool_index, slave_query_command_dict['READ_FROM_EEPROM'], payload)
 
     return response[1:]
 
-  def WriteToToolheadEEPROM(self, tool_index, offset, data):
+  def write_to_toolhead_EEPROM(self, tool_index, offset, data):
     """
     Write some data to the toolhead. The data structure is implementation specific.
     @param int tool_index: Index of tool to access
@@ -1060,52 +1018,52 @@ class s3g(object):
 
     payload += data
 
-    response = self.ToolQuery(tool_index, slave_query_command_dict['WRITE_TO_EEPROM'], payload)
+    response = self.tool_query(tool_index, slave_query_command_dict['WRITE_TO_EEPROM'], payload)
 
     if response[1] != len(data):
       raise EEPROMMismatchError(response[1])
 
-  def GetPlatformTemperature(self, tool_index):
+  def get_platform_temperature(self, tool_index):
     """
     Retrieve the build platform temperature
     @param int tool_index: Toolhead Index
     @return int temperature: reported by the toolhead
     """
-    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PLATFORM_TEMP'])
-    [response_code, temperature] = Encoder.UnpackResponse('<BH', response)
+    response = self.tool_query(tool_index, slave_query_command_dict['GET_PLATFORM_TEMP'])
+    [response_code, temperature] = Encoder.unpack_response('<BH', response)
 
     return temperature
 
-  def GetToolheadTargetTemperature(self, tool_index):
+  def get_toolhead_target_temperature(self, tool_index):
     """
     Retrieve the toolhead target temperature (setpoint)
     @param int tool_index: Toolhead Index
     @return int temperature: that the toolhead is attempting to achieve
     """
-    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_TOOLHEAD_TARGET_TEMP'])
-    [response_code, temperature] = Encoder.UnpackResponse('<BH', response)
+    response = self.tool_query(tool_index, slave_query_command_dict['GET_TOOLHEAD_TARGET_TEMP'])
+    [response_code, temperature] = Encoder.unpack_response('<BH', response)
 
     return temperature
 
-  def GetPlatformTargetTemperature(self, tool_index):
+  def get_platform_target_temperature(self, tool_index):
     """
     Retrieve the build platform target temperature (setpoint)
     @param int tool_index: Toolhead Index
     @return int temperature: that the build platform is attempting to achieve
     """
-    response = self.ToolQuery(tool_index, slave_query_command_dict['GET_PLATFORM_TARGET_TEMP'])
-    [response_code, temperature] = Encoder.UnpackResponse('<BH', response)
+    response = self.tool_query(tool_index, slave_query_command_dict['GET_PLATFORM_TARGET_TEMP'])
+    [response_code, temperature] = Encoder.unpack_response('<BH', response)
 
     return temperature
 
-  def IsPlatformReady(self, tool_index):
+  def is_platform_ready(self, tool_index):
     """
     Determine if the platform is at temperature, and is therefore ready to be used.
     @param int tool_index: Toolhead Index
     @return boolean isReady: true if the platform is at target temperature, false otherwise
     """
-    response = self.ToolQuery(tool_index, slave_query_command_dict['IS_PLATFORM_READY'])
-    [response_code, ready] = Encoder.UnpackResponse('<BB', response)
+    response = self.tool_query(tool_index, slave_query_command_dict['IS_PLATFORM_READY'])
+    [response_code, ready] = Encoder.unpack_response('<BB', response)
 
     isReady = False
     if ready == 1:
@@ -1117,7 +1075,7 @@ class s3g(object):
 
     return isReady
 
-  def ToggleFan(self, tool_index, state):
+  def toggle_fan(self, tool_index, state):
     """
     Turn the fan output on or off
     @param int tool_index: Toolhead Index
@@ -1128,13 +1086,13 @@ class s3g(object):
     else:
       payload = '\x00'
 
-    self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_FAN'], payload)
+    self.tool_action_command(tool_index, slave_action_command_dict['TOGGLE_FAN'], payload)
 
-  def ToggleValve(self, tool_index, state):
+  def toggle_extra_output(self, tool_index, state):
     """
-    Turn the valve output on or off
+    Turn the extra output on or off
     @param int tool_index: Toolhead Index
-    @param boolean state: If True, turn the valvue on, otherwise off.
+    @param boolean state: If True, turn the extra output on, otherwise off.
     """
 
     if state == True:
@@ -1142,9 +1100,9 @@ class s3g(object):
     else:
       payload = '\x00'
 
-    self.ToolActionCommand(tool_index, slave_action_command_dict['TOGGLE_VALVE'], payload)
+    self.tool_action_command(tool_index, slave_action_command_dict['TOGGLE_EXTRA_OUTPUT'], payload)
 
-  def ToolheadInit(self, tool_index):
+  def toolhead_init(self, tool_index):
     """
     Resets a certain tool_index to its initialized boot state, which consists of:
       resetting target temp to 0
@@ -1153,9 +1111,9 @@ class s3g(object):
       sesetting motor speed to 0
     @param int tool_index: The tool to re-initialize
     """
-    self.ToolActionCommand(tool_index, slave_action_command_dict['INIT'])
+    self.tool_action_command(tool_index, slave_action_command_dict['INIT'])
 
-  def SetToolheadTemperature(self, tool_index, temperature):
+  def set_toolhead_temperature(self, tool_index, temperature):
     """
     Set a certain toolhead's temperature
     @param int tool_index: Toolhead Index
@@ -1166,10 +1124,10 @@ class s3g(object):
       temperature
     )
 
-    self.ToolActionCommand(tool_index, slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP'], payload)
+    self.tool_action_command(tool_index, slave_action_command_dict['SET_TOOLHEAD_TARGET_TEMP'], payload)
 
 
-  def SetPlatformTemperature(self, tool_index, temperature):
+  def set_platform_temperature(self, tool_index, temperature):
     """
     Set the platform's temperature
     @param int tool_index: Platform Index
@@ -1180,4 +1138,4 @@ class s3g(object):
       temperature
     )
 
-    self.ToolActionCommand(tool_index, slave_action_command_dict['SET_PLATFORM_TEMP'], payload)
+    self.tool_action_command(tool_index, slave_action_command_dict['SET_PLATFORM_TEMP'], payload)

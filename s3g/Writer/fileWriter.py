@@ -17,5 +17,5 @@ class FileWriter(AbstractWriter):
     """
     self.file = file
 
-  def SendActionPayload(self, payload):
+  def send_action_payload(self, payload):
     self.file.write(bytes(payload))

@@ -59,7 +59,7 @@ def move_handler(addr, tags, stuff, source):
 
     try:
         with rLock:
-            r.QueueExtendedPoint(target, int(r.velocity))
+            r.queue_extended_point(target, int(r.velocity))
     except s3g.TransmissionError as e:
         print 'error moving:', e
 
@@ -73,7 +73,7 @@ def pen_handler(addr, tags, stuff, source):
     print addr, tags, stuff, source
 
     with rLock:
-        r.ToggleFan(0, stuff[0] == 1)
+        r.toggle_fan(0, stuff[0] == 1)
 
 print "starting client"
 t = OSC.OSCMultiClient()
@@ -97,9 +97,9 @@ try:
             time.sleep(1)
             msg = OSC.OSCMessage("/temps")
             with rLock:
-                msg.append(r.GetToolheadTemperature(0))
-                msg.append(r.GetToolheadTemperature(1))
-                msg.append(r.GetPlatformTemperature(0))
+                msg.append(r.get_toolhead_temperature(0))
+                msg.append(r.get_toolhead_temperature(1))
+                msg.append(r.get_platform_temperature(0))
                 t.send(msg)
         except s3g.TransmissionError as e:
             print 'error getting temperature: ', e

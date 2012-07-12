@@ -53,16 +53,16 @@ class FileReaderTestsWithS3g(unittest.TestCase):
     duration = 42
     relativeAxes = 0
 
-    self.r.QueueExtendedPointNew(point, duration, [])
-    self.r.SetExtendedPosition(point)
-    self.r.SetPosition(point[:3])
+    self.r.queue_extended_point_new(point, duration, [])
+    self.r.set_extended_position(point)
+    self.r.set_build_percent(0)
     self.inputstream.seek(0)
 
     payloads = self.d.ReadFile()
     cmdNumbers = [
         s3g.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'], 
         s3g.host_action_command_dict['SET_EXTENDED_POSITION'], 
-        s3g.host_action_command_dict['SET_POSITION']
+        s3g.host_action_command_dict['SET_BUILD_PERCENT']
         ]
 
     for readCmd, cmd in zip([payloads[0][0], payloads[1][0], payloads[2][0]], cmdNumbers):
@@ -159,7 +159,7 @@ class MockTests(unittest.TestCase):
     self.assertRaises(s3g.FileReader.BadCommandError, self.d.GetNextCommand)
 
   def test_get_next_command_host_action_command(self):
-    cmd = s3g.host_action_command_dict['QUEUE_POINT']
+    cmd = s3g.host_action_command_dict['QUEUE_EXTENDED_POINT']
     reply = bytearray()
     reply.append(cmd)
     self.d.ReadBytes = mock.Mock(return_value=reply)
@@ -195,7 +195,7 @@ class MockTests(unittest.TestCase):
     expected_data = [1, 2, 3]
     read_bytes_side_effect_data = []
     for data in expected_data:
-      read_bytes_side_effect_data.append([s3g.Encoder.EncodeUint32(data)])
+      read_bytes_side_effect_data.append([s3g.Encoder.encode_uint32(data)])
     read_bytes_side_effect_data.reverse()
     def read_bytes_side_effect(*args):
       return read_bytes_side_effect_data.pop()  
@@ -214,7 +214,7 @@ class MockTests(unittest.TestCase):
   def test_parse_out_parameters_strings_and_ints(self):
     formatString = 'sI'
     expected_data = ['asdf', 1]
-    self.d.ReadBytes = mock.Mock(return_value=s3g.Encoder.EncodeUint32(expected_data[1]))
+    self.d.ReadBytes = mock.Mock(return_value=s3g.Encoder.encode_uint32(expected_data[1]))
     self.d.GetStringBytes = mock.Mock(return_value=expected_data[0]+'\x00')
 
     parse_parameter_side_effect_data = [expected_data[1], expected_data[0]]
@@ -230,7 +230,7 @@ class MockTests(unittest.TestCase):
  
   def test_parse_parameter(self):
     cases = [
-    [256, s3g.Encoder.EncodeUint32(256), '<i'],
+    [256, s3g.Encoder.encode_uint32(256), '<i'],
     ['asdf', array.array('B', 'asdf'),  '<4s'],
     ['asdf', array.array('B', 'asdf\x00'), '<5s'],
     ]

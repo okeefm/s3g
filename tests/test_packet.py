@@ -11,45 +11,45 @@ class PacketEncodeTests(unittest.TestCase):
     payload = bytearray()
     for i in range (0, constants.maximum_payload_length + 1):
       payload.append(i)
-    self.assertRaises(errors.PacketLengthError,Encoder.EncodePayload,payload)
+    self.assertRaises(errors.PacketLengthError,Encoder.encode_payload,payload)
 
   def test_packet_length(self):
     payload = 'abcd'
-    packet = Encoder.EncodePayload(payload)
+    packet = Encoder.encode_payload(payload)
     assert len(packet) == len(payload) + 3
 
   def test_packet_header(self):
     payload = 'abcd'
-    packet = Encoder.EncodePayload(payload)
+    packet = Encoder.encode_payload(payload)
 
     assert packet[0] == constants.header
 
   def test_packet_length_field(self):
     payload = 'abcd'
-    packet = Encoder.EncodePayload(payload)
+    packet = Encoder.encode_payload(payload)
     assert packet[1] == len(payload)
 
   def test_packet_crc(self):
     payload = 'abcd'
-    packet = Encoder.EncodePayload(payload)
+    packet = Encoder.encode_payload(payload)
     assert packet[6] == Encoder.CalculateCRC(payload);
 
 
 class PacketDecodeTests(unittest.TestCase):
   def test_undersize_packet(self):
     packet = bytearray('abc')
-    self.assertRaises(errors.PacketLengthError,Encoder.DecodePacket,packet)
+    self.assertRaises(errors.PacketLengthError,Encoder.decode_packet,packet)
     
   def test_wrong_header(self):
     packet = bytearray('abcd')
-    self.assertRaises(errors.PacketHeaderError,Encoder.DecodePacket,packet)
+    self.assertRaises(errors.PacketHeaderError,Encoder.decode_packet,packet)
 
   def test_bad_packet_length_field(self):
     packet = bytearray()
     packet.append(constants.header)
     packet.append(5)
     packet.extend('ab')
-    self.assertRaises(errors.PacketLengthFieldError,Encoder.DecodePacket,packet)
+    self.assertRaises(errors.PacketLengthFieldError,Encoder.decode_packet,packet)
 
   def test_bad_crc(self):
     packet = bytearray()
@@ -57,7 +57,7 @@ class PacketDecodeTests(unittest.TestCase):
     packet.append(1)
     packet.extend('a')
     packet.append(Encoder.CalculateCRC('a')+1)
-    self.assertRaises(errors.PacketCRCError,Encoder.DecodePacket,packet)
+    self.assertRaises(errors.PacketCRCError,Encoder.decode_packet,packet)
 
   def test_got_payload(self):
     expected_payload = bytearray('abcde')
@@ -68,7 +68,7 @@ class PacketDecodeTests(unittest.TestCase):
     packet.extend(expected_payload)
     packet.append(Encoder.CalculateCRC(expected_payload))
 
-    payload = Encoder.DecodePacket(packet)
+    payload = Encoder.decode_packet(packet)
     assert payload == expected_payload
 
 
@@ -85,28 +85,28 @@ class PacketStreamDecoderTests(unittest.TestCase):
     assert self.s.expected_length == 0
 
   def test_reject_bad_header(self):
-    self.assertRaises(errors.PacketHeaderError,self.s.ParseByte,0x00)
+    self.assertRaises(errors.PacketHeaderError,self.s.parse_byte,0x00)
     assert self.s.state == 'WAIT_FOR_HEADER'
 
   def test_accept_header(self):
-    self.s.ParseByte(constants.header)
+    self.s.parse_byte(constants.header)
     assert self.s.state == 'WAIT_FOR_LENGTH'
 
   def test_reject_bad_size(self):
-    self.s.ParseByte(constants.header)
-    self.assertRaises(errors.PacketLengthFieldError,self.s.ParseByte,constants.maximum_payload_length+1)
+    self.s.parse_byte(constants.header)
+    self.assertRaises(errors.PacketLengthFieldError,self.s.parse_byte,constants.maximum_payload_length+1)
 
   def test_accept_size(self):
-    self.s.ParseByte(constants.header)
-    self.s.ParseByte(constants.maximum_payload_length)
+    self.s.parse_byte(constants.header)
+    self.s.parse_byte(constants.maximum_payload_length)
     assert(self.s.state == 'WAIT_FOR_DATA')
     assert(self.s.expected_length == constants.maximum_payload_length)
 
   def test_accepts_data(self):
-    self.s.ParseByte(constants.header)
-    self.s.ParseByte(constants.maximum_payload_length)
+    self.s.parse_byte(constants.header)
+    self.s.parse_byte(constants.maximum_payload_length)
     for i in range (0, constants.maximum_payload_length):
-      self.s.ParseByte(i)
+      self.s.parse_byte(i)
 
     assert(self.s.expected_length == constants.maximum_payload_length)
     for i in range (0, constants.maximum_payload_length):
@@ -114,11 +114,11 @@ class PacketStreamDecoderTests(unittest.TestCase):
 
   def test_reject_bad_crc(self):
     payload = 'abcde'
-    self.s.ParseByte(constants.header)
-    self.s.ParseByte(len(payload))
+    self.s.parse_byte(constants.header)
+    self.s.parse_byte(len(payload))
     for i in range (0, len(payload)):
-      self.s.ParseByte(payload[i])
-    self.assertRaises(errors.PacketCRCError,self.s.ParseByte,Encoder.CalculateCRC(payload)+1)
+      self.s.parse_byte(payload[i])
+    self.assertRaises(errors.PacketCRCError,self.s.parse_byte,Encoder.CalculateCRC(payload)+1)
 
   def test_reject_response_generic_error(self):
     cases = [
@@ -136,31 +136,31 @@ class PacketStreamDecoderTests(unittest.TestCase):
       payload = bytearray()
       payload.append(constants.response_code_dict[case[0]])
 
-      self.s.ParseByte(constants.header)
-      self.s.ParseByte(len(payload))
+      self.s.parse_byte(constants.header)
+      self.s.parse_byte(len(payload))
       for i in range (0, len(payload)):
-        self.s.ParseByte(payload[i])
-      self.assertRaises(case[1], Encoder.CheckResponseCode, payload[0])
+        self.s.parse_byte(payload[i])
+      self.assertRaises(case[1], Encoder.check_response_code, payload[0])
 
   def test_reject_response_unknown_error_code(self):
     payload = bytearray()
     payload.append(0xFF)  # Note: We assume that 0xFF is not a valid error code.
 
-    self.s.ParseByte(constants.header)
-    self.s.ParseByte(len(payload))
+    self.s.parse_byte(constants.header)
+    self.s.parse_byte(len(payload))
     for i in range (0, len(payload)):
-      self.s.ParseByte(payload[i])
-    self.assertRaises(errors.ProtocolError, Encoder.CheckResponseCode, payload[0])
+      self.s.parse_byte(payload[i])
+    self.assertRaises(errors.UnknownResponseError, Encoder.check_response_code, payload[0])
 
   def test_accept_packet(self):
     payload = bytearray()
     payload.append(constants.response_code_dict['SUCCESS'])
     payload.extend('abcde')
-    self.s.ParseByte(constants.header)
-    self.s.ParseByte(len(payload))
+    self.s.parse_byte(constants.header)
+    self.s.parse_byte(len(payload))
     for i in range (0, len(payload)):
-      self.s.ParseByte(payload[i])
-    self.s.ParseByte(Encoder.CalculateCRC(payload))
+      self.s.parse_byte(payload[i])
+    self.s.parse_byte(Encoder.CalculateCRC(payload))
     assert(self.s.state == 'PAYLOAD_READY')
     assert(self.s.payload == payload)
 
@@ -169,11 +169,11 @@ class PacketStreamDecoderTests(unittest.TestCase):
 
     payload = bytearray()
     payload.extend('abcde')
-    self.s.ParseByte(constants.header)
-    self.s.ParseByte(len(payload))
+    self.s.parse_byte(constants.header)
+    self.s.parse_byte(len(payload))
     for i in range (0, len(payload)):
-      self.s.ParseByte(payload[i])
-    self.s.ParseByte(Encoder.CalculateCRC(payload))
+      self.s.parse_byte(payload[i])
+    self.s.parse_byte(Encoder.CalculateCRC(payload))
     assert(self.s.state == 'PAYLOAD_READY')
     assert(self.s.payload == payload)
 

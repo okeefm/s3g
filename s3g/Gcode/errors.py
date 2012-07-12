@@ -61,7 +61,7 @@ class ExtraneousCodeError(GcodeError):
   An extraneous code error is raised when a code is found in a command that doesn't support it.
   """
 
-class UnrecognizedCodeError(GcodeError):
+class UnrecognizedCommandError(GcodeError):
   """
   An UnrecognizedCodeError is thrown when a gcode is parsed out that is not recognized
   """
@@ -106,7 +106,7 @@ class NoBuildNameError(GcodeError):
   started without a build name set
   """
 
-class ImproperGcodeEncodingError(TypeError):
+class ImproperGcodeEncodingError(GcodeError):
   """
   An ImproperGcodeEncodingError is thrown when a Gcode Command is encountered that is not 
   encoded in either ASCII or unicode.
@@ -122,6 +122,18 @@ class ImproperVariableError(GcodeError):
   """
   An ImproperVariableError is thrown when a variable that is not prefixed with a '#' is 
   defined in the environment.
+  """
+
+class CalculateHomingDDAError(GcodeError):
+  """
+  A CalculateHomingDDAError is raised when an empty max_feedrates list or spm_list has been
+  passed in.
+  """
+
+class InvalidOffsetError(GcodeError):
+  """
+  An InvalidOffsetError is raised when an offset defined by the P code in a G10 command
+  is not a valid value (1, 2)
   """
 
 class TCodeNotDefinedWarning:

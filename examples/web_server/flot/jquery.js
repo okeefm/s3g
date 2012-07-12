@@ -2177,7 +2177,7 @@ jQuery.event = {
 			handler.guid = jQuery.guid++;
 		}
 
-		// Init the element's event structure
+		// init the element's event structure
 		var elemData = jQuery._data( elem );
 
 		// If no elemData is found then we must be trying to bind to one of the
@@ -2238,7 +2238,7 @@ jQuery.event = {
 			var handlers = events[ type ],
 				special = jQuery.event.special[ type ] || {};
 
-			// Init the event handler queue
+			// init the event handler queue
 			if ( !handlers ) {
 				handlers = events[ type ] = [];
 
@@ -3339,7 +3339,7 @@ var Sizzle = function( selector, context, results, seed ) {
 		parts = [],
 		soFar = selector;
 	
-	// Reset the position of the chunker regexp (start from head)
+	// reset the position of the chunker regexp (start from head)
 	do {
 		chunker.exec( "" );
 		m = chunker.exec( soFar );
@@ -7439,7 +7439,7 @@ jQuery.fn.extend({
 				elem = this[i];
 				display = elem.style.display;
 
-				// Reset the inline display of this element to learn if it is
+				// reset the inline display of this element to learn if it is
 				// being hidden by cascaded rules or not
 				if ( !jQuery._data(elem, "olddisplay") && display === "none" ) {
 					display = elem.style.display = "";
@@ -7824,7 +7824,7 @@ jQuery.fx.prototype = {
 			}
 
 			if ( done ) {
-				// Reset the overflow
+				// reset the overflow
 				if ( this.options.overflow != null && !jQuery.support.shrinkWrapBlocks ) {
 					var elem = this.elem,
 						options = this.options;
@@ -7839,7 +7839,7 @@ jQuery.fx.prototype = {
 					jQuery(this.elem).hide();
 				}
 
-				// Reset the properties, if the item has been hidden or shown
+				// reset the properties, if the item has been hidden or shown
 				if ( this.options.hide || this.options.show ) {
 					for ( var p in this.options.curAnim ) {
 						jQuery.style( this.elem, p, this.options.orig[p] );

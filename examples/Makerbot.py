@@ -24,25 +24,25 @@ class Makerbot(object):
   def HasToolhead(self, index):
     return index < len(self.extruders)
 	
-  def GetToolheadTemperature(self, toolhead):
+  def get_toolhead_temperature(self, toolhead):
     if not self.HasToolhead(toolhead):
       raise s3g.ProtocolError('Tool index out of range, got=%i, max=%i'%(tool_index, max_tool_index))
     else:
-      return self.s3g.GetToolheadTemperature(toolhead)
+      return self.s3g.get_toolhead_temperature(toolhead)
 
-  def GetPlatformTemperature(self):
-    return self.s3g.GetPlatformTemperature(0)
+  def get_platform_temperature(self):
+    return self.s3g.get_platform_temperature(0)
 
   def SetExtruderTemperature(self, toolhead, target):
     if not self.HasToolhead(toolhead):
       raise s3g.ProtocolError('Tool index out of range, got=%i, max=%i'%(tool_index, max_tool_index))
-    return self.s3g.SetToolheadTemperature(toolhead, target)
+    return self.s3g.set_toolhead_temperature(toolhead, target)
 
-  def SetPlatformTemperature(self, target):
-    self.s3g.SetPlatformTemperature(0, target)
+  def set_platform_temperature(self, target):
+    self.s3g.set_platform_temperature(0, target)
 
-  def GetVersion(self):
-    self.s3g.GetVersion()
+  def get_version(self):
+    self.s3g.get_version()
 
   def GetExtruderPID(self):
     pid_offsets = [0, 2, 4]
@@ -50,8 +50,8 @@ class Makerbot(object):
     pid_base = 0x000A
     vals = []
     for offset in pid_offsets:
-      value = self.s3g.ReadFromEEPROM(pid_base+offset, length)
-      vals.append(s3g.DecodeUint16(value))
+      value = self.s3g.read_from_EEPROM(pid_base+offset, length)
+      vals.append(s3g.decode_uint16(value))
     return vals
 
   def SetExtruderPID(self, pid_vals):
@@ -59,7 +59,7 @@ class Makerbot(object):
     length = 2
     pid_base = 0x000A
     for val, offset in zip(pid_vals, pid_offsets):
-      self.s3g.WriteToEEPROM(pid_base+offset, val)
+      self.s3g.write_to_EEPROM(pid_base+offset, val)
 
   def GetPlatformPID(self):
     pid_offsets = [0, 2, 4]
@@ -67,14 +67,14 @@ class Makerbot(object):
     pid_base = 0x0010
     vals = []
     for offset in pid_offsets:
-      value = self.s3g.ReadFromEEPROM(pid_base+offset, length)
-      vals.append(s3g.DecodeUint16(value))
+      value = self.s3g.read_from_EEPROM(pid_base+offset, length)
+      vals.append(s3g.decode_uint16(value))
     return vals
 
 if __name__ == '__main__':
   m = Makerbot('/dev/tty.usbmodemfa131', '115200')
   m.Connect()
-  #print m.GetToolheadTemperature(m.extruders['Right'])
+  #print m.get_toolhead_temperature(m.extruders['Right'])
   print m.GetExtruderPID()
   m.Disconnect()
 

@@ -26,7 +26,7 @@ Host software:
 
 ## Definitions
 
-Here is some vocabulary, that should be used when talking about the protocol:
+Here is some vocabulary that should be used when talking about the protocol:
 
 <table>
 <tr>
@@ -63,7 +63,7 @@ Here is some vocabulary, that should be used when talking about the protocol:
 </tr>
 <tr>
  <td>Buffered Command</td>
- <td>A buffered command should be acknowledge immediately, but the Host or Tool may choose to store in a buffer for later execution. These should be used for commands that could take a long time to execute, such as motion commands.
+ <td>A buffered command should be acknowledged immediately, but the Host or Tool may choose to store it in a buffer for later execution. These should be used for commands that could take a long time to execute, such as motion commands.
 </tr>
 </table>
 
@@ -99,11 +99,11 @@ The slave device is expected to begin responding to a master command within 40ms
 
 Of course, communication is not always so rosy. There are a number of things that could prevent a successful transmission, such as electrical noise or busy firmware. The protocol uses two methods to protect against this: a CRC check at the end of every packet, and a timeout counter while receiving data.
 
-If the master sends a packet over the network and does not receive a response, then the transmission is considered a timeout and can be re-tried up to 5 times. If the master does receive a response packet but it is damaged (either due to an invalid header, length, or CRC check), then it is considered a decoder error, and can be retried. Finally, if the master receives a valid response packet, but the packets response code indicates that the slave encountered a buffer overflow or retry error, then the master should attempt retransmission of the packet.
+The master is allowed to attemt re-transmission if and only if it receives two specific types of errors.  The first type of error is the Retryable error.  If the master receives a Retryable Error, it may retry sending the current packet up to 5 times.  Several types of errors are considered "Retryable": transmission timeouts, Packet Decode errors (indicative of a malformed packet), CRC Errors indicating a discrepency between master and machine, and Generic Machine errors all inherit from Retryable Error.  After 5 Retryable Errors are raised, s3g throws a Transmission Error and terminates.  The second type of error that allows for re-transmission is the BufferOverflowError.  There is no limit to the number of Buffer Overflow Errors a machine can receive.
 
 Here is a reference implementation of a packet send state machine:
 
-![SendCommand state machine diagram](https://github.com/makerbot/s3g/raw/master/doc/SendCommand.png)
+![send_command state machine diagram](https://github.com/makerbot/s3g/raw/master/doc/send_command.png)
 
 
 # Packet formats
@@ -411,7 +411,7 @@ Response
 
     uint16: Firmware Version
 
-## 01 - Init: Initialize firmware to boot state
+## 01 - init: Initialize firmware to boot state
 Initialization consists of:
 
     * Resetting all axes positions to 0
@@ -437,18 +437,6 @@ Payload (0 bytes)
 
 Response (0 bytes)
 
-## 04 - Get position: Get the current position of the toolhead
-Retrieve the curent position of the XYZ axes
-
-Payload (0 bytes)
-
-Response
-
-    int32: X position, in steps
-    int32: Y position, in steps
-    int32: Z position, in steps
-    uint8: Axes bitfield corresponding to the endstop status
-
 ## 07 - Abort immediately: Stop machine, shut down job permanently
 This function is intended to be used to terminate a print during printing. Disables steppers, heaters, and any toolheads, and clears all command buffers.
 
@@ -456,10 +444,10 @@ Payload (0 bytes)
 
 Response (0 bytes)
 
-## 08 - Pause/resume: Halt execution temporarily
-This function is inteded to be called infrequently by the end user in order to make build-time adjustments during a print. It differes from 'Abort Immediately', in that the command buffers and heaters are not disabled.
+## 08 - pause/resume: Halt execution temporarily
+This function is inteded to be called infrequently by the end user in order to make build-time adjustments during a print. It differs from 'Abort Immediately', in that the command buffers and heaters are not disabled.
 
-On Pause, it stops all stepper movement and halts extrusion.
+On pause, it stops all stepper movement and halts extrusion.
 On Resume, it restarts extrusion and resumes movement.
 
 Payload (0 bytes)
@@ -543,7 +531,7 @@ Response
 
     uint8: SD response code
 
-## 17 - Reset
+## 17 - reset
 Call a soft reset. This calls all reset functions on the bot. Same as abort.
 
 Payload (0 bytes)
@@ -740,7 +728,7 @@ Response
     uint32: Reserved for Future Use
 
 ## 26 - Get communication statistics
-Gathers statistics about communication over the tool network. This wass intended for use while troubleshooting Gen3/4 machines.
+Gathers statistics about communication over the tool network. This was intended for use while troubleshooting Gen3/4 machines.
 
 Payload (0 bytes)
 
@@ -753,31 +741,6 @@ Response
     uint32: Number of bytes received over the tool network that were discarded as noise
 
 # Host Buffered Commands
-
-## 129 - Queue point
-This queues an absolute point to move to.
-
-_Historical note: This implementation is much more wordy than an incremental solution, which likely impacts processing time and buffer sizes on the resource-constrained firmware_
-
-Payload
-
-    int32: X coordinate, in steps
-    int32: Y coordinate, in steps
-    int32: Z coordinate, in steps
-    uint32: Feedrate, in microseconds between steps on the max delta. (DDA)
-
-Response (0 bytes)
-
-## 130 - Set position
-Reset the current position of the axes to the given values.
-
-Payload
-
-    int32: X position, in steps
-    int32: Y position, in steps
-    int32: Z position, in steps
-
-Response (0 bytes)
 
 ## 131 - Find axes minimums: Move specified axes in the negative direction until their limit switch is triggered.
 This function will find the minimum position that the hardware can travel to, then stop. Note that all axes are moved syncronously. If one of the axes (Z, for example) should be moved separately, then a seperate command should be sent to move that axis. Note that a minimum endstop is required for each axis that is to be moved.
@@ -801,12 +764,12 @@ Payload
 
 Response (0 bytes)
 
-## 133 - Delay: Pause all motion for the specified time
+## 133 - delay: pause all motion for the specified time
 Halt all motion for the specified amount of time.
 
 Payload
 
-    uint32: Delay, in microseconds
+    uint32: delay, in microseconds
 
 Response (0 bytes)
 
@@ -822,12 +785,12 @@ Payload
 Response (0 bytes)
 
 ## 135 - Wait for tool ready: Wait until a tool is ready before proceeding
-This command halts machine motion until the specified toolhead reaches a ready state. A tool is ready when it's temperature is within range of the setpoint.
+This command halts machine motion until the specified toolhead reaches a ready state. A tool is ready when its temperature is within range of the setpoint.
 
 Payload
 
     uint8: Tool ID of the tool to wait for
-    uint16: Delay between query packets sent to the tool, in ms (nominally 100 ms)
+    uint16: delay between query packets sent to the tool, in ms (nominally 100 ms)
     uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
 
 Response (0 bytes)
@@ -909,7 +872,7 @@ Payload
 Response (0 bytes)
 
 ## 140 - Set extended position
-Reset the current position of the axes to the given values.
+reset the current position of the axes to the given values.
 
 Payload
 
@@ -927,7 +890,7 @@ This command halts machine motion until the specified tool device reaches a read
 Payload
 
     uint8: Tool ID of the build platform to wait for
-    uint16: Delay between query packets sent to the tool, in ms (nominally 100 ms)
+    uint16: delay between query packets sent to the tool, in ms (nominally 100 ms)
     uint16: Timeout before continuing without tool ready, in seconds (nominally 1 minute)
 
 Response (0 bytes)
@@ -954,7 +917,7 @@ Record the positions of the selected axes to device EEPROM
 
 Payload
 
-    uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
+    uint8: Axes bitfield to specify which axes' positions to store. Any axis with a bit set should have its position stored.
 
 Response (0 bytes)
 
@@ -963,7 +926,7 @@ Recall the positions of the selected axes from device EEPROM
 
 Payload
 
-    uint8: Axes bitfield to specify which axes' positions to recall. Any axes with a bit set should have it's position recalled.
+    uint8: Axes bitfield to specify which axes' positions to recall. Any axis with a bit set should have its position recalled.
 
 Response (0 bytes)
 
@@ -972,7 +935,7 @@ Set the value of the digital potentiometers that control the voltage reference f
 
 Payload
 
-    uint8: Axes bitfield to specify which axes' positions to store. Any axes with a bit set should have it's position stored.
+    uint8: Axes bitfield to specify which axes' potentiometers to set. Any axis with a bit set should have it's potentiometer set.
     uint8: value (valid range 0-127), values over max will be capped at max
 
 Response (0 bytes)
@@ -1094,11 +1057,11 @@ Options Field
 
 ## 149 - Display message to LCD
 This command is used to display a message to the LCD board.
-The maximum buffer size is limited by the maximum package size. Thus a full screen cannot be written with one command.
+The maximum buffer size is larger than the maximum package size, so a full screen cannot be written with one command.
 Messages are stored in a buffer and the full buffer is displayed when the "last message in group" flag is 1.
 The buffer is also displayed when the clear message flag is 1. If multiple packets are received before the screen update is called, they will all be displayed. After screen update is called, the screen will wait until the "last message in group" is received to display the full buffer. TODO: clean this
 The "last message in group" flag must be used for display of multi-packet messages.
-Normal popping of the message screen, such as when a print is over, is ignored if the "last message in group" flag has not been received. This is because the bot thinks it is still waiting for the remainder of a message.
+Normal popping up of the message screen, such as when a print is over, is ignored if the "last message in group" flag has not been received. This is because the bot thinks it is still waiting for the remainder of a message.
 
 if the "clear message" flag is 0, the message buffer will be cleared and any existing timeout out will be cleared.
 
@@ -1116,6 +1079,7 @@ Payload
 
 Response (0 bytes)
 
+Options Field
 <table>
 <tr>
  <th>Bit</th>
@@ -1176,7 +1140,7 @@ Response (0 bytes)
 
 TODO: List of available songs?
 
-## 152 - Reset to Factory
+## 152 - reset to Factory
 Calls a factory reset on the eeprom. Resets all values to their "factory" settings. A soft reset of the board is also called.
 
 Payload
@@ -1428,7 +1392,7 @@ Response
 
 # Tool Action Commands
 
-## 01 - Init: Initialize firmware to boot state
+## 01 - init: Initialize firmware to boot state
 Initialization resets the toolhead and all processes it controls to the boot state.  some examples of processes that will be reset are:
 
     * Resetting target temperatures to 0
@@ -1524,8 +1488,8 @@ Payload
 
 Response (0 bytes)
 
-## 13 - Enable/disable valve
-Turn the valve output on or off
+## 13 - Enable/disable extra output
+Turn the extra output attached to a toolhead on or off
 
 Payload
 
@@ -1542,7 +1506,7 @@ Payload
 
 Response (0 bytes)
 
-## 23 - Pause/resume: Halt execution temporarily
+## 23 - pause/resume: Halt execution temporarily
 This function is inteded to be called infrequently by the end user in order to make build-time adjustments during a print.
 
 Payload (0 bytes)

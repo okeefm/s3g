@@ -35,7 +35,7 @@ class ProfileInitTests(unittest.TestCase):
         'ReplicatorDual',
         'ReplicatorSingle',
         ]
-    self.assertEqual(sorted(expected_profiles), sorted(list(s3g.ListProfiles())))
+    self.assertEqual(sorted(expected_profiles), sorted(list(s3g.list_profiles())))
 
 if __name__ == '__main__':
   unittest.main()

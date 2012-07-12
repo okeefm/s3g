@@ -6,6 +6,7 @@ from writerErrors import *
 from .. import errors
 from .. import Encoder
 from .. import constants
+import logging
 
 class StreamWriter(AbstractWriter):
   def __init__(self, file):
@@ -13,28 +14,27 @@ class StreamWriter(AbstractWriter):
 
     @param string file File object to interact with
     """
+    self._log = logging.getLogger(self.__class__.__name__)
     self.file = file
-
+    self._log.info('{"event":"begin_writing_to_stream", "stream":%s}'
+        %(str(self.file)))
     self.total_retries = 0
     self.total_overflows = 0
     self.external_stop = False
 
-  def ExternalStop(self):
-    self.external_stop = True
+  # TODO: test me
+  def send_query_payload(self, payload):
+    return self.send_command(payload)
 
   # TODO: test me
-  def SendQueryPayload(self, payload):
-    return self.SendCommand(payload)
+  def send_action_payload(self, payload):
+    self.send_command(payload)
 
-  # TODO: test me
-  def SendActionPayload(self, payload):
-    self.SendCommand(payload)
+  def send_command(self, payload):
+    packet = Encoder.encode_payload(payload)
+    return self.send_packet(packet)
 
-  def SendCommand(self, payload):
-    packet = Encoder.EncodePayload(payload)
-    return self.SendPacket(packet)
-
-  def SendPacket(self, packet):
+  def send_packet(self, packet):
     """
     Attempt to send a packet to the machine, retrying up to 5 times if an error
     occurs.
@@ -46,6 +46,7 @@ class StreamWriter(AbstractWriter):
     received_errors = []
     while True:
       if self.external_stop:
+        self._log.error('{"event":"external_stop"}\n')
         raise ExternalStopError
       decoder = Encoder.PacketStreamDecoder()
       self.file.write(packet)
@@ -60,6 +61,7 @@ class StreamWriter(AbstractWriter):
           data = ''
           while data == '':
             if (time.time() > start_time + constants.timeout_length):
+              self._log.error('{"event":"machine_timeout"}\n')
               raise errors.TimeoutError(len(data), decoder.state)
 
             # pySerial streams handle blocking read. Be sure to set up a timeout when
@@ -67,9 +69,9 @@ class StreamWriter(AbstractWriter):
             data = self.file.read(1)
 
           data = ord(data)
-          decoder.ParseByte(data)
+          decoder.parse_byte(data)
        
-        Encoder.CheckResponseCode(decoder.payload[0])        
+        Encoder.check_response_code(decoder.payload[0])        
  
         # TODO: Should we chop the response code?
         return decoder.payload
@@ -78,36 +80,32 @@ class StreamWriter(AbstractWriter):
         # Buffer overflow error- wait a while for the buffer to clear, then try again.
         # TODO: This could hang forever if the machine gets stuck; is that what we want?
 
-# TODO: Re-enable logging
-#        self.logger.warning('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}\n'
-#          %(overflow_count,retry_count))
+        self._log.warning('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}\n'
+          %(overflow_count,retry_count))
 
         self.total_overflows += 1
         overflow_count += 1
 
         time.sleep(.2)
 
-      except (errors.PacketDecodeError, errors.GenericError, errors.TimeoutError, errors.CRCMismatchError) as e:
+      except errors.RetryableError as e:
         # Sent a packet to the host, but got a malformed response or timed out waiting
         # for a reply. Retry immediately.
 
-# TODO: Re-enable logging
-#        self.logger.warning('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'
-#          %(type(e),e.__str__(),retry_count))
+        self._log.warning('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'
+          %(type(e),e.__str__(),retry_count))
 
         self.total_retries += 1
         retry_count += 1
-        received_errors.append(e.__name__)
+        received_errors.append(e.__class__.__name__)
 
       except Exception as e:
         # Other exceptions are propigated upwards.
 
-# TODO: Re-enable logging
-#        self.logger.warning('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}\n'
-#          %(type(e),e.__str__(),retry_count))
+        self._log.error('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}\n'
+          %(type(e),e.__str__(),retry_count))
         raise e
 
       if retry_count >= constants.max_retry_count:
-# TODO: Re-enable logging
-#        self.logger.warning('{"event":"transmission_error"}\n')
+        self._log.error('{"event":"transmission_error"}\n')
         raise errors.TransmissionError(received_errors)

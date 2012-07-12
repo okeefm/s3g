@@ -13,7 +13,7 @@ digraph
 
   "TIME>START_TIME+TIMEOUT_LENGTH?" [shape=diamond];
   "TIME>START_TIME+TIMEOUT_LENGTH?" -> "READ BYTE" [label="no"];
-  "TIME>START_TIME+TIMEOUT_LENGTH?" -> "ERROR" [label="yes"];
+  "TIME>START_TIME+TIMEOUT_LENGTH?" -> "RETRYABLE_ERROR" [label="yes"];
 
   "READ BYTE" -> "RECEIVED BYTE?";
   "RECEIVED BYTE?" [shape=diamond];
@@ -22,7 +22,7 @@ digraph
 
   "UPDATE DECODER_STATE" -> "DECODER ERROR?";
   "DECODER ERROR?" [shape=diamond];
-  "DECODER ERROR?" -> "ERROR" [label="yes"];
+  "DECODER ERROR?" -> "RETRYABLE_ERROR" [label="yes"];
   "DECODER ERROR?" -> "DECODER_STATE=PAYLOAD_READY?" [label="no"];
 
   "EVALUATE RESPONSE_CODE" -> "RESPONSE=SUCCESS?";
@@ -35,14 +35,14 @@ digraph
   "RESPONSE=BUFFER_OVERFLOW?" -> "RESPONSE=GENERIC_ERROR?" [label="no"];
 
   "RESPONSE=GENERIC_ERROR?" [shape=diamond];
-  "RESPONSE=GENERIC_ERROR?" -> "ERROR" [label="yes"];
+  "RESPONSE=GENERIC_ERROR?" -> "RETRYABLE_ERROR" [label="yes"];
   "RESPONSE=GENERIC_ERROR?" -> "RESPONSE=CRC_MISMATCH_ERROR?" [label="no"];
 
   "RESPONSE=CRC_MISMATCH_ERROR?" [shape=diamond];
-  "RESPONSE=CRC_MISMATCH_ERROR?" -> "ERROR" [label="yes"];
+  "RESPONSE=CRC_MISMATCH_ERROR?" -> "RETRYABLE_ERROR" [label="yes"];
   "RESPONSE=CRC_MISMATCH_ERROR?" -> "FAILURE" [label="no"];
 
-  "ERROR" -> "INCREMENT RETRY_COUNT";
+  "RETRYABLE_ERROR" -> "INCREMENT RETRY_COUNT";
 
   "INCREMENT RETRY_COUNT" -> "RETRY_COUNT<5?";
   "RETRY_COUNT<5?" [shape=diamond];

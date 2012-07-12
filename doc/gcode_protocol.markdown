@@ -13,7 +13,7 @@ These are the rules for this interpreter:
 The interpreter state machine stores these states:
 
 * Machine position (x,y,z,a,b)
-* Offset register (0, 1)
+* Offset register (1, 2)
 * Toolhead index (0, 1)
 * Toolhead RPM
 * Toolhead direction
@@ -95,7 +95,7 @@ These are the rules used to parse commands:
 ## Variable Substitution
 The gcode parser has an internal variable, called an environemnt.  The environment is a python dict that defines all variables encased in a Gcode File.  During Line Execution, prior to parsing out the comments/commands, all variables defined in the environment are replaced by their defined value.  If any variables present in a line of Gcode are undefined in the environment, the parser will throw an UndefinedVariableError.  While variables contained within the line of Gcode must be prefixed by a '#', the variables defined in the environment do not need to be delineated (i.e. The variable '#FOO' is defined as 'FOO' in the environment).
 
-NB: The environment defaults with as an empty python dict.
+NB: The environment defaults to an empty python dict.
 
 # Supported G Codes
 
@@ -126,7 +126,7 @@ Registers
 
 S3g Output
 
-    QueueExtendedPoint(point, rate)
+    queue_extended_point(point, rate)
 
 Parameters
 
@@ -145,34 +145,34 @@ Registers
 
 S3g Output
 
-    QueueExtendedPoint(point, rate)
+    queue_extended_point(point, rate)
 
 Parameters
 
     point = [x, y, z]
     rate = F
 
-## G4 - Dwell
-If a toolhead is not enabled, this command simply pauses motion for the specified time. If a toolhead is enabled, then this command extrudes at the current rate and direction for the specified time, but does not move the toolhead.
+## G4 - dwell
+Tells the machine to pause for a certain amount of time.
 
 Registers
 
-    P: (code) Dwell time, in ms
+    P: (code) dwell time, in ms
 
 S3g Output
 
-    Delay(delay)
+    delay(delay)
 
 Parameters
     
-    Delay = P
+    delay = P
 
 ## G10 - Store offsets to position register
 Save the specified XYZ offsets to an offset register. When the register is activated by a G54 or G55 command, apply this offset to every position before sending it to the machine.
 
 Registers
 
-    P: (code) Coordinate offset register to write to (0, 1)
+    P: (code) Coordinate offset register to write to (1, 2)
     X: (code) X offset, in mm
     Y: (code) Y offset, in mm
     Z: (code) Z offset, in mm
@@ -181,25 +181,7 @@ S3g Output (none)
 
 Parameters (none)
 
-## G21 - Programming in milimeters
-Instruct the machine that all distances are in milimeters. This command is ignored; the only coordinate system supported is mm.
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
-## G54 - Use coordinage system from G10 P0 (toolhead 0?)
-Consider all future positions to be offset by the values stored in the position register P0.
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
-## G55 - Use coordinage system from G10 P1 (toolhead 1?)
+## G54 - Use coordinate system from G10 P1
 Consider all future positions to be offset by the values stored in the position register P1.
 
 Registers (none)
@@ -208,15 +190,14 @@ S3g Output (none)
 
 Parameters (none)
 
-## G90 - Absolute programming
-Instruct the machine that all distances are absolute. This command is ignored; the only programming mode is absolute.
+## G55 - Use coordinate system from G10 P2
+Consider all future positions to be offset by the values stored in the position register P2.
 
 Registers (none)
 
 S3g Output (none)
 
 Parameters (none)
-
 
 ## G92 - Position register: Set the specified axes positions to the given position
 Sets the position of the state machine and the bot.
@@ -240,7 +221,7 @@ Registers
 
 S3g Output
 
-    SetPosition(position)
+    set_extended_position(position)
 
 Parameters
 
@@ -257,7 +238,7 @@ Registers
 
 S3g Output
 
-    SetPosition(position)
+    set_extended_position(position)
 
 Parameters
 
@@ -277,7 +258,7 @@ Registers
 
 S3g Output
 
-    SetPotentiometerValue(axes, val)
+    set_potentiometer_value(axes, val)
 
 Parameters
 
@@ -290,39 +271,40 @@ Instruct the machine to home the specified axes to their minimum position.
 
 Registers
 
-    D: (code, optional) Movement DDA speed in microseconds/step
+    F: (code) Desired feedrate (mm/min) for this command
     X: (flag, optional) If present, home the x axis to its minimum position
     Y: (flag, optional) If present, home the y axis to its minimum position
     Z: (flag, optional) If present, home the z axis to its minimum position
 
 S3g Output
 
-    FindAxesMinimums(axes, feedrate, timeout)
+    find_axes_minimums(axes, feedrate, timeout)
 
 Parameters
 
     axes = List Of All Present Axes
-    feedrate = F
-    timeout = Hardcoded timeout of 60 seconds
+    feedrate = The calculated DDA speed for F.  We always use the minimum feedrate (relative to the desired feedrate and maximum feedrates of all homing axes) and the limiting axis' spm constant.  If no limiting axis is present, we default to the first axis' spm constant.
+    timeout = Timeout specified in the machine profile
 
 ## G162 - Home given axes to maximum
 Instruct the machine to home the specified axes to their maximum position.
 
 Registers
 
-    D: (code, optional) Movement DDA speed in microseconds/step
+    F: (code) Desired feedrate (mm/min) for this command
     X: (flag, optional) If present, home the x axis to its maximum position
     Y: (flag, optional) If present, home the y axis to its maximum position
     Z: (flag, optional) If present, home the z axis to its maximum position
 
 S3g Output
 
-    FindAxesMaximums(axes, feedrate)
+    find_axes_maximums(axes, feedrate, timeout)
 
 Parameters
 
     axes = List Of All Present Axes
-    feedrate = F
+    feedrate = The calculated DDA speed for F.  We always use the minimum feedrate (relative to the desired feedrate and maximum feedrates of all homing axes) and the limiting axis' spm constant.  If no limiting axis is present, we default to the first axis' spm constant.
+    timeout = Timeout specified in the machine profile
 
 # Supported M Codes
 
@@ -339,7 +321,7 @@ Registers
 
 S3g Output
 
-    ToggleAxes(axes, False)
+    toggle_axes(axes, False)
 
 Parameters
 
@@ -356,7 +338,7 @@ Registers
 
 S3g Output
 
-    DisplayMessage(row, col, message, timeout, clear_existing, last_in_group, wait_for_button)
+    display_message(row, col, message, timeout, clear_existing, last_in_group, wait_for_button)
 
 Parameters
 
@@ -377,7 +359,7 @@ Registers
 
 S3g Output
 
-    QueueSong(song_id)
+    queue_song(song_id)
 
 Parameter
 
@@ -392,7 +374,7 @@ Registers
 
 S3g Output
 
-    SetBuildPercent(percent)
+    set_build_percent(percent)
 
 Parameters
 
@@ -404,7 +386,7 @@ Registers (none)
 
 S3g Output
 
-    BuildStartNotification(build name)
+    build_start_notification(build name)
 
 Parameters
 
@@ -416,7 +398,7 @@ Registers (none)
 
 S3g Output
 
-    BuildEndNotification()
+    build_end_notification()
 
 Parameters (none)
 
@@ -431,7 +413,7 @@ Registers
 
 S3g Output
 
-    SetToolheadTemperature(tool_index, temperature)
+    set_toolhead_temperature(tool_index, temperature)
 
 Parameters
 
@@ -448,12 +430,42 @@ Registers
 
 S3g Output
 
-    SetPlatformTemperature(tool_index, temperature)
+    set_platform_temperature(tool_index, temperature)
 
 Parameters
 
     tool_index = 0
     temperature = S
+
+## M126 - Enable Extra Output
+Enables an extra output attached to a specific toolhead.
+
+Registers
+
+    T: (code) The toolhead that the extra output we want to enable is attached to.
+
+S3g Output
+
+    toggle_extra_output(tool_index, True)
+
+Parameters
+
+    tool_index = T
+
+## M127 - Disable Extra Output 
+Disables an extra output attached to a specific toolhead.
+
+Registers
+
+    T: (code) The toolhead that the extra output we want to disable is attached to
+
+S3g Output
+
+    toggle_extra_output(tool_index, False)
+
+Parameters
+
+    tool_index = T
 
 ## M132 - Load current home position from EEPROM
 Recalls current home position from the EEPROM and waits for the buffer to empty
@@ -468,7 +480,7 @@ Registers
 
 S3g Output
 
-    RecallHomePositions(axes)
+    recall_home_positions(axes)
 
 Parameters
 
@@ -480,11 +492,11 @@ Instruct the machine to wait for the toolhead to reach its target temperature
 Registers
 
     T: (code) The extruder to wait for.
-    P: (code, optional) If present, sets the time limit that we wait for.
+    P: (code, optional) If present, sets the time limit that we wait for.  Otherwise, use a timeout coded into the Gcode State Machine.
 
 S3g Output
 
-    WaitForPlatformReady(tool_index, delay, timeout)
+    wait_for_tool_ready(tool_index, delay, timeout)
 
 Parameters
 
@@ -498,11 +510,11 @@ Instruct the machine to wait for the platform to reach its target temperature
 Registers
 
     T: (code) The platform to wait for.
-    P: (code, optional) If present, sets the time limit that we wait for.
+    P: (code, optional) If present, sets the time limit that we wait for.  Otherwise, use a timeout coded into the Gcode State Machine.
 
 S3g Output
 
-    WaitForPlatformReady(tool_index, delay, timeout)
+    wait_for_platform_ready(tool_index, delay, timeout)
 
 Parameters
 
@@ -521,40 +533,8 @@ Registers
 
 S3g Output
 
-    ChangeTool(tool_index)
+    change_tool(tool_index)
 
 Parameters
 
     tool_index = T
-
-# Ignored M codes
-These codes will not cause an error if encountered, but do not get evaluated. This is because some skeining engines are buggy and produce them.
-
-## M101 - Turn extruder on, forward
-Set the extruder direction to clockwise
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
-## M102 - Turn extruder on, reverse
-Set the extruder direction to counter-clockwise
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
-## M103 - Turn extruder off
-Disables the extruder motor
-
-Registers
-
-    T: (code, optional) If present, first change to the specified tool
-
-S3g Output (none)
-
-Parameters (none)

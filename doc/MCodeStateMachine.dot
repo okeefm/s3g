@@ -11,7 +11,6 @@ digraph
 
   "IS_*_REGISTER_DEFINED?" [shape=rectangle];
   "IS_*_REGISTER_A_FLAG?" [shape=diamond];
-  "PASS"; 
   "70_IS_P_REGISTER_DEFINED?" [shape=rectangle];
   "72_IS_P_REGISTER_DEFINED?" [shape=rectangle];
   "73_IS_P_REGISTER_DEFINED?" [shape=rectangle];
@@ -19,8 +18,12 @@ digraph
   "104_IS_S_REGISTER_DEFINED?" [shape=rectangle];
   "109_IS_T_REGISTER_DEFINED?" [shape=rectangle];
   "109_IS_S_REGISTER_DEFINED?" [shape=rectangle];
+  "126_IS_T_REGISTER_DEFINED?" [shape=rectangle];
+  "127_IS_T_REGISTER_DEFINED?" [shape=rectangle];
   "133_IS_T_REGISTER_DEFINED?" [shape=rectangle];
   "134_IS_T_REGISTER_DEFINED?" [shape=rectangle];
+  "133_IS_P_REGISTER_DEFINED?" [shape=rectangle];
+  "134_IS_P_REGISTER_DEFINED?" [shape=rectangle];
   "135_IS_T_REGISTER_DEFINED?" [shape=rectangle];
   "IS_P_CODE_0?" [shape=rectangle];
   "IS_P_CODE_100?" [shape=rectangle];
@@ -33,12 +36,10 @@ digraph
   "EXTRA_REGISTERS_PRESENT?" -> "CODE=70" [label="no" weight=10];
   "EXTRA_REGISTERS_PRESENT?" -> "CODE=72" [label="no" weight=10];
   "EXTRA_REGISTERS_PRESENT?" -> "CODE=73" [label="no" weight=10];
-  "EXTRA_REGISTERS_PRESENT?" -> "CODE=101" [label="no" weight=10];
-  "EXTRA_REGISTERS_PRESENT?" -> "CODE=102" [label="no" weight=10];
-  "EXTRA_REGISTERS_PRESENT?" -> "CODE=103" [label="no" weight=10];
   "EXTRA_REGISTERS_PRESENT?" -> "CODE=104" [label="no" weight=10];
-  "EXTRA_REGISTERS_PRESENT?" -> "CODE=105" [label="no" weight=10];
   "EXTRA_REGISTERS_PRESENT?" -> "CODE=109" [label="no" weight=10];
+  "EXTRA_REGISTERS_PRESENT?" -> "CODE=126" [label="no" weight=10];
+  "EXTRA_REGISTERS_PRESENT?" -> "CODE=127" [label="no" weight=10];
   "EXTRA_REGISTERS_PRESENT?" -> "CODE=132" [label="no" weight=10];
   "EXTRA_REGISTERS_PRESENT?" -> "CODE=133" [label="no" weight=10];
   "EXTRA_REGISTERS_PRESENT?" -> "CODE=134" [label="no" weight=10];
@@ -61,22 +62,20 @@ digraph
   "IS_BUILD_NAME_SPECIFIED?" -> "NO_BUILD_NAME_ERROR" [label="no"];
   "IS_P_CODE_0?" -> "IS_P_CODE_100?" [label="no"];
   "IS_P_CODE_100?" -> "SEND_BUILD_END_NOTIFICATION" [label="yes"]
-  "CODE=101" -> "PROCESS_SET_EXTRUDER_ON_FORWARD" [weight=15];
-  "PROCESS_SET_EXTRUDER_ON_FORWARD" -> "PASS";
-  "CODE=102" -> "PROCESS_SET_EXTRUDER_ON_REVERSE" [weight=15];
-  "PROCESS_SET_EXTRUDER_ON_REVERSE" -> "PASS";
-  "CODE=103" -> "PROCESS_EXTRUDER_OFF" [weight=15];
-  "PROCESS_EXTRUDER_OFF" -> "PASS";
   "CODE=104" -> "PROCESS_SET_TOOLHEAD_TEMPERATURE" [weight=15];
   "PROCESS_SET_TOOLHEAD_TEMPERATURE" -> "104_IS_T_REGISTER_DEFINED?";
   "104_IS_T_REGISTER_DEFINED?" -> "104_IS_S_REGISTER_DEFINED?";
   "104_IS_S_REGISTER_DEFINED?" -> "SET_TOOLHEAD_TEMPERATURE";
-  "CODE=105" -> "PROCESS_GET_TEMPERATURE" [weight=15];
-  "PROCESS_GET_TEMPERATURE" -> "PASS";
   "CODE=109" -> "PROCESS_SET_PLATFORM_TEMPERATURE" [weight=15];
   "PROCESS_SET_PLATFORM_TEMPERATURE" -> "109_IS_T_REGISTER_DEFINED?";
   "109_IS_T_REGISTER_DEFINED?" -> "109_IS_S_REGISTER_DEFINED?";
   "109_IS_S_REGISTER_DEFINED?" -> "SET_PLATFORM_TEMPERATURE";
+  "CODE=126" -> "PROCESS_ENABLE_EXTRA_OUTPUT" [weight=15];
+  "PROCESS_ENABLE_EXTRA_OUTPUT" -> "126_IS_T_REGISTER_DEFINED?";
+  "126_IS_T_REGISTER_DEFINED?" -> "ENABLE_EXTRA_OUTPUT";
+  "CODE=127" -> "PROCESS_DISABLE_EXTRA_OUTPUT" [weight=15];
+  "PROCESS_DISABLE_EXTRA_OUTPUT" -> "127_IS_T_REGISTER_DEFINED?";
+  "127_IS_T_REGISTER_DEFINED?" -> "DISABLE_EXTRA_OUTPUT";
   "CODE=132" -> "PROCESS_LOAD_POSITION" [weight=15];
   "PROCESS_LOAD_POSITION" -> "RECALL_HOME_POSITION";
   "RECALL_HOME_POSITION" -> "LOSE_POSITION";

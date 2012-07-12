@@ -15,7 +15,7 @@ class EncodeIntTests(unittest.TestCase):
       [2147483647,   '\xFF\xFF\xFF\x7F'],
     ]
     for case in cases:
-      assert Encoder.EncodeInt32(case[0]) == case[1]
+      assert Encoder.encode_int32(case[0]) == case[1]
     
   def test_encode_uint32(self):
     cases = [
@@ -24,7 +24,7 @@ class EncodeIntTests(unittest.TestCase):
       [4294967295,   '\xFF\xFF\xFF\xFF'],
     ]
     for case in cases:
-      assert Encoder.EncodeUint32(case[0]) == case[1]
+      assert Encoder.encode_uint32(case[0]) == case[1]
 
   def test_encode_int16(self):
     cases = [
@@ -33,7 +33,7 @@ class EncodeIntTests(unittest.TestCase):
       [32767,   '\xFF\x7F'],
     ]
     for case in cases:
-      assert Encoder.EncodeInt16(case[0]) == case[1]
+      assert Encoder.encode_int16(case[0]) == case[1]
 
   def test_encode_uint16(self):
     cases = [
@@ -42,7 +42,7 @@ class EncodeIntTests(unittest.TestCase):
       [65535,   '\xFF\xFF'],
     ]
     for case in cases:
-      assert Encoder.EncodeUint16(case[0]) == case[1]
+      assert Encoder.encode_uint16(case[0]) == case[1]
 
 class DecodeIntTests(unittest.TestCase):
   def test_decode_int32(self):
@@ -52,7 +52,7 @@ class DecodeIntTests(unittest.TestCase):
       [16,      '\x10\x00\x00\x00'],
     ]
     for case in cases:
-      self.assertEqual(case[0], Encoder.DecodeInt32(case[1]))
+      self.assertEqual(case[0], Encoder.decode_int32(case[1]))
 
   def test_decode_int32_bytearray(self):
     cases = [
@@ -61,7 +61,7 @@ class DecodeIntTests(unittest.TestCase):
       [16,      '\x10\x00\x00\x00'],
     ]
     for case in cases:
-      self.assertEqual(case[0], Encoder.DecodeInt32(case[1]))
+      self.assertEqual(case[0], Encoder.decode_int32(case[1]))
 
   def test_decode_uint16(self):
     cases = [
@@ -70,7 +70,7 @@ class DecodeIntTests(unittest.TestCase):
       [65535,   '\xFF\xFF'],
     ]
     for case in cases:
-      self.assertEqual(Encoder.DecodeUint16(case[1]), case[0])
+      self.assertEqual(Encoder.decode_uint16(case[1]), case[0])
 
   def test_decode_uint16_bytearray(self):
     byteArrayCases = [
@@ -79,11 +79,11 @@ class DecodeIntTests(unittest.TestCase):
       [65535,   bytearray('\xff\xff')],
     ]
     for case in byteArrayCases:
-      self.assertEqual(Encoder.DecodeUint16(case[1]), case[0])
+      self.assertEqual(Encoder.decode_uint16(case[1]), case[0])
 
   def test_decode_uint16_pathological_fail(self):
     failCase = [0, bytearray('\x00\x00\x00')]
-    self.assertRaises(struct.error, Encoder.DecodeUint16, failCase[1])
+    self.assertRaises(struct.error, Encoder.decode_uint16, failCase[1])
 
 class EncodeAxesTests(unittest.TestCase):
   def test_encode_axes(self):
@@ -98,26 +98,26 @@ class EncodeAxesTests(unittest.TestCase):
       [[],                    0x00],
     ]
     for case in cases:
-      assert Encoder.EncodeAxes(case[0]) == case[1]
+      assert Encoder.encode_axes(case[0]) == case[1]
 
 class UnpackResponseTests(unittest.TestCase):
   def test_unpack_response_no_format(self):
     b = bytearray()
     b.extend('abcde')
-    self.assertRaises(errors.ProtocolError,Encoder.UnpackResponse,'',b)
+    self.assertRaises(errors.ProtocolError,Encoder.unpack_response,'',b)
 
   def test_unpack_response_short_data(self):
     b = bytearray()
     b.extend('abc')
-    self.assertRaises(errors.ProtocolError,Encoder.UnpackResponse,'<I',b)
+    self.assertRaises(errors.ProtocolError,Encoder.unpack_response,'<I',b)
 
   def test_unpack_response(self):
     expected_data = [1,'a','b','c']
     b = bytearray()
-    b.extend(Encoder.EncodeUint32(1))
+    b.extend(Encoder.encode_uint32(1))
     for data in expected_data[1:]:
       b.append(data)
-    data = Encoder.UnpackResponse('<Iccc',b)
+    data = Encoder.unpack_response('<Iccc',b)
     for i in range(0, len(expected_data)):
       assert(data[i] == expected_data[i])
 
@@ -125,30 +125,30 @@ class UnpackResponseTests(unittest.TestCase):
     expected_string = '\x00'
     b = bytearray()
     b.append(expected_string)
-    data = Encoder.UnpackResponseWithString('', b)
+    data = Encoder.unpack_response_with_string('', b)
     self.assertEqual(expected_string, data[0])
 
   def test_unpack_response_with_string_no_format(self):
     expected_string = 'abcde\x00'
     b = bytearray()
     b.extend(expected_string)
-    data = Encoder.UnpackResponseWithString('',b)
+    data = Encoder.unpack_response_with_string('',b)
     assert(len(data) == 1)
     assert data[0] == expected_string
 
   def test_unpack_response_with_string_missing_string(self):
     b = bytearray()
     b.extend('abcd')
-    self.assertRaises(errors.ProtocolError,Encoder.UnpackResponseWithString,'<I',b)
+    self.assertRaises(errors.ProtocolError,Encoder.unpack_response_with_string,'<I',b)
 
   def test_unpack_response_with_string(self):
     expected_data = [1, 'a', 'b', 'c', 'ABCDE\x00']
     b = bytearray()
-    b.extend(Encoder.EncodeUint32(1))
+    b.extend(Encoder.encode_uint32(1))
     for data in expected_data[1:-1]:
       b.append(data)
     b.extend(expected_data[-1])
-    data = Encoder.UnpackResponseWithString('<Iccc',b)
+    data = Encoder.unpack_response_with_string('<Iccc',b)
     for expected, d in zip(expected_data, data):
       self.assertEqual(expected, d)
 
@@ -156,7 +156,7 @@ class UnpackResponseTests(unittest.TestCase):
     expected_data = 'ABCDE'
     b = bytearray()
     b.extend(expected_data)
-    self.assertRaises(errors.ProtocolError, Encoder.UnpackResponseWithString, '', b)
+    self.assertRaises(errors.ProtocolError, Encoder.unpack_response_with_string, '', b)
 
 if __name__ == "__main__":
   unittest.main()
