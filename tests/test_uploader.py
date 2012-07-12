@@ -64,7 +64,7 @@ class TestUploader(unittest.TestCase):
 
   def test_list_versions_good_machine(self):
     machine = "Replicator"
-    expected_versions = ['5.1', '5.2']
+    expected_versions = ['5.1', '5.2', '5.5']
     got_versions = self.uploader.list_versions(machine)
     self.assertEqual(expected_versions, got_versions)
 
