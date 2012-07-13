@@ -750,6 +750,7 @@ Response
     uint16_t Firmware Version
     uint16_t Internal Version
     uint16_t Reserved for future use
+    uint16_t Reserved for future use
 
 # Host Buffered Commands
 
@@ -1070,13 +1071,11 @@ Options Field
 This command is used to display a message to the LCD board.
 The maximum buffer size is larger than the maximum package size, so a full screen cannot be written with one command.
 Messages are stored in a buffer and the full buffer is displayed when the "last message in group" flag is 1.
-The buffer is also displayed when the clear message flag is 1. If multiple packets are received before the screen update is called, they will all be displayed. After screen update is called, the screen will wait until the "last message in group" is received to display the full buffer. TODO: clean this
-The "last message in group" flag must be used for display of multi-packet messages.
-Normal popping up of the message screen, such as when a print is over, is ignored if the "last message in group" flag has not been received. This is because the bot thinks it is still waiting for the remainder of a message.
+If the "last message in group" is not sent, the message will never be displayed
 
 if the "clear message" flag is 0, the message buffer will be cleared and any existing timeout out will be cleared.
 
-If the "wait on button" flag is 1, the message screen will clear after a user button press is received. The timeout field is still relevant if the button press is never received.
+If the "wait on button" flag is 1, the message screen will clear after a users presses the center button. The timeout field is still relevant if the button press is never received.
 
 Text will auto-wrap at end of line. \n is recognized as new line start. \r is ignored.
 
@@ -1149,10 +1148,21 @@ Payload
 
 Response (0 bytes)
 
-TODO: List of available songs?
+    song ID 0: error tone with 4 cycles
+    song ID 1: done tone
+    song ID 2: error tone with 2 cycles
+
 
 ## 152 - reset to Factory
 Calls a factory reset on the eeprom. Resets all values to their "factory" settings. A soft reset of the board is also called.
+
+This function resets all eeprom values to defaults except those that are considered "Factory" settings.   Factory settings are:
+
+    Toolhead Calibration Settings
+    Axis Inversion Settings
+    Tool Count (single or dual)
+
+These settings will not be cleared by reset to Factory.  A full eeprom reset must be called to clear these settings.
 
 Payload
 
@@ -1161,7 +1171,7 @@ Payload
 Response (0 bytes)
 
 ## 153 - Build start notification
-Tells the motherboard that a build is about to begin, and provides the name of the job for status reporting. This allows the motherboard to display an appropriate build screen on the interface board.
+Tells the motherboard that a build is starting. This allows the motherboard to be state aware and to display and track build statistics.   Builds that do not include this command will not have the full mightyboard feature set enabled.
 
 Payload
 
@@ -1491,7 +1501,7 @@ Response (0 bytes)
 </table>
 
 ## 12 - Enable/disable fan
-Turn the fan output on or off
+Turn the fan output on or off.  Note that the extruder fan does not turn on until a temperature threshold is reached (currently set to 50C).  
 
 Payload
 
