@@ -1,7 +1,6 @@
 # Some utilities for speaking s3g
 import struct
 import time
-import logging
 import serial
 
 import Encoder
