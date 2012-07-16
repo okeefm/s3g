@@ -90,7 +90,7 @@ class StreamWriter(AbstractWriter):
         # Sent a packet to the host, but got a malformed response or timed out waiting
         # for a reply. Retry immediately.
 
-        self._log.warning('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}', type(e),e.__str__(),retry_count)
+        self._log.warning('{"event":"transmission_problem", "exception":"%s", "message":"%s", "retry_count"=%i}', type(e),e.__str__(),retry_count)
 
         self.total_retries += 1
         retry_count += 1
@@ -99,7 +99,7 @@ class StreamWriter(AbstractWriter):
       except Exception as e:
         # Other exceptions are propigated upwards.
 
-        self._log.error('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}', type(e),e.__str__(),retry_count)
+        self._log.error('{"event":"unhandled_exception", "exception":"%s", "message":"%s", "retry_count"=%i}', type(e),e.__str__(),retry_count)
         raise e
 
       if retry_count >= constants.max_retry_count:
