@@ -8,6 +8,7 @@ import unittest
 import json
 
 import s3g
+import s3g.profile
 
 class ProfileInitTests(unittest.TestCase):
   def test_bad_profile_name(self):
@@ -36,6 +37,23 @@ class ProfileInitTests(unittest.TestCase):
         'ReplicatorSingle',
         ]
     self.assertEqual(sorted(expected_profiles), sorted(list(s3g.list_profiles())))
+
+  def test__getprofiledir(self):
+    '''Make sure that _getprofiledir returns its argument when that argument is
+    not None.
+
+    '''
+    profiledir = 'x'
+    self.assertEqual(profiledir, s3g.profile._getprofiledir(profiledir))
+
+  def test__getprofiledir_default(self):
+    '''Make sure that _getprofiledir returns the default profile directory when
+    its argument is None.
+
+    '''
+    profiledir = os.path.abspath(
+      os.path.join(os.path.dirname(__file__), '..', 's3g', 'profiles'))
+    self.assertEqual(profiledir, s3g.profile._getprofiledir(None))
 
 if __name__ == '__main__':
   unittest.main()
