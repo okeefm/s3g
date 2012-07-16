@@ -23,7 +23,7 @@ class FileReader(object):
     data = self.file.read(count)
   
     if len(data) != count:
-      self._log.error('{"event":"insufficient_data"}\n')
+      self._log.error('{"event":"insufficient_data"}')
       raise InsufficientDataError 
     
     return data 
@@ -40,10 +40,10 @@ class FileReader(object):
     while True:
       b += self.ReadBytes(1)
       if b == '':   #We just read in an empty string, so we ran out of data
-        self._log.error('{"event":"insufficient_data"}\n')
+        self._log.error('{"event":"insufficient_data"}')
         raise InsufficientDataError
       if len(b) > constants.maximum_payload_length:
-        self._log.error('{"event":"string_too_long"}\n')
+        self._log.error('{"event":"string_too_long"}')
         raise StringTooLongError
       elif b[-1] == '\x00':
         return b
@@ -63,8 +63,7 @@ class FileReader(object):
     # TODO: Break the tool action commands out of here
     if (not cmd in constants.slave_action_command_dict.values()) and \
        (not cmd in constants.host_action_command_dict.values()):
-      self._log.error('{"event":"bad_read_command", "command":%s}\n'
-          %(cmd))
+      self._log.error('{"event":"bad_read_command", "command":%s}' , cmd)
       raise BadCommandError(cmd)
 
     return cmd
@@ -104,14 +103,12 @@ class FileReader(object):
     try:
       return self.ParseOutParameters(hostFormats[cmd])
     except KeyError:
-      self._log.error('{"event":"bad_host_command", "bad_command":%s}'
-          %(cmd))
+      self._log.error('{"event":"bad_host_command", "bad_command":%s}' , cmd)
       raise BadHostCommandError(cmd)
 
   def ParseToolAction(self, cmd):
     if cmd != constants.host_action_command_dict['TOOL_ACTION_COMMAND']:
-      self._log.error('{"event":"cmd_is_not_tool_action_cmd", "bad_cmd":%s}'
-          %(cmd))
+      self._log.error('{"event":"cmd_is_not_tool_action_cmd", "bad_cmd":%s}' , cmd)
       raise NotToolActionCmdError
     data = []
     data.extend(self.ParseOutParameters(hostFormats[cmd]))
@@ -119,8 +116,7 @@ class FileReader(object):
     try:
       data.extend(self.ParseOutParameters(slaveFormats[slaveCmd]))
     except KeyError:
-      self._log.error('{"event":"bad_slave_cmd", "bad_cmd":%s}'
-          %(slaveCmd))
+      self._log.error('{"event":"bad_slave_cmd", "bad_cmd":%s}' , slaveCmd)
       raise BadSlaveCommandError(slaveCmd)
     return data
 
@@ -144,13 +140,12 @@ class FileReader(object):
     """
     payloads = []
     try:
-      self._log.info('{"event":"reading_bytes_from_file", "file":%s}'
-          %(str(self.file)))
+      self._log.info('{"event":"reading_bytes_from_file", "file":%s}' , str(self.file))
       while True:
         payload = self.ParseNextPayload()
         payloads.append(payload)
     # TODO: We aren't catching partial packets at the end of files here.
     except EndOfFileError:
-      self._log.info('{"event":"done_reading_file"}\n')
+      self._log.info('{"event":"done_reading_file"}')
       return payloads
 
