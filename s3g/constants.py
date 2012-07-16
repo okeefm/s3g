@@ -79,17 +79,18 @@ slave_action_command_dict = {
 }
 
 response_code_dict = {
-  'GENERIC_ERROR'              : 0x80,
+  'GENERIC_PACKET_ERROR'       : 0x80,
   'SUCCESS'                    : 0x81,
   'ACTION_BUFFER_OVERFLOW'     : 0x82,
   'CRC_MISMATCH'               : 0x83,
-#  'QUERY_TOO_BIG'              : 0x84,
-#  'COMMAND_NOT_SUPPORTED'      : 0x85,
+  'PACKET_TOO_BIG'             : 0x84,
+  'COMMAND_NOT_SUPPORTED'      : 0x85,
   'DOWNSTREAM_TIMEOUT'         : 0x87,
   'TOOL_LOCK_TIMEOUT'          : 0x88,
   'CANCEL_BUILD'               : 0x89,
   'ACTIVE_LOCAL_BUILD'         : 0x8A,
   'OVERHEAT_STATE'             : 0x8B,
+  'PACKET_TIMEOUT'             : 0x8C,
 }
 
 sd_error_dict = {

@@ -225,7 +225,7 @@ Response code values can be as follows:
 </tr>
 <tr>
  <td>0x80</td>
- <td>Generic error, packet discarded</td>
+ <td>Generic Packet error, packet discarded</td>
  <td>Yes</td>
 </tr>
 <tr>
@@ -245,7 +245,7 @@ Response code values can be as follows:
 </tr>
 <tr>
  <td>0x84</td>
- <td>Query packet too big, packet discarded (TODO: is this in use?)</td>
+ <td>Query packet too big, packet discarded </td>
  <td>No</td>
 </tr>
 <tr>
@@ -278,6 +278,12 @@ Response code values can be as follows:
  <td>Bot is shutdown due to Overheat</td>
  <td>No</td>
 </tr>
+<tr>
+ <td>0x8C</td>
+ <td>Packet timeout error, packet discarded</td>
+ <td>Yes</td>
+</tr>
+
 </table>
 
 _Historical note: Firmware versions prior to 2.9 did not have the high bit set for error codes. This was changed to avoid having the response code conflict with tool indexes on the tool network_ 

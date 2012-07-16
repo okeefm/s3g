@@ -122,14 +122,17 @@ class PacketStreamDecoderTests(unittest.TestCase):
 
   def test_reject_response_generic_error(self):
     cases = [
-      ['GENERIC_ERROR',          errors.GenericError],
-      ['ACTION_BUFFER_OVERFLOW', errors.BufferOverflowError],
-      ['CRC_MISMATCH',           errors.CRCMismatchError],
-      ['DOWNSTREAM_TIMEOUT',     errors.DownstreamTimeoutError],
-      ['TOOL_LOCK_TIMEOUT',      errors.ToolLockError],
-      ['CANCEL_BUILD',           errors.BuildCancelledError],
-      ['ACTIVE_LOCAL_BUILD',     errors.ActiveBuildError],
-      ['OVERHEAT_STATE',         errors.OverheatError]
+      ['GENERIC_PACKET_ERROR',      errors.GenericError],
+      ['ACTION_BUFFER_OVERFLOW',    errors.BufferOverflowError],
+      ['CRC_MISMATCH',              errors.CRCMismatchError],
+      ['COMMAND_NOT_SUPPORTED',     errors.CommandNotSupportedError],
+      ['PACKET_TOO_BIG',       errors.PacketLengthError],
+      ['PACKET_TIMEOUT' ,           errors.PacketTimeoutError],
+      ['DOWNSTREAM_TIMEOUT',        errors.DownstreamTimeoutError],
+      ['TOOL_LOCK_TIMEOUT',         errors.ToolLockError],
+      ['CANCEL_BUILD',              errors.BuildCancelledError],
+      ['ACTIVE_LOCAL_BUILD',        errors.ActiveBuildError],
+      ['OVERHEAT_STATE',            errors.OverheatError]
     ]
 
     for case in cases:

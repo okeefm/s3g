@@ -38,7 +38,7 @@ class StreamWriterTests(unittest.TestCase):
     for i in range(3):
       self.outputstream.write(Encoder.encode_payload(response_payload))
     response_payload = bytearray()
-    response_payload.append(constants.response_code_dict['GENERIC_ERROR'])
+    response_payload.append(constants.response_code_dict['GENERIC_PACKET_ERROR'])
     for i in range(2):
       self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
