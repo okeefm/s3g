@@ -6,6 +6,8 @@ sys.path.append(lib_path)
 import unittest
 
 import json
+import shutil
+import tempfile
 
 import s3g
 import s3g.profile
@@ -22,6 +24,18 @@ class ProfileInitTests(unittest.TestCase):
       expected_vals = json.load(f)
     self.assertEqual(expected_vals, p.values)
 
+  def test_Profile_profiledir(self):
+    profiledir = tempfile.mkdtemp()
+    try:
+      path = os.path.join(profiledir, 'Test.json')
+      with open(path, 'w') as fp:
+        values = {'key':'value'}
+        json.dump(values, fp)
+      profile = s3g.Profile('Test', profiledir)
+      self.assertEqual(values, profile.values)
+    finally:
+      shutil.rmtree(profiledir)
+
   def test_profile_access(self):
     """
     Make sure we have no issues accessing the information in the machine profile
@@ -37,6 +51,18 @@ class ProfileInitTests(unittest.TestCase):
         'ReplicatorSingle',
         ]
     self.assertEqual(sorted(expected_profiles), sorted(list(s3g.list_profiles())))
+
+  def test_list_profiles_profiledir(self):
+    profiledir = tempfile.mkdtemp()
+    try:
+      self.assertEqual([], list(s3g.list_profiles(profiledir)))
+      path = os.path.join(profiledir, 'Test.json')
+      with open(path, 'w') as fp:
+        values = {'key':'value'}
+        json.dump(values, fp)
+      self.assertEqual(['Test'], list(s3g.list_profiles(profiledir)))
+    finally:
+      shutil.rmtree(profiledir)
 
   def test__getprofiledir(self):
     '''Make sure that _getprofiledir returns its argument when that argument is
