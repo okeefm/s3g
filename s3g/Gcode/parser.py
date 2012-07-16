@@ -102,16 +102,12 @@ class GcodeParser(object):
         else:
           pass
     except KeyError as e:
-      if e[0] == 'T':
-        self._log.warning('{"event":"t_code_not_defined"}')
-        TCodeNotDefinedWarning()
-      else:
-        self._log.error('{"event":"missing_code_error", "missing_code":%s}\n', e[0])
-        gcode_error = MissingCodeError()
-        gcode_error.values['MissingCode'] = e[0]
-        gcode_error.values['LineNumber'] = self.line_number
-        gcode_error.values['Command'] = command
-        raise gcode_error
+      self._log.error('{"event":"missing_code_error", "missing_code":%s}\n', e[0])
+      gcode_error = MissingCodeError()
+      gcode_error.values['MissingCode'] = e[0]
+      gcode_error.values['LineNumber'] = self.line_number
+      gcode_error.values['Command'] = command
+      raise gcode_error
     except VectorLengthZeroError:
       self._log.warning('{"event":vector_length_zero_error"}')
       pass
