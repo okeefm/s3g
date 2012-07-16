@@ -14,7 +14,7 @@ parser.add_option("-o", "--outputfile", dest="output_file",
 parser.add_option("-m", "--machine_type", dest="machine",
                   help="machine type", default="ReplicatorDual")
 parser.add_option("-s", "--gcode_start_end_sequences", dest="start_end_sequences",
-                  help="run gcode start and end proceeses", default=True)
+                  help="Disregard the start/end sequences in the stored inside the machine profile.", default=True, action="store_false")
 (options, args) = parser.parse_args()
 
 
