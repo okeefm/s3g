@@ -226,6 +226,7 @@ class StreamWriterTests(unittest.TestCase):
     self.delay_and_external_stop_in_thread()
     self.assertTrue(self.w.external_stop)
 
+  @unittest.skip("This test doesnt work 100% of the time since it relies timing too much, so we skip it for mow")
   def test_eternal_stop_works_multithreaded(self):
     t = threading.Thread(target=self.delay_and_external_stop_in_thread)
     try:
