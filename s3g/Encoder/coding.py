@@ -56,14 +56,28 @@ def decode_uint16(data):
     data = array.array('B', data)
   return struct.unpack('<H', data)[0]
     
+def encode_axis(axis):
+  """
+  Encode an array of axes names into an axis bitfield
+  @param axes Array of axis names ['x', 'y', ...] 
+  @return bitfield containing a representation of the axes map
+  """
+  axes_map = {
+    'x':0x01,
+    'y':0x02,
+    'z':0x03,
+    'a':0x04,
+    'b':0x05,
+  }
+
+  return axes_map[axis.lower()]
+
 def encode_axes(axes):
   """
   Encode an array of axes names into an axis bitfield
   @param axes Array of axis names ['x', 'y', ...] 
   @return bitfield containing a representation of the axes map
   """
-  # TODO: Test cases?
-
   axes_map = {
     'x':0x01,
     'y':0x02,

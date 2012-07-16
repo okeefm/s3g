@@ -46,6 +46,33 @@ class s3g(object):
     [response_code, version] = Encoder.unpack_response('<BH', response)
     return version
 
+  def get_advanced_version(self):
+    """
+    Get the firmware version number of the connected machine
+    @return Version number
+    """
+    payload = struct.pack(
+      '<BH',
+      host_query_command_dict['GET_ADVANCED_VERSION'], 
+      s3g_version,
+    )
+
+    response = self.writer.send_query_payload(payload)
+    [response_code,
+     version,
+     internal_version,
+     reserved_a,
+     reserved_b] = Encoder.unpack_response('<BHHHH', response)
+
+    version_info = {
+    'Version' : version,
+    'InternalVersion' : internal_version,
+    'ReservedA'  : reserved_a,
+    'ReservedB'  : reserved_b,
+    }
+
+    return version_info
+
   def capture_to_file(self, filename):
     """
     Capture all subsequent commands up to the 'end capture' command to a file with the given filename on an SD card.
@@ -128,6 +155,33 @@ class s3g(object):
 
     # TODO: mismatch here.
     self.writer.send_action_payload(payload)
+
+  def get_build_stats(self):
+    """
+    Get some statistics about the print currently running, or the last print if no print is active
+    """
+    payload = struct.pack(
+      '<B',
+      host_query_command_dict['GET_BUILD_STATS'],
+    )
+     
+    response = self.writer.send_query_payload(payload)
+
+    [response_code,
+     build_state,
+     build_hours,
+     build_minutes,
+     line_number,
+     reserved] = Encoder.unpack_response('<BBBBLL', response)
+
+    info = {
+    'BuildState' : build_state,
+    'BuildHours' : build_hours,
+    'BuildMinutes' : build_minutes,
+    'LineNumber' : line_number,
+    'Reserved' : reserved
+    }
+    return info
 
   def get_communication_stats(self):
     """
@@ -333,7 +387,7 @@ class s3g(object):
     payload = struct.pack(
       '<BBB',
       host_action_command_dict['SET_POT_VALUE'], 
-      axis, 
+      Encoder.encode_axis(axis), 
       value
     )
 

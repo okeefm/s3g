@@ -128,6 +128,8 @@ class PacketStreamDecoderTests(unittest.TestCase):
       ['DOWNSTREAM_TIMEOUT',     errors.DownstreamTimeoutError],
       ['TOOL_LOCK_TIMEOUT',      errors.ToolLockError],
       ['CANCEL_BUILD',           errors.BuildCancelledError],
+      ['ACTIVE_LOCAL_BUILD',     errors.ActiveBuildError],
+      ['OVERHEAT_STATE',         errors.OverheatError]
     ]
 
     for case in cases:

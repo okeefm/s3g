@@ -141,7 +141,7 @@ class GcodeParser(object):
       except KeyError:
         valTable[codes[a]] = [a]
     for val in valTable:
-      self.s3g.set_potentiometer_value(valTable[val], val)
+      self.s3g.set_potentiometer_value(valTable[val][0], val)
 
   def find_axes_maximums(self, codes, flags, command):
     """Moves the given axes in the position direction until a timeout

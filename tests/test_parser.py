@@ -534,7 +534,7 @@ class gcodeTests(unittest.TestCase):
 
   def test_set_potentiometer_values_one_axis(self):
     codes = {'G' : 130, 'X' : 0}
-    axes = ['X']
+    axes = 'X'
     val = 0
     self.g.set_potentiometer_values(codes, [], '')
     self.mock.set_potentiometer_value.assert_called_once_with(axes, val)
@@ -542,11 +542,11 @@ class gcodeTests(unittest.TestCase):
   def test_set_potentiometer_values_all_axes(self):
     codes = {'X' : 0, 'Y' : 1, 'Z' : 2, 'A': 3, 'B' : 4} 
     expected = [
-        (['X'], 0),
-        (['Y'], 1),
-        (['Z'], 2),
-        (['A'], 3),
-        (['B'], 4),
+        ('X', 0),
+        ('Y', 1),
+        ('Z', 2),
+        ('A', 3),
+        ('B', 4),
         ]
     self.g.set_potentiometer_values(codes, [], '')
     for i in range(len(expected)):

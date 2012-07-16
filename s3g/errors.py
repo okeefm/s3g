@@ -73,6 +73,16 @@ class BuildCancelledError(Exception):
   Signifies the cancellation of a build
   """
 
+class ActiveBuildError(Exception):
+  """ 
+  Signigifies a report that the the bot is actively building from a local source
+  """
+
+class OverheatError(Exception):
+  """
+  Signigies that the bot is reporting and overheat state and can no longer accept commands
+  """
+
 class TransmissionError(IOError):
   """
   A transmission error is raised when the s3g driver encounters 

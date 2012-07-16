@@ -18,7 +18,9 @@ host_query_command_dict = {
   'GET_EXTENDED_POSITION'     : 21,
   'EXTENDED_STOP'             : 22,
   'GET_MOTHERBOARD_STATUS'    : 23,
-  'GET_COMMUNICATION_STATS'   : 26
+  'GET_BUILD_STATS'           : 24,
+  'GET_COMMUNICATION_STATS'   : 26,
+  'GET_ADVANCED_VERSION'      : 27
 }
 
 host_action_command_dict = {
@@ -86,6 +88,8 @@ response_code_dict = {
   'DOWNSTREAM_TIMEOUT'         : 0x87,
   'TOOL_LOCK_TIMEOUT'          : 0x88,
   'CANCEL_BUILD'               : 0x89,
+  'ACTIVE_LOCAL_BUILD'         : 0x8A,
+  'OVERHEAT_STATE'             : 0x8B,
 }
 
 sd_error_dict = {

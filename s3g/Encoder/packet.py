@@ -70,6 +70,12 @@ def check_response_code(response_code):
   elif response_code == constants.response_code_dict['CANCEL_BUILD']:
     raise errors.BuildCancelledError()
 
+  elif response_code == constants.response_code_dict['ACTIVE_LOCAL_BUILD']:
+    raise errors.ActiveBuildError()
+
+  elif response_code == constants.response_code_dict['OVERHEAT_STATE']:
+    raise errors.OverheatError()
+
   raise errors.UnknownResponseError(response_code)
 
 class PacketStreamDecoder(object):

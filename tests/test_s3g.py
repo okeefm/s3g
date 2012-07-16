@@ -72,6 +72,31 @@ class S3gTests(unittest.TestCase):
     self.assertEqual(payload[0], constants.host_query_command_dict['GET_VERSION'])
     self.assertEqual(payload[1:3], Encoder.encode_uint16(constants.s3g_version))
 
+  def test_get_advanced_version(self):
+    info = {
+      'Version': 0x5DD5,
+      'InternalVersion' : 0x0110,
+      'ReservedA': 0,
+      'ReservedB': 0
+    }
+
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    response_payload.extend(Encoder.encode_uint16(info['Version']))
+    response_payload.extend(Encoder.encode_uint16(info['InternalVersion']))
+    response_payload.extend(Encoder.encode_uint16(info['ReservedA']))
+    response_payload.extend(Encoder.encode_uint16(info['ReservedB']))
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+
+    version_info = self.r.get_advanced_version()
+    self.assertEqual(version_info, info)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = Encoder.decode_packet(packet)
+    self.assertEqual(payload[0], constants.host_query_command_dict['GET_ADVANCED_VERSION'])
+    self.assertEqual(payload[1:3], Encoder.encode_uint16(constants.s3g_version))
+
   def test_reset(self):
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
@@ -773,7 +798,7 @@ class S3gTests(unittest.TestCase):
     self.assertEqual(payload[5], 0x00) # reserved byte
 
   def test_set_potentiometer_value(self):
-    axes = ['x', 'y', 'z', 'a', 'b']
+    axes = 'x'
     value = 2
 
     response_payload = bytearray()
@@ -787,7 +812,7 @@ class S3gTests(unittest.TestCase):
     payload = Encoder.decode_packet(packet)
 
     self.assertEqual(payload[0], constants.host_action_command_dict['SET_POT_VALUE'])
-    self.assertEqual(payload[1], Encoder.encode_axes(axes))
+    self.assertEqual(payload[1], Encoder.encode_axis(axes))
     self.assertEqual(payload[2], value)
 
   def test_recall_home_positions(self):
@@ -935,6 +960,33 @@ class S3gTests(unittest.TestCase):
     payload = Encoder.decode_packet(packet)
     self.assertEqual(payload[0], constants.host_action_command_dict['CHANGE_TOOL'])
     self.assertEqual(payload[1], tool_index)
+
+  def test_get_build_stats(self):
+    stats = {
+      'BuildState' : 0,
+      'BuildHours' : 1,
+      'BuildMinutes' : 2,
+      'LineNumber' : 3,
+      'Reserved' : 4,
+    }
+
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    response_payload.append(stats['BuildState'])
+    response_payload.append(stats['BuildHours'])
+    response_payload.append(stats['BuildMinutes'])
+    response_payload.extend(Encoder.encode_uint32(stats['LineNumber']))
+    response_payload.extend(Encoder.encode_uint32(stats['Reserved']))
+
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+
+    info = self.r.get_build_stats()
+    self.assertEqual(info, stats)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = Encoder.decode_packet(packet)
+    self.assertEqual(payload[0], constants.host_query_command_dict['GET_BUILD_STATS'])
 
   def test_get_communication_stats(self):
     stats = {

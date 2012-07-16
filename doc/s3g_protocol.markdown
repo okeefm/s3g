@@ -401,7 +401,7 @@ An axes bitfield structure is used to represent a selection of axes.
 # Host Query Commands
 
 ## 00 - Get version: Query firmware for version information
-This command allows the host and firmware to exchange version numbers. It also allows for automated discovery of the firmware. Version numbers will always be stored as a single number, Arduino / Processing style.
+This command allows the host and firmware to exchange version numbers. It also allows for automated discovery of the firmware. Version numbers will always be stored as a single number, Arduino / Processing style.  If the returned version number is greater than 5.5, the host has the option of requesting advanced version information with command #27
 
 Payload
 
@@ -714,10 +714,10 @@ Response
 </tr>
 </table>
 
-## 24 - Get print statistics
+## 24 - Get build statistics
 Gathers statistics about the currently building print if a build is active, or the last print if there is no active build
 
-Payload (0 bytes)
+Payload (1 byte)
 
 Response
 
@@ -743,7 +743,9 @@ Response
 ## 27 - Get advanced version number
 returns the main version numbers along with an internal version number
 
-Payload (0 bytes)
+Payload
+
+    uint16: Host Version
 
 Response
 

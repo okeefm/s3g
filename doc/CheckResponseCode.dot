@@ -35,4 +35,12 @@ digraph
   "RESPONSE=CANCEL_BUILD?" [shape=diamond];
   "RESPONSE=CANCEL_BUILD?" -> "RAISE BUILD_CANCELLED_ERROR" [label="yes"];
   "RESPONSE=CANCEL_BUILD?" -> "RAISE PROTOCOL_ERROR" [label="no", weight=10];
+
+  "RESPONSE=ACTIVE_LOCAL_BUILD?" [shape=diamond];
+  "RESPONSE=ACTIVE_LOCAL_BUILD?" -> "RAISE ACTIVE_BUILD_ERROR" [label="yes"];
+  "RESPONSE=ACTIVE_LOCAL_BUILD?" -> "RAISE PROTOCOL_ERROR" [label="no", weight=10];
+
+  "RESPONSE=BOT_OVERHEAT?" [shape=diamond];
+  "RESPONSE=BOT_OVERHEAT?" -> "RAISE BOT_OVERHEAT_ERROR" [label="yes"];
+  "RESPONSE=BOT_OVERHEAT?" -> "RAISE PROTOCOL_ERROR" [label="no", weight=10];
 }
