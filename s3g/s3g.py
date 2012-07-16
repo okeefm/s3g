@@ -173,9 +173,10 @@ class s3g(object):
 
     [response_code, bitfield] = Encoder.unpack_response('<BB', response)
 
+    bitfield = Encoder.decode_bitfield(bitfield)
     flags = {
-    'POWER_ERROR'   : 1 == ((bitfield >> 7) & 0x01),
-    'HEAT_SHUTDOWN' : 1 == ((bitfield >> 6) & 0x01)
+    'POWER_ERROR'   : bitfield[7],
+    'HEAT_SHUTDOWN' : bitfield[6],
     }
     return flags
 
@@ -865,16 +866,16 @@ class s3g(object):
 
     [resonse_code, bitfield] = Encoder.unpack_response('<BB', response)
 
-#    bitfield = Encoder.DecodeBitfield8(bitfield)
+    bitfield = Encoder.decode_bitfield(bitfield)
 
     returnDict = {
-      "ExtruderReady"        : 1 == ((bitfield >> 0) & 0x01),
-      "ExtruderNotPluggedIn" : 1 == ((bitfield >> 1) & 0x01),
-      "ExtruderOverMaxTemp"  : 1 == ((bitfield >> 2) & 0x01),
-      "ExtruderNotHeating"   : 1 == ((bitfield >> 3) & 0x01),
-      "ExtruderDroppingTemp" : 1 == ((bitfield >> 4) & 0x01),
-      "PlatformError"        : 1 == ((bitfield >> 6) & 0x01),
-      "ExtruderError"        : 1 == ((bitfield >> 7) & 0x01),
+      "ExtruderReady"        : bitfield[0], 
+      "ExtruderNotPluggedIn" : bitfield[1],
+      "ExtruderOverMaxTemp"  : bitfield[2],
+      "ExtruderNotHeating"   : bitfield[3],
+      "ExtruderDroppingTemp" : bitfield[4],
+      "PlatformError"        : bitfield[6],
+      "ExtruderError"        : bitfield[7],
     }
     return returnDict
   
