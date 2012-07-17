@@ -57,10 +57,10 @@ class GcodeParser(object):
     """
     #If command is in unicode, encode it into ascii
     if isinstance(command, unicode):
-      self._log.warning('{"event":"encoding_gcode_into_utf8"}\n')
+      self._log.warning('{"event":"encoding_gcode_into_utf8"}')
       command = command.encode("utf8")
     elif not isinstance(command, str):
-      self._log.error('{"event":"gcode_file_in_improper_format"}\n')
+      self._log.error('{"event":"gcode_file_in_improper_format"}')
       raise ImproperGcodeEncodingError
 
     try:
@@ -75,8 +75,7 @@ class GcodeParser(object):
           self.GCODE_INSTRUCTIONS[codes['G']][0](codes, flags, comment)
 
         else:
-          self._log.error('{"event":"unrecognized_command", "command":%s}\n'
-              %(codes['G']))
+          self._log.error('{"event":"unrecognized_command", "command":%s}', codes['G'])
           gcode_error = UnrecognizedCommandError()
           gcode_error.values['UnrecognizedCommand'] = codes['G']
           raise gcode_error
@@ -88,8 +87,7 @@ class GcodeParser(object):
           self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
 
         else:
-          self._log.error('{"event":"unrecognized_command", "command":%s}\n'
-              %(codes['M']))
+          self._log.error('{"event":"unrecognized_command", "command":%s}', codes['M'])
           gcode_error = UnrecognizedCommandError()
           gcode_error.values['UnrecognizedCommand'] = codes['M']
           raise gcode_error
@@ -97,29 +95,24 @@ class GcodeParser(object):
       # Not a G or M code, should we throw here?
       else:
         if len(codes) + len(flags) > 0:
-          self._log.error('{"event":"extraneous_code"}\n')
+          self._log.error('{"event":"extraneous_code"}')
           gcode_error = ExtraneousCodeError()
           raise gcode_error
 
         else:
           pass
     except KeyError as e:
-      if e[0] == 'T':
-        self._log.warning('{"event":"t_code_not_defined"}\n')
-        TCodeNotDefinedWarning()
-      else:
-        self._log.error('{"event":"missing_code_error", "missing_code":%s}\n'
-            %(e[0]))
-        gcode_error = MissingCodeError()
-        gcode_error.values['MissingCode'] = e[0]
-        gcode_error.values['LineNumber'] = self.line_number
-        gcode_error.values['Command'] = command
-        raise gcode_error
+      self._log.error('{"event":"missing_code_error", "missing_code":%s}\n', e[0])
+      gcode_error = MissingCodeError()
+      gcode_error.values['MissingCode'] = e[0]
+      gcode_error.values['LineNumber'] = self.line_number
+      gcode_error.values['Command'] = command
+      raise gcode_error
     except VectorLengthZeroError:
-      self._log.warning('{"event":vector_length_zero_error"}\n')
+      self._log.warning('{"event":vector_length_zero_error"}')
       pass
     except GcodeError as gcode_error:
-      self._log.error('{"event":"gcode_error"}\n')
+      self._log.error('{"event":"gcode_error"}')
       gcode_error.values['Command'] = command
       gcode_error.values['LineNumber'] = self.line_number
       raise gcode_error
@@ -191,15 +184,13 @@ class GcodeParser(object):
     """Sets the state machine to use the P0 offset.
     """
     self.state.offset_register = 1
-    self._log.info('{"event":"gcode_state_change", "change":"offset_register", "new_offset_register": %i}\n'
-        %(self.state.offset_register))
+    self._log.info('{"event":"gcode_state_change", "change":"offset_register", "new_offset_register": %i}', self.state.offset_register)
 
   def use_p2_offsets(self, codes, flags, comment):
     """Sets the state machine to use the P1 offset.
     """
     self.state.offset_register = 2
-    self._log.info('{"event":"gcode_state_change", "change":"offset_register", "new_offset_register": %i}\n'
-        %(self.state.offset_register))
+    self._log.info('{"event":"gcode_state_change", "change":"offset_register", "new_offset_register": %i}', self.state.offset_register)
 
   def wait_for_tool_ready(self, codes, flags, comment):
     """
@@ -296,8 +287,7 @@ class GcodeParser(object):
     """
     if 'F' in codes:
       self.state.values['feedrate'] = codes['F']
-      self._log.info('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}\n'
-          %(codes['F']))
+      self._log.info('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', codes['F'])
     if len(parse_out_axes(codes)) > 0 or 'E' in codes:
       if 'A' in codes and 'B' in codes:
         gcode_error = ConflictingCodesError()
@@ -363,26 +353,25 @@ class GcodeParser(object):
     """Sends a chagne tool command to the machine.
     """
     self.state.values['tool_index'] = codes['T']
-    self._log.info('{"event":"gcode_state_change", "change":"tool_change", "new_tool_index":%i}\n'
-        %(codes['T']))
+    self._log.info('{"event":"gcode_state_change", "change":"tool_change", "new_tool_index":%i}', codes['T'])
     self.s3g.change_tool(codes['T'])
 
   def build_start_notification(self):
     """Sends a build start notification command to the machine.
     """
-    self._log.info('{"event":"build_start"}\n')
+    self._log.info('{"event":"build_start"}')
     try:
       self.s3g.build_start_notification(self.state.values['build_name'])
     except KeyError:
-      self._log.info('{"event":"no_build_name_defined"}\n')
+      self._log.info('{"event":"no_build_name_defined"}')
       raise NoBuildNameError
 
   def build_end_notification(self):
     """Sends a build end notification command to the machine
     """
-    self._log.info('{"event":"build_end"}\n')
+    self._log.info('{"event":"build_end"}')
     self.state.values['build_name'] = None
-    self._log.info('{"event":"gcode_state_change", "change":"remove_build_name"}\n')
+    self._log.info('{"event":"gcode_state_change", "change":"remove_build_name"}')
     self.s3g.build_end_notification()
 
   def enable_extra_output(self, codes, flags, comment):

@@ -2,6 +2,17 @@
 
 The s3g module is designed to communicate with a Makerbot Printer via s3g Packets.  The main objectives of this module are to  transform certain actions (i.e. move-to-a-position, heat-up-a-toolhead) into packets of information to be sent and to decode packets of information received from a printer into human parsable formats.  
 
+##VirtualEnv
+We provide the necessary files to operate inside a VirtualEnv, that will install all dependencies for you without polluting your own machine.  
+
+To configure the VirtualEnv, navigate to the root directory of the s3g driver and, in a terminal issue:
+
+    ./setup.sh
+
+To activate the VirtualEnv, in the root directory of the s3g driver, issue:
+
+    . virtualenv/bin/activate
+
 To connect to a machine, you will need the following module:
 
 * [pySerial](http://pypi.python.org/pypi/pyserial).

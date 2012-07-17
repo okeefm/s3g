@@ -20,9 +20,8 @@ class Profile(object):
     self._log = logging.getLogger(self.__class__.__name__)
     self.path = _getprofiledir(profiledir)
     extension = '.json'
-    path = os.path.join(self.path, name + extension)
-    self._log.info('{"event":"open_profile", "path":%s}'
-        %(path))
+    path = os.path.join(self.path,name+extension)
+    self._log.info('{"event":"open_profile", "path":%s}', path)
     with open(path) as f:
       self.values = json.load(f) 
 

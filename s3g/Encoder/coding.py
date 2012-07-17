@@ -3,6 +3,20 @@ import array
 
 from .. import errors
 
+def decode_bitfield(number):
+  """
+  Given an uint8 number, returns its decoded bitfield
+
+  @param int number:  A number to be decoded
+  @return list bitfield: The decoded bitfield
+  """
+  if number < 0 or number > 255:
+    raise ValueError
+  bitfield = []
+  for i in range(8):
+    bitfield.append(1 == (number >> i) & 0x01)
+  return bitfield
+
 def encode_int32(number):
   """
   Encode a 32-bit signed integer as a 4-byte string
