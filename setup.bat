@@ -7,7 +7,7 @@ pip install --use-mirrors argparse mock coverage doxypy lockfile pyserial unitte
 GOTO DONE
 
 :DIRNOTEXISTS
-python virtualenv.py virtualenv
+python virtualenv.py --system-site-packages virtualenv
 GOTO DIREXISTS
 
 :DONE
