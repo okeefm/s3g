@@ -126,8 +126,6 @@ class PacketStreamDecoderTests(unittest.TestCase):
       ['ACTION_BUFFER_OVERFLOW',    errors.BufferOverflowError],
       ['CRC_MISMATCH',              errors.CRCMismatchError],
       ['COMMAND_NOT_SUPPORTED',     errors.CommandNotSupportedError],
-      ['PACKET_TOO_BIG',       errors.PacketLengthError],
-      ['PACKET_TIMEOUT' ,           errors.PacketTimeoutError],
       ['DOWNSTREAM_TIMEOUT',        errors.DownstreamTimeoutError],
       ['TOOL_LOCK_TIMEOUT',         errors.ToolLockError],
       ['CANCEL_BUILD',              errors.BuildCancelledError],

@@ -686,7 +686,7 @@ Response
 <tr>
  <td>6</td>
  <td>HEAT_SHUTDOWN</td>
- <td>Heaters were shutdown after 20 minutes of inactivity</td>
+ <td>Heaters were shutdown after 30 minutes of inactivity</td>
 </tr>
 <tr>
  <td>5</td>
@@ -732,6 +732,30 @@ Response
     uint8 : Minutes elapsed on print (add hours for total time)
     uint32: Line Number (number of commands processed)
     uint32: Reserved for Future Use
+
+Build State Return Values are as follows
+<table>
+<tr>
+  <td>0</td>
+  <td>no build initialized (boot up state)</td>
+</tr>
+<tr>
+  <td>1</td>
+  <td>build running</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>build finished normally</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>build paused</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>build cancelled</td>
+</tr>
+</table>
 
 ## 26 - Get communication statistics
 Gathers statistics about communication over the tool network. This was intended for use while troubleshooting Gen3/4 machines.

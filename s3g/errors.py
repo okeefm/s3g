@@ -83,16 +83,6 @@ class OverheatError(Exception):
   Signifies that the bot is reporting and overheat state and can no longer accept commands
   """
 
-class PacketLengthError(RetryableError):
-  """
-  Signifies that the bot reported receiving a packet that was too long
-  """
-
-class PacketTimeoutError(RetryableError):
-  """
-  Signifies that the bot reported a timeout while processing the packet
-  """
-
 class CommandNotSupportedError(Exception):
   """
   Signifies that the bot reported receiving a command it does not support

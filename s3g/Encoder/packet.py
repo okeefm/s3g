@@ -61,14 +61,8 @@ def check_response_code(response_code):
   elif response_code == constants.response_code_dict['CRC_MISMATCH']:
     raise errors.CRCMismatchError()
 
-  elif response_code == constants.response_code_dict['PACKET_TOO_BIG']:
-    raise errors.PacketLengthError()
-
   elif response_code == constants.response_code_dict['COMMAND_NOT_SUPPORTED']:
     raise errors.CommandNotSupportedError()
-
-  elif response_code == constants.response_code_dict['PACKET_TIMEOUT']:
-    raise errors.PacketTimeoutError()
 
   elif response_code == constants.response_code_dict['DOWNSTREAM_TIMEOUT']:
     raise errors.DownstreamTimeoutError()
