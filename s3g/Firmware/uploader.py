@@ -71,8 +71,7 @@ class Uploader(object):
       raise UnknownVersionError
     hex_file_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), 'machine_board_profiles', hex_file)
-    process = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), 'avrdude')
+    process = 'avrdude'
     flags = []
     #get the part
     flags.append('-p'+str(values['part']))

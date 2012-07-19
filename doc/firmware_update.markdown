@@ -1,5 +1,7 @@
 #Firmware Update
-The s3g driver has the capability of uploading firmware to a machine via AVRDude, an external firmware uploading utility.  
+The s3g driver has the capability of uploading firmware to a machine via AVRDude, an external firmware uploading utility.  No AVRDude utility is packaged with this driver, so it is up to the user to satisfy this requirement.
+
+To download AVRDude, goto: www.nongnu.org/avrdude
 
 ##Definitions
 <table>

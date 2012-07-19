@@ -32,8 +32,7 @@ class TestUploader(unittest.TestCase):
     port = '/dev/tty.usbmodemfa121'
     machine = 'Replicator'
     version = '5.2'
-    avrdude_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), '..', 's3g', 'Firmware', 'avrdude')
+    avrdude_path = 'avrdude'
     conf_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), '..', 's3g', 'Firmware', 'avrdude.conf')
     hex_path = os.path.join(
@@ -42,7 +41,7 @@ class TestUploader(unittest.TestCase):
     got_call = self.uploader.parse_command(port, machine, version)
     expected_call = expected_call.split(' ')
     expected_avrdude = expected_call[0]
-    self.assertTrue(os.path.samefile(expected_avrdude, avrdude_path))
+    self.assertEqual(expected_avrdude, avrdude_path)
     for i in range(1,3)+[4, 5]:
       self.assertEqual(expected_call[i], got_call[i])
     expected_conf_path = expected_call[3][2:]
