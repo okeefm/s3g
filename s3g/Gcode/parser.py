@@ -33,7 +33,7 @@ class GcodeParser(object):
       130 : [self.set_potentiometer_values,      'XYZAB',   ''],
       161 : [self.find_axes_minimums,            'F',       'XYZ'],
       162 : [self.find_axes_maximums,            'F',       'XYZ'],
-}
+    }
 
     self.MCODE_INSTRUCTIONS = {
        18  : [self.disable_axes,                '',        'XYZAB'],
