@@ -33,20 +33,15 @@ class TestUploader(unittest.TestCase):
     machine = 'Replicator'
     version = '5.2'
     avrdude_path = 'avrdude'
-    conf_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), '..', 's3g', 'Firmware', 'avrdude.conf')
     hex_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), '..', 's3g', 'Firmware', 'machine_board_profiles', 'Mighty-mb40-v5.2.hex')
-    expected_call = avrdude_path + " -pm1280 -b57600 -C"+conf_path+" -cstk500v1 -P/dev/tty.usbmodemfa121 -Uflash:w:"+hex_path+":i"
+    expected_call = avrdude_path + " -pm1280 -b57600 -cstk500v1 -P/dev/tty.usbmodemfa121 -Uflash:w:"+hex_path+":i"
     got_call = self.uploader.parse_command(port, machine, version)
     expected_call = expected_call.split(' ')
     expected_avrdude = expected_call[0]
     self.assertEqual(expected_avrdude, avrdude_path)
-    for i in range(1,3)+[4, 5]:
+    for i in range(1, 5):
       self.assertEqual(expected_call[i], got_call[i])
-    expected_conf_path = expected_call[3][2:]
-    got_conf_path = got_call[3][2:]
-    self.assertTrue(os.path.samefile(expected_conf_path, got_conf_path))
     expected_operation = expected_call[-1].split(':')
     got_operation = got_call[-1].split(':')
     for i in range(2)+[3]:

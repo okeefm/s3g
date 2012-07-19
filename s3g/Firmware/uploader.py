@@ -6,8 +6,7 @@ from errors import *
 class Uploader(object):
 
   def __init__(self):
-    self.conf_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), 'avrdude.conf')
+    pass
 
   def get_machine_board_profile(self, machine):
     """
@@ -77,8 +76,6 @@ class Uploader(object):
     flags.append('-p'+str(values['part']))
     #get the baudrate
     flags.append('-b'+str(values['baudrate']))
-    #get the config
-    flags.append('-C'+self.conf_path)
     #get the programmer
     flags.append('-c'+str(values['programmer']))
     #get the port
