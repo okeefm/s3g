@@ -16,8 +16,7 @@ class StreamWriter(AbstractWriter):
     """
     self._log = logging.getLogger(self.__class__.__name__)
     self.file = file
-    self._log.info('{"event":"begin_writing_to_stream", "stream":%s}'
-        %(str(self.file)))
+    self._log.info('{"event":"begin_writing_to_stream", "stream":%s}', str(self.file))
     self.total_retries = 0
     self.total_overflows = 0
     self.external_stop = False
@@ -46,7 +45,7 @@ class StreamWriter(AbstractWriter):
     received_errors = []
     while True:
       if self.external_stop:
-        self._log.error('{"event":"external_stop"}\n')
+        self._log.error('{"event":"external_stop"}')
         raise ExternalStopError
       decoder = Encoder.PacketStreamDecoder()
       self.file.write(packet)
@@ -61,7 +60,7 @@ class StreamWriter(AbstractWriter):
           data = ''
           while data == '':
             if (time.time() > start_time + constants.timeout_length):
-              self._log.error('{"event":"machine_timeout"}\n')
+              self._log.error('{"event":"machine_timeout"}')
               raise errors.TimeoutError(len(data), decoder.state)
 
             # pySerial streams handle blocking read. Be sure to set up a timeout when
@@ -80,8 +79,7 @@ class StreamWriter(AbstractWriter):
         # Buffer overflow error- wait a while for the buffer to clear, then try again.
         # TODO: This could hang forever if the machine gets stuck; is that what we want?
 
-        self._log.warning('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}\n'
-          %(overflow_count,retry_count))
+        self._log.warning('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}', overflow_count,retry_count)
 
         self.total_overflows += 1
         overflow_count += 1
@@ -92,8 +90,7 @@ class StreamWriter(AbstractWriter):
         # Sent a packet to the host, but got a malformed response or timed out waiting
         # for a reply. Retry immediately.
 
-        self._log.warning('{"event":"transmission_problem", "exception":"%s", "message":"%s" "retry_count"=%i}\n'
-          %(type(e),e.__str__(),retry_count))
+        self._log.warning('{"event":"transmission_problem", "exception":"%s", "message":"%s", "retry_count"=%i}', type(e),e.__str__(),retry_count)
 
         self.total_retries += 1
         retry_count += 1
@@ -102,10 +99,9 @@ class StreamWriter(AbstractWriter):
       except Exception as e:
         # Other exceptions are propigated upwards.
 
-        self._log.error('{"event":"unhandled_exception", "exception":"%s", "message":"%s" "retry_count"=%i}\n'
-          %(type(e),e.__str__(),retry_count))
+        self._log.error('{"event":"unhandled_exception", "exception":"%s", "message":"%s", "retry_count"=%i}', type(e),e.__str__(),retry_count)
         raise e
 
       if retry_count >= constants.max_retry_count:
-        self._log.error('{"event":"transmission_error"}\n')
+        self._log.error('{"event":"transmission_error"}')
         raise errors.TransmissionError(received_errors)

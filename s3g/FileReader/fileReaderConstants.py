@@ -26,6 +26,7 @@ hostFormats = {
 slaveFormats = {
     1       :     [], #"INIT"
     3       :     ['h'], #"SET TOOLHEAD TARGET TEMP", 
+    4       :     ['B'],
     6       :     ['I'], #"SET MOTOR 1 SPED RPM", 
     10      :     ['B'], #"TOGGLE MOTOR 1", 
     12      :     ['B'], #"TOGGLE FAN", 

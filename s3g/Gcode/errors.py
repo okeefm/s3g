@@ -135,12 +135,3 @@ class InvalidOffsetError(GcodeError):
   An InvalidOffsetError is raised when an offset defined by the P code in a G10 command
   is not a valid value (1, 2)
   """
-
-class TCodeNotDefinedWarning:
-  """
-  A TCodeNotDefinedWarning is raised when a command is executed that should have a T command
-  but does not.  We throw warnings to keep compatability with skeinforge, which tends to violate
-  our parser habitually.
-  """
-  def __init__(self):
-    warnings.warn("We are allowing commands that do not have T codes defined even though they should to pass through currently due to skeinforge compatability issues.  Once skeinforge has been fixed, these commands WILL cause errors.", FutureWarning)

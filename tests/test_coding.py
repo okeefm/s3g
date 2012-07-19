@@ -45,6 +45,20 @@ class EncodeIntTests(unittest.TestCase):
       assert Encoder.encode_uint16(case[0]) == case[1]
 
 class DecodeIntTests(unittest.TestCase):
+  def test_decode_bitfield_fails_on_non_uint8(self):
+    cases = [-1, 256]
+    for case in cases:
+      self.assertRaises(ValueError, Encoder.decode_bitfield, case)
+
+  def test_decode_bitfield(self):
+    cases = [
+      [[True for i in range(8)], 255],
+      [[False for i in range(8)], 0],
+      [[True, False, True, False, True, False, True, False], 85],
+      ]
+    for case in cases:
+      self.assertEqual(case[0], Encoder.decode_bitfield(case[1]))
+
   def test_decode_int32(self):
     cases = [
       [0,       '\x00\x00\x00\x00'],
