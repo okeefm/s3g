@@ -20,10 +20,15 @@ vid = int('23c1', 16)
 pid = int('d314', 16)
 
 ports = serial.tools.list_ports.get_ports_by_vid_pid(vid, pid)
+port = None
 
 for port in ports:
   thePort = port['PORT']
   break
+
+if port == None:
+  print 'You dont have a replicator connected!!11'
+  sys.exit(1)
 
 r = s3g.s3g.from_filename(thePort)
 
