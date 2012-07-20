@@ -3,7 +3,6 @@ import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 import s3g
-lib_path = os.path.abspath('../pyserial')
 
 import serial
 import serial.tools.list_ports
