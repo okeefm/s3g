@@ -4,8 +4,9 @@ import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-# For this to work on OS/X, you need the makerbot branch of pyserial
-lib_path = os.path.abspath('/Users/mattmets/Projects/Makerbot/pyserial')
+# For this to work on OS/X, you need the makerbot branch of pyserial to load as 'serial'
+#rather than the OS version
+lib_path = os.path.abspath('../pyserial')
 sys.path.insert(0,lib_path)
 
 import unittest
@@ -18,58 +19,19 @@ import serial.tools.list_ports
 
 
 class TestGetInfoFromSerialIdentifier(unittest.TestCase):
-  def test_blank_string(self):
-    self.assertEquals(s3g.bot_notifier.get_info_from_serial_identifier(''), {})
 
-  def test_not_usb_device(self):
-    self.assertEquals(s3g.bot_notifier.get_info_from_serial_identifier('abcdefg'), {})
+  def test_blank_vidpid(self):
+     val = serial.tools.list_ports.list_ports_by_vid_pid('`','') 
+     x = list(val) #collapse generator
+     self.assertEquals(x,[]) 
 
-  def test_good_params(self):
-    identifier_string = 'USB VID:PID=12AB:34CD SNR=56Ef'
-    expected_info = {
-      'idVendor' : 4779,
-      'idProduct' : 13517,
-      'iSerialNumber' : '56Ef'
-    }
-
-    self.assertEquals(
-      s3g.bot_notifier.get_info_from_serial_identifier(identifier_string),
-      expected_info
-    )
-
-class TestListPorts(unittest.TestCase):
-  def setUp(self):
-    # Override the list_ports module, so we can inject fake serial devices.
-    self.mock = mock.Mock()
-    serial.tools.list_ports.comports = self.mock
-
-  def tearDown(self):
-    # Restore the list_ports module.
-    reload(serial.tools.list_ports)
-
-  def test_no_ports(self):
-    self.mock.return_value = {}
-
-    self.assertEquals(s3g.bot_notifier.list_ports(), {})
-    self.mock.assert_called_once()
-
-  def test_formatted_ports(self):
-    input_ports = [
-      ['/dev/cu.usbmodemfd121', 'The Replicator', 'USB VID:PID=23c1:d314 SNR=64935343133351107190'],
-      ['/dev/cu.Bluetooth-PDA-Sync', '', ''],
-      ['/dev/cu.Bluetooth-Modem', '', '']
-    ]
-
-    expected_output = {
-      '/dev/cu.usbmodemfd121' : {'idVendor' : 0x23c1, 'idProduct' : 0xd314, 'iSerialNumber' : '64935343133351107190'},
-      '/dev/cu.Bluetooth-PDA-Sync' : {},
-      '/dev/cu.Bluetooth-Modem' : {},
-    }
-
-    self.mock.return_value = input_ports
-
-    self.assertEquals(s3g.bot_notifier.list_ports(), expected_output)
-    self.mock.assert_called_once()
+  def test_unmatchd_vidpid(self):
+     val = serial.tools.list_ports.list_ports_by_vid_pid('1111','1111')  #fake vid/pid values
+     x = list(val) #collapse generator
+     self.assertEquals(x,[]) 
+     val = serial.tools.list_ports.list_ports_by_vid_pid('FFFF','FFFF')  #fake vid/pid values
+     x = list(val) #collapse generator
+     self.assertEquals(x,[]) 
 
 class TestListPorts(unittest.TestCase):
   def setUp(self):
