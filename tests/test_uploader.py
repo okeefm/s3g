@@ -35,11 +35,13 @@ class TestUploader(unittest.TestCase):
     avrdude_path = 'avrdude'
     hex_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), '..', 's3g', 'Firmware', 'machine_board_profiles', 'Mighty-mb40-v5.2.hex')
-    expected_call = avrdude_path + " -pm1280 -b57600 -cstk500v1 -P/dev/tty.usbmodemfa121 -Uflash:w:"+hex_path+":i"
+    expected_call = (avrdude_path, "-pm1280","-b57600","-cstk500v1","-P/dev/tty.usbmodemfa121","-Uflash:w:"+hex_path+":i")
     got_call = self.uploader.parse_command(port, machine, version)
-    expected_call = expected_call.split(' ')
+    #expected_call = expected_call.split(' ')
     expected_avrdude = expected_call[0]
     self.assertEqual(expected_avrdude, avrdude_path)
+    import pdb
+    pdb.set_trace()
     for i in range(1, 5):
       self.assertEqual(expected_call[i], got_call[i])
     expected_operation = expected_call[-1].split(':')
