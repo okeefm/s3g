@@ -11,4 +11,6 @@ python unit_tests.py
 _CODE = $?
 
 ENDLOCAL EnableDelayedExpansion
-exit _CODE
+CALL stop.bat
+REM Don't do this in windows, it closes your command prompt
+REM exit _CODE
