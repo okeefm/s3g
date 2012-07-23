@@ -40,8 +40,6 @@ class TestUploader(unittest.TestCase):
     #expected_call = expected_call.split(' ')
     expected_avrdude = expected_call[0]
     self.assertEqual(expected_avrdude, avrdude_path)
-    import pdb
-    pdb.set_trace()
     for i in range(1, 5):
       self.assertEqual(expected_call[i], got_call[i])
     expected_operation = expected_call[-1].split(':')
