@@ -44,6 +44,8 @@
     }
   },
   "baudrate"  : 115200,
+  "VID"       : 9153,
+  "PID"       : 54036,
   "print_start_sequence":  [
     "(**** start.gcode for The Replicator, dual head ****)",
     "M73 P0 (enable build progress)",
