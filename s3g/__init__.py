@@ -10,4 +10,4 @@ from s3g import *
 from profile import *
 from constants import *
 from errors import *
-from bot_notifier import *
+from machine_detector import *
