@@ -42,11 +42,25 @@ class TestUploader(unittest.TestCase):
     self.assertEqual(expected_avrdude, avrdude_path)
     for i in range(1, 5):
       self.assertEqual(expected_call[i], got_call[i])
-    expected_operation = expected_call[-1].split(':')
-    got_operation = got_call[-1].split(':')
-    for i in range(2)+[3]:
-      self.assertEqual(expected_operation[i], got_operation[i])
-    self.assertTrue(os.path.samefile(expected_operation[2], got_operation[2]))
+    #DO something really hacky, since windows paths have colons in them
+    #and splitting at each colon will result in the test failing on windows
+    #DUMB
+    expected_op = expected_call[-1]
+    expected_op_parts = []
+    expected_op_parts.extend(expected_op[:9].split(':'))
+    expected_op_parts.append(expected_op[10:-2])
+    expected_op_parts.append(expected_op[-1])
+    #Get the path relative from here
+    expected_op_parts[2] = os.path.relpath(expected_op_parts[2])
+    got_op = got_call[-1]
+    got_op_parts = []
+    got_op_parts.extend(expected_op[:9].split(':'))
+    got_op_parts.append(expected_op[10:-2])
+    got_op_parts.append(expected_op[-1])
+    #Get the path relative from here
+    got_op_parts[2] = os.path.relpath(expected_op_parts[2])
+    for i in range(len(expected_op_parts)):
+      self.assertEqual(expected_op_parts[i], got_op_parts[i])
 
   def test_list_machines(self):
     expected_machines = ["Replicator"]
