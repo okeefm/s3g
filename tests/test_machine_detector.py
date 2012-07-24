@@ -4,23 +4,19 @@ import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-# For this to work on OS/X, you need the makerbot branch of pyserial to load as 'serial'
-#rather than the OS version
-lib_path = os.path.abspath('../pyserial')
-sys.path.insert(0,lib_path)
-
 import unittest
-import io
 import mock
 
 import s3g
 
 import serial.tools.list_ports
 
-
 class TestGetVIDPID(unittest.TestCase):
   def setUp(self):
     self.md = s3g.MachineDetector()
+
+  def tearDown(self):
+    self.md = None
 
   def test_get_vid_pid_bad_machine_name(self):
     bad_name = 'I HOPE THIS ISNT A MACHINE NAME'
@@ -42,13 +38,17 @@ class TestScanSerialPorts(unittest.TestCase):
 
   def tearDown(self):
     reload(serial.tools.list_ports)
+    self.md = None
 
   def test_scan_serial_port_cant_find_vid_pid(self):
+    #This return_value is a mocked list_ports_by_vid_pid that could not find a port with
+    #the given VID/PID.  This is what it returns in that case
     return_value = {'PORT'  :   ['/dev/tty.usbmodemfa121', 'The Replicator', 'some_vid_info']}
     self.mock.return_value = yield return_value 
     self.assertRaises(KeyError, self.md.scan_serial_ports, {}, self.vid, self.pid)
 
   def test_scan_serial_ports_no_ports(self):
+    #This return value is indicative of absolutely no ports being found
     return_value = []
     self.mock.return_value = iter(return_value)
     current_ports = []
@@ -65,6 +65,7 @@ class TestScanSerialPorts(unittest.TestCase):
         ]
     added_ports = []
     removed_ports = []
+    #list_ports_by_vid_pid returns the same ports that we already know about
     self.mock.return_value = iter(current_ports) #Turns a list into an iterator
     expected_return = (current_ports, added_ports, removed_ports)
     got_return = self.md.scan_serial_ports(current_ports, self.vid, self.pid)
@@ -160,9 +161,7 @@ class TestScanMultiplePorts(unittest.TestCase):
 
   def test_scan_multiple_ports_one_machine_type(self):
     added_port = {'iSerial' : 'asdf'}
-    self.mock.return_value = [
-        added_port
-        ]
+    self.mock.return_value = yield added_port
     machines = ['ReplicatorDual']
     self.md.reset_port_list(machines)
     expected_ports = {
