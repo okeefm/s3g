@@ -24,9 +24,9 @@ The Machine Detector stores all information in an internal python dictionary cal
 
 Each type of machine being scanned for is a separate key.  That key is defined by an additional dict, which stores three specific values:
 
-    * 'current_ports'
-    * 'added_ports'
-    * 'removed_ports'
+* 'current_ports'
+* 'added_ports'
+* 'removed_ports'
 
 For instance, if we wanted to scan for a 'ReplicatorDual' and a 'Thing-O-Matic', the architecture of the ports dict would be:
 
@@ -46,13 +46,13 @@ For instance, if we wanted to scan for a 'ReplicatorDual' and a 'Thing-O-Matic',
 ##Scanning by VID/PID
 It is possible to scan for a specific VID/PID.  To do this:
 
-   md = s3g.MachineDetector()
-   current_ports = []
-   vid = <some_vid>
-   pid = <some_pid>
-   current_ports, added_ports, removed_ports = md.scan_serial_ports(current_ports, vid, pid)
+    md = s3g.MachineDetector()
+    current_ports = []
+    vid = <some_vid>
+    pid = <some_pid>
+    current_ports, added_ports, removed_ports = md.scan_serial_ports(current_ports, vid, pid)
 
-scan_serial_ports requires a python list as its first parameter of currently connected ports.  The function checks the newly ascertained ports against the parametized port list to find added and removed ports.
+scan_serial_ports requires a python list of currently connected ports as its first parameter.  The function checks the newly ascertained ports against the parametized port list to find added and removed ports.
 
 ##Find VID/PID of a machine
 To find the VID/PID information from a specific machine that has a fully defined machine profile:
