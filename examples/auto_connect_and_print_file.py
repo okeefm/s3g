@@ -5,7 +5,7 @@ sys.path.append(lib_path)
 import s3g
 
 import serial
-import serial.tools.list_ports
+import serial.tools.list_ports as lp
 import optparse
 
 parser = optparse.OptionParser()
@@ -18,7 +18,7 @@ parser.add_option("-s", "--gcode_start_end_sequences", dest="start_end_sequences
 vid = int('23c1', 16)
 pid = int('d314', 16)
 
-ports = serial.tools.list_ports.get_ports_by_vid_pid(vid, pid)
+ports = lp.list_ports_by_vid_pid(vid, pid)
 port = None
 
 for port in ports:
