@@ -1,4 +1,4 @@
-__all__ = ['Encoder', 'FileReader', 'Gcode', 'Writer', 's3g', 'profile', 'constants', 'errors', 'bot_notifier']
+__all__ = ['Encoder', 'FileReader', 'Gcode', 'Writer', 's3g', 'profile', 'constants', 'errors', 'machine_detector']
 
 import Preprocessors
 import Encoder
