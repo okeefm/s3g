@@ -8,12 +8,16 @@ values to find all current, added and removed ports.  All ports
 are kept track of in a python dict named "ports".
 """
 
-import serial.tools.list_ports
+import serial.tools.list_ports  as lp
 import profile
 
 class MachineDetector(object):
   def __init__(self):
     self.ports = {}
+    #We save this func as a variable for testing purposes, 
+    #otherwise we would have to do hacky things, like reload
+    #libraries during testing, etc
+    self.list_ports_by_vid_pid = lp.list_ports_by_vid_pid
 
   def get_vid_pid(self, machine_model):
     """
@@ -40,7 +44,7 @@ class MachineDetector(object):
         a list of ports that were added, and a list of 
         ports that were removed.
     """
-    current_ports = list(list_ports_by_vid_pid(vid, pid))
+    current_ports = list(self.list_ports_by_vid_pid(vid, pid))
 
     added_ports = []
     removed_ports = []

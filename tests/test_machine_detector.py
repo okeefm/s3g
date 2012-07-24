@@ -9,8 +9,6 @@ import mock
 
 import s3g
 
-import serial.tools.list_ports
-
 class TestGetVIDPID(unittest.TestCase):
   def setUp(self):
     self.md = s3g.MachineDetector()
@@ -34,10 +32,10 @@ class TestScanSerialPorts(unittest.TestCase):
     self.pid = 54036 
     self.md = s3g.MachineDetector()
     self.mock = mock.Mock()
-    s3g.machine_detector.list_ports_by_vid_pid = self.mock
+    self.md.list_ports_by_vid_pid = self.mock
+    
 
   def tearDown(self):
-    reload(serial.tools.list_ports)
     self.md = None
 
   def test_scan_serial_port_cant_find_vid_pid(self):
@@ -154,10 +152,11 @@ class TestScanMultiplePorts(unittest.TestCase):
   def setUp(self):
     self.mock = mock.Mock()
     self.md = s3g.MachineDetector()
-    s3g.machine_detector.list_ports_by_vid_pid = self.mock
+    self.md.list_ports_by_vid_pid = self.mock
+
 
   def tearDown(self):
-    reload(serial.tools.list_ports)
+    self.md = None
 
   def test_scan_multiple_ports_one_machine_type(self):
     added_port = {'iSerial' : 'asdf'}
