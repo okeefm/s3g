@@ -4,12 +4,12 @@
     "X" : {
       "platform_length"        : 227,
       "max_feedrate"  : 12450,
-      "steps_per_mm"  : 94.139
+      "steps_per_mm"  : 94.139704
     },
     "Y" : {
       "platform_length"        : 148,
       "max_feedrate"  : 12450,
-      "steps_per_mm"  : 94.139
+      "steps_per_mm"  : 94.139704
     },
     "Z" : {
       "platform_length"        : 150,

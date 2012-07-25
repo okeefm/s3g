@@ -157,11 +157,11 @@ class ParseCommandTests(unittest.TestCase):
     command = 'G0 G0'
     self.assertRaises(s3g.Gcode.RepeatCodeError, s3g.Gcode.parse_command, command)
 
-  def test_reject_both_g_and_m_code(self):
+  def test_reject_both_g_and_m_code_g_then_m(self):
     command = 'G0 M0'
     self.assertRaises(s3g.Gcode.MultipleCommandCodeError, s3g.Gcode.parse_command, command)
 
-  def test_reject_both_g_and_m_code(self):
+  def test_reject_both_g_and_m_code_m_then_g(self):
     command = 'M0 G0'
     self.assertRaises(s3g.Gcode.MultipleCommandCodeError, s3g.Gcode.parse_command, command)
 
@@ -256,10 +256,10 @@ class CalculateVectorMagnitudeTests(unittest.TestCase):
       self.assertEquals(case[1], s3g.Gcode.calculate_vector_magnitude(case[0]))
 
 class CalculateVectorDifferenceTests(unittest.TestCase):
-  def test_reject_non_5d_list(self):
+  def test_reject_non_5d_list_4_and_5(self):
     self.assertRaises(s3g.PointLengthError, s3g.Gcode.calculate_vector_difference, range(4), range(5))
 
-  def test_reject_non_5d_list(self):
+  def test_reject_non_5d_list_5_and_4(self):
     self.assertRaises(s3g.PointLengthError, s3g.Gcode.calculate_vector_difference, range(5), range(4))
 
   def test_good_result(self):

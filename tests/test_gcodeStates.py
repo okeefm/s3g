@@ -207,8 +207,8 @@ class TestProfileInformationParsing(unittest.TestCase):
   def test_get_axes_values(self):
     key = 'steps_per_mm'
     expected_values = [
-        94.139,
-        94.139,
+        94.139704,
+        94.139704,
         400,
         -96.275,
         -96.275,
@@ -224,11 +224,11 @@ class MachineProfileWith4Axes(unittest.TestCase):
   def tearDown(self):
     self.g = None
 
-  def get_axes_values_with_one_0(self):
+  def test_get_axes_values_with_one_0(self):
     key = 'steps_per_mm'
     expected_values = [
-        94.139,
-        94.139,
+        94.139704,
+        94.139704,
         400,
         -96.275,
         0,
@@ -263,7 +263,7 @@ class GetAxesFeedrateSPM(unittest.TestCase):
     axes = ['X']
     feedrate, spm = self.g.get_axes_feedrate_and_SPM(axes)
     expected_feedrate = [12450]
-    expected_spm = [94.139]
+    expected_spm = [94.139704]
     self.assertEqual(expected_feedrate, feedrate)
     self.assertEqual(expected_spm, spm)
 
@@ -271,7 +271,7 @@ class GetAxesFeedrateSPM(unittest.TestCase):
     axes = ['X', 'Y', 'Z']
     feedrate, spm = self.g.get_axes_feedrate_and_SPM(axes)
     expected_feedrate = [12450, 12450, 1170]
-    expected_spm = [94.139, 94.139, 400]
+    expected_spm = [94.139704, 94.139704, 400]
     self.assertEqual(expected_feedrate, feedrate)
     self.assertEqual(expected_spm, spm)
 

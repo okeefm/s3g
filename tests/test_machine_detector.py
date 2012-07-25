@@ -34,7 +34,6 @@ class TestScanSerialPorts(unittest.TestCase):
     self.mock = mock.Mock()
     self.md.list_ports_by_vid_pid = self.mock
     
-
   def tearDown(self):
     self.md = None
 
@@ -42,7 +41,9 @@ class TestScanSerialPorts(unittest.TestCase):
     #This return_value is a mocked list_ports_by_vid_pid that could not find a port with
     #the given VID/PID.  This is what it returns in that case
     return_value = {'PORT'  :   ['/dev/tty.usbmodemfa121', 'The Replicator', 'some_vid_info']}
-    self.mock.return_value = yield return_value 
+    def mock_return_func(*args, **kwargs):
+      yield return_value
+    self.mock.side_effect = mock_return_func
     self.assertRaises(KeyError, self.md.scan_serial_ports, {}, self.vid, self.pid)
 
   def test_scan_serial_ports_no_ports(self):
@@ -119,12 +120,12 @@ class TestResetPortList(unittest.TestCase):
   def tearDown(self):
     self.md = None
 
-  def reset_port_list_no_ports(self):
+  def test_reset_port_list_no_ports(self):
     expected_ports = {}
     self.md.reset_port_list([])
     self.assertEqual(expected_ports, self.md.ports)
 
-  def reset_port_list_one_machine(self):
+  def test_reset_port_list_one_machine(self):
     expected_ports = {
         'ReplicatorDual'  :   {
             'current_ports' : [],
@@ -135,7 +136,7 @@ class TestResetPortList(unittest.TestCase):
     self.md.reset_port_list(['ReplicatorDual'])
     self.assertEqual(expected_ports, self.md.ports)
 
-  def reset_port_list_multiple_machines(self):
+  def test_reset_port_list_multiple_machines(self):
     ports = {
         'current_ports' : [],
         'removed_ports' : [],
@@ -149,18 +150,20 @@ class TestResetPortList(unittest.TestCase):
     self.assertEqual(expected_ports, self.md.ports)
     
 class TestScanMultiplePorts(unittest.TestCase):
+
   def setUp(self):
     self.mock = mock.Mock()
     self.md = s3g.MachineDetector()
     self.md.list_ports_by_vid_pid = self.mock
 
-
   def tearDown(self):
     self.md = None
 
-  def test_scan_multiple_ports_one_machine_type(self):
+  def test_foo(self):
     added_port = {'iSerial' : 'asdf'}
-    self.mock.return_value = yield added_port
+    def mock_return_func(*args, **kwargs):
+      yield added_port
+    self.mock.side_effect = mock_return_func
     machines = ['ReplicatorDual']
     self.md.reset_port_list(machines)
     expected_ports = {
