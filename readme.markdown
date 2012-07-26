@@ -3,7 +3,15 @@
 The s3g module is designed to communicate with a Makerbot Printer via s3g Packets.  The main objectives of this module are to  transform certain actions (i.e. move-to-a-position, heat-up-a-toolhead) into packets of information to be sent and to decode packets of information received from a printer into human parsable formats.  
 
 ##VirtualEnv
-We provide the necessary files to operate inside a VirtualEnv, that will install all dependencies for you without polluting your own machine.  
+Due to s3g's dependency on our (Makerbot Industries) own version of pyserial, and for the sake of not polluting your own system that may have the 'true' version of pyserial installed, we suggest invoking s3g inside a virtualenv.  We provide the necessary files to operate inside a VirtualEnv that will install all dependencies for you without polluting your own machine.  
+
+First, obtain a copy of our version of pyserial.  This can be done VIA git.  On the same directory level as s3g, in a terminal window issue:
+
+    git clone git@github.com:makerbot/pyserial.git
+
+To create the VirtualEnv, inside the root directory of the s3g folder, issue:
+
+    python virtualenv.py virtualenv
 
 To configure the VirtualEnv, navigate to the root directory of the s3g driver and, in a terminal issue:
 
@@ -12,6 +20,8 @@ To configure the VirtualEnv, navigate to the root directory of the s3g driver an
 To activate the VirtualEnv, in the root directory of the s3g driver, issue:
 
     . virtualenv/bin/activate
+
+##Machine Connection
 
 To connect to a machine, you will need the following module:
 
