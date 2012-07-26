@@ -1,8 +1,13 @@
 from distutils.core import setup
 
+import re, os
+version = re.search(
+        "__version__.*'(.+)'",
+        open(os.path.join('s3g', '__init__.py')).read()).group(1)
+
 setup(
     name='pys3g',
-    version='0.1.0',
+    version=version,
     author='MakerBot Industries',
     author_email='matt.mets@makerbot.com',
     packages=['s3g', 's3g.test'],
