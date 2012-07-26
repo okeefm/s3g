@@ -29,7 +29,7 @@ elif options.none:
 elif options.expecting:
   ports = serial.tools.list_ports.get_ports_by_vid_pid(vid, pid)
   for port in ports:
-    if port['PORT'] == options.expecting:
+    if port['port'] == options.expecting:
       print "Bot Detected at port %s, exiting." %(options.expecting)
       sys.exit()
   else:

@@ -22,7 +22,7 @@ ports = lp.list_ports_by_vid_pid(vid, pid)
 port = None
 
 for port in ports:
-  thePort = port['PORT']
+  thePort = port['port']
   break
 
 if port == None:

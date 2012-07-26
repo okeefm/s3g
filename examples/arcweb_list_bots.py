@@ -17,6 +17,6 @@ port = list(serial.tools.list_ports.get_ports_by_vid_pid(vid, pid))[0]
 if options.verbose:
   return_info = port
 else:
-  return_info = port['PORT']
+  return_info = port['port']
 print return_info
 sys.exit()
