@@ -1,18 +1,20 @@
 import json
 import os
 import subprocess
+import urllib2
 from errors import *
 
 class Uploader(object):
 
   def __init__(self):
     self.product_url = './products.json'
-    self.base_url = 'firmware.makerbot.com'
+    self.base_url = 'http://firmware.makerbot.com'
     #The base path is included for testing purposes.  It makes us
     #rely on mock much, much less.
     self.base_path = os.path.abspath(os.path.dirname(__file__))
     #Again, for testing purposes we save this
     self.check_call = subprocess.check_call
+    self.urlopen = urllib2.urlopen
 
   def get_products(self):
     product_url = self.build_firmware_url(self.product_url)
@@ -39,8 +41,10 @@ class Uploader(object):
 
     @param str url: The url we want to wget
     """
-    call = self.make_wget_call(url)
-    self.check_call(call)
+    dl_file = self.urlopen(url)
+    filename = url.split('/')[-1]
+    with open(os.path.join(self.base_path, filename), 'w') as f:
+      f.write(dl_file.read())
 
   def load_json_values(self, path):
     with open(path) as f:

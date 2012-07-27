@@ -7,6 +7,8 @@ import unittest
 import io
 import json
 import mock
+import urllib2
+import tempfile
 
 import s3g
 
@@ -37,16 +39,33 @@ class TestWgetThis(unittest.TestCase):
     self.uploader = s3g.Firmware.Uploader()
     self.check_call_mock = mock.Mock()
     self.uploader.check_call = self.check_call_mock
+    self.base_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'test_files',
+        )
+    self.uploader.base_path = self.base_path
+    self.urlopen_mock = mock.Mock()
+    self.uploader.urlopen = self.urlopen_mock
 
   def tearDown(self):
     self.uploader = None
 
   def test_wget_this(self):
-    f = 'firmware.makerbot.com/products.json'
-    expected_subprocess_call = self.uploader.make_wget_call(f)
-    self.uploader.wget_this(f)
-    self.check_call_mock.assert_called_once_with(expected_subprocess_call)
-
+    string = '1234567890asdf'
+    class file_like_object(object):
+      def __init__(self):
+        pass
+      def read(self):
+        return string
+    url = 'firmware.makerbot.com/foobar.json'
+    filename = url.split('/')[-1]
+    self.urlopen_mock.return_value = file_like_object()
+    self.uploader.wget_this(url)
+    self.urlopen_mock.assert_called_once_with(url)
+    with open(os.path.join(self.base_path, filename)) as f:
+      self.assertEqual(string, f.read())
+    os.unlink(os.path.join(self.base_path, filename))
+   
 class TestGetMachineJsonFiles(unittest.TestCase):
   def setUp(self):
     self.uploader = s3g.Firmware.Uploader()
