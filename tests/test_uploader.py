@@ -121,11 +121,12 @@ class TestGetFirmwareVersions(unittest.TestCase):
       vals = json.load(f)
     expected_versions = []
     for version in vals['firmware']['versions']:
-      expected_versions.append(version)
+      descriptor = vals['firmware']['versions'][version][1]
+      expected_versions.append([version, descriptor])
     got_versions = self.uploader.list_firmware_versions(machine)
     self.assertEqual(expected_versions, got_versions)
 
-class TestGetMachineBoardProfile(unittest.TestCase):
+class TestGetFirmwareValues(unittest.TestCase):
   def setUp(self):
     self.uploader = s3g.Firmware.Uploader()
     base_path = os.path.join(
@@ -139,11 +140,11 @@ class TestGetMachineBoardProfile(unittest.TestCase):
   def tearDown(self):
     self.uploader = None
 
-  def test_get_machine_board_profile_bad_machine(self):
+  def test_get_firmware_values_bad_machine(self):
     machine = "i really hope you dont have a file with this exact name"
-    self.assertRaises(KeyError, self.uploader.get_machine_board_profile, machine)
+    self.assertRaises(KeyError, self.uploader.get_firmware_values, machine)
 
-  def test_get_machine_board_profile_values(self):
+  def test_get_firmware_values_values(self):
     machine = "Example"
     with open(os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
@@ -151,7 +152,7 @@ class TestGetMachineBoardProfile(unittest.TestCase):
         'Example.json'
         )) as f: 
       expected_values = json.load(f)
-    self.assertEqual(expected_values, self.uploader.get_machine_board_profile(machine))
+    self.assertEqual(expected_values, self.uploader.get_firmware_values(machine))
 
 class TestListVersions(unittest.TestCase):
   def setUp(self):
@@ -178,21 +179,32 @@ class TestListVersions(unittest.TestCase):
 class TestUploader(unittest.TestCase):
   def setUp(self):
     self.uploader = s3g.Firmware.Uploader()
+    self.base_url = 'http://firmware.makerbot.com'
 
   def tearDown(self):
     self.uploader = None
 
+  def test_update(self):
+    update_mock = mock.Mock()
+    self.uploader.get_products = update_mock
+    self.uploader.update()
+    update_mock.assert_called_once_with()
+
   def test_build_firmware_url_no_file_separator(self):
-    base_url = 'firmware.makerbot.com'
     f = 'products.json'
-    expected_url = '%s/%s' %(base_url, f)
+    expected_url = '%s/%s' %(self.base_url, f)
     got_url = self.uploader.build_firmware_url(f)
     self.assertEqual(expected_url, got_url)
 
-  def test_build_firmware_url_has_file_separator(self):
-    base_url = 'firmware.makerbot.com'
+  def test_build_firmware_url_has_file_separator_without_dot(self):
+    f = '/products.json'
+    expected_url = self.base_url+f
+    got_url = self.uploader.build_firmware_url(f)
+    self.assertEqual(expected_url, got_url)
+
+  def test_build_firmware_url_has_file_separator_with_dot(self):
     f = './products.json'
-    expected_url = base_url+f
+    expected_url = self.base_url+f
     got_url = self.uploader.build_firmware_url(f)
     self.assertEqual(expected_url, got_url)
 
@@ -206,12 +218,6 @@ class TestUploader(unittest.TestCase):
   def test_load_json_values_bad_file(self):
     filename = 'I HOPE THIS ISNT A FILENAME'
     self.assertRaises(IOError, self.uploader.load_json_values, filename)
-
-  def test_make_wget_call(self):
-    f = 'file.json'
-    expected_call = ['wget', '-N', f, '-P%s' % self.uploader.base_path ]
-    got_call = self.uploader.make_wget_call(f)
-    self.assertEqual(expected_call, got_call)
 
 class TestParseAvrdudeCommand(unittest.TestCase):
   def setUp(self):
