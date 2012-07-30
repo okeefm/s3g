@@ -3,10 +3,12 @@ import os
 import subprocess
 import urllib2
 from errors import *
+import logging
 
 class Uploader(object):
 
   def __init__(self):
+    self._logger = logging.getLogger(self.__class__.__name__)
     self.product_url = './products.json'
     self.base_url = 'http://firmware.makerbot.com'
     #The base path is included for testing purposes.  Without it, we would
@@ -23,13 +25,13 @@ class Uploader(object):
     is being used.
     """
     self.get_products()
+    self._logger.info('{"event":"updating_updater"}')
 
   def get_products(self):
     """
     Pulls the most recent products.json file and, using that,
     pulls all possible machine json files.
     """
-
     product_url = self.build_firmware_url(self.product_url)
     self.wget_this(product_url)
     #Assuming wget works, this shouldnt be a problem
@@ -54,6 +56,7 @@ class Uploader(object):
 
     @param str url: The url we want to wget
     """
+    self._logger.info('{"event":"downloading_url", "url":%s}' %(url))
     dl_file = self.urlopen(url)
     filename = url.split('/')[-1]
     with open(os.path.join(self.base_path, filename), 'w') as f:
@@ -158,5 +161,6 @@ class Uploader(object):
     @param str machine: The machine we are uploading to
     @param str version: The version of firmware we want to upload to
     """
+    self._logger.info('{"event":"uploading_firmware", "port":%s, "machine":%s, "version":%s}' %(port, machine, version))
     call = self.parse_avrdude_command(port, machine, version)
     self.check_call(call)
