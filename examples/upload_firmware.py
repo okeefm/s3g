@@ -16,5 +16,5 @@ parser.add_option("-p", "--port", dest="port",
 (options, args) = parser.parse_args()
 
 u = uploader.Uploader()
-u.get_products()
+u.update()
 u.upload_firmware(options.port, options.machine, options.version)
