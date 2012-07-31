@@ -3,39 +3,58 @@ import os
 import subprocess
 import urllib2
 from errors import *
-import logging
+import logging    
+import urlparse
+
 
 class Uploader(object):
-
-  def __init__(self):
+  """ Firmware Uploader is used to send firmware to a 3D printer."""
+  
+  def __init__(self, base_url = None, base_path = None, autoUpdate= True):
+    """Build an uploader.
+	@param base_url: specify a url to fetch firmware metadata from. Can be a directory
+    @param base_path: path to use as the local file store location
+    @param autoUpdate: automatically and immedately fetch machine data
+    """
     self._logger = logging.getLogger(self.__class__.__name__)
-    self.product_url = './products.json'
-    self.base_url = 'http://firmware.makerbot.com'
-    #The base path is included for testing purposes.  Without it, we would
-    #rely on mock too much
-    self.base_path = os.path.abspath(os.path.dirname(__file__))
-    #Again, for testing purposes we save this function
-    self.check_call = subprocess.check_call
+    self.product_filename = 'products.json'
+    self.base_url = base_url if base_url else 'http://firmware.makerbot.com'
+    self.base_path = base_path if base_path else os.getcwd()
+    
+    self.run_subprocess = subprocess.check_call
     self.urlopen = urllib2.urlopen
+    if autoUpdate:
+        self.update()
+
+  def pathjoin(self, base, resource):
+    """ joins URL or filename paths to find a resource relative to base"""
+    if( base.startswith('http://')):
+        return urlparse.urljoin(base, resource)
+    return os.path.normpath(os.path.join(base, resource))
 
   def update(self):
     """
-    Update should be called before any firmware loading
-    is done, to ensure the most up-to-date information 
-    is being used.
-    """
-    self.get_products()
-    self._logger.info('{"event":"updating_updater"}')
+    Update should be called before any firmware loading is done, to ensure the
+    most up-to-date information is being used.
 
-  def get_products(self):
     """
-    Pulls the most recent products.json file and, using that,
-    pulls all possible machine json files.
+    self._logger.info('{"event":"updating_updater"}')
+    self._pull_products()
+
+
+  def _pull_products(self):
     """
-    product_url = self.build_firmware_url(self.product_url)
-    self.wget_this(product_url)
+    Pulls the most recent products.json file and, using that
+    to update internal manchine lists and metadata
+    """
+    product_filename = self.pathjoin(self.base_url, self.product_filename)
+    filename = self.wget(product_filename)
     #Assuming wget works, this shouldnt be a problem
-    self.products = self.load_json_values(os.path.join(self.base_path, 'products.json'))
+    self.products = self.load_json_values(filename)
+    if 'Example' not in self.products['ExtrusionPrinters'].keys() :
+#        import pdb
+#        pdb.set_trace()
+        pass
     self.get_machine_json_files()
 
   def get_machine_json_files(self):
@@ -46,40 +65,36 @@ class Uploader(object):
     machines = self.products['ExtrusionPrinters']
     for machine in machines:
       f = self.products['ExtrusionPrinters'][machine]
-      url = self.build_firmware_url(self.products['ExtrusionPrinters'][machine])
-      self.wget_this(url)
+      url = self.pathjoin(self.base_url,  self.products['ExtrusionPrinters'][machine])
+      self.wget(url)
 
-  def wget_this(self, url):
+  def wget(self, url):
     """
-    Given a url, creates a wget call with it and 
-    executes wget on it.
+    calls wget to fetch a file from the web this objects self.base_path_
 
     @param str url: The url we want to wget
+    @return file: local filename of the resource
     """
-    self._logger.info('{"event":"downloading_url", "url":%s}' %(url))
-    dl_file = self.urlopen(url)
-    filename = url.split('/')[-1]
-    with open(os.path.join(self.base_path, filename), 'w') as f:
-      f.write(dl_file.read())
-
+    filename = url.split('/')[-1] #urllib here might be useful
+    filename = os.path.join(self.base_path, filename) 
+    if os.path.isfile(url):
+      import shutil
+      if (url == filename):
+        import pdb
+        pdb.set_trace()
+      shutil.copyfile(url, filename)
+      return filename
+    else:
+      self._logger.info('{"event":"downloading_url", "url":%s}' %(url))
+      dl_file = self.urlopen(url)
+      with open(filename, 'w') as f:
+        f.write(dl_file.read())
+      return filename 
+    
   def load_json_values(self, path):
     with open(path) as f:
       return json.load(f)
 
-  def build_firmware_url(self, url):
-    """Given a url concatenat are return the url 
-    onto the base url.
-
-    @param str url: The url we want to access
-    @return str full_url: The full url we want to access
-    return self.base_url + url
-    """
-    #If there is a path divider already in place
-    if '/' == url[0] or './' == url[:2]:
-      return_url = self.base_url + url
-    else:
-      return_url = self.base_url + '/' + url
-    return return_url
 
   def get_firmware_values(self, machine):
     """
@@ -93,6 +108,7 @@ class Uploader(object):
         self.base_path,
         self.products['ExtrusionPrinters'][machine],
         )
+    path = os.path.normpath(path)
     return self.load_json_values(path)
 
   def list_firmware_versions(self, machine):
@@ -109,6 +125,7 @@ class Uploader(object):
       versions.append([version, descriptor])
     return versions
 
+
   def list_machines(self):
     """
     Lists all the machines we can upload firmware to
@@ -116,6 +133,7 @@ class Uploader(object):
     @return iterator machines: The machines we can upload firmware to
     """
     return self.products['ExtrusionPrinters'].keys()
+
 
   def parse_avrdude_command(self, port, machine, version):
     """
@@ -132,12 +150,12 @@ class Uploader(object):
       hex_file = str(values['versions'][version][0])
     except KeyError:
       raise UnknownVersionError
-    hex_file_url = self.build_firmware_url(hex_file)
-    #Pull the hex file
-    self.wget_this(hex_file_url)
+    hex_file_url = self.pathjoin(self.base_url, hex_file)
+    
+    hex_file_path = self.wget(hex_file_url)
     #Get the path to the hex file
-    hex_file_path = hex_file.split('/')[-1]
-    hex_file_path = os.path.join(self.base_path, hex_file_path)
+    ##hex_file_path = hex_file.split('/')[-1]
+    ##hex_file_path = os.path.join(self.base_path, hex_file_path)
     process = 'avrdude'
     flags = []
     #get the part
@@ -161,6 +179,8 @@ class Uploader(object):
     @param str machine: The machine we are uploading to
     @param str version: The version of firmware we want to upload to
     """
+    import pdb
+    pdb.set_trace()
     self._logger.info('{"event":"uploading_firmware", "port":%s, "machine":%s, "version":%s}' %(port, machine, version))
     call = self.parse_avrdude_command(port, machine, version)
-    self.check_call(call)
+    self.run_subprocess(call)
