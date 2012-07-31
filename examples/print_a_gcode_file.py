@@ -34,7 +34,7 @@ print_delay = 15
 print "Super, I've found a replicator!  Give me %i seconds to get everything ready." %(print_delay)
 time.sleep(print_delay)
 
-r = s3g.s3g.from_filename(ports[0]['PORT'])
+r = s3g.s3g.from_filename(ports[0]['port'])
 
 parser = s3g.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'

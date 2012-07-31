@@ -757,7 +757,7 @@ Build State Return Values are as follows
 </tr>
 </table>
 
-## 26 - Get communication statistics
+## 25 - Get communication statistics
 Gathers statistics about communication over the tool network. This was intended for use while troubleshooting Gen3/4 machines.
 
 Payload (0 bytes)

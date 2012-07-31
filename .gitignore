@@ -5,3 +5,7 @@ dist/*
 build/*
 MANIFEST
 virtualenv
+htmlcov
+build
+dist
+pys3g.egg-info

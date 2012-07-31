@@ -11,9 +11,11 @@ run_test = GetOption('test')
 env = Environment(ENV = os.environ)
 
 if 'win32' == sys.platform:
-	env.Command('virtualenv', 'setup.bat', 'setup.bat')
+	vcmd=env.Command('virtualenv', 'setup.bat', 'setup.bat')
 else:
-	env.Command('virtualenv', 'setup.sh', './setup.sh')
+	vcmd=env.Command('virtualenv', 'setup.sh', './setup.sh')
+
+env.Clean(vcmd,'virtualenv')
 
 if run_test:
     if 'win32' == sys.platform:
