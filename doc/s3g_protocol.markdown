@@ -705,18 +705,18 @@ Response
 </tr>
 <tr>
  <td>2</td>
- <td>PORF *Deprecated*</td>
- <td>Power-on reset flag was set at restart</td>
+ <td>ONBOARD_SCRIPT</td>
+ <td>Bot is running an onboard script</td>
 </tr>
 <tr>
  <td>1</td>
- <td>0 (reserved for future use)</td>
- <td></td>
+ <td>MANUAL_MODE</td>
+ <td>Manual move mode active</td>
 </tr>
 <tr>
  <td>0</td>
- <td>0 (reserved for future use)</td>
- <td></td>
+ <td>PREHEAT</td>
+ <td>Onboard preheat active</td>
 </tr>
 </table>
 
