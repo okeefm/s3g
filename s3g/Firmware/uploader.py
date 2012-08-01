@@ -52,8 +52,6 @@ class Uploader(object):
     #Assuming wget works, this shouldnt be a problem
     self.products = self.load_json_values(filename)
     if 'Example' not in self.products['ExtrusionPrinters'].keys() :
-#        import pdb
-#        pdb.set_trace()
         pass
     self.get_machine_json_files()
 
@@ -70,23 +68,26 @@ class Uploader(object):
 
   def wget(self, url):
     """
-    calls wget to fetch a file from the web this objects self.base_path_
+    Gets a certain file from a url and copies it into 
+    the current working directory.  If the url is stored
+    locally, we copy that file.  Otherwise we pull it from
+    the internets.
 
     @param str url: The url we want to wget
     @return file: local filename of the resource
     """
     filename = url.split('/')[-1] #urllib here might be useful
     filename = os.path.join(self.base_path, filename) 
+    #If file is local
     if os.path.isfile(url):
       import shutil
-      if (url == filename):
-        import pdb
-        pdb.set_trace()
       shutil.copyfile(url, filename)
       return filename
     else:
       self._logger.info('{"event":"downloading_url", "url":%s}' %(url))
+      #Download the file
       dl_file = self.urlopen(url)
+      #Write out the file
       with open(filename, 'w') as f:
         f.write(dl_file.read())
       return filename 
@@ -179,8 +180,6 @@ class Uploader(object):
     @param str machine: The machine we are uploading to
     @param str version: The version of firmware we want to upload to
     """
-    import pdb
-    pdb.set_trace()
     self._logger.info('{"event":"uploading_firmware", "port":%s, "machine":%s, "version":%s}' %(port, machine, version))
     call = self.parse_avrdude_command(port, machine, version)
     self.run_subprocess(call)
