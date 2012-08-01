@@ -10,7 +10,7 @@ setup(
     version=version,
     author='MakerBot Industries',
     author_email='matt.mets@makerbot.com',
-    packages=['s3g', 's3g.test'],
+    packages=['s3g'],
     url='http://github.com/makerbot/s3g',
     license='LICENSE.txt',
     description='.',
