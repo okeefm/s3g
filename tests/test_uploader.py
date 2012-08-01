@@ -272,102 +272,93 @@ class TestParseAvrdudeCommand(unittest.TestCase):
   def tearDown(self):
     self.uploader = None
  
-#  def test_parse_avrdude_command_no_products(self):
-#    port = '/dev/tty.usbmodemfa121'
-#    machine = "Example"
-#    version = '0.1'
-#    self.assertRaises(AttributeError, self.uploader.parse_avrdude_command, port, machine, version)
+  def test_parse_avrdude_command_no_products(self):
+    uploader = s3g.Firmware.Uploader(autoUpdate=False)
+    port = '/dev/tty.usbmodemfa121'
+    machine = "Example"
+    version = '0.1'
+    self.assertRaises(AttributeError, uploader.parse_avrdude_command, port, machine, version)
  
   def test_parse_avrdude_command_cant_find_machine(self):
-    with open(os.path.join(
-        self.uploader.base_path,
-        'products.json',
-        )) as f:
-      self.uploader.products = json.load(f)
     port = '/dev/tty.usbmodemfa121'
     machine = "i really hope you dont have a file with this exact name"
     version = '5.2'
     self.assertRaises(KeyError, self.uploader.parse_avrdude_command, port, machine, version)
  
   def test_parse_avrdude_command_cant_find_version(self):
-    with open(os.path.join(
-        self.uploader.base_path,
-        'products.json',
-        )) as f:
-      self.uploader.products = json.load(f)
     port = '/dev/tty.usbmodemfa121'
     machine = 'Example'
     version = 'x.x'
     self.assertRaises(s3g.Firmware.UnknownVersionError, self.uploader.parse_avrdude_command, port, machine, version)
  
 
-# def test_parse_avrdude_command(self):
-#   wget_mock = mock.Mock()
-#   self.uploader.wget = wget_mock
-#   with open(os.path.join(
-#       self.uploader.base_path,
-#        'products.json',
-#        )) as f:
-#      self.uploader.products = json.load(f)
-#   with open(os.path.join(self.uploader.base_path, 'Example.json')) as f:
-#     example_profile = json.load(f)
-#   example_values = example_profile['firmware']
-#   port = '/dev/tty.usbmodemfa121'
-#   machine = 'Example'
-#   version = '0.1'
-#   hex_url = example_values['versions'][version][0]
-#   hex_path = os.path.join(
-#       self.uploader.base_path, 
-#       hex_url,
-#       )
-#   avrdude_path = 'avrdude'
-#   expected_call = "%s -p%s -b%i -c%s -P/dev/tty.usbmodemfa121 -Uflash:w:%s:i" %(avrdude_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
-#   expected_call = expected_call.split(' ')
-#   got_call = self.uploader.parse_avrdude_command(port, machine, version)
-#   #expected_call = expected_call.split(' ')
-#   expected_avrdude = expected_call[0]
-#   self.assertEqual(expected_avrdude, avrdude_path)
-#   for i in range(1, 5):
-#     self.assertEqual(expected_call[i], got_call[i])
-#   #DO something really hacky, since windows paths have colons in them
-#   #and splitting at each colon will result in the test failing on windows
-#   #DUMB
-#   expected_op = expected_call[-1]
-#   expected_op_parts = []
-#   expected_op_parts.extend(expected_op[:9].split(':'))
-#   expected_op_parts.append(expected_op[10:-2])
-#   expected_op_parts.append(expected_op[-1])
-#   #Get the path relative from here
-#   expected_op_parts[2] = os.path.relpath(expected_op_parts[2])
-#   got_op = got_call[-1]
-#   got_op_parts = []
-#   got_op_parts.extend(expected_op[:9].split(':'))
-#   got_op_parts.append(expected_op[10:-2])
-#   got_op_parts.append(expected_op[-1])
-#   #Get the path relative from here
-#   got_op_parts[2] = os.path.relpath(expected_op_parts[2])
-#   for i in range(len(expected_op_parts)):
-#     self.assertEqual(expected_op_parts[i], got_op_parts[i])
+  def test_parse_avrdude_command(self):
+    machine = 'Example'
+    wget_mock = mock.Mock()
+    self.uploader.wget = wget_mock
+    with open(os.path.join(self.uploader.base_url, machine+'.json')) as f:
+      example_profile = json.load(f)
+    example_values = example_profile['firmware']
+    port = '/dev/tty.usbmodemfa121'
+    version = '0.1'
+    hex_url = example_values['versions'][version][0]
+    hex_path = os.path.join(
+        self.uploader.base_path, 
+        hex_url,
+        )
+    #Mock up the actual path to the hex_file
+    wget_mock.return_value = hex_path
+    avrdude_path = 'avrdude'
+    expected_call = "%s -p%s -b%i -c%s -P/dev/tty.usbmodemfa121 -Uflash:w:%s:i" %(avrdude_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
+    expected_call = expected_call.split(' ')
+    got_call = self.uploader.parse_avrdude_command(port, machine, version)
+    #expected_call = expected_call.split(' ')
+    expected_avrdude = expected_call[0]
+    self.assertEqual(expected_avrdude, avrdude_path)
+    for i in range(1, 5):
+      self.assertEqual(expected_call[i], got_call[i])
+    #DO something really hacky, since windows paths have colons in them
+    #and splitting at each colon will result in the test failing on windows
+    #DUMB
+    expected_op = expected_call[-1]
+    expected_op_parts = []
+    expected_op_parts.extend(expected_op[:9].split(':'))
+    expected_op_parts.append(expected_op[10:-2])
+    expected_op_parts.append(expected_op[-1])
+    #Get the path relative from here
+    expected_op_parts[2] = os.path.relpath(expected_op_parts[2])
+    got_op = got_call[-1]
+    got_op_parts = []
+    got_op_parts.extend(expected_op[:9].split(':'))
+    got_op_parts.append(expected_op[10:-2])
+    got_op_parts.append(expected_op[-1])
+    #Get the path relative from here
+    got_op_parts[2] = os.path.relpath(expected_op_parts[2])
+    for i in range(len(expected_op_parts)):
+      self.assertEqual(expected_op_parts[i], got_op_parts[i])
 
-#   def test_update_firmware(self):
-#     wget_mock = mock.Mock()
-#     self.uploader.wget = wget_mock
-#     with open(os.path.join(
-#         self.uploader.base_path,
-#         'products.json',
-#         )) as f:
-#       self.uploader.products = json.load(f)
-#     
-#     check_call_mock = mock.Mock()
-#     self.uploader.run_subprocess = check_call_mock
-#     port = '/dev/tty.usbmodemfa121'
-#     machine = 'Example'
-#     version = '0.1'
-#     import pdb
-#     pdb.set_trace()
-#     expected_call = self.uploader.parse_avrdude_command(port, machine, version)
-#     self.uploader.upload_firmware(port, machine, version)
-#     check_call_mock.assert_called_once_with(expected_call)
+  def test_update_firmware(self):
+    machine = 'Example'
+    wget_mock = mock.Mock()
+    self.uploader.wget = wget_mock
+    with open(os.path.join(self.uploader.base_url, machine+'.json')) as f:
+      example_profile = json.load(f)
+    example_values = example_profile['firmware']
+    port = '/dev/tty.usbmodemfa121'
+    version = '0.1'
+    hex_url = example_values['versions'][version][0]
+    hex_path = os.path.join(
+        self.uploader.base_path, 
+        hex_url,
+        )
+    #Mock up the actual path to the hex_file
+    wget_mock.return_value = hex_path
+
+    check_call_mock = mock.Mock()
+    self.uploader.run_subprocess = check_call_mock
+    expected_call = self.uploader.parse_avrdude_command(port, machine, version)
+    self.uploader.upload_firmware(port, machine, version)
+    check_call_mock.assert_called_once_with(expected_call)
 
 if __name__ == "__main__":
   unittest.main()

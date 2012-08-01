@@ -51,8 +51,6 @@ class Uploader(object):
     filename = self.wget(product_filename)
     #Assuming wget works, this shouldnt be a problem
     self.products = self.load_json_values(filename)
-    if 'Example' not in self.products['ExtrusionPrinters'].keys() :
-        pass
     self.get_machine_json_files()
 
   def get_machine_json_files(self):
@@ -152,11 +150,8 @@ class Uploader(object):
     except KeyError:
       raise UnknownVersionError
     hex_file_url = self.pathjoin(self.base_url, hex_file)
-    
     hex_file_path = self.wget(hex_file_url)
     #Get the path to the hex file
-    ##hex_file_path = hex_file.split('/')[-1]
-    ##hex_file_path = os.path.join(self.base_path, hex_file_path)
     process = 'avrdude'
     flags = []
     #get the part
