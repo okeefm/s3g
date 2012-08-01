@@ -3,12 +3,9 @@ import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import urlparse
 import unittest
-import io
 import json
 import mock
-import urllib2
 import tempfile
 
 import s3g
@@ -24,27 +21,27 @@ class TestGetProducts(unittest.TestCase):
          base_url = base_url, 
          base_path = d,
          )
-#    self.wget_mock = mock.Mock()
-#    self.get_machine_json_files_mock = mock.Mock()
-#    self.uploader.wget = self.wget_mock
-#    self.uploader.get_machine_json_files = self.get_machine_json_files_mock 
 
   def tearDown(self):
     self.uploader = None
    
   def test_pathjoin(self):
     base, f = './base', 'x.txt'
-    import os.path
     path = os.path.normpath(os.path.join(base,f))
     self.assertEquals(self.uploader.pathjoin(base,f), path) 
     base, f = 'http://base', 'x.txt'
     self.assertEquals(self.uploader.pathjoin(base,f), "http://base/x.txt")
  
   def test_pull_products(self):
+    expected_products_url = self.uploader.pathjoin(self.uploader.base_url, self.uploader.product_filename)
+    wget_mock = mock.Mock()
+    wget_mock.return_value = expected_products_url
+    self.uploader.wget = wget_mock
+    get_machine_json_files_mock = mock.Mock()
+    self.uploader.get_machine_json_files = get_machine_json_files_mock
     self.uploader._pull_products()	
-    expected_products_url = self.uploader.pathjoin(self.uploader.base_url,'./products.json')
-    #self.wget_mock.assert_called_once_with(expected_products_url)
-    #self.get_machine_json_files_mock.assert_called_once_with() 
+    wget_mock.assert_called_once_with(expected_products_url)
+    get_machine_json_files_mock.assert_called_once_with() 
  
 class TestWget(unittest.TestCase):
   def setUp(self):

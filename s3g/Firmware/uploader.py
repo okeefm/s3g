@@ -36,7 +36,6 @@ class Uploader(object):
     """
     Update should be called before any firmware loading is done, to ensure the
     most up-to-date information is being used.
-
     """
     self._logger.info('{"event":"updating_updater"}')
     self._pull_products()
@@ -93,7 +92,6 @@ class Uploader(object):
   def load_json_values(self, path):
     with open(path) as f:
       return json.load(f)
-
 
   def get_firmware_values(self, machine):
     """
