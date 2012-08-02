@@ -12,6 +12,8 @@ try:
   import serial.tools.list_ports  as lp
   list_ports_generator = lp.list_ports_by_vid_pid
 except ImportError:
+  import warnings
+  warnings.warn("No VID/PID detection in this version of PySerial; Automatic machine detection disabled.")
   # We're using legacy pyserial. For now, return an empty iterator.
   def list_ports_generator():
     return
