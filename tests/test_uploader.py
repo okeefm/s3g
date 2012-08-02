@@ -4,39 +4,311 @@ lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
 import unittest
-import io
 import json
+import mock
+import tempfile
 
 import s3g
 
-class TestUploader(unittest.TestCase):
+class TestGetProducts(unittest.TestCase):
   def setUp(self):
-    self.uploader = s3g.Firmware.Uploader()
+    base_url = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'test_files',
+        )
+    d = tempfile.mkdtemp()
+    self.uploader = s3g.Firmware.Uploader(
+         base_url = base_url, 
+         base_path = d,
+         )
+
+  def tearDown(self):
+    self.uploader = None
+   
+  def test_pathjoin(self):
+    base, f = './base', 'x.txt'
+    path = os.path.normpath(os.path.join(base,f))
+    self.assertEquals(self.uploader.pathjoin(base,f), path) 
+    base, f = 'http://base', 'x.txt'
+    self.assertEquals(self.uploader.pathjoin(base,f), "http://base/x.txt")
+ 
+  def test_pull_products(self):
+    expected_products_url = self.uploader.pathjoin(self.uploader.base_url, self.uploader.product_filename)
+    wget_mock = mock.Mock()
+    wget_mock.return_value = expected_products_url
+    self.uploader.wget = wget_mock
+    get_machine_json_files_mock = mock.Mock()
+    self.uploader.get_machine_json_files = get_machine_json_files_mock
+    self.uploader._pull_products()	
+    wget_mock.assert_called_once_with(expected_products_url)
+    get_machine_json_files_mock.assert_called_once_with() 
+ 
+class TestWget(unittest.TestCase):
+  def setUp(self):
+    self.base_url = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'test_files',
+        )
+    d = tempfile.mkdtemp()
+    self.uploader = s3g.Firmware.Uploader(
+        base_url = self.base_url,
+        base_path = d,
+        )
 
   def tearDown(self):
     self.uploader = None
 
-  def test_parse_command_cant_find_machine(self):
+  def test_wget_local_file(self):
+    string = '1234567890asdf'
+    class file_like_object(object):
+      def __init__(self):
+        pass
+      def read(self):
+        return string
+    filename = 'Example.json'
+    url = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'test_files',
+        filename,
+        )
+    self.assertTrue(os.path.isfile(os.path.join(
+        self.uploader.base_path,
+        filename
+        )))
+
+  def test_wget_internet_file(self):
+    url = 'http://firmware.makerbot.com/foobar.json'
+    string = '1234567890asdf'
+    class file_like_object(object):
+      """
+      A file-like-object in place of the one returned by 
+      urlopen
+      """
+      def __init__(self):
+        pass
+      def read(self):
+        return string
+    #We mock urlopen so we dont actually pull something down from the internets
+    #Our return value is a mocked file-like object (see above)
+    urlopen_mock = mock.Mock()
+    self.uploader.urlopen = urlopen_mock
+    urlopen_mock.return_value = file_like_object()
+    self.uploader.wget(url)
+    #This is where the new tempfile should be
+    temp_file = os.path.join(
+        self.uploader.base_path,
+        url.split('/')[-1],
+        )
+    #Read the tempfile, and see if its correct
+    with open(temp_file) as f:
+      self.assertEqual(string, f.read())
+
+class TestGetMachineJsonFiles(unittest.TestCase):
+  def setUp(self):
+    base_url = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'test_files', )
+    d = tempfile.mkdtemp()
+    self.uploader = s3g.Firmware.Uploader(
+        base_url = base_url,
+        base_path = d,
+        )
+
+  def tearDown(self):
+    self.uploader = None
+
+  def test_get_machine_json_files_no_products(self):
+    uploader = s3g.Firmware.Uploader(autoUpdate=False)
+    self.assertRaises(AttributeError, uploader.get_machine_json_files)
+
+  def test_get_machine_json_files_products_pulled_and_loaded(self):
+    #Mock wget so we dont copy things fromt he internets
+    self.wget_mock = mock.Mock()
+    self.uploader.wget = self.wget_mock
+    calls = self.wget_mock.mock_calls
+    machines = self.uploader.products['ExtrusionPrinters']
+    for machine, call in zip(machines, calls):
+      filename = self.uploader.products['ExtrusionPrinters'][machine]
+      firmware_url = urlparse.urljoin(self.uploader.base_url, filename)  
+      self.assertEqual(firmware_url, call[1][0])
+
+class TestGetFirmwareVersions(unittest.TestCase):
+
+  def setUp(self):
+    base_url = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'test_files', )
+    d = tempfile.mkdtemp()
+    self.uploader = s3g.Firmware.Uploader(
+        base_url = base_url,
+        base_path = d,
+        )
+
+  def tearDown(self):
+    self.uploader = None
+
+  def test_list_firmware_versions_bad_machine_name(self):
+    self.assertRaises(
+        KeyError, 
+        self.uploader.list_firmware_versions, 
+        'I HOPE THIS ISNT A MACHINE NAME'
+        )
+
+  def test_list_firmware_versions_good_machine_name(self):
+    machine = 'Example'
+    with open(os.path.join(
+        self.uploader.base_url,
+        machine+'.json',
+        )) as f:
+      vals = json.load(f)
+    expected_versions = []
+    #The version is the key, then the descriptor is the 1st element
+    #in the key's value
+    for version in vals['firmware']['versions']:
+      descriptor = vals['firmware']['versions'][version][1]
+      expected_versions.append([version, descriptor])
+    got_versions = self.uploader.list_firmware_versions(machine)
+    self.assertEqual(expected_versions, got_versions)
+
+class TestGetFirmwareValues(unittest.TestCase):
+  def setUp(self):
+    base_url = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'test_files',
+      )
+    d = tempfile.mkdtemp()
+    self.uploader = s3g.Firmware.Uploader(
+        base_url = base_url,
+        base_path = d,
+        )
+
+  def tearDown(self):
+    self.uploader = None
+
+  def test_get_firmware_values_bad_machine(self):
+    machine = "i really hope you dont have a file with this exact name"
+    self.assertRaises(KeyError, self.uploader.get_firmware_values, machine)
+  
+  def test_get_firmware_values_good_machine_name(self):
+    machine = "Example"
+    with open(os.path.join(
+        self.uploader.base_url,
+        machine+'.json',
+        )) as f:
+      expected_values = json.load(f)
+    self.assertEqual(expected_values, self.uploader.get_firmware_values(machine))
+
+class TestListVersions(unittest.TestCase):
+  def setUp(self):
+    base_url = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'test_files',
+        )
+    d = tempfile.mkdtemp()
+    self.uploader = s3g.Firmware.Uploader(
+        base_url = base_url,
+        base_path = d,
+        autoUpdate = False,
+        )
+
+  def test_list_machines_no_products(self):
+    self.assertRaises(AttributeError, self.uploader.list_machines)
+ 
+  def test_list_machines(self):
+    self.uploader.update()
+    with open(os.path.join(
+        self.uploader.base_url,
+        'products.json',
+        )) as f:
+      values = json.load(f)
+    expected_machines = []
+    for machine in values['ExtrusionPrinters']:
+       expected_machines.append(machine)
+    self.assertEqual(expected_machines, self.uploader.list_machines())
+ 
+class TestUploader(unittest.TestCase):
+  def setUp(self):
+    self.uploader = s3g.Firmware.Uploader(autoUpdate = False)
+
+  def tearDown(self):
+    self.uploader = None
+
+  def test_update(self):
+    pull_products_mock = mock.Mock()
+    self.uploader._pull_products = pull_products_mock
+    self.uploader.update()
+    pull_products_mock.assert_called_once_with()
+  
+  def test_load_json_values_good_file(self):
+      path_to_json = os.path.join(
+          os.path.abspath(os.path.dirname(__file__)),
+          'test_files',
+          'products.json'
+          )
+      with open(path_to_json) as f:
+        expected_vals = json.load(f)
+      got_vals = self.uploader.load_json_values(path_to_json)
+      self.assertEqual(expected_vals, got_vals)
+
+  def test_load_json_values_bad_file(self):
+      filename = 'I HOPE THIS ISNT A FILENAME'
+      self.assertRaises(IOError, self.uploader.load_json_values, filename)
+
+class TestParseAvrdudeCommand(unittest.TestCase):
+  def setUp(self):
+    base_url = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'test_files', 
+        )
+    d = tempfile.mkdtemp()
+    self.uploader = s3g.Firmware.Uploader(
+        base_url = base_url,
+        base_path = d,
+        )
+    
+  def tearDown(self):
+    self.uploader = None
+ 
+  def test_parse_avrdude_command_no_products(self):
+    uploader = s3g.Firmware.Uploader(autoUpdate=False)
+    port = '/dev/tty.usbmodemfa121'
+    machine = "Example"
+    version = '0.1'
+    self.assertRaises(AttributeError, uploader.parse_avrdude_command, port, machine, version)
+ 
+  def test_parse_avrdude_command_cant_find_machine(self):
     port = '/dev/tty.usbmodemfa121'
     machine = "i really hope you dont have a file with this exact name"
     version = '5.2'
-    self.assertRaises(IOError, self.uploader.parse_command, port, machine, version)
-
-  def test_parse_command_cant_find_version(self):
+    self.assertRaises(KeyError, self.uploader.parse_avrdude_command, port, machine, version)
+ 
+  def test_parse_avrdude_command_cant_find_version(self):
     port = '/dev/tty.usbmodemfa121'
-    machine = 'Replicator'
+    machine = 'Example'
     version = 'x.x'
-    self.assertRaises(s3g.Firmware.UnknownVersionError, self.uploader.parse_command, port, machine, version)
+    self.assertRaises(s3g.Firmware.UnknownVersionError, self.uploader.parse_avrdude_command, port, machine, version)
+ 
 
-  def test_parse_command(self):
+  def test_parse_avrdude_command(self):
+    machine = 'Example'
+    wget_mock = mock.Mock()
+    self.uploader.wget = wget_mock
+    with open(os.path.join(self.uploader.base_url, machine+'.json')) as f:
+      example_profile = json.load(f)
+    example_values = example_profile['firmware']
     port = '/dev/tty.usbmodemfa121'
-    machine = 'Replicator'
-    version = '5.2'
-    avrdude_path = 'avrdude'
+    version = '0.1'
+    hex_url = example_values['versions'][version][0]
     hex_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), '..', 's3g', 'Firmware', 'machine_board_profiles', 'Mighty-mb40-v5.2.hex')
-    expected_call = (avrdude_path, "-pm1280","-b57600","-cstk500v1","-P/dev/tty.usbmodemfa121","-Uflash:w:"+hex_path+":i")
-    got_call = self.uploader.parse_command(port, machine, version)
+        self.uploader.base_path, 
+        hex_url,
+        )
+    #Mock up the actual path to the hex_file
+    wget_mock.return_value = hex_path
+    avrdude_path = 'avrdude'
+    expected_call = "%s -p%s -b%i -c%s -P/dev/tty.usbmodemfa121 -Uflash:w:%s:i" %(avrdude_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
+    expected_call = expected_call.split(' ')
+    got_call = self.uploader.parse_avrdude_command(port, machine, version)
     #expected_call = expected_call.split(' ')
     expected_avrdude = expected_call[0]
     self.assertEqual(expected_avrdude, avrdude_path)
@@ -62,31 +334,28 @@ class TestUploader(unittest.TestCase):
     for i in range(len(expected_op_parts)):
       self.assertEqual(expected_op_parts[i], got_op_parts[i])
 
-  def test_list_machines(self):
-    expected_machines = ["Replicator"]
-    self.assertEqual(expected_machines, self.uploader.list_machines())
+  def test_update_firmware(self):
+    machine = 'Example'
+    wget_mock = mock.Mock()
+    self.uploader.wget = wget_mock
+    with open(os.path.join(self.uploader.base_url, machine+'.json')) as f:
+      example_profile = json.load(f)
+    example_values = example_profile['firmware']
+    port = '/dev/tty.usbmodemfa121'
+    version = '0.1'
+    hex_url = example_values['versions'][version][0]
+    hex_path = os.path.join(
+        self.uploader.base_path, 
+        hex_url,
+        )
+    #Mock up the actual path to the hex_file
+    wget_mock.return_value = hex_path
 
-  def test_list_versions_bad_machine(self):
-    machine = "i really hope you dont have a file with this exact name"
-    self.assertRaises(IOError, self.uploader.list_versions, machine)
+    check_call_mock = mock.Mock()
+    self.uploader.run_subprocess = check_call_mock
+    expected_call = self.uploader.parse_avrdude_command(port, machine, version)
+    self.uploader.upload_firmware(port, machine, version)
+    check_call_mock.assert_called_once_with(expected_call)
 
-  def test_list_versions_good_machine(self):
-    machine = "Replicator"
-    expected_versions = ['5.1', '5.2', '5.5']
-    got_versions = self.uploader.list_versions(machine)
-    self.assertEqual(expected_versions, got_versions)
-
-  def test_get_machine_board_profile_bad_machine(self):
-    machine = "i really hope you dont have a file with this exact name"
-    self.assertRaises(IOError, self.uploader.get_machine_board_profile, machine)
-
-  def test_get_machine_board_profile_values(self):
-    machine = "Replicator"
-    with open(os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), '..', 's3g', 'Firmware', 'machine_board_profiles', 'Replicator.json')) as f:
-      expected_values = json.load(f)
-    self.assertEqual(expected_values, self.uploader.get_machine_board_profile(machine))
-
-    
 if __name__ == "__main__":
   unittest.main()

@@ -1,9 +1,9 @@
 import os
 import sys
-lib_path = os.path.abspath('../')
+lib_path = os.path.abspath('../s3g/Firmware')
 sys.path.append(lib_path)
 
-import s3g
+import uploader
 import optparse
 
 parser = optparse.OptionParser()
@@ -15,5 +15,6 @@ parser.add_option("-p", "--port", dest="port",
                 help="port machine is connected to", default="/dev/ttyACM0")
 (options, args) = parser.parse_args()
 
-u = s3g.Firmware.Uploader()
-u.upload(options.port, options.machine, options.version)
+u = uploader.Uploader()
+u.update()
+u.upload_firmware(options.port, options.machine, options.version)
