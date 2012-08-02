@@ -3,22 +3,11 @@ The s3g driver has the capability of uploading firmware to a machine via AVRDude
 
 To download AVRDude, goto: www.nongnu.org/avrdude
 
-##Definitions
-<table>
-<tr>
-  <th>Name</th>
-  <th>Definition</th>
-</tr>
-<tr>
-  <td>Machine Board Profile</td>
-  <td>A .json file that contains information about a specific machine's board.</td>
-</tr>
-</table>
-
 ##Uploading
-To upload firmware, an uploader object must first be created:
+To upload firmware, an uploader object must first be created and updated:
 
     uploader = s3g.Firmware.Uploader()
+    uploader.update()
 
 To actually upload firmware, call
 
@@ -37,8 +26,3 @@ The uploader can explore and report back different bits of information related t
 To get a list of possible firmware versions the uploader can upload to:
 
     uploader.list_versions(<machine name>)
-
-##Overriding Default avrdude.conf file
-The Uploader has default avrdude.conf file specified.  To override, issue the following before invoking uploader.upload:
-
-    uploader.conf_path = <path to new avrdude.conf file>

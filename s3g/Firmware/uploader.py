@@ -1,60 +1,141 @@
 import json
 import os
 import subprocess
+import urllib2
 from errors import *
+import logging    
+import urlparse
+
 
 class Uploader(object):
-
-  def __init__(self):
-    pass
-
-  def get_machine_board_profile(self, machine):
+  """ Firmware Uploader is used to send firmware to a 3D printer."""
+  
+  def __init__(self, base_url = None, base_path = None, autoUpdate= True):
+    """Build an uploader.
+	@param base_url: specify a url to fetch firmware metadata from. Can be a directory
+    @param base_path: path to use as the local file store location
+    @param autoUpdate: automatically and immedately fetch machine data
     """
-    Given a machine name, retrieves the associated .json file and parsed
+    self._logger = logging.getLogger(self.__class__.__name__)
+    self.product_filename = 'products.json'
+    self.base_url = base_url if base_url else 'http://firmware.makerbot.com'
+    self.base_path = base_path if base_path else os.getcwd()
+    
+    self.run_subprocess = subprocess.check_call
+    self.urlopen = urllib2.urlopen
+    if autoUpdate:
+        self.update()
+
+  def pathjoin(self, base, resource):
+    """ joins URL or filename paths to find a resource relative to base"""
+    if( base.startswith('http://')):
+        return urlparse.urljoin(base, resource)
+    return os.path.normpath(os.path.join(base, resource))
+
+  def update(self):
+    """
+    Update should be called before any firmware loading is done, to ensure the
+    most up-to-date information is being used.
+
+    """
+    self._logger.info('{"event":"updating_updater"}')
+    self._pull_products()
+
+
+  def _pull_products(self):
+    """
+    Pulls the most recent products.json file and, using that
+    to update internal manchine lists and metadata
+    """
+    product_filename = self.pathjoin(self.base_url, self.product_filename)
+    filename = self.wget(product_filename)
+    #Assuming wget works, this shouldnt be a problem
+    self.products = self.load_json_values(filename)
+    if 'Example' not in self.products['ExtrusionPrinters'].keys() :
+#        import pdb
+#        pdb.set_trace()
+        pass
+    self.get_machine_json_files()
+
+  def get_machine_json_files(self):
+    """
+    Assuming a product.json file has been pulled and loaded, 
+    explores that products.json file and wgets all machine json files.
+    """
+    machines = self.products['ExtrusionPrinters']
+    for machine in machines:
+      f = self.products['ExtrusionPrinters'][machine]
+      url = self.pathjoin(self.base_url,  self.products['ExtrusionPrinters'][machine])
+      self.wget(url)
+
+  def wget(self, url):
+    """
+    calls wget to fetch a file from the web this objects self.base_path_
+
+    @param str url: The url we want to wget
+    @return file: local filename of the resource
+    """
+    filename = url.split('/')[-1] #urllib here might be useful
+    filename = os.path.join(self.base_path, filename) 
+    if os.path.isfile(url):
+      import shutil
+      if (url == filename):
+        import pdb
+        pdb.set_trace()
+      shutil.copyfile(url, filename)
+      return filename
+    else:
+      self._logger.info('{"event":"downloading_url", "url":%s}' %(url))
+      dl_file = self.urlopen(url)
+      with open(filename, 'w') as f:
+        f.write(dl_file.read())
+      return filename 
+    
+  def load_json_values(self, path):
+    with open(path) as f:
+      return json.load(f)
+
+
+  def get_firmware_values(self, machine):
+    """
+    Given a machine name, retrieves the associated .json file and parses
     out its values.
-    TODO: Replace this with a profile object from ../, but that requires
-      a profile refactor to take an absolute path
   
     @param str machine: The machine we want information about
     @return dict values: The values parsed out of the machine board profile
     """
-    extension = '.json'
     path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), 'machine_board_profiles', machine+extension)
-    with open(path) as f:
-      values = json.load(f)
-    return values
+        self.base_path,
+        self.products['ExtrusionPrinters'][machine],
+        )
+    path = os.path.normpath(path)
+    return self.load_json_values(path)
 
-  def list_versions(self, machine):
+  def list_firmware_versions(self, machine):
     """
     Given a machine name, returns all possible versions we can upload to
 
     @param str machine: The machine we want information about
     @return list versions: The versions we can upload
     """
-    values = self.get_machine_board_profile(machine)
+    values = self.get_firmware_values(machine)
     versions = []
-    for version in values['versions']:
-      versions.append(version)
+    for version in values['firmware']['versions']:
+      descriptor = values['firmware']['versions'][version][1]
+      versions.append([version, descriptor])
     return versions
+
 
   def list_machines(self):
     """
     Lists all the machines we can upload firmware to
 
-    @return list machines: The machines we can upload firmware to
+    @return iterator machines: The machines we can upload firmware to
     """
-    profile_ext = '.json'
-    files = os.listdir(
-        os.path.join(os.path.abspath(os.path.dirname(__file__)), 'machine_board_profiles'))
-    machines = []
-    for f in files:
-      name, ext = os.path.splitext(f)
-      if ext == profile_ext:
-        machines.append(name)
-    return machines
-   
-  def parse_command(self, port, machine, version):
+    return self.products['ExtrusionPrinters'].keys()
+
+
+  def parse_avrdude_command(self, port, machine, version):
     """
     Given a port, machine name and version number parses out a command that invokes avrdude
 
@@ -63,13 +144,18 @@ class Uploader(object):
     @param str version: The version of firmware we want to upload to
     @return str command: The command that invokes avrdude
     """
-    values = self.get_machine_board_profile(machine)
+    values = self.get_firmware_values(machine)
+    values = values['firmware']
     try:
-      hex_file = str(values['versions'][version])
+      hex_file = str(values['versions'][version][0])
     except KeyError:
       raise UnknownVersionError
-    hex_file_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), 'machine_board_profiles', hex_file)
+    hex_file_url = self.pathjoin(self.base_url, hex_file)
+    
+    hex_file_path = self.wget(hex_file_url)
+    #Get the path to the hex file
+    ##hex_file_path = hex_file.split('/')[-1]
+    ##hex_file_path = os.path.join(self.base_path, hex_file_path)
     process = 'avrdude'
     flags = []
     #get the part
@@ -84,7 +170,7 @@ class Uploader(object):
     flags.append('-U'+'flash:w:'+hex_file_path+':i')
     return [process] + flags
 
-  def upload(self, port, machine, version):
+  def upload_firmware(self, port, machine, version):
     """
     Given a port, machine name and version number, invokes avrdude to upload a specific firmware
     version to a specific type of machine.
@@ -93,5 +179,8 @@ class Uploader(object):
     @param str machine: The machine we are uploading to
     @param str version: The version of firmware we want to upload to
     """
-    call = self.parse_command(port, machine, version)
-    subprocess.check_call(call)
+    import pdb
+    pdb.set_trace()
+    self._logger.info('{"event":"uploading_firmware", "port":%s, "machine":%s, "version":%s}' %(port, machine, version))
+    call = self.parse_avrdude_command(port, machine, version)
+    self.run_subprocess(call)
