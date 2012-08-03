@@ -3,7 +3,7 @@ import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import s3g
+import makerbot_driver
 import serial
 import optparse
 
@@ -21,7 +21,7 @@ parser.add_option("-t", "--toolhead", dest="toolhead",
 
 (options, args) = parser.parse_args()
 
-r = s3g.s3g.from_filename(options.port)
+r = makerbot_driver.s3g.from_filename(options.port)
 r.clear_buffer()
 r.set_toolhead_temperature(options.toolhead, 220)
 r.wait_for_tool_ready(options.toolhead, 100, 600)

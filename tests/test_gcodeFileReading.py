@@ -11,24 +11,24 @@ import mock
 
 import tempfile
 
-import s3g
+import makerbot_driver
 import warnings
 
 class SingleHeadReading(unittest.TestCase):
 
   def setUp(self):
-    self.p = s3g.Gcode.GcodeParser()
-    self.s = s3g.Gcode.GcodeStates()
+    self.p = makerbot_driver.Gcode.GcodeParser()
+    self.s = makerbot_driver.Gcode.GcodeStates()
     self.s.values['build_name'] = 'test'
-    self.profile = s3g.Profile('ReplicatorSingle')
+    self.profile = makerbot_driver.Profile('ReplicatorSingle')
     self.s.profile = self.profile
     self.p.state = self.s
-    self.s3g = s3g.s3g()
+    self.s3g= makerbot_driver.s3g()
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
       pass
     input_path = input_file.name
     os.unlink(input_path)
-    self.writer = s3g.Writer.FileWriter(open(input_path, 'w'))
+    self.writer = makerbot_driver.Writer.FileWriter(open(input_path, 'w'))
     self.s3g.writer = self.writer
     self.p.s3g = self.s3g
 
@@ -55,18 +55,18 @@ class SingleHeadReading(unittest.TestCase):
 class DualHeadReading(unittest.TestCase):
 
   def setUp(self):
-    self.p = s3g.Gcode.GcodeParser()
-    self.s = s3g.Gcode.GcodeStates()
+    self.p = makerbot_driver.Gcode.GcodeParser()
+    self.s = makerbot_driver.Gcode.GcodeStates()
     self.s.values['build_name'] = 'test'
-    self.profile = s3g.Profile('ReplicatorDual')
+    self.profile = makerbot_driver.Profile('ReplicatorDual')
     self.s.profile = self.profile
     self.p.state = self.s
-    self.s3g = s3g.s3g()
+    self.s3g = makerbot_driver.s3g()
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
       pass
     input_path = input_file.name
     os.unlink(input_path)
-    self.writer = s3g.Writer.FileWriter(open(input_path, 'w'))
+    self.writer = makerbot_driver.Writer.FileWriter(open(input_path, 'w'))
     self.s3g.writer = self.writer
     self.p.s3g = self.s3g
 
@@ -95,7 +95,7 @@ class DualHeadReading(unittest.TestCase):
 
 def PreprocessAndExecuteFile(theFile, parser):
   #Get the skeinforge 50 preprocessor
-  preprocessor = s3g.Preprocessors.Skeinforge50Preprocessor()
+  preprocessor = makerbot_driver.Preprocessors.Skeinforge50Preprocessor()
   #Make the temp file to process the gcode file into
   with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
     pass

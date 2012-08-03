@@ -4,12 +4,12 @@ Read some statistics from a connected machine, and dump them to the console.
 Requires these modules:
 * pySerial: http://pypi.python.org/pypi/pyserial
 """
-# To use this example without installing s3g, we need this hack:
+# To use this example without installing makerbot_driver, we need this hack:
 import os, sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import s3g
+import makerbot_driver
 import serial
 import optparse
 import binascii
@@ -27,8 +27,8 @@ parser.add_option("-d", "--dumpeeprom", dest="dump_eeprom",
 
 
 file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
-r = s3g.s3g()
-r.writer = s3g.Writer.StreamWriter(file)
+r = makerbot_driver.s3g()
+r.writer = makerbot_driver.Writer.StreamWriter(file)
 
 print "firmware version: %i"%(r.get_version())
 print "build name: %s"%(r.get_build_name())
@@ -41,7 +41,7 @@ try:
     if filename == '\x00':
       break
     print '  ' + filename
-except s3g.SDCardError:
+except makerbot_driver.SDCardError:
   print "SD Card error"
 
 print "Available buffer size=%i"%(r.get_available_buffer_size())

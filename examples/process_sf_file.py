@@ -3,7 +3,7 @@ import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import s3g
+import makerbot_driver
 import optparse
 
 
@@ -16,5 +16,5 @@ parser.add_option('-s', '--skeinforgeVersion', dest='skeinforgeVersion',
                   help="the version of skeinforge that skeined this file", type="int")
 (options, args) = parser.parse_args()
 if options.skeinforgeVersion == 50:
-  p = s3g.Preprocessors.Skeinforge50Preprocessor()
+  p = makerbot_driver.Preprocessors.Skeinforge50Preprocessor()
   p.process_file(options.input_file, options.output_file)

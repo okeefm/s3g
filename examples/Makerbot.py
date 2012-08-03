@@ -3,13 +3,13 @@ lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
 import serial
-import s3g
+import makerbot_driver
 from time import sleep
 
 
 class Makerbot(object):
   def __init__(self, serialportname, baudrate, timeout=0):
-    self.s3g = s3g.s3g()
+    self.s3g = makerbot_driver.s3g()
     self.serialportname = serialportname
     self.baudrate = baudrate
     self.timeout = timeout
@@ -26,16 +26,16 @@ class Makerbot(object):
 	
   def get_toolhead_temperature(self, toolhead):
     if not self.HasToolhead(toolhead):
-      raise s3g.ProtocolError('Tool index out of range, got=%i, max=%i'%(tool_index, max_tool_index))
+      raise makerbot_driver.ProtocolError('Tool index out of range, got=%i, max=%i'%(tool_index, max_tool_index))
     else:
-      return self.s3g.get_toolhead_temperature(toolhead)
+      return self.makerbot_driver.get_toolhead_temperature(toolhead)
 
   def get_platform_temperature(self):
     return self.s3g.get_platform_temperature(0)
 
   def SetExtruderTemperature(self, toolhead, target):
     if not self.HasToolhead(toolhead):
-      raise s3g.ProtocolError('Tool index out of range, got=%i, max=%i'%(tool_index, max_tool_index))
+      raise makerbot_driver.ProtocolError('Tool index out of range, got=%i, max=%i'%(tool_index, max_tool_index))
     return self.s3g.set_toolhead_temperature(toolhead, target)
 
   def set_platform_temperature(self, target):
@@ -51,7 +51,7 @@ class Makerbot(object):
     vals = []
     for offset in pid_offsets:
       value = self.s3g.read_from_EEPROM(pid_base+offset, length)
-      vals.append(s3g.decode_uint16(value))
+      vals.append(makerbot_driver.decode_uint16(value))
     return vals
 
   def SetExtruderPID(self, pid_vals):
@@ -68,7 +68,7 @@ class Makerbot(object):
     vals = []
     for offset in pid_offsets:
       value = self.s3g.read_from_EEPROM(pid_base+offset, length)
-      vals.append(s3g.decode_uint16(value))
+      vals.append(makerbot_driver.decode_uint16(value))
     return vals
 
 if __name__ == '__main__':

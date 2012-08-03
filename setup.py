@@ -34,30 +34,31 @@ if sys.version < '2.6':
                      "supported. Sadly we will probably never support them :(")
 
 if sys.version >= '2.6' and sys.version < '3.0':
-  import s3g 
-  version = s3g.__version__
+  import makerbot_driver 
+  version = makerbot_driver.__version__
 
 elif sys.version >= 3.0:
   import re, os
   version = re.search(
         "__version__.*'(.+)'",
-        open(os.path.join('s3g', '__init__.py')).read()).group(1)
+        open(os.path.join('makerbot_driver', '__init__.py')).read()).group(1)
 
 
 
 setup(
-    name='s3g' + suffix,
+    name='makerbot_driver' + suffix,
     version=version,
     author= ['Matt Mets','David Sayles (MBI)','Far McKon (MBI)'],
     author_email=['cibomahto@gmail.com','david.sayles@makerbot.com','far@makerbot.com'],
     packages=[
-        's3g',
-        's3g.Encoder',
-        's3g.FileReader',
-        's3g.Firmware',
-        's3g.Gcode',
-        's3g.Preprocessors',
-        's3g.Writer'
+        'makerbot_driver',
+        'makerbot_driver.s3g',
+        'makerbot_driver.Encoder',
+        'makerbot_driver.FileReader',
+        'makerbot_driver.Firmware',
+        'makerbot_driver.Gcode',
+        'makerbot_driver.Preprocessors',
+        'makerbot_driver.Writer'
     ],
     url='http://github.com/makerbot/s3g',
     license='LICENSE.txt',

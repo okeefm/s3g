@@ -12,15 +12,15 @@ If using the virtual environment,  you will need to activate it before any testi
 
 Run unit tests
 ```
-s3g/> . ./setup.sh
-(virtuanenv)s3g/> python unit_tests.py
+makerbot_driver/> . ./setup.sh
+(virtuanenv)makerbot_driver/> python unit_tests.py
 ```
 
 Running post-install tests. If you install this as an installer, or manually
 this will quickly verify your install is OK and likely to work properly
 ```
-s3g/> . ./setup.sh
-(virtuanenv)s3g/> python pi_tests.py
+makerbot_driver/> . ./setup.sh
+(virtuanenv)makerbot_driver/> python pi_tests.py
 ```
 
 # building an egg

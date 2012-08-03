@@ -7,18 +7,18 @@ import unittest
 import io
 import time
 
-import s3g
+import makerbot_driver
 
 class s3gHelperFunctionTests(unittest.TestCase):
   def setUp(self):
-    self.g = s3g.Gcode.GcodeStates()
+    self.g = makerbot_driver.Gcode.GcodeStates()
 
   def tearDown(self):
     self.g = None
 
   def test_get_position_unspecified_axis_location(self):
     setattr(self.g.position, 'X', None)
-    self.assertRaises(s3g.Gcode.UnspecifiedAxisLocationError, self.g.get_position)
+    self.assertRaises(makerbot_driver.Gcode.UnspecifiedAxisLocationError, self.g.get_position)
 
   def test_get_position_no_offsets(self):
     position = {
@@ -123,14 +123,14 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'E' : 0,
         'A' : 0,
         }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.set_position, codes)
+    self.assertRaises(makerbot_driver.Gcode.ConflictingCodesError, self.g.set_position, codes)
 
   def test_set_position_e_and_b_codes(self):
     codes = {
         'E' : 0,
         'B' : 0,
         }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.set_position, codes)
+    self.assertRaises(makerbot_driver.Gcode.ConflictingCodesError, self.g.set_position, codes)
 
   def test_set_position_e_and_a_and_b_codes(self):
     codes = {
@@ -138,11 +138,11 @@ class s3gHelperFunctionTests(unittest.TestCase):
         'A' : 0,
         'B' : 0,
         }
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.set_position, codes)
+    self.assertRaises(makerbot_driver.Gcode.ConflictingCodesError, self.g.set_position, codes)
 
   def test_set_position_e_code_no_tool_index(self):
     codes = {'E'  : 0}
-    self.assertRaises(s3g.Gcode.NoToolIndexError, self.g.set_position, codes)
+    self.assertRaises(makerbot_driver.Gcode.NoToolIndexError, self.g.set_position, codes)
 
   def test_set_position_e_code_tool_index_1(self):
     codes = {'E'  : 2}
@@ -193,8 +193,8 @@ class s3gHelperFunctionTests(unittest.TestCase):
 class TestProfileInformationParsing(unittest.TestCase):
 
   def setUp(self):
-    self.g = s3g.Gcode.GcodeStates()
-    profile = s3g.Profile('ReplicatorDual')
+    self.g = makerbot_driver.Gcode.GcodeStates()
+    profile = makerbot_driver.Profile('ReplicatorDual')
     self.g.profile = profile
 
   def tearDown(self):
@@ -217,8 +217,8 @@ class TestProfileInformationParsing(unittest.TestCase):
 
 class MachineProfileWith4Axes(unittest.TestCase):
   def setUp(self):
-    self.g = s3g.Gcode.GcodeStates()
-    profile = s3g.Profile('ReplicatorSingle')
+    self.g = makerbot_driver.Gcode.GcodeStates()
+    profile = makerbot_driver.Profile('ReplicatorSingle')
     self.g.profile = profile
 
   def tearDown(self):
@@ -238,8 +238,8 @@ class MachineProfileWith4Axes(unittest.TestCase):
 class GetAxesFeedrateSPM(unittest.TestCase):
 
   def setUp(self):
-    self.g = s3g.Gcode.GcodeStates()
-    profile = s3g.Profile('ReplicatorDual')
+    self.g = makerbot_driver.Gcode.GcodeStates()
+    profile = makerbot_driver.Profile('ReplicatorDual')
     self.g.profile = profile
 
   def tearDown(self):

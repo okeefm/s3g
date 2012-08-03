@@ -16,7 +16,7 @@ except ImportError:
     import unittest
 
 
-import s3g
+import makerbot_driver
 
 class PortBusyTechnicianTest(unittest.TestCase):
   def setUp(self):
@@ -27,8 +27,8 @@ class PortBusyTechnicianTest(unittest.TestCase):
 
   def test_portBusy(self):
     port = raw_input("specify a real active port on your OS to test")
-    r1 = s3g.s3g.from_filename( port )
-    r2 = s3g.s3g.from_filename( port )
+    r1 = makerbot_driver.s3g.from_filename( port )
+    r2 = makerbot_driver.s3g.from_filename( port )
     #r1.get_version()
     #r2.get_version()
     r1.find_axes_maximums(['x', 'y'], 500, 60)

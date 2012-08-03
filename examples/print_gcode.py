@@ -3,7 +3,7 @@ import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import s3g
+import makerbot_driver
 import serial
 import optparse
 
@@ -21,13 +21,13 @@ parser.add_option("-s", "--gcode_start_end_sequences", dest="start_end_sequences
 (options, args) = parser.parse_args()
 
 
-r = s3g.s3g()
+r = makerbot_driver.s3g()
 file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
-r.writer = s3g.Writer.StreamWriter(file)
+r.writer = makerbot_driver.Writer.StreamWriter(file)
 
-parser = s3g.Gcode.GcodeParser()
+parser = makerbot_driver.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
-parser.state.profile = s3g.Profile(options.machine)
+parser.state.profile = makerbot_driver.Profile(options.machine)
 parser.s3g = r
 
 if options.start_end_sequences:

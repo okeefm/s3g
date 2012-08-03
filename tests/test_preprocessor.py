@@ -6,23 +6,23 @@ sys.path.append(lib_path)
 import unittest
 import tempfile
 
-import s3g
+import makerbot_driver
 
 class PreprocessorTests(unittest.TestCase):
 
   def test_can_create_preprocessor(self):
-    p = s3g.Preprocessors.Preprocessor()
+    p = makerbot_driver.Preprocessors.Preprocessor()
 
   def test_can_preprocess_file(self):
     input_path = 'input'
     output_path = 'output'
-    p = s3g.Preprocessors.Preprocessor()
+    p = makerbot_driver.Preprocessors.Preprocessor()
     p.process_file(input_path, output_path)
     
 class Skeinforge50PreprocessorTests(unittest.TestCase):
   
   def setUp(self):
-    self.sp = s3g.Preprocessors.Skeinforge50Preprocessor()
+    self.sp = makerbot_driver.Preprocessors.Skeinforge50Preprocessor()
     
   def tearDown(self):
     self.sp = None
@@ -118,14 +118,14 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
     input_path = input_file.name
     os.unlink(input_path)
     output_path = 'test.gcode'
-    self.assertRaises(s3g.Preprocessors.NotGCodeFileError, self.sp.process_file, input_path, output_path)
+    self.assertRaises(makerbot_driver.Preprocessors.NotGCodeFileError, self.sp.process_file, input_path, output_path)
 
   def test_process_file_output_file_isnt_gcode(self):
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
       pass
     input_path = input_file.name
     bad_output = 'something'
-    self.assertRaises(s3g.Preprocessors.NotGCodeFileError, self.sp.process_file, input_path, bad_output)
+    self.assertRaises(makerbot_driver.Preprocessors.NotGCodeFileError, self.sp.process_file, input_path, bad_output)
     os.unlink(input_path)
 
   def test_process_file_good_inputs(self):

@@ -3,7 +3,7 @@ import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import s3g
+import makerbot_driver
 import optparse
 
 parser = optparse.OptionParser()
@@ -18,12 +18,12 @@ parser.add_option("-s", "--gcode_start_end_sequences", dest="start_end_sequences
 (options, args) = parser.parse_args()
 
 
-s = s3g.s3g()
-s.writer = s3g.Writer.FileWriter(open(options.output_file, 'w'))
+s = makerbot_driver.s3g()
+s.writer = makerbot_driver.Writer.FileWriter(open(options.output_file, 'w'))
 
-parser = s3g.Gcode.GcodeParser()
+parser = makerbot_driver.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
-parser.state.profile = s3g.Profile(options.machine)
+parser.state.profile = makerbot_driver.Profile(options.machine)
 parser.s3g = s
 
 if options.start_end_sequences:
