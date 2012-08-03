@@ -27,7 +27,8 @@ class TestIsCorrectVariant(unittest.TestCase):
     import serial.tools.list_ports as lp    
     scan = lp.list_ports_by_vid_pid
 
-
+  '''
+  # This test is commented out because it requires an actual serial port.
   def test_variantDoesBlocking(self):
     #grab a port
     #try to grab it again
@@ -43,6 +44,7 @@ class TestIsCorrectVariant(unittest.TestCase):
     s = serial.Serial(portname)
     with self.assertRaises(serial.SerialException) as ex:
         s = serial.Serial(portname)
+   '''
 
    
 if __name__ == '__main__':
