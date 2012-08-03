@@ -35,7 +35,7 @@ class TestIsCorrectVariant(unittest.TestCase):
     scan = lp.list_ports_by_vid_pid
     print('autograbbing a port')
     comports = lp.comports()
-    if( len(comports) < 1):
+    if( len(list(comports)) < 1):
         print('no comport availabe')
         self.assertFalse(True, "no comports, cannot execute test")
     portname = comports[-1][0] #item 0 in last comport as the port to test 
