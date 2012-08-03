@@ -61,7 +61,7 @@ setup(
     ],
     url='http://github.com/makerbot/s3g',
     license='LICENSE.txt',
-    description='Python driver to connect to 3D Printers which use the s3g protocol'
+    description='Python driver to connect to 3D Printers which use the s3g protocol',
     long_description=open('README.md').read(),
 	platforms = 'any',
 )
