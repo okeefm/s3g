@@ -1,4 +1,4 @@
-Source: s3g
+Source: makerbot-driver
 Section: unknown
 Priority: extra
 Maintainer: MakerBot Industries dev team <dev@makerbot.com>
@@ -8,7 +8,7 @@ Homepage: https://github.com/makerbot/s3g
 #Vcs-Git: git://git.debian.org/collab-maint/s3g.git
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/s3g.git;a=summary
 
-Package: s3g
+Package: makerbot-driver
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, python, python-serial
 Description: Python interface to MakerBot s3g devices.

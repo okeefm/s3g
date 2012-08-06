@@ -1,6 +1,6 @@
 Format: http://dep.debian.net/deps/dep5
-Upstream-Name: conveyor
-Source: <http://github.com/makerbot/conveyor>
+Upstream-Name: makerbot-driver
+Source: <http://github.com/makerbot/s3g>
 
 Files: *
 Copyright: 2012 Makerbot dev team <dev@makerbot.com>
