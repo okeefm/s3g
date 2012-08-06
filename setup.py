@@ -52,7 +52,6 @@ setup(
     author_email=['cibomahto@gmail.com','david.sayles@makerbot.com','far@makerbot.com'],
     packages=[
         'makerbot_driver',
-        'makerbot_driver.s3g',
         'makerbot_driver.Encoder',
         'makerbot_driver.FileReader',
         'makerbot_driver.Firmware',
@@ -62,7 +61,7 @@ setup(
     ],
     url='http://github.com/makerbot/s3g',
     license='LICENSE.txt',
-    description='Python driver to connect to 3D Printers which use the s3g protocol',
+    description='Python driver to connect to MakerBot 3D Printers which use the s3g protocol',
     long_description=open('README.md').read(),
 	platforms = 'any',
 )
