@@ -1,0 +1,1 @@
+{"buzz_eeprom_offsets": {"BASIC_BUZZ_OFFSET": {"floating_point": "False", "type": "i", "offset": "0x00"}, "DONE_BUZZ_OFFSET": {"floating_point": "False", "type": "i", "offset": "0x08"}, "ERROR_BUZZ_OFFSET": {"floating_point": "False", "type": "i", "offset": "0x04"}}}

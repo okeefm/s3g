@@ -45,12 +45,19 @@ class eeprom_analyzer(object):
         try:
           while True:
             self.find_next_entry()
-            pack_type = self.parse_out_type(self.file.readline())
+            variables = self.parse_out_variables(self.file.readline())
             (name, location) = self.parse_out_name_and_location(self.file.readline())
-            namespace[name] = {
-                'location'  : location,
-                'type'      : pack_type,
+            v = {
+                'offset'  : location,
                 }
+            for variable in variables:
+              variable = variable.split(':')
+              v[variable[0]] = variable[1]
+            namespace[name] = v
+#            namespace[name] = {
+#                'location'  : location,
+#                'type'      : pack_type,
+#                }
         except EndOfNamespaceError:
           eeprom_map = {
               namespace_name  : namespace,
@@ -121,16 +128,16 @@ class eeprom_analyzer(object):
     (name, location) = line.split("=")
     return name, location
 
-  def parse_out_type(self, line):
+  def parse_out_variables(self, line):
     line = line.strip()
-    for s in ['\n', '\r','\t', ]:
+    for s in ['\n', '\r', '\t',]:
       line = line.rstrip(s)
     line = line.lstrip('//')
-    parts = line.split(':')
-    if parts[0] == '$S':
-      return parts[1]
-    else:
-      return line
+    line = line.replace(' ', '')
+    parts = line.split('$')
+    #Dont return the first, since its empty
+    return parts[1:]
+    
 
   def dump_json(self, name, eeprom_map):
     output = json.dumps(eeprom_map)

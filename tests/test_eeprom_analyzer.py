@@ -40,26 +40,11 @@ class TestLineReader(unittest.TestCase):
       got_name = self.reader.parse_out_namespace_name(line)
       self.assertEqual(expected_name, got_name)
 
-  def test_parse_out_type_different_endings(self):
-    lines = [
-      '//$S:iiii\n',
-      '//$S:iiii\r',
-      '//$S:iiii    \r',
-      ]
-    expected = 'iiii'
-    for line in lines:
-      self.assertEqual(expected, self.reader.parse_out_type(line))
+  def test_parse_out_variables_good_line(self):
+    line = '//$S:1 $B:2 $C:3\n'
+    expected = ['S:1', 'B:2', 'C:3']
+    self.assertEqual(expected, self.reader.parse_out_variables(line))
 
-  def test_parse_out_type_different_types(self):
-    lines = {
-        'iiii'  : '//$S:iiii\n',
-        'HH'    : '//$S:HH\r',
-        's'     : '//$S:s\n',
-        'Hhiis' : '//$S:Hhiis',
-        }
-    for line in lines:
-      self.assertEqual(line, self.reader.parse_out_type(lines[line]))
-    
   def testDumpJSON(self):
     test_dic = {
         'a' : 1,

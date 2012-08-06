@@ -1,0 +1,1 @@
+{"preheat_eeprom_offsets": {"PREHEAT_RIGHT_OFFSET": {"floating_point": "False", "type": "h", "offset": "0x00"}, "PREHEAT_ON_OFF_OFFSET": {"floating_point": "False", "type": "h", "offset": "0x06"}, "PREHEAT_PLATFORM_OFFSET": {"floating_point": "False", "type": "h", "offset": "0x04"}, "PREHEAT_LEFT_OFFSET": {"floating_point": "False", "type": "h", "offset": "0x02"}}}
