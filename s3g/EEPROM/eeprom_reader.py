@@ -16,20 +16,27 @@ A 'value' is appended onto each eeprom value, and returned.
 from errors import *
 import json
 import struct
+import os
 
 class eeprom_reader(object):
 
-  def __init__(self):
-    pass
+  def __init__(self, map_name = "eeprom_map.json", working_directory = None):
+    #Set working directory
+    if working_directory == None:
+      working_directory = os.path.abspath(os.path.dirname(__file__))
+    #Load the eeprom map
+    with open(os.path.join(working_directory, map_name)) as f:
+      self.eeprom_map = json.load(f)
+    #We always start with the main map
+    self.main_map = 'eeprom_offsets'
 
-  def read_eeprom_map(self, file_name, base=0):
-    with open(file_name) as f:
-      eeprom_map = json.load(f)
-    eeprom_name = eeprom_map[0]
-    eeprom_values = eeprom_map[eeprom_name]
+  def read_entire_eeprom(self):
+    self.read_eeprom_map(self.main_map)
+
+  def read_eeprom_map(self, map_name, base=0):
+    eeprom_values = eeprom_map[map_name]
     for key in eeprom_values:
       eeprom_values[key]['value'] = self.read_from_eeprom(eeprom_values[key], base)
-    return eeprom_map
 
   def read_from_eeprom(self, input_dict, base=0):
     try:
