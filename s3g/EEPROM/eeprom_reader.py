@@ -34,13 +34,14 @@ class eeprom_reader(object):
   def read_entire_eeprom(self, print_map = False):
     self.read_eeprom_map(self.main_map)
     if print_map:
-      with open(os.path.join(self.working_directory, 'my_replicator_map.json'), 'w') as f:
+      with open(os.path.join(self.working_directory, 'my_eeprom_map.json'), 'w') as f:
         f.write(json.dumps(self.eeprom_map, sort_keys=True, indent=2))
 
   def read_eeprom_map(self, map_name, base=0):
     eeprom_values = self.eeprom_map[map_name]
     for key in eeprom_values:
       eeprom_values[key]['value'] = self.read_from_eeprom(eeprom_values[key], base)
+    return eeprom_values
 
   def read_from_eeprom(self, input_dict, base=0):
     try:
