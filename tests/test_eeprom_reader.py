@@ -40,7 +40,7 @@ class TestEepromReader(unittest.TestCase):
         'offset'  : '0x0000',
         'eeprom_map'  : 'toolhead_eeprom_offsets',
         }
-    file_name = input_dict['eeprom_map'] + '.json'
+    file_name = input_dict['eeprom_map'] 
     offset = int(input_dict['offset'], 16)
     read_eeprom_map_mock = mock.Mock()
     self.reader.read_eeprom_map = read_eeprom_map_mock

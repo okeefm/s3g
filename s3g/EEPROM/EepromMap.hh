@@ -212,7 +212,7 @@ const static uint16_t BUZZ_SETTINGS		= 0x014A;
 const static uint16_t FIRST_BOOT_FLAG  = 0x0156;
 /// 7 bytes, short int x 3 entries, 1 byte on/off
 //$BEGIN_ENTRY
-//$eeprom_map:preaheat_eeprom_offsets
+//$eeprom_map:preheat_eeprom_offsets
 const static uint16_t PREHEAT_SETTINGS = 0x0158;
 /// 1 byte,  0x01 for help menus on, 0x00 for off
 //$BEGIN_ENTRY

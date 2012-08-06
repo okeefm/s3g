@@ -114,7 +114,7 @@
       "type": "s"
     }, 
     "PREHEAT_SETTINGS": {
-      "eeprom_map": "preaheat_eeprom_offsets", 
+      "eeprom_map": "preheat_eeprom_offsets", 
       "offset": "0x0158"
     }, 
     "T0_DATA_BASE": {
