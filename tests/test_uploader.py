@@ -8,7 +8,7 @@ import json
 import mock
 import tempfile
 
-import s3g
+import makerbot_driver
 
 class TestGetProducts(unittest.TestCase):
   def setUp(self):
@@ -17,7 +17,7 @@ class TestGetProducts(unittest.TestCase):
         'test_files',
         )
     d = tempfile.mkdtemp()
-    self.uploader = s3g.Firmware.Uploader(
+    self.uploader = makerbot_driver.Firmware.Uploader(
          base_url = base_url, 
          base_path = d,
          )
@@ -50,7 +50,7 @@ class TestWget(unittest.TestCase):
         'test_files',
         )
     d = tempfile.mkdtemp()
-    self.uploader = s3g.Firmware.Uploader(
+    self.uploader = makerbot_driver.Firmware.Uploader(
         base_url = self.base_url,
         base_path = d,
         )
@@ -109,7 +109,7 @@ class TestGetMachineJsonFiles(unittest.TestCase):
         os.path.abspath(os.path.dirname(__file__)),
         'test_files', )
     d = tempfile.mkdtemp()
-    self.uploader = s3g.Firmware.Uploader(
+    self.uploader = makerbot_driver.Firmware.Uploader(
         base_url = base_url,
         base_path = d,
         )
@@ -118,7 +118,7 @@ class TestGetMachineJsonFiles(unittest.TestCase):
     self.uploader = None
 
   def test_get_machine_json_files_no_products(self):
-    uploader = s3g.Firmware.Uploader(autoUpdate=False)
+    uploader = makerbot_driver.Firmware.Uploader(autoUpdate=False)
     self.assertRaises(AttributeError, uploader.get_machine_json_files)
 
   def test_get_machine_json_files_products_pulled_and_loaded(self):
@@ -139,7 +139,7 @@ class TestGetFirmwareVersions(unittest.TestCase):
         os.path.abspath(os.path.dirname(__file__)),
         'test_files', )
     d = tempfile.mkdtemp()
-    self.uploader = s3g.Firmware.Uploader(
+    self.uploader = makerbot_driver.Firmware.Uploader(
         base_url = base_url,
         base_path = d,
         )
@@ -177,7 +177,7 @@ class TestGetFirmwareValues(unittest.TestCase):
         'test_files',
       )
     d = tempfile.mkdtemp()
-    self.uploader = s3g.Firmware.Uploader(
+    self.uploader = makerbot_driver.Firmware.Uploader(
         base_url = base_url,
         base_path = d,
         )
@@ -205,7 +205,7 @@ class TestListVersions(unittest.TestCase):
         'test_files',
         )
     d = tempfile.mkdtemp()
-    self.uploader = s3g.Firmware.Uploader(
+    self.uploader = makerbot_driver.Firmware.Uploader(
         base_url = base_url,
         base_path = d,
         autoUpdate = False,
@@ -228,7 +228,7 @@ class TestListVersions(unittest.TestCase):
  
 class TestUploader(unittest.TestCase):
   def setUp(self):
-    self.uploader = s3g.Firmware.Uploader(autoUpdate = False)
+    self.uploader = makerbot_driver.Firmware.Uploader(autoUpdate = False)
 
   def tearDown(self):
     self.uploader = None
@@ -261,7 +261,7 @@ class TestParseAvrdudeCommand(unittest.TestCase):
         'test_files', 
         )
     d = tempfile.mkdtemp()
-    self.uploader = s3g.Firmware.Uploader(
+    self.uploader = makerbot_driver.Firmware.Uploader(
         base_url = base_url,
         base_path = d,
         )
@@ -270,7 +270,7 @@ class TestParseAvrdudeCommand(unittest.TestCase):
     self.uploader = None
  
   def test_parse_avrdude_command_no_products(self):
-    uploader = s3g.Firmware.Uploader(autoUpdate=False)
+    uploader = makerbot_driver.Firmware.Uploader(autoUpdate=False)
     port = '/dev/tty.usbmodemfa121'
     machine = "Example"
     version = '0.1'
@@ -286,7 +286,7 @@ class TestParseAvrdudeCommand(unittest.TestCase):
     port = '/dev/tty.usbmodemfa121'
     machine = 'Example'
     version = 'x.x'
-    self.assertRaises(s3g.Firmware.UnknownVersionError, self.uploader.parse_avrdude_command, port, machine, version)
+    self.assertRaises(makerbot_driver.Firmware.UnknownVersionError, self.uploader.parse_avrdude_command, port, machine, version)
  
 
   def test_parse_avrdude_command(self):

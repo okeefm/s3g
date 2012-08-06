@@ -7,7 +7,7 @@ import os
 import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
-import s3g
+import makerbot_driver
 
 import serial
 import serial.tools.list_ports
@@ -34,11 +34,11 @@ print_delay = 15
 print "Super, I've found a replicator!  Give me %i seconds to get everything ready." %(print_delay)
 time.sleep(print_delay)
 
-r = s3g.s3g.from_filename(ports[0]['port'])
+r = makerbot_driver.s3g.from_filename(ports[0]['port'])
 
-parser = s3g.Gcode.GcodeParser()
+parser = makerbot_driver.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
-parser.state.profile = s3g.Profile('ReplicatorDual')
+parser.state.profile = makerbot_driver.Profile('ReplicatorDual')
 parser.s3g = r
 
 if options.start_end_sequences:

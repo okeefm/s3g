@@ -5,14 +5,14 @@ Requires these modules:
 * pySerial: http://pypi.python.org/pypi/pyserial
 """
 
-# To use this example without installing s3g, we need this hack:
+# To use this example without installing makerbot_driver, we need this hack:
 import os, sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 lib_path = os.path.abspath('./')
 sys.path.append(lib_path)
 
-import s3g
+import makerbot_driver
 import serial
 import time
 import optparse
@@ -101,7 +101,7 @@ class CircleGenerator(object):
 
 
 """
-r = s3g.s3g()
+r = makerbot_driver.s3g()
 
 r.file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 
@@ -150,7 +150,7 @@ for test_state in test_states:
  
             command_count += 1
  
-        except s3g.TransmissionError as e:
+        except makerbot_driver.TransmissionError as e:
             print 'error moving:', e
  
         except KeyboardInterrupt, SystemExit:

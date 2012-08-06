@@ -1,23 +1,23 @@
-# s3g
+# makerbot_driver
 
-The s3g module is designed to communicate with a Makerbot Printer via s3g Packets.  The main objectives of this module are to  transform certain actions (i.e. move-to-a-position, heat-up-a-toolhead) into packets of information to be sent and to decode packets of information received from a printer into human parsable formats.  
+The makerbot_driver module is designed to communicate with a Makerbot Printer via makerbot_driver Packets.  The main objectives of this module are to  transform certain actions (i.e. move-to-a-position, heat-up-a-toolhead) into packets of information to be sent and to decode packets of information received from a printer into human parsable formats.  
 
 ##VirtualEnv
-Due to s3g's dependency on our (Makerbot Industries) own version of pyserial, and for the sake of not polluting your own system that may have the 'true' version of pyserial installed, we suggest invoking s3g inside a virtualenv.  We provide the necessary files to operate inside a VirtualEnv that will install all dependencies for you without polluting your own machine.  
+Due to makerbot_driver's dependency on our (Makerbot Industries) own version of pyserial, and for the sake of not polluting your own system that may have the 'true' version of pyserial installed, we suggest invoking makerbot_driver inside a virtualenv.  We provide the necessary files to operate inside a VirtualEnv that will install all dependencies for you without polluting your own machine.  
 
-First, obtain a copy of our version of pyserial.  This can be done VIA git.  On the same directory level as s3g, in a terminal window issue:
+First, obtain a copy of our version of pyserial.  This can be done VIA git.  On the same directory level as makerbot_driver, in a terminal window issue:
 
     git clone git@github.com:makerbot/pyserial.git
 
-To create the VirtualEnv, inside the root directory of the s3g folder, issue:
+To create the VirtualEnv, inside the root directory of the makerbot_driver folder, issue:
 
     python virtualenv.py virtualenv
 
-To configure the VirtualEnv, navigate to the root directory of the s3g driver and, in a terminal issue:
+To configure the VirtualEnv, navigate to the root directory of the makerbot_driver driver and, in a terminal issue:
 
     ./setup.sh
 
-To activate the VirtualEnv, in the root directory of the s3g driver, issue:
+To activate the VirtualEnv, in the root directory of the makerbot_driver driver, issue:
 
     . virtualenv/bin/activate
 
@@ -33,18 +33,18 @@ To run the unit tests, you will need the following modules:
 * [unittest2](http://pypi.python.org/pypi/unittest2) (Python 2.6 and earlier)
 
 ## Example: Connecting to a Replicator
-Import both the s3g module and pyserial:
+Import both the makerbot_driver module and pyserial:
 
 ```python
-import s3g, serial
+import makerbot_driver, serial
 ```
 
-Create an s3g object, and attach it to a serial port:
+Create an makerbot_driver object, and attach it to a serial port:
 
 ```python
-r = s3g.s3g()
+r = makerbot_driver.s3g()
 file = serial.Serial(port, 115200, timeout=.2)
-r.writer = s3g.Writer.StreamWriter(file)
+r.writer = makerbot_driver.Writer.StreamWriter(file)
 ```
 
 _Note: Replace port with your serial port (example: '/dev/tty.usbmodemfd121')_
@@ -105,7 +105,7 @@ There are several commands that require a list of axes as input.  This parameter
     ['x', 'y', 'z', 'a', 'b']
 
 # Error handling
-The s3g module will raise an exception if it encounters a problem during transmission. Conditions, such as timeouts, bad packets being received from the bot and poorly formatted parameters all can cause the s3g module to raise exceptions.  Some of these states are recoverable, while some require a machine restart.  We can categorize s3g's error states into the following:
+The makerbot_driver module will raise an exception if it encounters a problem during transmission. Conditions, such as timeouts, bad packets being received from the bot and poorly formatted parameters all can cause the makerbot_driver module to raise exceptions.  Some of these states are recoverable, while some require a machine restart.  We can categorize makerbot_driver's error states into the following:
 
 TODO: This is largely duplicated in the errors.py doc, consider rewriting as a summary of the base error types only.
 
@@ -113,7 +113,7 @@ TODO: This is largely duplicated in the errors.py doc, consider rewriting as a s
 A Buffer Overflow Error is raised when the machine has full buffer.
 
 ## Retryable Errors (used internally)
-Retryable Errors are non-catastrophic errors raised by s3g.  While alone they cannot cause s3g to terminate, an aggregate of 5 errors will cause s3g to quit.
+Retryable Errors are non-catastrophic errors raised by makerbot_driver.  While alone they cannot cause makerbot_driver to terminate, an aggregate of 5 errors will cause makerbot_driver to quit.
 
     Packet Decode Errors
     Generic Errors
@@ -169,10 +169,10 @@ Cause By:
     M And G Codes Present On The Same Line
    
 ## External Stop Error
-An External Stop Error is raised when an external thread sets the External Stop Flag in s3g.Writer.StreamWriter to true, which terminates the Stream Writer's packet sending process.
+An External Stop Error is raised when an external thread sets the External Stop Flag in makerbot_driver.Writer.StreamWriter to true, which terminates the Stream Writer's packet sending process.
  
 ## S3G Stream Reading Errors
-These errors are thrown when the s3g module encounters errors during s3g stream parsing.  
+These errors are thrown when the makerbot_driver module encounters errors during makerbot_driver stream parsing.  
 Caused By:
 
     Encoded Strings Above The Max Payload Length

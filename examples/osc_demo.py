@@ -1,5 +1,5 @@
 """
-Control an s3g device (Makerbot, etc) using osc!
+Control an makerbot_driver device (Makerbot, etc) using osc!
 
 Requires these modules:
 * pySerial: http://pypi.python.org/pypi/pyserial
@@ -7,12 +7,12 @@ Requires these modules:
 
 """
 
-# To use this example without installing s3g, we need this hack:
+# To use this example without installing makerbot_driver, we need this hack:
 import os, sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import s3g
+import makerbot_driver
 import serial
 import time
 import optparse
@@ -30,10 +30,10 @@ parser.add_option("-o", "--oscport", dest="oscport",
 
 
 rLock = threading.Lock()
-r = s3g.s3g()
+r = makerbot_driver.s3g()
 
 file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
-r.writer = s3g.Writer.StreamWriter(file)
+r.writer = makerbot_driver.Writer.StreamWriter(file)
 
 # TODO: Remove this hack.
 r.velocity = 1600
@@ -60,7 +60,7 @@ def move_handler(addr, tags, stuff, source):
     try:
         with rLock:
             r.queue_extended_point(target, int(r.velocity))
-    except s3g.TransmissionError as e:
+    except makerbot_driver.TransmissionError as e:
         print 'error moving:', e
 
 def led_handler(addr, tags, stuff, source):
@@ -101,7 +101,7 @@ try:
                 msg.append(r.get_toolhead_temperature(1))
                 msg.append(r.get_platform_temperature(0))
                 t.send(msg)
-        except s3g.TransmissionError as e:
+        except makerbot_driver.TransmissionError as e:
             print 'error getting temperature: ', e
 
 except KeyboardInterrupt:

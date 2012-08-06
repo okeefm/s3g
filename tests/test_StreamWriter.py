@@ -9,7 +9,7 @@ import unittest
 import threading
 import time
 
-from s3g import Writer, Encoder, errors, constants
+from makerbot_driver import Writer, Encoder, errors, constants
 
 class StreamWriterTests(unittest.TestCase):
   def setUp(self):

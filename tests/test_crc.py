@@ -4,7 +4,7 @@ lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
 import unittest
-from s3g import Encoder
+from makerbot_driver import Encoder
 
 class CRCTests(unittest.TestCase):
   def test_cases(self):

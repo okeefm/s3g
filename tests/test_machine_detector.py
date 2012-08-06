@@ -7,11 +7,11 @@ sys.path.append(lib_path)
 import unittest
 import mock
 
-import s3g
+import makerbot_driver
 
 class TestGetVIDPID(unittest.TestCase):
   def setUp(self):
-    self.md = s3g.MachineDetector()
+    self.md = makerbot_driver.MachineDetector()
 
   def tearDown(self):
     self.md = None
@@ -30,7 +30,7 @@ class TestScanSerialPorts(unittest.TestCase):
   def setUp(self):
     self.vid = 9153
     self.pid = 54036 
-    self.md = s3g.MachineDetector()
+    self.md = makerbot_driver.MachineDetector()
     self.mock = mock.Mock()
     self.md.list_ports_by_vid_pid = self.mock
     
@@ -115,7 +115,7 @@ class TestScanSerialPorts(unittest.TestCase):
 
 class TestResetPortList(unittest.TestCase):
   def setUp(self):
-    self.md = s3g.MachineDetector()
+    self.md = makerbot_driver.MachineDetector()
 
   def tearDown(self):
     self.md = None
@@ -153,7 +153,7 @@ class TestScanMultiplePorts(unittest.TestCase):
 
   def setUp(self):
     self.mock = mock.Mock()
-    self.md = s3g.MachineDetector()
+    self.md = makerbot_driver.MachineDetector()
     self.md.list_ports_by_vid_pid = self.mock
 
   def tearDown(self):

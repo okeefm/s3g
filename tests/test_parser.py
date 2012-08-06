@@ -9,15 +9,15 @@ import time
 import mock
 import copy
 
-import s3g
+import makerbot_driver
 
 class TestFindAxesMinMax(unittest.TestCase):
   def setUp(self):
-    self.mock = mock.Mock(s3g.s3g())
+    self.mock = mock.Mock(makerbot_driver.s3g())
 
-    self.g = s3g.Gcode.GcodeParser()
+    self.g = makerbot_driver.Gcode.GcodeParser()
     self.g.s3g = self.mock
-    profile = s3g.Profile("ReplicatorDual")
+    profile = makerbot_driver.Profile("ReplicatorDual")
     self.g.state.profile = profile
     for axis in ['X', 'Y', 'Z', 'A', 'B']:
       setattr(self.g.state.position, axis, 0)
@@ -100,10 +100,10 @@ class TestFindAxesMinMax(unittest.TestCase):
 class Testlinear_interpolation(unittest.TestCase):
 
   def setUp(self):
-    self.mock = mock.Mock(s3g.s3g())
-    self.g = s3g.Gcode.GcodeParser()
+    self.mock = mock.Mock(makerbot_driver.s3g())
+    self.g = makerbot_driver.Gcode.GcodeParser()
     self.g.s3g = self.mock
-    profile = s3g.Profile("ReplicatorDual")
+    profile = makerbot_driver.Profile("ReplicatorDual")
     self.g.state.profile = profile
     for axis in ['X', 'Y', 'Z', 'A', 'B']:
       setattr(self.g.state.position, axis, 0)
@@ -167,7 +167,7 @@ class Testlinear_interpolation(unittest.TestCase):
     self.g.linear_interpolation(codes, [], '')
     #We want to be sure it used the correct feedrate, so we must check for it
     actual_params = self.mock.mock_calls[0][1]
-    ddaFeedrate = s3g.Gcode.calculate_DDA_speed(
+    ddaFeedrate = makerbot_driver.Gcode.calculate_DDA_speed(
         self.initial_position, 
         expectedPoint, 
         feedrate,
@@ -192,7 +192,7 @@ class Testlinear_interpolation(unittest.TestCase):
     self.g.linear_interpolation(codes, flags, comments)
     #We want to be sure it used the correct feedrate, so we must check for it
     actual_params = self.mock.mock_calls[0][1]
-    ddaFeedrate = s3g.Gcode.calculate_DDA_speed(
+    ddaFeedrate = makerbot_driver.Gcode.calculate_DDA_speed(
         self.initial_position, 
         expectedPoint, 
         feedrate,
@@ -218,7 +218,7 @@ class Testlinear_interpolation(unittest.TestCase):
     self.g.linear_interpolation(codes, flags, comments)
  
     #We want to be sure it used the correct feedrate, so we must check for it
-    ddaFeedrate = s3g.Gcode.calculate_DDA_speed(
+    ddaFeedrate = makerbot_driver.Gcode.calculate_DDA_speed(
         self.initial_position, 
         expectedPosition, 
         code_feedrate,
@@ -236,7 +236,7 @@ class Testlinear_interpolation(unittest.TestCase):
         }
     flags = []
     comments = ''
-    self.assertRaises(s3g.Gcode.ConflictingCodesError, self.g.linear_interpolation, codes, flags, comments)
+    self.assertRaises(makerbot_driver.Gcode.ConflictingCodesError, self.g.linear_interpolation, codes, flags, comments)
 
   def test_linear_interpolation_a_code_doesnt_throw_conflicting_codes_error(self):
     codes = {
@@ -280,11 +280,11 @@ class Testlinear_interpolation(unittest.TestCase):
 
 class gcodeTests(unittest.TestCase):
   def setUp(self):
-    self.mock = mock.Mock(s3g.s3g())
+    self.mock = mock.Mock(makerbot_driver.s3g())
 
-    self.g = s3g.Gcode.GcodeParser()
+    self.g = makerbot_driver.Gcode.GcodeParser()
     self.g.s3g = self.mock
-    profile = s3g.Profile("ReplicatorDual")
+    profile = makerbot_driver.Profile("ReplicatorDual")
     self.g.state.profile = profile
 
   def tearDown(self):
@@ -296,7 +296,7 @@ class gcodeTests(unittest.TestCase):
     command = 'G' + str(cmd)
     try:
       self.g.execute_line(command)
-    except s3g.Gcode.UnrecognizedCommandError as e:
+    except makerbot_driver.Gcode.UnrecognizedCommandError as e:
       self.assertEqual(e.values['UnrecognizedCommand'], cmd)
 
   def test_unrecognized_command_test_m_command(self):
@@ -304,12 +304,12 @@ class gcodeTests(unittest.TestCase):
     command = 'M' + str(cmd)
     try:
       self.g.execute_line(command)
-    except s3g.Gcode.UnrecognizedCommandError as e:
+    except makerbot_driver.Gcode.UnrecognizedCommandError as e:
       self.assertEqual(e.values['UnrecognizedCommand'], cmd)
 
   def test_check_cant_read_non_unicde_non_ascii(self):
     command = 92
-    self.assertRaises(s3g.Gcode.ImproperGcodeEncodingError, self.g.execute_line, command)
+    self.assertRaises(makerbot_driver.Gcode.ImproperGcodeEncodingError, self.g.execute_line, command)
 
   def test_check_can_read_unicode(self):
     command = "G92 X0 Y0 Z0 A0 B0"
@@ -332,7 +332,7 @@ class gcodeTests(unittest.TestCase):
 
     try:
       self.g.execute_line(command)
-    except s3g.Gcode.GcodeError as e:
+    except makerbot_driver.Gcode.GcodeError as e:
       self.assertEqual(expectedValues, e.values)
     else:
       self.fail('ExpectedException not thrown')
@@ -340,19 +340,19 @@ class gcodeTests(unittest.TestCase):
 
   def test_check_gcode_extraneous_codes_gets_called(self):
     command = "G161 Q1" # Note: this assumes that G161 does not accept a Q code
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.execute_line, command)
+    self.assertRaises(makerbot_driver.Gcode.InvalidCodeError, self.g.execute_line, command)
 
   def test_check_gcode_extraneous_flags_gets_called(self):
     command = "G161 Q" # Note: this assumes that G161 does not accept a Q flag
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.execute_line, command)
+    self.assertRaises(makerbot_driver.Gcode.InvalidCodeError, self.g.execute_line, command)
 
   def test_check_mcode_extraneous_codes_gets_called(self):
     command = "M18 Q4" # Note: This assumes that M6 does not accept an X code
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.execute_line, command)
+    self.assertRaises(makerbot_driver.Gcode.InvalidCodeError, self.g.execute_line, command)
 
   def test_check_mcode_extraneous_flags_gets_called(self):
     command = "M18 Q" # Note: This assumes that M6 does not accept an X flag
-    self.assertRaises(s3g.Gcode.InvalidCodeError, self.g.execute_line, command)
+    self.assertRaises(makerbot_driver.Gcode.InvalidCodeError, self.g.execute_line, command)
 
   def test_disable_axes(self):
     flags = ['A','B','X','Y','Z']
@@ -411,14 +411,14 @@ class gcodeTests(unittest.TestCase):
     codes = {'P' : build_percentage}
     flags = []
     comments = ''
-    self.assertRaises(s3g.Gcode.BadPercentageError, self.g.set_build_percentage, codes, flags, comments)
+    self.assertRaises(makerbot_driver.Gcode.BadPercentageError, self.g.set_build_percentage, codes, flags, comments)
 
   def test_set_build_percentage_too_high_percent(self):
     build_percentage = 100.1
     codes = {'P' : build_percentage}
     flags = []
     comments = ''
-    self.assertRaises(s3g.Gcode.BadPercentageError, self.g.set_build_percentage, codes, flags, comments)
+    self.assertRaises(makerbot_driver.Gcode.BadPercentageError, self.g.set_build_percentage, codes, flags, comments)
 
   def test_set_build_percentage_0_percent(self):
     build_percentage = 0
@@ -466,8 +466,8 @@ class gcodeTests(unittest.TestCase):
         'P' : 1,
         }
     self.g.store_offsets(codes, [], '')
-    p1Offset = s3g.Gcode.Point()
-    p2Offset = s3g.Gcode.Point()
+    p1Offset = makerbot_driver.Gcode.Point()
+    p2Offset = makerbot_driver.Gcode.Point()
     for axis, offset in zip(['X', 'Y', 'Z'], [xOff, yOff, zOff]):
       setattr(p1Offset, axis, offset)
       setattr(p2Offset, axis, 0)  #The p2 offset is [0, 0, 0, 0, 0]
@@ -817,7 +817,7 @@ class gcodeTests(unittest.TestCase):
     flags = []
     comments = ''
     self.assertRaises(
-        s3g.Gcode.NoBuildNameError, 
+        makerbot_driver.Gcode.NoBuildNameError, 
         self.g.build_start_notification, 
         )
     

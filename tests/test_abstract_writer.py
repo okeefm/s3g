@@ -4,7 +4,7 @@ lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
 import unittest
-from s3g import Writer
+from makerbot_driver import Writer
 
 class AbstractWriterTests(unittest.TestCase):
   """

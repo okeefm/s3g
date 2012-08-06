@@ -4,12 +4,12 @@ Start a web server that can proxy requests to the machine
 Requires these modules:
 * pySerial: http://pypi.python.org/pypi/pyserial
 """
-# To use this example without installing s3g, we need this hack:
+# To use this example without installing makerbot_driver, we need this hack:
 import os, sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
-import s3g
+import makerbot_driver
 import serial
 import optparse
 import json
@@ -48,9 +48,9 @@ class Bot(object):
         @param string port Serial port to connect to
         @param string baud Baud rate to communicate at
         """
-        self.r = s3g.s3g()
+        self.r = makerbot_driver.s3g()
         file = serial.Serial(port, baud, timeout=.2)
-        self.r.writer = s3g.Writer.StreamWriter(file)
+        self.r.writer = makerbot_driver.Writer.StreamWriter(file)
 
     def update(self):
         """ Update the machine temperature data- call this periodically. """
