@@ -51,13 +51,12 @@ class TestLineReader(unittest.TestCase):
         'b' : 2,
         'c' : 3,
         }
-    with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as input_file:
+    with tempfile.NamedTemporaryFile(suffix = '.json',delete=False) as input_file:
       pass
     input_path = input_file.name
     os.unlink(input_path)
     filename = input_path
-    eeprom_map = test_dic
-    self.reader.dump_json(filename, eeprom_map)
+    self.reader.dump_json(filename, test_dic)
     with open(input_path) as f:
       written_vals = json.load(f)
     self.assertEqual(test_dic, written_vals)

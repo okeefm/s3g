@@ -36,6 +36,7 @@ class eeprom_analyzer(object):
         }
 
   def parse_file(self):
+    eeprom_map = {}
     try:
       while True:
         namespace_name = self.find_next_namespace().lower()
@@ -54,17 +55,11 @@ class eeprom_analyzer(object):
               variable = variable.split(':')
               v[variable[0]] = variable[1]
             namespace[name] = v
-#            namespace[name] = {
-#                'location'  : location,
-#                'type'      : pack_type,
-#                }
         except EndOfNamespaceError:
-          eeprom_map = {
-              namespace_name  : namespace,
-              }
-          self.dump_json(namespace_name, eeprom_map)
+          eeprom_map[namespace_name]  = namespace
+#          self.dump_json(namespace_name+'.json', eeprom_map)
     except EndOfEepromError:
-      pass
+      self.dump_json('eeprom_map.json', eeprom_map)
       
   def find_next_entry(self):
     namespace_end = '}'
@@ -137,9 +132,8 @@ class eeprom_analyzer(object):
     parts = line.split('$')
     #Dont return the first, since its empty
     return parts[1:]
-    
 
   def dump_json(self, name, eeprom_map):
-    output = json.dumps(eeprom_map)
+    output = json.dumps(eeprom_map, sort_keys=True, indent=2) 
     with(open(name, 'w')) as f:
       f.write(output)
