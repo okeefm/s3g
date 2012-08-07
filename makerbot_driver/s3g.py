@@ -9,27 +9,54 @@ from constants import *
 from errors import *
 
 
-class s3g(object):
-  def __init__(self):
-    self.writer = None
 
-    # TODO: Move these to constants file.
-    self.extendedPointLength = 5
-    self.pointLength = 3
-  
+class s3g(object):
+  """ Represents an interface to a s3g driven bot. Contains methods and functions to 
+  read and write data to the bot.  No data is cached by this driver, all data is requested
+  over the USB bus when queried.  
+  """
+
+
   @classmethod
   def from_filename(cls, port, baudrate=115200, timeout=.2):
     """Constructs and returns an s3g object connected to the 
     passed file endpoint passed as a string @port (ie 'COM0' or '/dev/tty9')
 
+    @param port target Serial port name 
+    @param baurdate baudrace 115200 assumed 
+    @param timeout, time allowance before timeout error. 0.2 assummed
     @return s3g object, equipped with a StreamWrtier directed at port.
-	  """
-
+    """
     r = s3g()
     s = serial.Serial(port, baudrate=baudrate, timeout=timeout)
     r.writer = Writer.StreamWriter(s)
     return r
 
+
+  
+  def __init__(self):
+    self.writer = None
+    # TODO: Move these to constants file.
+    self.extendedPointLength = 5
+    self.pointLength = 3
+
+  def close(self):
+    """ If any ports are open for this s3g bot, it closes those ports """
+    if self.writer:
+       self.writer.close()
+
+  def is_open(self):
+    """@returns true if we have a writer and it is open. False otherwise."""
+    if self.writer:
+       return self.writer.isOpen()
+    return False
+
+
+  def open(self):
+    """ If a writer with data exists in this bot, attempts to open that writer."""
+    if self.writer:
+       self.writer.open()
+    
   def get_version(self):
     """
     Get the firmware version number of the connected machine
@@ -44,6 +71,27 @@ class s3g(object):
     response = self.writer.send_query_payload(payload)
     [response_code, version] = Encoder.unpack_response('<BH', response)
     return version
+
+
+  def get_advanced_name(self):
+    """ 
+    Get the name and UUID of a specific bot.
+    @return a name, uuid tuple
+    """
+    return ('unimplemented','unimplemented')
+
+  def get_toolhead_count(self):
+    """ 
+    @return the toolhead count of this bot. -1 on error
+    """
+    return -1 
+
+  def get_verified_status(self):
+    """
+    @returns true if this firmware is marked as verified
+    """
+    return False
+
 
   def get_advanced_version(self):
     """
@@ -185,6 +233,7 @@ class s3g(object):
   def get_communication_stats(self):
     """
     Get some communication statistics about traffic on the tool network from the Host.
+    @return a dictionary of communication stats, keyed by stat name
     """
     payload = struct.pack(
       '<B',
@@ -212,9 +261,9 @@ class s3g(object):
   def get_motherboard_status(self):
     """
     Retrieve bits of information about the motherboard
-    @return: A python dictionary of various flags and whether theywere set or not at reset
     POWER_ERRPR : An error was detected with the system power.
     HEAT_SHUTDOWN : The heaters were shutdown because the bot was inactive for over 20 minutes
+    @return: A python dictionary of various flags and whether theywere set or not at reset
     """
     payload = struct.pack(
       '<B',
@@ -445,7 +494,7 @@ class s3g(object):
 
   def init(self):
     """
-    Initialize the machine to a default state
+    Sends 'init' packet to machine to Initialize the machine to a default state
     """
     payload = struct.pack(
       '<B',
@@ -571,23 +620,18 @@ class s3g(object):
 
   def get_next_filename(self, reset):
     """
-    Get the next filename from the machine
-    @param boolean reset: If true, reset the file index to zero and return the first 
-    available filename.
+    Gets the 'next' filename on the SD card if an SD card is inserted into the 'bot
+    @param boolean reset: If true, reset the file index to zero and return the first  available filename. 
+    @return the next filename on the machine, as a string.
     """
-    if reset == True:
-      flag = 1
-    else:
-      flag = 0
+    flag = 1 if reset else 0 
 
     payload = struct.pack(
       '<Bb',
       host_query_command_dict['GET_NEXT_FILENAME'], 
       flag,
     )
-
     response = self.writer.send_query_payload(payload)
-   
     [response_code, sd_response_code, filename] = Encoder.unpack_response_with_string('<BB', response)
 
     if sd_response_code != sd_error_dict['SUCCESS']:
@@ -613,8 +657,7 @@ class s3g(object):
   def get_extended_position(self):
     """
     Gets the current machine position
-    @return tuple position: containing the 5D position the machine is currently located
-    at, and the endstop states.
+    @return tuple position: containing the current 5D position (x,y,z,a,b) location and endstop states.
     """
     payload = struct.pack(
       '<B',
@@ -900,9 +943,8 @@ class s3g(object):
 
   def get_tool_status(self, tool_index):
     """
-    Retrieve some information about the tool
-    @param int tool_index: The tool we would like to query for information
-    @return A dictionary containing status information about the tool_index
+    Retrieve some information about the tool, as a status dictionary
+    statusDict = {
       ExtruderReady : The extruder has reached target temp
       ExtruderNotPluggedIn : The extruder thermocouple is not detected by the bot
       ExturderOverMaxTemp : The temperature measured at the extruder is greater than max allowed
@@ -914,7 +956,10 @@ class s3g(object):
       ExtruderError: An error was detected with the extruder heater (if the tool supports one).  
         The extruder heater will fail if an error is detected with the sensor (thermocouple) or 
         if the temperature reading appears to be unreasonable
-    """
+      }
+     @param int tool_index: The tool we would like to query for information
+     @return A dictionary containing status information specified above 
+   """
     response = self.tool_query(tool_index, slave_query_command_dict['GET_TOOL_STATUS'])
 
     [resonse_code, bitfield] = Encoder.unpack_response('<BB', response)
