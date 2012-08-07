@@ -120,13 +120,36 @@ class TestReadFromEeprom(unittest.TestCase):
         'offset'  : offset,
         'type'  : t,
         }
-    expected = 128.5
+    expected = [128.5]
     self.read_from_eeprom_mock.return_value = struct.pack('>B', 128)
     got_value = self.reader.read_from_eeprom(input_dict)
     self.assertEqual(expected, got_value)  
     calls = self.read_from_eeprom_mock.mock_calls
     self.assertEqual(calls[0][1], (int(offset, 16), 1))
     self.assertEqual(calls[1][1], (int(offset, 16)+1, 1))
+
+  def test_read_from_eeprom_floating_point_multiple(self):
+    offset = '0xaabb'
+    t = 'HHH'
+    #We get size of b because we read the individual bytes that
+    #make up the short
+    input_dict = {
+        'floating_point'  : 'True',
+        'offset'  : offset,
+        'type'  : t,
+        }
+    expected = [128.5, 230.90, 26.1]
+    return_values = [128, 128, 230, 230, 26, 26]
+    return_values.reverse()
+    def return_func(*args, **kwards):
+      return struct.pack('B', return_values.pop())
+    self.read_from_eeprom_mock.side_effect = return_func
+    got_value = self.reader.read_from_eeprom(input_dict)
+    self.assertEqual(expected, got_value)  
+    calls = self.read_from_eeprom_mock.mock_calls
+    for i in range(len(calls)):
+      self.assertEqual(calls[i][1], (int(offset, 16)+i, 1))
+    
 
   def test_read_from_eeprom_string_missing_info(self):
     input_dicts = [
@@ -146,8 +169,8 @@ class TestReadFromEeprom(unittest.TestCase):
         'type'    : 's',
         'length'  : 10 
         }
-    expected_string = 'abcdefghi'
-    return_value = array.array("B", expected_string+'\x00')
+    expected_string = ['abcdefghi']
+    return_value = array.array("B", expected_string[0]+'\x00')
     self.read_from_eeprom_mock.return_value = return_value
     got_value = self.reader.read_from_eeprom(input_dict)
     self.assertEqual(expected_string, got_value)
@@ -220,9 +243,9 @@ class TestEepromReader(unittest.TestCase):
   def test_read_floating_point_from_eeprom_bad_size(self):
     input_dict = {
         'floating_point'  : True,
-        'type'            : 'i',
+        'type'            : 'HHB',
         }
-    offset = '0x0000'
+    offset = 0
     self.assertRaises(makerbot_driver.EEPROM.PoorlySizedFloatingPointError, self.reader.read_floating_point_from_eeprom, input_dict, offset)
 
   def test_read_floating_point_from_eeprom(self):
@@ -231,12 +254,23 @@ class TestEepromReader(unittest.TestCase):
         'type'            : 'h',
         'offset'          : '0x0000',
         }
-    expected = 128.50
+    expected = [128.50]
     offset = int(input_dict['offset'], 16)
     read_from_eeprom_mock = mock.Mock()
     read_from_eeprom_mock.return_value = struct.pack('>B', 128)
     self.reader.s3g.read_from_EEPROM = read_from_eeprom_mock
     self.assertEqual(expected, self.reader.read_floating_point_from_eeprom(input_dict, offset))
+
+  def test_read_and_unpack_floating_point(self):
+    offset = 0
+    expected = [128.5]
+    read_from_eeprom_mock = mock.Mock()
+    read_from_eeprom_mock.return_value = struct.pack('>B', 128)
+    self.reader.s3g.read_from_EEPROM = read_from_eeprom_mock
+    got = self.reader.read_and_unpack_floating_point(offset)
+    calls = read_from_eeprom_mock.mock_calls
+    for i in range(len(calls)):
+      self.assertEqual(calls[i][1], (offset+i, 1))
 
   def test_read_value_from_eeprom_one_value(self):
     input_dict = {

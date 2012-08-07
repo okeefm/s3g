@@ -40,8 +40,8 @@ class eeprom_analyzer(object):
     try:
       while True:
         namespace_name = self.find_next_namespace().lower()
-        if namespace_name in self.necessary_eeproms:
-          self.necessary_eeproms[namespace_name] = True
+#        if namespace_name in self.necessary_eeproms:
+#          self.necessary_eeproms[namespace_name] = True
         namespace = {}
         try:
           while True:

@@ -78,19 +78,30 @@ class eeprom_reader(object):
     @return str: The read string
     """
     val = self.s3g.read_from_EEPROM(offset, int(input_dict['length']))
-    return self.decode_string(val)
+    return [self.decode_string(val)]
 
   def read_eeprom_sub_map(self, input_dict, offset):
     map_name = input_dict['eeprom_map']
     return self.read_eeprom_map(map_name, base=offset)
 
   def read_floating_point_from_eeprom(self, input_dict, offset):
-    size = struct.calcsize(input_dict['type'])
-    if size is not 2:  
-      raise PoorlySizedFloatingPointError(size)
+    unpack_code = input_dict['type']
+    for c in unpack_code:
+      if not c.upper() == 'H':
+        raise PoorlySizedFloatingPointError(unpack_code)
+    fp_vals = []
+    for i in range(len(input_dict['type'])):
+      size = struct.calcsize(input_dict['type'][i])
+      fp = self.read_and_unpack_floating_point(offset+size*i)
+      fp_vals.append(fp)
+    return fp_vals
+
+  def read_and_unpack_floating_point(self, offset):
     high_bit = self.s3g.read_from_EEPROM(offset, 1)
+    high_bit = array.array("B", high_bit)
     high_bit = struct.unpack('>B', high_bit)[0]
     low_bit = self.s3g.read_from_EEPROM(offset+1, 1)
+    low_bit = array.array("B", low_bit)
     low_bit = struct.unpack('>B', low_bit)[0]
     return self.decode_floating_point(high_bit, low_bit)
 
