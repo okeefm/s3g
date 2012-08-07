@@ -10,7 +10,12 @@ given eeprom.  The eeprom map is in the form of:
     },
     ...
 }
-A 'value' is appended onto each eeprom value, and returned.
+When reading values, a new dictionary is generated that is in the form of:
+<name_of_eeprom> : {
+  <name_of_entry> : <value>
+  ...
+  }
+If any entry points at an eeprom sub-map (i.e. toolhead eeprom offsets), that value is defined as a completely new dictionary.
 """
 
 from errors import *
