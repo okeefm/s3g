@@ -40,21 +40,48 @@ class eeprom_reader(object):
     self.the_map = {}
 
   def read_entire_eeprom(self, print_map = False):
+    """
+    Reads the entire eeprom from a connected eeprom.
+    We start reading from the entry labeled: 'eeprom_offsets',
+    and any sub-maps contained within.
+    @param bool print_map: boolean to print out the map as 
+      a json file.
+    """
     the_map = self.read_eeprom_map(self.main_map)
     if print_map:
       with open(os.path.join(self.working_directory, 'my_eeprom_map.json'), 'w') as f:
         f.write(json.dumps(the_map, sort_keys=True, indent=2))
-        
 
-  def read_eeprom_map(self, map_name, base=0):
+  def read_eeprom_map(self, map_name, offset=0):
+    """
+    Given the name of an eeprom map help in self.eeprom_map, 
+    reads that entire map off the eeprom.  This generates
+    a simplified eeprom map, which is in the form of:
+    {
+        map_name  : {
+            <value_name>  : <value>
+            ...
+            }
+    }
+    @param map_name: The map to read from
+    @param int offset: The offset to begin reading from
+    """
     the_map = {map_name : {}}
     for key in self.eeprom_map[map_name]:
-      the_map[map_name][key] = self.read_from_eeprom(self.eeprom_map[map_name][key], base)
+      the_map[map_name][key] = self.read_from_eeprom(self.eeprom_map[map_name][key], offset)
     return the_map
 
-  def read_from_eeprom(self, input_dict, base=0):
+  def read_from_eeprom(self, input_dict, offset=0):
+    """
+    Reads information off an eeprom, starting from a given offset.
+
+    @param dict input_dict: Dictionary with information required 
+    to read off the eeprom.
+    @param int offset: The offset to start reading from
+    @return value: The values read from the eeprom
+    """
     try:
-      offset = base + int(input_dict['offset'], 16)
+      offset = offset + int(input_dict['offset'], 16)
       if 'eeprom_map' in input_dict:  
         return_val = self.read_eeprom_sub_map(input_dict, offset)
       elif 'floating_point' in input_dict:
@@ -81,10 +108,29 @@ class eeprom_reader(object):
     return [self.decode_string(val)]
 
   def read_eeprom_sub_map(self, input_dict, offset):
+    """
+    Begins reading an eeprom sub_map off the eeprom.  An eeprom
+    sub-map is a mapping of eeprom values that begins at a certain
+    position.  Toolhead eeprom offsets and acceleration offsetse 
+    are held in sub_maps.
+
+    @param dict input_dict: Dictionary with information required 
+    to read off the eeprom.
+    @param int offset: The offset to start reading from
+    @return dict: The submap read off the eeprom
+    """
     map_name = input_dict['eeprom_map']
-    return self.read_eeprom_map(map_name, base=offset)
+    return self.read_eeprom_map(map_name, offset=offset)
 
   def read_floating_point_from_eeprom(self, input_dict, offset):
+    """
+    Given an input dict and offset, reads floating point numbers
+    off the eeprom and returns them
+
+    @param dict input_dict: Dictionary with information required 
+    to read off the eeprom.
+    @param int offset: The offset to start reading from.
+    """
     unpack_code = input_dict['type']
     for c in unpack_code:
       if not c.upper() == 'H':
@@ -97,26 +143,56 @@ class eeprom_reader(object):
     return fp_vals
 
   def read_and_unpack_floating_point(self, offset):
+    """ 
+    Given an offset, reads a floating point value
+    off an eeprom.
+
+    @param int offset: The offset to read from
+    @return int: The floating point number.
+    """
     high_bit = self.s3g.read_from_EEPROM(offset, 1)
-    high_bit = array.array("B", high_bit)
-    high_bit = struct.unpack('>B', high_bit)[0]
+    high_bit = self.unpack_value(high_bit, 'B')[0]
     low_bit = self.s3g.read_from_EEPROM(offset+1, 1)
-    low_bit = array.array("B", low_bit)
-    low_bit = struct.unpack('>B', low_bit)[0]
+    low_bit = self.unpack_value(low_bit, 'B')[0]
     return self.decode_floating_point(high_bit, low_bit)
 
   def read_value_from_eeprom(self, input_dict, offset):
+    """
+    Given an input dict with type information, and an offset,
+    pulls that data from the eeprom and unpacks it.
+
+    @param dict input_dict: Dictionary with information required 
+    to read off the eeprom.
+    @param int offset: The offset we read from on the eeprom
+    @return list: The pieces of data we read off the eeprom
+    """
     #Get size of payload
     unpack_code = str(input_dict['type'])
     size = struct.calcsize(unpack_code)
     #Get the value to unpack
     val = self.s3g.read_from_EEPROM(offset, size)
-    #cast val into a byte array
-    val = array.array('B', val)
-    #unpack it
-    return struct.unpack('>%s' %(unpack_code), val)
+    return self.unpack_value(val, unpack_code)
+
+  def unpack_value(self, value, code):
+    """
+    Given a value and code, puts the value into an
+    array and unpacks the value.
+
+    @param bytearray value: The value to unpack
+    @param str code: The type of info in the bytearray
+    @return value: The information unpacked from value
+    """
+    value = array.array('B', value)
+    return struct.unpack('>%s' %(code), value)
         
   def decode_string(self, s):
+    """
+    Given a string s, determines if its a valid string
+    and returns it without the null terminator.
+
+    @param str s: The string with a null terminator on it
+    @return str: The string w/o a null terminator
+    """
     string = ''
     for char in s:
       string+=chr(char)
@@ -125,6 +201,14 @@ class eeprom_reader(object):
     raise NonTerminatedStringError(s)
 
   def decode_floating_point(self, high_bit, low_bit):
+    """
+    Given a high_bit and low_bit, calculated a floating 
+    point numner.
+
+    @param int high_bit: The first bit that determines the integer
+    @param int low_bit: The second bit that determines the decimal
+    @return int float: The calculated floating point number
+    """
     value = high_bit+(low_bit/255.0)
     value = round(value, 2)
     return value

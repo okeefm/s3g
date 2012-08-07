@@ -87,7 +87,7 @@ class TestReadFromEeprom(unittest.TestCase):
     read_eeprom_map_mock = mock.Mock()
     self.reader.read_eeprom_map = read_eeprom_map_mock
     self.reader.read_from_eeprom(input_dict)
-    read_eeprom_map_mock.assert_called_once_with(input_dict['eeprom_map'], base=int(input_dict['offset'], 16))
+    read_eeprom_map_mock.assert_called_once_with(input_dict['eeprom_map'], offset=int(input_dict['offset'], 16))
 
   def test_read_eeprom_map_no_offset(self):
     input_dict = {
@@ -238,7 +238,7 @@ class TestEepromReader(unittest.TestCase):
     read_eeprom_map_mock = mock.Mock()
     self.reader.read_eeprom_map = read_eeprom_map_mock
     self.reader.read_eeprom_sub_map(input_dict, offset)
-    read_eeprom_map_mock.assert_called_once_with(file_name, base=offset)
+    read_eeprom_map_mock.assert_called_once_with(file_name, offset=offset)
 
   def test_read_floating_point_from_eeprom_bad_size(self):
     input_dict = {
@@ -329,6 +329,17 @@ class TestEepromReader(unittest.TestCase):
     expected = 'asdf'
     string = array.array("B", expected + '\x00')
     self.assertEqual(expected, self.reader.decode_string(string))
+
+  def test_unpack_value(self):
+    cases = [
+        ['B', 255],
+        ['I', 252645135], 
+        ['H', 3855],
+        ]
+    for case in cases:  
+      val = struct.pack('>%s' %(case[0]), case[1])
+      got_val = self.reader.unpack_value(val, case[0])[0]
+      self.assertEqual(case[1], got_val)
 
 
 if __name__ == '__main__':
