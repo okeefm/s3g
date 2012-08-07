@@ -1,5 +1,14 @@
 """
 An eeprom writer!
+
+The eeprom writer expects to be given
+a full map of the eeprom with names for each
+variable, that defines another python dict
+containing information required for writing:
+{
+  eeprom_offsets  : {
+      <value_name>  : {
+          '
 """
 
 import json
