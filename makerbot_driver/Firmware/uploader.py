@@ -78,7 +78,7 @@ class Uploader(object):
     #If file is local
     if os.path.isfile(url):
       import shutil
-      shutil.copyfile(url, filename)
+      shutil.copy(url, filename)
       return filename
     else:
       self._logger.info('{"event":"downloading_url", "url":%s}' %(url))
