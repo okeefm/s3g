@@ -12,7 +12,7 @@ import struct
 import array
 
 
-import s3g
+import makerbot_driver
 
 class TestInit(unittest.TestCase):
 
@@ -23,7 +23,7 @@ class TestInit(unittest.TestCase):
     total_path = f.name
     name = total_path.split('/')[-1]
     path = tempfile.tempdir
-    reader = s3g.EEPROM.eeprom_reader(map_name=name, working_directory=path)
+    reader = makerbot_driver.EEPROM.eeprom_reader(map_name=name, working_directory=path)
     self.assertEqual(reader.eeprom_map, eeprom_map)
     self.assertEqual(path, reader.working_directory)
 
@@ -34,7 +34,7 @@ class TestReadEepromMap(unittest.TestCase):
         'test_files',
         )
     self.m = 'eeprom_map.json'
-    self.reader = s3g.EEPROM.eeprom_reader(map_name = self.m, working_directory=self.wd)
+    self.reader = makerbot_driver.EEPROM.eeprom_reader(map_name = self.m, working_directory=self.wd)
 
   def tearDown(self):
     self.reader = None
@@ -72,8 +72,8 @@ class TestReadFromEeprom(unittest.TestCase):
 
   def setUp(self):
     self.read_from_eeprom_mock = mock.Mock()
-    self.reader = s3g.EEPROM.eeprom_reader()
-    self.reader.s3g = s3g.s3g()
+    self.reader = makerbot_driver.EEPROM.eeprom_reader()
+    self.reader.s3g = makerbot_driver.s3g()
     self.reader.s3g.read_from_EEPROM = self.read_from_eeprom_mock
 
   def tearDown(self):
@@ -93,7 +93,7 @@ class TestReadFromEeprom(unittest.TestCase):
     input_dict = {
         'eeprom_map'  :   'toolhead_eeprom_offsets',
         }
-    self.assertRaises(s3g.EEPROM.MissingVariableError, self.reader.read_from_eeprom, input_dict)
+    self.assertRaises(makerbot_driver.EEPROM.MissingVariableError, self.reader.read_from_eeprom, input_dict)
 
   def test_read_from_eeprom_floating_point_missing_information(self):
     dicts = [
@@ -107,7 +107,7 @@ class TestReadFromEeprom(unittest.TestCase):
         }
         ]
     for d in dicts:
-      self.assertRaises(s3g.EEPROM.MissingVariableError, self.reader.read_from_eeprom, d)
+      self.assertRaises(makerbot_driver.EEPROM.MissingVariableError, self.reader.read_from_eeprom, d)
 
   def test_read_from_eeprom_floating_point_good_value(self):
     offset = '0xaabb'
@@ -136,7 +136,7 @@ class TestReadFromEeprom(unittest.TestCase):
         }
         ]
     for d in input_dicts:
-      self.assertRaises(s3g.EEPROM.MissingVariableError, self.reader.read_from_eeprom, d)
+      self.assertRaises(makerbot_driver.EEPROM.MissingVariableError, self.reader.read_from_eeprom, d)
 
   def test_read_from_eeprom_string(self):
     offset = '0xaabb'
@@ -179,14 +179,14 @@ class TestReadFromEeprom(unittest.TestCase):
         }
         ]
     for d in dicts:
-      self.assertRaises(s3g.EEPROM.MissingVariableError, self.reader.read_from_eeprom, d)
+      self.assertRaises(makerbot_driver.EEPROM.MissingVariableError, self.reader.read_from_eeprom, d)
 
     
 class TestEepromReader(unittest.TestCase):
 
   def setUp(self):
-    self.reader = s3g.EEPROM.eeprom_reader()
-    self.reader.s3g = s3g.s3g()
+    self.reader = makerbot_driver.EEPROM.eeprom_reader()
+    self.reader.s3g = makerbot_driver.s3g()
     
   def tearDown(self):
     self.reader = None
@@ -223,7 +223,7 @@ class TestEepromReader(unittest.TestCase):
         'type'            : 'i',
         }
     offset = '0x0000'
-    self.assertRaises(s3g.EEPROM.PoorlySizedFloatingPointError, self.reader.read_floating_point_from_eeprom, input_dict, offset)
+    self.assertRaises(makerbot_driver.EEPROM.PoorlySizedFloatingPointError, self.reader.read_floating_point_from_eeprom, input_dict, offset)
 
   def test_read_floating_point_from_eeprom(self):
     input_dict = {
@@ -281,13 +281,13 @@ class TestEepromReader(unittest.TestCase):
         'offset'  : '0x0000',
         'type'    : 's',
         }
-    self.assertRaises(s3g.EEPROM.MissingVariableError, self.reader.read_from_eeprom, input_dict)
+    self.assertRaises(makerbot_driver.EEPROM.MissingVariableError, self.reader.read_from_eeprom, input_dict)
 
   def test_decode_string_no_null_terminator(self):
     #We pack the string into an array to mimick the way 
     #the actual function call reads in the value.
     string = array.array("B", 'iasef')
-    self.assertRaises(s3g.EEPROM.NonTerminatedStringError, self.reader.decode_string, string)
+    self.assertRaises(makerbot_driver.EEPROM.NonTerminatedStringError, self.reader.decode_string, string)
 
   def test_decode_string_good_string(self):
     #We pack the string into an array to mimick the way 
