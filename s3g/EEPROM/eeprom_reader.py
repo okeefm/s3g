@@ -25,24 +25,27 @@ class eeprom_reader(object):
     #Set working directory
     if working_directory == None:
       self.working_directory = os.path.abspath(os.path.dirname(__file__))
+    else:
+      self.working_directory = working_directory
     #Load the eeprom map
     with open(os.path.join(self.working_directory, map_name)) as f:
       self.eeprom_map = json.load(f)
     #We always start with the main map
     self.main_map = 'eeprom_offsets'
-    self.read_eeprom_map = {}
+    self.the_map = {}
 
   def read_entire_eeprom(self, print_map = False):
-    self.read_eeprom_map(self.main_map)
+    the_map = self.read_eeprom_map(self.main_map)
     if print_map:
       with open(os.path.join(self.working_directory, 'my_eeprom_map.json'), 'w') as f:
-        f.write(json.dumps(self.eeprom_map, sort_keys=True, indent=2))
+        f.write(json.dumps(the_map, sort_keys=True, indent=2))
+        
 
   def read_eeprom_map(self, map_name, base=0):
-    eeprom_values = self.eeprom_map[map_name]
-    for key in eeprom_values:
-      eeprom_values[key]['value'] = self.read_from_eeprom(eeprom_values[key], base)
-    return eeprom_values
+    the_map = {map_name : {}}
+    for key in self.eeprom_map[map_name]:
+      the_map[map_name][key] = self.read_from_eeprom(self.eeprom_map[map_name][key], base)
+    return the_map
 
   def read_from_eeprom(self, input_dict, base=0):
     try:
@@ -88,15 +91,14 @@ class eeprom_reader(object):
 
   def read_value_from_eeprom(self, input_dict, offset):
     #Get size of payload
-    unpack_code = '>%s' %(input_dict['type'])
-    unpack_code = str(unpack_code)
+    unpack_code = str(input_dict['type'])
     size = struct.calcsize(unpack_code)
     #Get the value to unpack
     val = self.s3g.read_from_EEPROM(offset, size)
     #cast val into a byte array
     val = array.array('B', val)
     #unpack it
-    return struct.unpack(unpack_code, val)
+    return struct.unpack('>%s' %(unpack_code), val)
         
   def decode_string(self, s):
     string = ''
