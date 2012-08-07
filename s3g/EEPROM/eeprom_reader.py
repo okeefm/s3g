@@ -30,6 +30,7 @@ class eeprom_reader(object):
       self.eeprom_map = json.load(f)
     #We always start with the main map
     self.main_map = 'eeprom_offsets'
+    self.read_eeprom_map = {}
 
   def read_entire_eeprom(self, print_map = False):
     self.read_eeprom_map(self.main_map)
