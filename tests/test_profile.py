@@ -9,18 +9,18 @@ import json
 import shutil
 import tempfile
 
-import s3g
-import s3g.profile
+import makerbot_driver
+import makerbot_driver.profile
 
 class ProfileInitTests(unittest.TestCase):
   def test_bad_profile_name(self):
     bad_name = 'this_is_going_to_fail :('
-    self.assertRaises(IOError, s3g.Profile, bad_name)
+    self.assertRaises(IOError, makerbot_driver.Profile, bad_name)
 
   def test_good_profile_name(self):
     name = "ReplicatorSingle"
-    p = s3g.Profile(name)
-    with open('s3g' + os.path.sep + 'profiles' + os.path.sep +name+'.json') as f:
+    p = makerbot_driver.Profile(name)
+    with open('makerbot_driver' + os.path.sep + 'profiles' + os.path.sep +name+'.json') as f:
       expected_vals = json.load(f)
     self.assertEqual(expected_vals, p.values)
 
@@ -31,7 +31,7 @@ class ProfileInitTests(unittest.TestCase):
       with open(path, 'w') as fp:
         values = {'key':'value'}
         json.dump(values, fp)
-      profile = s3g.Profile('Test', profiledir)
+      profile = makerbot_driver.Profile('Test', profiledir)
       self.assertEqual(values, profile.values)
     finally:
       shutil.rmtree(profiledir)
@@ -42,7 +42,7 @@ class ProfileInitTests(unittest.TestCase):
     """
     expected_name = "The Replicator Dual"
     name = "ReplicatorDual"
-    p = s3g.Profile(name)
+    p = makerbot_driver.Profile(name)
     self.assertEqual(p.values['type'], expected_name)
 
   def test_list_profiles(self):
@@ -50,17 +50,17 @@ class ProfileInitTests(unittest.TestCase):
         'ReplicatorDual',
         'ReplicatorSingle',
         ]
-    self.assertEqual(sorted(expected_profiles), sorted(list(s3g.list_profiles())))
+    self.assertEqual(sorted(expected_profiles), sorted(list(makerbot_driver.list_profiles())))
 
   def test_list_profiles_profiledir(self):
     profiledir = tempfile.mkdtemp()
     try:
-      self.assertEqual([], list(s3g.list_profiles(profiledir)))
+      self.assertEqual([], list(makerbot_driver.list_profiles(profiledir)))
       path = os.path.join(profiledir, 'Test.json')
       with open(path, 'w') as fp:
         values = {'key':'value'}
         json.dump(values, fp)
-      self.assertEqual(['Test'], list(s3g.list_profiles(profiledir)))
+      self.assertEqual(['Test'], list(makerbot_driver.list_profiles(profiledir)))
     finally:
       shutil.rmtree(profiledir)
 
@@ -70,7 +70,7 @@ class ProfileInitTests(unittest.TestCase):
 
     '''
     profiledir = 'x'
-    self.assertEqual(profiledir, s3g.profile._getprofiledir(profiledir))
+    self.assertEqual(profiledir, makerbot_driver.profile._getprofiledir(profiledir))
 
   def test__getprofiledir_default(self):
     '''Make sure that _getprofiledir returns the default profile directory when
@@ -78,8 +78,8 @@ class ProfileInitTests(unittest.TestCase):
 
     '''
     profiledir = os.path.abspath(
-      os.path.join(os.path.dirname(__file__), '..', 's3g', 'profiles'))
-    self.assertEqual(profiledir, s3g.profile._getprofiledir(None))
+      os.path.join(os.path.dirname(__file__), '..', 'makerbot_driver', 'profiles'))
+    self.assertEqual(profiledir, makerbot_driver.profile._getprofiledir(None))
 
 if __name__ == '__main__':
   unittest.main()

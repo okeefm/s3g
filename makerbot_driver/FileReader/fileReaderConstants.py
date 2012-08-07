@@ -21,7 +21,7 @@ hostFormats = {
     151     :     ['B'], #"QUEUE SONG", 
     152     :     ['B'], #"RESET TO FACTORY", 
     153     :     ['I', 's'], #"BUILD START NOTIFICATION", 
-    154     :     [], #"BUILD END NOTIFICATION"
+    154     :     ['B'], #"BUILD END NOTIFICATION"
 }
 slaveFormats = {
     1       :     [], #"INIT"

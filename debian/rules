@@ -1,0 +1,7 @@
+#!/usr/bin/make -f
+
+DEBUILD_DPKG_BUILDPACKAGE_OPTS="-us -uc -sa -i -I"
+
+%:
+	dh $@
+

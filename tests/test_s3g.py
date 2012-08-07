@@ -7,7 +7,7 @@ import unittest
 import io
 
 import serial
-from s3g import Writer, constants, s3g, errors, Encoder
+from makerbot_driver import Writer, constants, s3g, errors, Encoder
 
 class TestFromFileName(unittest.TestCase):
   def setUp(self):

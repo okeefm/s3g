@@ -5,7 +5,7 @@ sys.path.append(lib_path)
 
 import unittest
 import struct
-from s3g import Encoder, errors
+from makerbot_driver import Encoder, errors
 
 class EncodeIntTests(unittest.TestCase):
   def test_encode_int32(self):

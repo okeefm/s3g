@@ -705,18 +705,18 @@ Response
 </tr>
 <tr>
  <td>2</td>
- <td>PORF *Deprecated*</td>
- <td>Power-on reset flag was set at restart</td>
+ <td>ONBOARD_SCRIPT</td>
+ <td>Bot is running an onboard script</td>
 </tr>
 <tr>
  <td>1</td>
- <td>0 (reserved for future use)</td>
- <td></td>
+ <td>MANUAL_MODE</td>
+ <td>Manual move mode active</td>
 </tr>
 <tr>
  <td>0</td>
- <td>0 (reserved for future use)</td>
- <td></td>
+ <td>PREHEAT</td>
+ <td>Onboard preheat active</td>
 </tr>
 </table>
 
@@ -757,7 +757,7 @@ Build State Return Values are as follows
 </tr>
 </table>
 
-## 26 - Get communication statistics
+## 25 - Get communication statistics
 Gathers statistics about communication over the tool network. This was intended for use while troubleshooting Gen3/4 machines.
 
 Payload (0 bytes)

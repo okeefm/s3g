@@ -6,7 +6,7 @@ sys.path.append(lib_path)
 import unittest
 import io
 
-from s3g import Writer
+from makerbot_driver import Writer
 
 
 class s3gFileWriterTests(unittest.TestCase):

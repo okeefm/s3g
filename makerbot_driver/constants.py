@@ -19,7 +19,7 @@ host_query_command_dict = {
   'EXTENDED_STOP'             : 22,
   'GET_MOTHERBOARD_STATUS'    : 23,
   'GET_BUILD_STATS'           : 24,
-  'GET_COMMUNICATION_STATS'   : 26,
+  'GET_COMMUNICATION_STATS'   : 25,
   'GET_ADVANCED_VERSION'      : 27
 }
 

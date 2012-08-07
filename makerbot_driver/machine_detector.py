@@ -8,7 +8,17 @@ values to find all current, added and removed ports.  All ports
 are kept track of in a python dict named "ports".
 """
 
-import serial.tools.list_ports  as lp
+try:
+  import serial.tools.list_ports  as lp
+  list_ports_generator = lp.list_ports_by_vid_pid
+except ImportError:
+  import warnings
+  warnings.warn("No VID/PID detection in this version of PySerial; Automatic machine detection disabled.")
+  # We're using legacy pyserial. For now, return an empty iterator.
+  def list_ports_generator():
+    return
+    yield
+
 import profile
 
 class MachineDetector(object):
@@ -17,7 +27,7 @@ class MachineDetector(object):
     #We save this func as a variable for testing purposes, 
     #otherwise we would have to do hacky things, like reload
     #libraries during testing, etc
-    self.list_ports_by_vid_pid = lp.list_ports_by_vid_pid
+    self.list_ports_by_vid_pid = list_ports_generator
 
   def get_vid_pid(self, machine_model):
     """
