@@ -7,7 +7,7 @@ import Encoder
 import Writer 
 from constants import *
 from errors import *
-
+import uuid
 
 
 class s3g(object):
@@ -72,13 +72,40 @@ class s3g(object):
     [response_code, version] = Encoder.unpack_response('<BH', response)
     return version
 
+  def get_name(self):
+    """
+    Get stored Bot Name
+    @return a string for the name
+    TODO: merge this function with future eeprom read/write module
+    """
+    eeprom_offset_name = 0x0022
+    name_bytes = self.read_from_EEPROM(eeprom_offset_name, 16)
+
+    # find the null termination
+    for idx, b in enumerate(name_bytes):
+      last_byte = idx
+      if b == 0:
+        break;
+
+    return str(name_bytes[0:last_byte])
+      
+  def get_uuid(self):
+    """
+    Get stored Bot UUID
+    @return a uuid format string
+    TODO: merge this function with future eeprom read/write module
+    """
+    eeprom_offset_uuid = 0x01A4
+    uuid_bytes = self.read_from_EEPROM(eeprom_offset_uuid, 16)
+
+    return uuid.UUID(bytes = str(uuid_bytes))
 
   def get_advanced_name(self):
     """ 
     Get the name and UUID of a specific bot.
     @return a name, uuid tuple
     """
-    return ('unimplemented','unimplemented')
+    return (self.get_name(), self.get_uuid())
 
   def get_toolhead_count(self):
     """ 

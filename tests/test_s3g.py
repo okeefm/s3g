@@ -97,6 +97,43 @@ class S3gTests(unittest.TestCase):
     self.assertEqual(payload[0], constants.host_query_command_dict['GET_ADVANCED_VERSION'])
     self.assertEqual(payload[1:3], Encoder.encode_uint16(constants.s3g_version))
 
+  def test_get_name(self):
+    import array
+    name = 'The Replicator'
+    n = array.array('B', name)
+    n.append(0)
+    n.append(0)
+
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    response_payload.extend(n)
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+
+    version_info = self.r.get_name()
+    self.assertEqual(version_info, name)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = Encoder.decode_packet(packet)
+    self.assertEqual(payload[0], constants.host_query_command_dict['READ_FROM_EEPROM'])
+
+  def test_get_uuid(self):
+    import uuid
+    uid = uuid.uuid4()
+
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    response_payload.extend(uid.bytes)
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+
+    version_info = self.r.get_uuid()
+    self.assertEqual(version_info, uid)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = Encoder.decode_packet(packet)
+    self.assertEqual(payload[0], constants.host_query_command_dict['READ_FROM_EEPROM'])
+
   def test_reset(self):
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
