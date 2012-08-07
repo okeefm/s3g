@@ -1,5 +1,18 @@
 class AbstractWriter(object):
 
+  def close(self):
+    """ Close port """
+    raise NotImplementedError()
+
+  def open (self):
+    """ Opens the currently set port"""
+    raise NotImplementedError()
+
+  def isOpen(self):
+    """ Fluch of file like objects. """
+    raise NotImplementedError()
+
+
   def send_action_payload(self, payload):
     """ Send the given payload as an action command
 

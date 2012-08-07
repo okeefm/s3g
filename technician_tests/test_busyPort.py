@@ -25,14 +25,36 @@ class PortBusyTechnicianTest(unittest.TestCase):
   def tearDown(self):
     pass
 
-  def test_portBusy(self):
-    port = raw_input("specify a real active port on your OS to test")
+  def test_port_busy(self):
+    return
+    port = raw_input("specify a real active port on your OS to test>")
     r1 = makerbot_driver.s3g.from_filename( port )
     r2 = makerbot_driver.s3g.from_filename( port )
     #r1.get_version()
     #r2.get_version()
     r1.find_axes_maximums(['x', 'y'], 500, 60)
-    r2.find_axes_maximums(['x', 'y'], 500, 60)
+    r2.find_axes_maximums(['x', 'y'], 500, 60) 
+    r1.close()
+    r2.close()
 
+class InUseTechnicianTest(unittest.TestCase):
+  def setUp(self):
+    pass
+
+  def tearDown(self):
+    pass
+
+  def test_inuse_port(self):
+    port = raw_input("specify a real active port on your OS to test>")
+    r1 = makerbot_driver.s3g.from_filename( port )
+    s = r1.isOpen()
+    self.assertTrue(s, "open expcted post construction")
+    r1.close()
+    s = r1.isOpen()
+    self.assertFalse(s, "close expcted.")
+    r1.open()
+#    s = r1.isOpen()
+#    self.assertFalse(s, "reopened. open expcted")
+	
 if __name__ == '__main__':
   unittest.main()

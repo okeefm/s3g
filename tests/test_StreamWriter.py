@@ -12,6 +12,7 @@ import time
 from makerbot_driver import Writer, Encoder, errors, constants
 
 class StreamWriterTests(unittest.TestCase):
+
   def setUp(self):
     self.outputstream = io.BytesIO() # Stream that we will send responses on
     self.inputstream = io.BytesIO()  # Stream that we will receive commands on
@@ -19,8 +20,10 @@ class StreamWriterTests(unittest.TestCase):
     file = io.BufferedRWPair(self.outputstream, self.inputstream)
     self.w = Writer.StreamWriter(file)
 
+
   def tearDown(self):
     self.w = None
+
 
   def test_error_reporting(self):
     """Tests that StreamWriter records errors received correctly
@@ -48,6 +51,7 @@ class StreamWriterTests(unittest.TestCase):
     except errors.TransmissionError as e:
       self.assertEqual(expected_errors, e.value)
 
+
   def test_send_command(self):
     """
     Passing case: Preload the buffer with a correctly formatted expected response, and verigy that it works correctly
@@ -62,6 +66,7 @@ class StreamWriterTests(unittest.TestCase):
 
     self.assertEqual(response_payload, self.w.send_command(payload))
     self.assertEqual(Encoder.encode_payload(payload), self.inputstream.getvalue())
+
 
   def test_send_packet_timeout(self):
     """
@@ -78,6 +83,7 @@ class StreamWriterTests(unittest.TestCase):
     for i in range (0, constants.max_retry_count):
       for byte in expected_packet:
         self.assertEquals(byte, ord(self.inputstream.read(1)))
+
 
   def test_send_packet_many_bad_responses(self):
     """
@@ -104,6 +110,7 @@ class StreamWriterTests(unittest.TestCase):
       for byte in expected_packet:
         self.assertEquals(byte, ord(self.inputstream.read(1)))
 
+
   def test_send_packet(self):
     """
     Passing case: Preload the buffer with a correctly formatted expected response, and
@@ -121,6 +128,7 @@ class StreamWriterTests(unittest.TestCase):
     self.assertEquals(Encoder.encode_payload(payload), self.inputstream.getvalue())
 
   # TODO: Test timing based errors- can we send half a response, get it to re-send, then send a regular response?
+
 
   def test_build_and_send_action_payload(self):
     command = constants.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW']
@@ -147,11 +155,9 @@ class StreamWriterTests(unittest.TestCase):
       duration,
       relativeAxes,
     )
-      
-
     self.w.send_action_payload(payload)
-
     self.assertEquals(Encoder.encode_payload(expected_payload), self.inputstream.getvalue())
+
 
   def test_build_and_send_query_payload_with_null_terminated_string(self):
     cmd = constants.host_query_command_dict['GET_NEXT_FILENAME']
@@ -176,7 +182,6 @@ class StreamWriterTests(unittest.TestCase):
       flag,
     )
     self.assertEqual(response_payload, self.w.send_query_payload(payload))
-
     self.assertEqual(Encoder.encode_payload(payload), self.inputstream.getvalue())
     
 
@@ -205,9 +210,11 @@ class StreamWriterTests(unittest.TestCase):
     self.assertEquals(response_payload, self.w.send_query_payload(payload))
     self.assertEquals(Encoder.encode_payload(expected_payload), self.inputstream.getvalue())
 
+
   def test_external_stop(self):
     self.w.external_stop = True
     self.assertTrue(self.w.external_stop)
+
 
   def test_external_stop_works_precondition(self):
     response_payload = bytearray()
@@ -217,16 +224,19 @@ class StreamWriterTests(unittest.TestCase):
     self.w.external_stop = True
     self.assertRaises(Writer.ExternalStopError, self.w.send_command, 'asdf')
 
+
   def delay_and_external_stop_in_thread(self):
     time.sleep(constants.timeout_length)
     self.w.external_stop = True
+
 
   def test_delay_and_external_stop_in_thread(self):
     self.assertFalse(self.w.external_stop)
     self.delay_and_external_stop_in_thread()
     self.assertTrue(self.w.external_stop)
 
-  @unittest.skip("This test doesnt work 100% of the time since it relies timing too much, so we skip it for mow")
+
+  @unittest.skip("This test doesnt work 100% of the time since it relies timing too much, so we skip it for now")
   def test_eternal_stop_works_multithreaded(self):
     t = threading.Thread(target=self.delay_and_external_stop_in_thread)
     try:
@@ -235,6 +245,38 @@ class StreamWriterTests(unittest.TestCase):
     except Writer.ExternalStopError:
       self.assertTrue(self.w.external_stop)
     t.join()    #Kill that thread!
+
+class TestUnderlyingFile(unittest.TestCase):
+  """ test StreamWriter calls underlying file open/close """
+
+  def setUp(self):
+    import mock
+    import serial
+    self.outputstream = io.BytesIO() # Stream that we will send responses on
+    self.inputstream = io.BytesIO()  # Stream that we will receive commands on
+    self.mock = mock.Mock(serial.Serial)
+    self.mock.isOpen.return_value = True
+    def side_effect_close():
+      self.mock.isOpen.return_value = False
+    def side_effect_open():
+      self.mock.isOpen.return_value = True 
+    self.mock.open.side_effect = side_effect_open
+    self.mock.close.side_effect = side_effect_close
+    #file = io.BufferedRWPair(self.outputstream, self.inputstream)
+    self.sWriter = Writer.StreamWriter(self.mock)
+
+  def test_underlying_open_close(self):
+    "verify underlying file object gets open/close""" 
+    isOpen = self.sWriter.is_open()
+    self.assertTrue(isOpen,"open called during setup/construction")
+
+    self.sWriter.close()
+    isOpen = self.sWriter.is_open()
+    self.assertFalse(isOpen,"is now closed")
+
+    self.sWriter.open()
+    isOpen = self.sWriter.is_open()
+    self.assertTrue(isOpen,"opened again")
 
 if __name__ == "__main__":
   unittest.main()
