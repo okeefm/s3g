@@ -9,8 +9,12 @@ from .. import constants
 import logging
 
 class StreamWriter(AbstractWriter):
+  """ Represents a writer to a data stream, usually a tty or USB connection
+  to a bot at the end of a wire.
+  """ 
+
   def __init__(self, file):
-    """ Initialize a new stream writer
+    """ Initialize a new StreamWriter object
 
     @param string file File object to interact with
     """
@@ -21,13 +25,33 @@ class StreamWriter(AbstractWriter):
     self.total_overflows = 0
     self.external_stop = False
 
+
   # TODO: test me
   def send_query_payload(self, payload):
     return self.send_command(payload)
 
+
   # TODO: test me
   def send_action_payload(self, payload):
     self.send_command(payload)
+
+
+  def close(self):
+    if self.is_open() and self.file != None: 
+	self.file.close() 
+
+ 
+  def open(self):
+    """ Open or re-open an already defined stream connection """
+    if self.file != None:
+	self.file.open() 
+
+
+  def is_open(self):
+    """@returns true if a port is open and active, False otherwise """
+    if self.file == None: return False
+    return self.file.isOpen()
+
 
   def send_command(self, payload):
     packet = Encoder.encode_payload(payload)
