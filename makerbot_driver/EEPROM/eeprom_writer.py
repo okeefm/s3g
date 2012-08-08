@@ -29,22 +29,29 @@ class EepromWriter(object):
       self.working_directory = working_directory
     with open(os.path.join(self.working_directory, map_name)) as f:
       self.eeprom_map = json.load(f)
-    self.main_map = 'eeprom_offsets'
+    self.main_map = 'eeprom_map'
     self.data_buffer = []
 
   def write_value(self, input_dict, flush=False):
-    (found_dict, sub_map_name) = self.search_for_entry(input_dict['name'])
-    if 'toolhead' in input_dict:
-      offset = self.get_offset(input_dict, sub_map_name=sub_map_name, toolhead=input_dict['toolhead'])
+    if input_dict['toolhead']:
+      (found_dict, offset) = self.search_for_toolhead_entry_and_offset(input_dict['name'], self.eeprom_map[self.main_map], input_dict['toolhead'])
     else:
-      offset = self.get_offset(input_dict, sub_map_name=sub_map_name)
+      (found_dict, offset) = self.search_for_entry_and_offset(input_dict['name'], self.eeprom_map[self.main_map])
     data = self.encode_data(input_dict['data'], found_dict)
     self.data_buffer.append([offset, data])
+
     if flush:
       for data in self.data_buffer:
         self.s3g.write_to_EEPROM(data[0], data[1])
 
-  def search_for_entry(self, name):
+  def search_for_toolhead_entry_and_offset(self, name, the_map, toolhead):
+    toolhead_dict_name = self.get_toolhead_dict_name(toolhead)
+    found_dict = the_map[toolhead_dict_name]['sub_map'][name], 16
+    offset = int(the_map[toolhead_dict_name]['offset'], 16)
+    offset += int(found_dict['offset'], 16)
+    return found_dict, offset
+
+  def search_for_entry_and_offset(self, name, the_map):
     """
     Given an EEPROM entry name, searches the eeprom map for
     that entry and returns both its dict and the map that 
@@ -55,20 +62,21 @@ class EepromWriter(object):
     @return str sub_map_name: The name of the eeprom map that 
       holds this entry
     """
-    found_dict = -1
-    sub_map_name = -1
-    for m in self.eeprom_map:
-      try:
-        #Theres only one key, which is the name of the submap
-        sub_map_name = m
-        found_dict = self.eeprom_map[sub_map_name][name]
-        break
-      except KeyError:
-        pass
-    if found_dict is -1:
-      raise EntryNotFoundError(name)
-    return found_dict, sub_map_name
-
+    offset = 0
+    if name in the_map:
+      return the_map[name], int(the_map[name]['offset'], 16)
+    else:
+      for key in the_map:
+        try:
+          if 'sub_map' in the_map[key]:
+            (found_dict, sub_offset) = self.search_for_entry_and_offset(name, the_map[key]['sub_map'])
+            offset = int(the_map[key]['offset'], 16)
+            return found_dict, sub_offset+offset
+        #We didnt find the entry in there, so we pass
+        except EntryNotFoundError:
+          pass
+    raise EntryNotFoundError(name)
+  
   def get_toolhead_dict_name(self, toolhead):
     """
     Gets the toolhead dict name thats stored in eeprom_offsets.

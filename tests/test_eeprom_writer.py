@@ -26,63 +26,33 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
 
   def tearDown(self):
     self.writer = None
-   
-  def test_search_for_entry_not_found(self):
-    entry = 'this is going to fail'
-    self.assertRaises(makerbot_driver.EEPROM.EntryNotFoundError, self.writer.search_for_entry, entry) 
 
-  def test_serach_for_entry_can_find_entry(self):
+  def test_search_for_entry_and_offset_not_found(self):
+    entry = 'this is going to fail'
+    self.assertRaises(makerbot_driver.EEPROM.EntryNotFoundError, self.writer.search_for_entry_and_offset, entry, self.writer.eeprom_map[self.writer.main_map]) 
+
+  def test_search_for_entry_and_offset_non_recursive(self):
+    entry = 'foo'
+    expected_entry = self.writer.eeprom_map['eeprom_map']['foo']
+    expected_offset = int(expected_entry['offset'], 16)
+    (got_entry, got_offset) = self.writer.search_for_entry_and_offset(entry, self.writer.eeprom_map['eeprom_map'])
+    self.assertEqual(expected_offset, got_offset)
+    self.assertEqual(expected_entry, got_entry)
+
+  def test_search_for_entry_and_offset_recursive(self):
     cases = [
-      ['foo', 'eeprom_offsets'],
-      ['baz', 'eeprom_offsets'],
-      ['foobar', 'toolhead_offsets'],
-      ['bazbar', 'acceleration_offsets'],
+      ['bingbangboing','ACCELERATION_TABLE'],
+      ['ni','foo'],
+      ['unus', 'barfoo'],
       ]
     for case in cases:
       entry = case[0]
-      expected_map_name = case[1]
-      (got_entry, got_map_name) = self.writer.search_for_entry(entry)
-      expected_entry = self.map_vals[expected_map_name][entry]
-      self.assertEqual(expected_map_name, got_map_name)
+      sub_map = case[1]
+      expected_entry = self.writer.eeprom_map['eeprom_map'][sub_map]['sub_map'][entry]
+      expected_offset = int(expected_entry['offset'], 16) + int(self.writer.eeprom_map['eeprom_map'][sub_map]['offset'], 16)
+      (got_entry, got_offset) = self.writer.search_for_entry_and_offset(entry, self.writer.eeprom_map['eeprom_map'])
       self.assertEqual(expected_entry, got_entry)
-
-  def test_get_offset_no_offset_defined(self):
-    input_dict = {
-        'name'  : 'foo'
-        }
-    self.assertRaises(KeyError, self.writer.get_offset, input_dict)
-
-  def test_get_offset_bad_submap_name(self):
-    sub_map_name = 'this is going to fail'
-    input_dict = self.writer.eeprom_map['acceleration_offsets']['bazbar']
-    self.assertRaises(makerbot_driver.EEPROM.SubMapNotFoundError, self.writer.get_offset, input_dict, sub_map_name=sub_map_name)
-
-  def test_get_offset_toolhead_defined_with_bad_sub_map_name(self):
-    input_dict = {}
-    toolhead = 1
-    sub_map_name = 'acceleration_offsets'
-    self.assertRaises(makerbot_driver.EEPROM.ToolheadSubMapError, self.writer.get_offset, input_dict, toolhead=toolhead, sub_map_name=sub_map_name)
-
-  def test_get_offset_from_eeprom_offset(self):
-    input_dict = self.writer.eeprom_map['eeprom_offsets']['foo']
-    expected_offset = int(input_dict['offset'], 16)
-    self.assertEqual(expected_offset, self.writer.get_offset(input_dict))
-
-  def test_get_offset_not_from_eeprom_offset(self):
-    sub_map = 'acceleration_offsets'
-    input_dict = self.writer.eeprom_map[sub_map]['bazbar']
-    expected_offset = int(input_dict['offset'], 16)
-    expected_offset += int(self.writer.eeprom_map['eeprom_offsets']['ACCELERATION_TABLE']['offset'], 16)
-    self.assertEqual(expected_offset, self.writer.get_offset(input_dict, sub_map_name=sub_map))
-
-  def test_get_offset_with_toolhead(self):
-    toolhead = 0
-    tool_dict = self.writer.get_toolhead_dict_name(toolhead)
-    sub_map = 'toolhead_offsets'
-    input_dict = self.writer.eeprom_map[sub_map]['foobar']
-    expected_offset = int(input_dict['offset'], 16)
-    expected_offset += int(self.writer.eeprom_map['eeprom_offsets'][tool_dict]['offset'], 16)
-    self.assertEqual(expected_offset, self.writer.get_offset(input_dict, sub_map_name=sub_map, toolhead=toolhead))
+      self.assertEqual(expected_offset, got_offset)
 
   def test_get_tool_dict_name(self):
     cases = [
