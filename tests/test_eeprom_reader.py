@@ -45,8 +45,7 @@ class TestReadEepromMap(unittest.TestCase):
     """
     with open(os.path.join(self.wd, self.m)) as f:
       vals = json.load(f)
-    map_name = vals.keys()[0]
-    eeprom_vals = vals[map_name]
+    eeprom_vals = vals['eeprom_map']
 
     #=====Making Mock Values=====
     read_string_from_eeprom_mock = mock.Mock()
@@ -61,12 +60,12 @@ class TestReadEepromMap(unittest.TestCase):
     read_value_from_eeprom_mock.return_value = eeprom_vals['value']['return_value']
     self.reader.read_value_from_eeprom = read_value_from_eeprom_mock
 
-    expected_map = {map_name : {}}
+    expected_map = vals
     for key in eeprom_vals:
-      expected_map[map_name][key] = eeprom_vals[key]['return_value']
+      expected_map['eeprom_map'][key]['value'] = eeprom_vals[key]['return_value']
 
-    got_map = self.reader.read_eeprom_map(map_name)
-    self.assertEqual(expected_map, got_map)
+    got_map = self.reader.read_eeprom_map(vals['eeprom_map'])
+    self.assertEqual(expected_map['eeprom_map'], got_map)
 
 class TestReadFromEeprom(unittest.TestCase):
 
@@ -81,17 +80,23 @@ class TestReadFromEeprom(unittest.TestCase):
 
   def test_read_from_eeprom_sub_map(self):
     input_dict = {
-        'eeprom_map'  :   'toolhead_eeprom_offsets',
         'offset'      :   '0xaabb',
+        'sub_map'  :   {
+            'offset'  : '0x00aa',
+            'type'          : 'h'
+          }
         }
     read_eeprom_map_mock = mock.Mock()
     self.reader.read_eeprom_map = read_eeprom_map_mock
     self.reader.read_from_eeprom(input_dict)
-    read_eeprom_map_mock.assert_called_once_with(input_dict['eeprom_map'], offset=int(input_dict['offset'], 16))
+    read_eeprom_map_mock.assert_called_once_with(input_dict['sub_map'], offset=int(input_dict['offset'], 16))
 
   def test_read_eeprom_map_no_offset(self):
     input_dict = {
-        'eeprom_map'  :   'toolhead_eeprom_offsets',
+        'sub_map'  :   {
+            'offset'  : '0x00aa',
+            'type'    : 'b',
+          }
         }
     self.assertRaises(makerbot_driver.EEPROM.MissingVariableError, self.reader.read_from_eeprom, input_dict)
 
@@ -231,14 +236,17 @@ class TestEepromReader(unittest.TestCase):
   def test_read_eeprom_sub_map(self):
     input_dict = {
         'offset'  : '0x0000',
-        'eeprom_map'  : 'toolhead_eeprom_offsets',
+        'sub_map'  : {
+            'offset'  : '0x0000',
+            'floating_point'  : 'True'
+            }
         }
-    file_name = input_dict['eeprom_map'] 
+    sub_map = input_dict['sub_map']
     offset = int(input_dict['offset'], 16)
     read_eeprom_map_mock = mock.Mock()
     self.reader.read_eeprom_map = read_eeprom_map_mock
     self.reader.read_eeprom_sub_map(input_dict, offset)
-    read_eeprom_map_mock.assert_called_once_with(file_name, offset=offset)
+    read_eeprom_map_mock.assert_called_once_with(sub_map, offset=offset)
 
   def test_read_floating_point_from_eeprom_bad_size(self):
     input_dict = {
