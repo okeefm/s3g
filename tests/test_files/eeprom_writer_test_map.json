@@ -43,7 +43,8 @@
       "sub_map" : {
           "unus"  : {
             "offset"  : "0xaabb",
-            "type"  : "hh"
+            "type"  : "hh",
+            "floating_point"  : "True"
             }
         }
       },
@@ -53,7 +54,7 @@
       "sub_map" : {
           "foobar"  : {
             "offset"  : "0x0000",
-            "type"    : "i"
+            "type"    : "I"
             },
           "bingban" : {
             "offset"  : "0x0004",

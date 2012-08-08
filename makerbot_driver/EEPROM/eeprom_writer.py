@@ -32,10 +32,10 @@ class EepromWriter(object):
     self.main_map = 'eeprom_map'
     self.data_buffer = []
 
-  def write_value(self, input_dict, flush=False):
-    if input_dict['toolhead']:
+  def write_data(self, input_dict, flush=False):
+    try:
       (found_dict, offset) = self.search_for_toolhead_entry_and_offset(input_dict['name'], self.eeprom_map[self.main_map], input_dict['toolhead'])
-    else:
+    except KeyError:
       (found_dict, offset) = self.search_for_entry_and_offset(input_dict['name'], self.eeprom_map[self.main_map])
     data = self.encode_data(input_dict['data'], found_dict)
     self.data_buffer.append([offset, data])
@@ -46,7 +46,7 @@ class EepromWriter(object):
 
   def search_for_toolhead_entry_and_offset(self, name, the_map, toolhead):
     toolhead_dict_name = self.get_toolhead_dict_name(toolhead)
-    found_dict = the_map[toolhead_dict_name]['sub_map'][name], 16
+    found_dict = the_map[toolhead_dict_name]['sub_map'][name]
     offset = int(the_map[toolhead_dict_name]['offset'], 16)
     offset += int(found_dict['offset'], 16)
     return found_dict, offset

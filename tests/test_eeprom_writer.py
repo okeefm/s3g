@@ -6,7 +6,7 @@ sys.path.append(lib_path)
 import unittest
 import struct
 import json
-
+import mock
 
 import makerbot_driver
 
@@ -23,9 +23,94 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
         )
     with open(os.path.join(wd, map_name)) as f:
       self.map_vals = json.load(f)
+    self.writer.s3g = makerbot_driver.s3g()
+    self.write_to_eeprom_mock = mock.Mock()
+    self.writer.s3g.write_to_EEPROM = self.write_to_eeprom_mock
 
   def tearDown(self):
     self.writer = None
+
+  def test_write_value_no_flush_toolhead(self):
+    name = 'foobar'
+    value = 252645135
+    toolhead = 1
+    input_dict = {
+        'name'  : name,
+        'data' : [value],
+        'toolhead'  : toolhead
+        }
+    offset = int('0x001c', 16) + int('0x0000', 16)
+    expected_value = struct.pack('>I', value)
+    expected_buffer = [[offset, expected_value]]
+    self.writer.write_data(input_dict)
+    self.assertEqual(expected_buffer, self.writer.data_buffer)
+    self.assertEqual(len(self.write_to_eeprom_mock.mock_calls), 0)
+  
+  def test_write_value_flush_no_toolhead(self):
+    name = 'foo'
+    value = 120
+    input_dict = {
+        'name'  : name,
+        'data' : [value], 
+        }
+    expected_packed_data = []
+    expected_packed_data.append([int(self.writer.eeprom_map[self.writer.main_map][name]['offset'], 16), struct.pack('>b', value)])
+    self.writer.write_data(input_dict)
+    #add second value
+    name = 'unus'
+    values = [128.5, 256]
+    input_dict = {
+        'name'  : name,
+        'data'  : values
+      }
+    offset = self.writer.search_for_entry_and_offset(name, self.writer.eeprom_map[self.writer.main_map])[1]
+    data = ''
+    for value in values:
+      bits = self.writer.calculate_floating_point(value)
+      data += struct.pack('>BB', bits[0], bits[1])
+    expected_packed_data.append([offset, data])
+    self.writer.write_data(input_dict, flush=True)
+    self.assertEqual(expected_packed_data, self.writer.data_buffer)
+    calls = self.write_to_eeprom_mock.mock_calls
+    self.assertEqual(calls[0][1], tuple(expected_packed_data[0]))
+    self.assertEqual(calls[1][1], tuple(expected_packed_data[1]))
+
+  def test_write_value_no_flush_no_toolhead(self):
+    name = 'foo'
+    value = 120
+    input_dict = {
+        'name'  : name,
+        'data' : [value], 
+        }
+    expected_packed_data = []
+    expected_packed_data.append([int(self.writer.eeprom_map[self.writer.main_map][name]['offset'], 16), struct.pack('>b', value)])
+    self.writer.write_data(input_dict)
+    #add second value
+    name = 'unus'
+    values = [128.5, 256]
+    input_dict = {
+        'name'  : name,
+        'data'  : values
+      }
+    offset = self.writer.search_for_entry_and_offset(name, self.writer.eeprom_map[self.writer.main_map])[1]
+    data = ''
+    for value in values:
+      bits = self.writer.calculate_floating_point(value)
+      data += struct.pack('>BB', bits[0], bits[1])
+    expected_packed_data.append([offset, data])
+    self.writer.write_data(input_dict)
+    self.assertEqual(expected_packed_data, self.writer.data_buffer)
+    self.assertEqual(len(self.write_to_eeprom_mock.mock_calls), 0)
+
+  def test_search_for_toolhead_entry_and_offset(self):
+    toolhead = 0
+    entry = 'foobar'
+    expected_entry = self.writer.eeprom_map[self.writer.main_map]['T0_DATA_BASE']['sub_map']['foobar']
+    expected_offset = int(expected_entry['offset'], 16)
+    expected_offset += int(self.writer.eeprom_map[self.writer.main_map]['T0_DATA_BASE']['offset'], 16)
+    (got_entry, got_offset) = self.writer.search_for_toolhead_entry_and_offset(entry, self.writer.eeprom_map['eeprom_map'], toolhead)
+    self.assertEqual(expected_offset, got_offset)
+    self.assertEqual(expected_entry, got_entry)
 
   def test_search_for_entry_and_offset_not_found(self):
     entry = 'this is going to fail'
