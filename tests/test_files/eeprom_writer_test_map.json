@@ -1,0 +1,46 @@
+{
+  "eeprom_offsets" : { 
+    "foo" : {
+      "offset"  : "0x0000",
+      "type"    : "b"
+      },
+    "bar" : {
+      "offset"  : "0x0002",
+      "type"    : "i"
+      },
+    "baz" : {
+      "offset"  : "0x0006",
+      "type"    : "s",
+      "length"  : 16
+      },
+    "T0_DATA_BASE"  : {
+      "eeprom_map" : "toolhead_offsets",
+      "offset" : "0x0016"
+      },
+    "T1_DATA_BASE"  : {
+      "eeprom_map"  : "toolhead_offsets",
+      "offset"  : "0x001c"
+      },
+    "ACCELERATION_TABLE"  : {
+      "eeprom_map"  : "acceleration_offsets",
+      "offset"  : "0x0022"
+      }
+    },
+  "toolhead_offsets" : {
+    "foobar"  : {
+      "offset"  : "0x0000",
+      "type"    : "i"
+      },
+    "barfoo"  : {
+      "offset"  : "0x0004",
+      "type"    : "b"
+      }
+    },
+  "acceleration_offsets"  : {
+    "bazbar"  : {
+      "offset"  : "0x0000",
+      "type"    : "s",
+      "length"  : 16
+      }
+  }
+}
