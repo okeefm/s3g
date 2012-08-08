@@ -10,7 +10,7 @@ import json
 
 import makerbot_driver
 
-class TestEepromWriterSearchEepromMap(unittest.TestCase):
+class TestEepromWriterUseTestEepromMap(unittest.TestCase):
   def setUp(self):
     wd = os.path.join(
       os.path.abspath(os.path.dirname(__file__)),
@@ -135,22 +135,22 @@ class TestEepromWriter(unittest.TestCase):
     expected_payload = struct.pack(code, terminated_string)
     self.assertEqual(expected_payload, self.writer.encode_string(string))
 
-  def test_encode_value_string_with_other_types(self):
+  def test_encode_data_string_with_other_types(self):
     value = ['fail', 'fail', 'fail']
     input_dict = {
         'type'  : 'sBB',
         }
-    self.assertRaises(makerbot_driver.EEPROM.IncompatableTypeError, self.writer.encode_value, value, input_dict)
+    self.assertRaises(makerbot_driver.EEPROM.IncompatableTypeError, self.writer.encode_data, value, input_dict)
 
-  def test_encode_value_floating_point_with_non_short_types(self):
+  def test_encode_data_floating_point_with_non_short_types(self):
     value = ['fail', 'fail', 'fail']
     input_dict = {
         'type'  : 'HHI',
         'floating_point' : True
         }
-    self.assertRaises(makerbot_driver.EEPROM.IncompatableTypeError, self.writer.encode_value, value, input_dict)
+    self.assertRaises(makerbot_driver.EEPROM.IncompatableTypeError, self.writer.encode_data, value, input_dict)
 
-  def test_encode_value_string(self):
+  def test_encode_data_string(self):
     input_dict = {
         'type'  : 's'
         }
@@ -158,9 +158,9 @@ class TestEepromWriter(unittest.TestCase):
     terminated_string = string+'\x00'
     code = '>%is' %(len(terminated_string))
     expected_payload = struct.pack(code, terminated_string)
-    self.assertEqual(expected_payload, self.writer.encode_value([string], input_dict))
+    self.assertEqual(expected_payload, self.writer.encode_data([string], input_dict))
 
-  def test_encode_value_floating_point(self):
+  def test_encode_data_floating_point(self):
     input_dict = {
         'floating_point'  : True,
         'type'            : 'H',
@@ -168,9 +168,9 @@ class TestEepromWriter(unittest.TestCase):
     value = [128.5]
     bits = self.writer.calculate_floating_point(value[0])
     expected = struct.pack('>BB', bits[0], bits[1])
-    self.assertEqual(expected, self.writer.encode_value(value, input_dict))
+    self.assertEqual(expected, self.writer.encode_data(value, input_dict))
 
-  def test_encode_value_floating_point_multiple(self):
+  def test_encode_data_floating_point_multiple(self):
     input_dict = {
         'floating_point'  : True,
         'type'  : 'HHH'
@@ -180,41 +180,41 @@ class TestEepromWriter(unittest.TestCase):
     for value in values:
       bits = self.writer.calculate_floating_point(value)
       expected += struct.pack('>BB', bits[0], bits[1])
-    self.assertEqual(expected, self.writer.encode_value(values, input_dict))
+    self.assertEqual(expected, self.writer.encode_data(values, input_dict))
 
-  def test_encode_value_normal_value(self):
+  def test_encode_data_normal_value(self):
     t = 'B'
     input_dict = {
         'type'  : t
         }
     value = [128]
     expected_value = struct.pack('>%s' %(t), value[0])
-    self.assertEqual(expected_value, self.writer.encode_value(value, input_dict))
+    self.assertEqual(expected_value, self.writer.encode_data(value, input_dict))
 
-  def test_encode_value_multiple_values(self):
+  def test_encode_data_multiple_values(self):
     t = 'BIH'
     input_dict = {
         'type'  : t
         }
     values = [128, 252645135, 3855]
     expected_value = struct.pack('>%s' %(t), values[0], values[1], values[2])
-    self.assertEqual(expected_value, self.writer.encode_value(values, input_dict))
+    self.assertEqual(expected_value, self.writer.encode_data(values, input_dict))
 
-  def test_encode_value_non_matching_type_and_values_more_types(self):
+  def test_encode_data_non_matching_type_and_values_more_types(self):
     t = 'BIH'
     values = [1, 2]
     input_dict = {
         'type'  : t
         }
-    self.assertRaises(makerbot_driver.EEPROM.MismatchedTypeAndValueError, self.writer.encode_value, values, input_dict)
+    self.assertRaises(makerbot_driver.EEPROM.MismatchedTypeAndValueError, self.writer.encode_data, values, input_dict)
   
-  def test_encode_value_non_matching_type_and_values_more_values(self):
+  def test_encode_data_non_matching_type_and_values_more_values(self):
     t = 'BI'
     values = [1, 2, 3]
     input_dict = {
         'type'  : t
         }
-    self.assertRaises(makerbot_driver.EEPROM.MismatchedTypeAndValueError, self.writer.encode_value, values, input_dict)
+    self.assertRaises(makerbot_driver.EEPROM.MismatchedTypeAndValueError, self.writer.encode_data, values, input_dict)
 
   def test_calculate_floating_point(self):
     cases = [

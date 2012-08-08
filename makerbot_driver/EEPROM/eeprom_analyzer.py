@@ -30,18 +30,12 @@ class eeprom_analyzer(object):
   def __init__(self):
     self.filename = 'eeprom_map.json'
     self.eeprom_map = {}
-    self.necessary_eeproms = {
-        'toolhead_eeprom_offsets' : False,
-        'eeprom_offsets' : False,
-        }
 
   def parse_file(self):
-    eeprom_map = {}
+    self.eeprom_map = {}
     try:
       while True:
         namespace_name = self.find_next_namespace().lower()
-#        if namespace_name in self.necessary_eeproms:
-#          self.necessary_eeproms[namespace_name] = True
         namespace = {}
         try:
           while True:
@@ -56,10 +50,9 @@ class eeprom_analyzer(object):
               v[variable[0]] = variable[1]
             namespace[name] = v
         except EndOfNamespaceError:
-          eeprom_map[namespace_name]  = namespace
-#          self.dump_json(namespace_name+'.json', eeprom_map)
+          self.eeprom_map[namespace_name]  = namespace
     except EndOfEepromError:
-      self.dump_json('eeprom_map.json', eeprom_map)
+      self.dump_json('eeprom_map.json', self.eeprom_map)
       
   def find_next_entry(self):
     namespace_end = '}'
@@ -137,3 +130,12 @@ class eeprom_analyzer(object):
     output = json.dumps(eeprom_map, sort_keys=True, indent=2) 
     with(open(name, 'w')) as f:
       f.write(output)
+
+  def collate_maps(self):
+    main_map = 'eeprom_offsets'
+    collated_map = self.eeprom_map[main_map)
+    for key in self.eeprom_map[main_map]:
+      if 'eeprom_map' in self.eeprom_map[main_map][key]
+        sub_map_name = self.eeprom_map[main_map][key]['eeprom_map']
+   #     self.eeprom_map[main_map][key]['sub_map'] = self.eeprom_map[sub_map_name]
+        collate_map[key]['sub_map'] = self.eeprom_map[sub_map_name]

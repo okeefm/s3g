@@ -30,7 +30,19 @@ class EepromWriter(object):
     with open(os.path.join(self.working_directory, map_name)) as f:
       self.eeprom_map = json.load(f)
     self.main_map = 'eeprom_offsets'
-    self.buffer_map = {}
+    self.data_buffer = []
+
+  def write_value(self, input_dict, flush=False):
+    (found_dict, sub_map_name) = self.search_for_entry(input_dict['name'])
+    if 'toolhead' in input_dict:
+      offset = self.get_offset(input_dict, sub_map_name=sub_map_name, toolhead=input_dict['toolhead'])
+    else:
+      offset = self.get_offset(input_dict, sub_map_name=sub_map_name)
+    data = self.encode_data(input_dict['data'], found_dict)
+    self.data_buffer.append([offset, data])
+    if flush:
+      for data in self.data_buffer:
+        self.s3g.write_to_EEPROM(data[0], data[1])
 
   def search_for_entry(self, name):
     """
@@ -39,9 +51,9 @@ class EepromWriter(object):
     contained it.
 
     @param str name: The name of the entry we are looking for.
+    @return found_dict: The dictionary that is defined by the name
     @return str sub_map_name: The name of the eeprom map that 
       holds this entry
-    @return found_dict: The dictionary that is defined by the name
     """
     found_dict = -1
     sub_map_name = -1
@@ -78,7 +90,6 @@ class EepromWriter(object):
     @param str sub_map_name: The name of the possible sub_map that contains the
       entry.
     @param int toolhead: The toolhead (if any) we want to write to
-
     @return int offset: The calculated offset for this eeprom entry
     """
     #If were lookin at a toolhead eeprom value, but the submap isnt toolhead_eeprom,
@@ -131,7 +142,7 @@ class EepromWriter(object):
       value = char.upper() == 'H'
     return value
 
-  def encode_value(self, values, input_dict):
+  def encode_data(self, data, input_dict):
     """
     Given a list of values and an input dict for that value,
     packs then into a byte string.
@@ -141,23 +152,23 @@ class EepromWriter(object):
     @return str: The values packed into a byte string
     """
     pack_code = input_dict['type']
-    if len(pack_code) is not len(values):
-      raise MismatchedTypeAndValueError([len(pack_code), len(values)])
+    if len(pack_code) is not len(data):
+      raise MismatchedTypeAndValueError([len(pack_code), len(data)])
     if 'floating_point' in input_dict:
       if not self.good_floating_point_type(pack_code):
         raise IncompatableTypeError(pack_code)
       payload = ''
-      for value in values:
-        bits = self.calculate_floating_point(value)
+      for point in data:
+        bits = self.calculate_floating_point(point)
         payload += struct.pack('>BB', bits[0], bits[1])
     elif 's' in pack_code:
       if not self.good_string_type(pack_code):
         raise IncompatableTypeError(pack_code)
-      payload = self.encode_string(values[0]) 
+      payload = self.encode_string(data[0]) 
     else:
       payload = ''
-      for code, value in zip(pack_code, values):
-        payload += struct.pack('>%s' %(code), value)
+      for code, point in zip(pack_code, data):
+        payload += struct.pack('>%s' %(code), point)
     return payload
 
   def encode_string(self, string):
