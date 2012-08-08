@@ -52,7 +52,7 @@ class eeprom_analyzer(object):
         except EndOfNamespaceError:
           self.eeprom_map[namespace_name]  = namespace
     except EndOfEepromError:
-      self.dump_json('eeprom_map.json', self.eeprom_map)
+      self.dump_json('eeprom_map.json', self.collate_maps())
       
   def find_next_entry(self):
     namespace_end = '}'
@@ -133,9 +133,11 @@ class eeprom_analyzer(object):
 
   def collate_maps(self):
     main_map = 'eeprom_offsets'
-    collated_map = self.eeprom_map[main_map)
+    collated_map = self.eeprom_map[main_map]
     for key in self.eeprom_map[main_map]:
-      if 'eeprom_map' in self.eeprom_map[main_map][key]
+      if 'eeprom_map' in self.eeprom_map[main_map][key]:
         sub_map_name = self.eeprom_map[main_map][key]['eeprom_map']
    #     self.eeprom_map[main_map][key]['sub_map'] = self.eeprom_map[sub_map_name]
-        collate_map[key]['sub_map'] = self.eeprom_map[sub_map_name]
+        collated_map[key]['sub_map'] = self.eeprom_map[sub_map_name]
+    collated_map = {'eeprom_map'  : collated_map}
+    return collated_map

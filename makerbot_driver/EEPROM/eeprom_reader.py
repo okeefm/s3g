@@ -52,7 +52,7 @@ class eeprom_reader(object):
       with open(os.path.join(self.working_directory, 'my_eeprom_map.json'), 'w') as f:
         f.write(json.dumps(the_map, sort_keys=True, indent=2))
 
-  def read_eeprom_map(self, map_name, offset=0):
+  def read_eeprom_map(self, the_map, offset=0):
     """
     Given the name of an eeprom map help in self.eeprom_map, 
     reads that entire map off the eeprom.  This generates
@@ -66,9 +66,11 @@ class eeprom_reader(object):
     @param map_name: The map to read from
     @param int offset: The offset to begin reading from
     """
-    the_map = {map_name : {}}
-    for key in self.eeprom_map[map_name]:
-      the_map[map_name][key] = self.read_from_eeprom(self.eeprom_map[map_name][key], offset)
+    #the_map = {map_name : {}}
+#    for key in self.eeprom_map[map_name]:
+    for key in the_map:
+#      the_map[map_name][key] = self.read_from_eeprom(self.eeprom_map[map_name][key], offset)
+      the_map[key]['value'] = self.read_from_eeprom(the_map[key], offset)
     return the_map
 
   def read_from_eeprom(self, input_dict, offset=0):
@@ -119,8 +121,9 @@ class eeprom_reader(object):
     @param int offset: The offset to start reading from
     @return dict: The submap read off the eeprom
     """
-    map_name = input_dict['eeprom_map']
-    return self.read_eeprom_map(map_name, offset=offset)
+#    map_name = input_dict['eeprom_map']
+#    return self.read_eeprom_map(map_name, offset=offset)
+    return self.read_eeprom_map(input_dict['sub_map'], offset=offset)
 
   def read_floating_point_from_eeprom(self, input_dict, offset):
     """
