@@ -12,14 +12,14 @@ import makerbot_driver
 
 class TestGetProducts(unittest.TestCase):
   def setUp(self):
-    base_url = os.path.join(
+    source_url = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'test_files',
         )
-    d = tempfile.mkdtemp()
+    dest = tempfile.mkdtemp()
     self.uploader = makerbot_driver.Firmware.Uploader(
-         base_url = base_url, 
-         base_path = d,
+         source_url = source_url, 
+         dest_path = dest,
          )
 
   def tearDown(self):
@@ -33,7 +33,7 @@ class TestGetProducts(unittest.TestCase):
     self.assertEquals(self.uploader.pathjoin(base,f), "http://base/x.txt")
  
   def test_pull_products(self):
-    expected_products_url = self.uploader.pathjoin(self.uploader.base_url, self.uploader.product_filename)
+    expected_products_url = self.uploader.pathjoin(self.uploader.source_url, self.uploader.product_filename)
     wget_mock = mock.Mock()
     wget_mock.return_value = expected_products_url
     self.uploader.wget = wget_mock
@@ -45,14 +45,14 @@ class TestGetProducts(unittest.TestCase):
  
 class TestWget(unittest.TestCase):
   def setUp(self):
-    self.base_url = os.path.join(
+    self.source_url = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'test_files',
         )
-    d = tempfile.mkdtemp()
+    dest = tempfile.mkdtemp()
     self.uploader = makerbot_driver.Firmware.Uploader(
-        base_url = self.base_url,
-        base_path = d,
+        source_url = self.source_url,
+        dest_path = dest,
         )
 
   def tearDown(self):
@@ -72,7 +72,7 @@ class TestWget(unittest.TestCase):
         filename,
         )
     self.assertTrue(os.path.isfile(os.path.join(
-        self.uploader.base_path,
+        self.uploader.dest_path,
         filename
         )))
 
@@ -96,7 +96,7 @@ class TestWget(unittest.TestCase):
     self.uploader.wget(url)
     #This is where the new tempfile should be
     temp_file = os.path.join(
-        self.uploader.base_path,
+        self.uploader.dest_path,
         url.split('/')[-1],
         )
     #Read the tempfile, and see if its correct
@@ -105,13 +105,13 @@ class TestWget(unittest.TestCase):
 
 class TestGetMachineJsonFiles(unittest.TestCase):
   def setUp(self):
-    base_url = os.path.join(
+    source_url = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'test_files', )
-    d = tempfile.mkdtemp()
+    dest = tempfile.mkdtemp()
     self.uploader = makerbot_driver.Firmware.Uploader(
-        base_url = base_url,
-        base_path = d,
+        source_url = source_url,
+        dest_path = dest,
         )
 
   def tearDown(self):
@@ -129,19 +129,19 @@ class TestGetMachineJsonFiles(unittest.TestCase):
     machines = self.uploader.products['ExtrusionPrinters']
     for machine, call in zip(machines, calls):
       filename = self.uploader.products['ExtrusionPrinters'][machine]
-      firmware_url = urlparse.urljoin(self.uploader.base_url, filename)  
+      firmware_url = urlparse.urljoin(self.uploader.source_url, filename)  
       self.assertEqual(firmware_url, call[1][0])
 
 class TestGetFirmwareVersions(unittest.TestCase):
 
   def setUp(self):
-    base_url = os.path.join(
+    source_url = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'test_files', )
-    d = tempfile.mkdtemp()
+    dest  = tempfile.mkdtemp()
     self.uploader = makerbot_driver.Firmware.Uploader(
-        base_url = base_url,
-        base_path = d,
+        source_url = source_url,
+        dest_path = dest,
         )
 
   def tearDown(self):
@@ -157,7 +157,7 @@ class TestGetFirmwareVersions(unittest.TestCase):
   def test_list_firmware_versions_good_machine_name(self):
     machine = 'Example'
     with open(os.path.join(
-        self.uploader.base_url,
+        self.uploader.source_url,
         machine+'.json',
         )) as f:
       vals = json.load(f)
@@ -172,14 +172,14 @@ class TestGetFirmwareVersions(unittest.TestCase):
 
 class TestGetFirmwareValues(unittest.TestCase):
   def setUp(self):
-    base_url = os.path.join(
+    source_url = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'test_files',
       )
-    d = tempfile.mkdtemp()
+    dest = tempfile.mkdtemp()
     self.uploader = makerbot_driver.Firmware.Uploader(
-        base_url = base_url,
-        base_path = d,
+        source_url = source_url,
+        dest_path = dest,
         )
 
   def tearDown(self):
@@ -192,7 +192,7 @@ class TestGetFirmwareValues(unittest.TestCase):
   def test_get_firmware_values_good_machine_name(self):
     machine = "Example"
     with open(os.path.join(
-        self.uploader.base_url,
+        self.uploader.source_url,
         machine+'.json',
         )) as f:
       expected_values = json.load(f)
@@ -200,14 +200,14 @@ class TestGetFirmwareValues(unittest.TestCase):
 
 class TestListVersions(unittest.TestCase):
   def setUp(self):
-    base_url = os.path.join(
+    source_url = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'test_files',
         )
-    d = tempfile.mkdtemp()
+    dest = tempfile.mkdtemp()
     self.uploader = makerbot_driver.Firmware.Uploader(
-        base_url = base_url,
-        base_path = d,
+        source_url = source_url,
+        dest_path = dest,
         autoUpdate = False,
         )
 
@@ -217,7 +217,7 @@ class TestListVersions(unittest.TestCase):
   def test_list_machines(self):
     self.uploader.update()
     with open(os.path.join(
-        self.uploader.base_url,
+        self.uploader.source_url,
         'products.json',
         )) as f:
       values = json.load(f)
@@ -256,14 +256,14 @@ class TestUploader(unittest.TestCase):
 
 class TestParseAvrdudeCommand(unittest.TestCase):
   def setUp(self):
-    base_url = os.path.join(
+    source_url = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'test_files', 
         )
-    d = tempfile.mkdtemp()
+    dest = tempfile.mkdtemp()
     self.uploader = makerbot_driver.Firmware.Uploader(
-        base_url = base_url,
-        base_path = d,
+        source_url = source_url,
+        dest_path = dest,
         )
     
   def tearDown(self):
@@ -293,14 +293,14 @@ class TestParseAvrdudeCommand(unittest.TestCase):
     machine = 'Example'
     wget_mock = mock.Mock()
     self.uploader.wget = wget_mock
-    with open(os.path.join(self.uploader.base_url, machine+'.json')) as f:
+    with open(os.path.join(self.uploader.source_url, machine+'.json')) as f:
       example_profile = json.load(f)
     example_values = example_profile['firmware']
     port = '/dev/tty.usbmodemfa121'
     version = '0.1'
     hex_url = example_values['versions'][version][0]
     hex_path = os.path.join(
-        self.uploader.base_path, 
+        self.uploader.dest_path, 
         hex_url,
         )
     #Mock up the actual path to the hex_file
@@ -338,14 +338,14 @@ class TestParseAvrdudeCommand(unittest.TestCase):
     machine = 'Example'
     wget_mock = mock.Mock()
     self.uploader.wget = wget_mock
-    with open(os.path.join(self.uploader.base_url, machine+'.json')) as f:
+    with open(os.path.join(self.uploader.source_url, machine+'.json')) as f:
       example_profile = json.load(f)
     example_values = example_profile['firmware']
     port = '/dev/tty.usbmodemfa121'
     version = '0.1'
     hex_url = example_values['versions'][version][0]
     hex_path = os.path.join(
-        self.uploader.base_path, 
+        self.uploader.dest_path, 
         hex_url,
         )
     #Mock up the actual path to the hex_file
