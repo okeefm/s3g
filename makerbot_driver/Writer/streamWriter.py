@@ -30,28 +30,23 @@ class StreamWriter(AbstractWriter):
   def send_query_payload(self, payload):
     return self.send_command(payload)
 
-
   # TODO: test me
   def send_action_payload(self, payload):
     self.send_command(payload)
 
-
   def close(self):
     if self.is_open() and self.file != None: 
-	self.file.close() 
-
+      self.file.close() 
  
   def open(self):
     """ Open or re-open an already defined stream connection """
     if self.file != None:
-	self.file.open() 
-
+      self.file.open() 
 
   def is_open(self):
     """@returns true if a port is open and active, False otherwise """
     if self.file == None: return False
     return self.file.isOpen()
-
 
   def send_command(self, payload):
     packet = Encoder.encode_payload(payload)

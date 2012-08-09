@@ -48,7 +48,7 @@ class s3g(object):
   def is_open(self):
     """@returns true if we have a writer and it is open. False otherwise."""
     if self.writer:
-       return self.writer.isOpen()
+       return self.writer.is_open()
     return False
 
 
