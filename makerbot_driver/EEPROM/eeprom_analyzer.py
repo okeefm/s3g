@@ -52,7 +52,8 @@ class eeprom_analyzer(object):
         except EndOfNamespaceError:
           self.eeprom_map[namespace_name]  = namespace
     except EndOfEepromError:
-      self.dump_json('eeprom_map.json', self.collate_maps())
+      collated_map = {'eeprom_map' : self.collate_maps(self.eeprom_map['eeprom_offsets'])}
+      self.dump_json('eeprom_map.json', collated_map)
       
   def find_next_entry(self):
     namespace_end = '}'
@@ -131,13 +132,17 @@ class eeprom_analyzer(object):
     with(open(name, 'w')) as f:
       f.write(output)
 
-  def collate_maps(self):
-    main_map = 'eeprom_offsets'
-    collated_map = self.eeprom_map[main_map]
-    for key in self.eeprom_map[main_map]:
-      if 'eeprom_map' in self.eeprom_map[main_map][key]:
-        sub_map_name = self.eeprom_map[main_map][key]['eeprom_map']
-   #     self.eeprom_map[main_map][key]['sub_map'] = self.eeprom_map[sub_map_name]
+  def collate_maps(self, the_map):
+#    main_map = 'eeprom_offsets'
+#    collated_map = self.eeprom_map[main_map]
+    collated_map = the_map
+#    for key in self.eeprom_map[main_map]:
+    for key in the_map:
+#      if 'eeprom_map' in self.eeprom_map[main_map][key]:
+      if 'eeprom_map' in the_map[key]:
+#        sub_map_name = self.eeprom_map[main_map][key]['eeprom_map']
+        sub_map_name = the_map[key]['eeprom_map']
         collated_map[key]['sub_map'] = self.eeprom_map[sub_map_name]
-    collated_map = {'eeprom_map'  : collated_map}
+        self.collate_maps(collated_map[key]['sub_map'])
+#    collated_map = {'eeprom_map'  : collated_map}
     return collated_map

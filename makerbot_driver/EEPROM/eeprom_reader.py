@@ -67,12 +67,7 @@ class eeprom_reader(object):
     @param map_name: The map to read from
     @param int offset: The offset to begin reading from
     """
-    #the_map = {map_name : {}}
-#    for key in self.eeprom_map[map_name]:
     for key in the_map:
-#      the_map[map_name][key] = self.read_from_eeprom(self.eeprom_map[map_name][key], offset)
-#      import pdb
-#      pdb.set_trace()
       the_map[key]['value'] = self.read_from_eeprom(the_map[key], offset)
     return the_map
 
@@ -170,12 +165,25 @@ class eeprom_reader(object):
     @param int offset: The offset we read from on the eeprom
     @return list: The pieces of data we read off the eeprom
     """
-    #Get size of payload
-    unpack_code = str(input_dict['type'])
-    size = struct.calcsize(unpack_code)
-    #Get the value to unpack
-    val = self.s3g.read_from_EEPROM(offset, size)
-    return self.unpack_value(val, unpack_code)
+    if 'mult' in input_dict:
+      data = self.unpack_large_data_amount(input_dict, offset)
+    else:
+      #Get size of payload
+      unpack_code = str(input_dict['type'])
+      size = struct.calcsize(unpack_code)
+      #Get the value to unpack
+      val = self.s3g.read_from_EEPROM(offset, size)
+      data = self.unpack_value(val, unpack_code)
+    return data
+
+  def unpack_large_data_amount(self, input_dict, offset):
+    data = []
+    size = struct.calcsize(input_dict['type'])
+    for i in range(int(input_dict['mult'])):
+      val = self.s3g.read_from_EEPROM(offset, size)
+      data.append(self.unpack_value(val, input_dict['type']))
+      offset += size
+    return data
 
   def unpack_value(self, value, code):
     """
