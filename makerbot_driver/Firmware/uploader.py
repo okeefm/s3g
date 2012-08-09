@@ -77,9 +77,10 @@ class Uploader(object):
     filename = os.path.join(self.dest_path, filename) 
     #If file is local
     if os.path.isfile(url):
+      if url == filename or \
+			( os.path.isfile(filename) and os.path.samefile(url, filename)):
+        return filename #someone silly is copying files overthemselves
       import shutil
-	  if os.path.samefile(url, filename):
-		return filename #someone silly is copying files overthemselves
       shutil.copy(url, filename)
       return filename
     else:
