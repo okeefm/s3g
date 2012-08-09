@@ -78,6 +78,8 @@ class Uploader(object):
     #If file is local
     if os.path.isfile(url):
       import shutil
+	  if os.path.samefile(url, filename):
+		return filename #someone silly is copying files overthemselves
       shutil.copy(url, filename)
       return filename
     else:
