@@ -111,7 +111,11 @@ class s3g(object):
     """ 
     @return the toolhead count of this bot. -1 on error
     """
-    return -1 
+    eeprom_offset_toolcount = 0x0042
+    eeprom_length_toolcount = 2
+    data = self.read_from_EEPROM(eeprom_offset_toolcount, eeprom_length_toolcount)
+    data = Encoder.decode_uint16(data)
+    return data
 
   def get_verified_status(self):
     """
