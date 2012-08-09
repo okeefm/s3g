@@ -8,12 +8,12 @@ import io
 import json
 import tempfile
 
-import s3g
+import makerbot_driver
 
 class TestLineReader(unittest.TestCase):
 
   def setUp(self):
-    self.reader = s3g.EEPROM.eeprom_analyzer()
+    self.reader = makerbot_driver.EEPROM.eeprom_analyzer()
 
   def tearDown(self):
     self.reader = None

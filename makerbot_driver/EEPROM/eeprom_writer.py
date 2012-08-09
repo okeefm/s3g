@@ -99,7 +99,7 @@ class EepromWriter(object):
     """
     value = False
     value = len(t) is 1
-    value = t is 's'
+    value = t == 's'
     return value
 
   def good_floating_point_type(self, t):
