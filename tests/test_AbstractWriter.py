@@ -25,7 +25,7 @@ class AbstractWriterTests(unittest.TestCase):
     with self.assertRaises(NotImplementedError) as a_raise:
       self.w.close()
     with self.assertRaises(NotImplementedError) as a_raise:
-      self.w.isOpen()
+      self.w.is_open()
 
 
 if __name__ == "__main__":
