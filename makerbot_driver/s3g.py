@@ -121,7 +121,11 @@ class s3g(object):
     """
     @returns true if this firmware is marked as verified
     """
-    return False
+    eeprom_pid_offset = 0x0046
+    eeprom_pid_length = 2
+    data = self.read_from_EEPROM(eeprom_pid_offset, eeprom_pid_length)
+    data = Encoder.decode_uint16(data)
+    return data == vid_pid[1]
 
 
   def get_advanced_version(self):
