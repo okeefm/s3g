@@ -1,18 +1,5 @@
 """
 An eeprom writer!
-
-To write files, the eeprom writer is expecting
-a python dict with the name of a variable loaded
-onto the eeprom, with an appropriate definition:
-{'name' : <value>}
-It then cross references that variable with the eeprom
-map givin to it during its inception (defaults to 'eeprom_map.json').
-That eeprom map is expected to contain all the necessary
-information for uploading (i.e. offset, packing code, etc).
-
-NB: If uploading to a toolhead eeprom, an additional
-definition must be added to the dict:
-{'toolhead' : <toolhead>}
 """
 
 from errors import *
@@ -22,17 +9,28 @@ import os
 
 class EepromWriter(object):
 
-  def __init__(self, map_name = "eeprom_map.json", working_directory = None):
-    if working_directory == None:
-      self.working_directory = os.path.abspath(os.path.dirname(__file__))
-    else:
-      self.working_directory = working_directory
-    with open(os.path.join(self.working_directory, map_name)) as f:
+  @classmethod
+  def factory(cls, s3gObj=None, map_name =None, working_directory = None):
+    """ factory for creating an eeprom reader
+    @param s3gObj an makerbot_driver.s3g object
+    @param eeprom_map json file.
+    @param working_directory container of eeprom_map name file
+    """
+    eeprom_writer = EepromWriter(map_name, working_directory)
+    eeprom_writer.s3g = s3gObj
+    return eeprom_writer
+
+  def __init__(self, map_name=None, working_directory=None):
+    self.map_name = map_name if map_name else 'eeprom_map.json'
+    self.working_directory = working_directory if working_directory else os.path.abspath(os.path.dirname(__file__))
+    #Load the eeprom map
+    with open(os.path.join(self.working_directory, self.map_name)) as f:
       self.eeprom_map = json.load(f)
+    #We always start with the main map
     self.main_map = 'eeprom_map'
     self.data_buffer = []
 
-  def get_dict_by_context(self, name, context):
+  def get_dict_by_context(self, name, context=None):
     """
     Due to the nested nature of the eeprom map, we need to be given
     some context when reading values.  In this instance, we are given the
@@ -47,9 +45,10 @@ class EepromWriter(object):
     """
     the_dict = self.eeprom_map.get(self.main_map)
     offset = 0
-    for c in context:
-      offset += int(the_dict[c]['offset'], 16)
-      the_dict = the_dict.get(c)['sub_map']
+    if context:
+      for c in context:
+        offset += int(the_dict[c]['offset'], 16)
+        the_dict = the_dict.get(c)['sub_map']
     the_dict = the_dict[name]
     offset += int(the_dict['offset'], 16) 
     return the_dict, offset

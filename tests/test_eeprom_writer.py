@@ -94,6 +94,23 @@ class TestEepromWriter(unittest.TestCase):
   def tearDown(self):
     self.writer = None
 
+  def test_encode_data_mult(self):
+    mult = 10
+    t = 'H'
+    offset = 0x0000
+    input_dict = {
+        'mult'  : mult,
+        'type'  : t,
+        'offset': offset,
+        }
+    value = [10]*mult
+    expected = ''
+    for i in range(mult):
+      expected += struct.pack('>H', value[0])
+    got =self.writer.encode_data(value, input_dict)
+    self.assertEqual(expected, got)
+
+
   def test_good_floating_point_type(self):
     cases = [
         [False, ''],
