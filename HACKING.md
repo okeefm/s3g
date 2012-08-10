@@ -10,6 +10,10 @@ To setup the virtual envrionment test environment
 
 If using the virtual environment,  you will need to activate it before any testing or use of the module. I have included the 'activate' in each test below, but you only need to run it once. When a virtual environemnt is active, your shell will have the prefix of (virtualenv) 
 
+#Updating the EEPROM map
+  - Copy the EepromMap.hh file from MightBoardFirmware.git/firmware/src/MightyBoard/Motherboard into /makerbot_driver/EEPROM/
+  - run the parse_eeprom_map_hh.py script to create a new eeprom_map.json file
+
 Run unit tests
 ```
 makerbot_driver/> . ./setup.sh
