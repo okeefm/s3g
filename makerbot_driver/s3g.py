@@ -31,8 +31,6 @@ class s3g(object):
     r.writer = Writer.StreamWriter(s)
     return r
 
-
-  
   def __init__(self):
     self.writer = None
     # TODO: Move these to constants file.
@@ -71,14 +69,13 @@ class s3g(object):
     [response_code, version] = Encoder.unpack_response('<BH', response)
     return version
 
-  def get_name(self):
+  def get_name(self, offset = 0x0022):
     """
     Get stored Bot Name
     @return a string for the name
     TODO: merge this function with future eeprom read/write module
     """
-    eeprom_offset_name = 0x0022
-    name_bytes = self.read_from_EEPROM(eeprom_offset_name, 16)
+    name_bytes = self.read_from_EEPROM(offset, 16)
 
     # find the null termination
     for idx, b in enumerate(name_bytes):
@@ -106,25 +103,33 @@ class s3g(object):
     """
     return (self.get_name(), self.get_uuid())
 
-  def get_toolhead_count(self):
+  def get_toolhead_count(self, offset = 0x0042):
     """ 
     @return the toolhead count of this bot. -1 on error
     """
-    eeprom_offset_toolcount = 0x0042
     eeprom_length_toolcount = 2
-    data = self.read_from_EEPROM(eeprom_offset_toolcount, eeprom_length_toolcount)
+    data = self.read_from_EEPROM(offset, eeprom_length_toolcount)
     data = Encoder.decode_uint16(data)
     return data
 
-  def get_verified_status(self):
+  def get_vid_pid(self, offset=0x0044):
+    """
+    Returns vid and pid as an int
+    """ 
+    length = 2
+    data = []
+    for i in range(2):
+      datum = self.read_from_EEPROM(eeprom_offset, length)
+      data.append(Encoder.decode_uint16(data))
+      offset += length
+    return data[0], data[1]
+
+  def get_verified_status(self, verified_pid=vid_pid[1]):
     """
     @returns true if this firmware is marked as verified
     """
-    eeprom_pid_offset = 0x0046
-    eeprom_pid_length = 2
-    data = self.read_from_EEPROM(eeprom_pid_offset, eeprom_pid_length)
-    data = Encoder.decode_uint16(data)
-    return data == vid_pid[1]
+    vid_pid = self.get_vid_pid()
+    return data == verified_pid
 
 
   def get_advanced_version(self):

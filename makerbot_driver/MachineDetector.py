@@ -26,20 +26,18 @@ g_machineDetector = None
 
 
 
-def get_gMachineDetector(evenSeenCacheFile=None):
+def get_gMachineDetector(everSeenCacheFile=None):
     """ always returns a singleton MachineDetector."""
     if g_machineDetector == None :
         g_machineDetector = MachineDetector()
     if everSeenCacheFile != None :
         g_machineDetector.updateEverSeen(everSeenCacheFile)
 
-
-
 # Data structure containing bot connection classess by VID/PID, as
 # well as what kinds of MakerBot may be constructed with those
 botClasses = {
- 'The Replicator':{'vid':0x23C1, 'pid':0xD314,'botProfiles':'.*Replicator*'}, 
- 'MightyBoard':{'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*Replicator*'}, 
+ 'The Replicator':{'vid':0x23C1, 'pid':0xD314,'botProfiles':'.*Replicator.*'}, 
+ 'MightyBoard':{'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*Replicator.*'}, 
 }
 
 class MachineDetector(object):
@@ -126,8 +124,8 @@ class MachineDetector(object):
   def get_vid_pid_by_class(self, botType):
     """@returns a tuple of vid/pid if botType passed matches any class"""
     if botType in botClasses.keys():
-      return (botClasses[botType]['vid'], botClasses[botType]['pid'])
-    return (None,None)
+      return botClasses[botType]['vid'], botClasses[botType]['pid']
+    return None,None
 
   def get_first_bot_available(self, botTypes= None):
     """ returns the bot dict for the very first bot avaiable"""
