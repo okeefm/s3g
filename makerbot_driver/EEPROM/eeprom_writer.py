@@ -32,65 +32,95 @@ class EepromWriter(object):
     self.main_map = 'eeprom_map'
     self.data_buffer = []
 
-  def write_data(self, input_dict, flush=False):
-    try:
-      (found_dict, offset) = self.search_for_toolhead_entry_and_offset(input_dict['name'], self.eeprom_map[self.main_map], input_dict['toolhead'])
-    except KeyError:
-      (found_dict, offset) = self.search_for_entry_and_offset(input_dict['name'], self.eeprom_map[self.main_map])
-    data = self.encode_data(input_dict['data'], found_dict)
-    self.data_buffer.append([offset, data])
+  def get_dict_by_context(self, name, *args, **kwargs):
+    """
+    Due to the nested nature of the eeprom map, we need to be given
+    some context when reading values.  In this instance, we are given the
+    actual value name we want to read, in addition to its precise location
+    (i.e. We can write the 'P' value for PID constants in both:
+        "T0_DATA_BASE", "EXTRUDER_PID_BASE", D_TERM_OFFSET" and
+        "T0_DATA_BASE", "HBP_PID_BASE", D_TERM_OFFSET" and
 
+    @param str name: The name of the value we want to read
+    @param args: The sub_map names of the eeprom_map
+    @return value: The value we read from the eeprom
+    """
+    the_dict = self.eeprom_map.get(self.main_map)
+    offset = 0
+    for arg in args:
+      offset += int(the_dict[arg]['offset'], 16)
+      the_dict = the_dict.get(arg)['sub_map']
+    the_dict = the_dict[name]
+    offset += int(the_dict['offset'], 16) 
+    return the_dict, offset
+
+  def write_data(self, name, data, *args, **kwargs):
+    found_dict, offset = self.get_dict_by_context(na,e args, kwargs)
+    data = self.encode_data(data, found_dict)
+    self.data_buffer.append([offset, data])
     if flush:
       for data in self.data_buffer:
         self.s3g.write_to_EEPROM(data[0], data[1])
 
-  def search_for_toolhead_entry_and_offset(self, name, the_map, toolhead):
-    """Assuming we are looking for a toolhead eeprom value, find the 
-    appropriate toolhead sub_map name and pull the correct values.
+#  def write_data(self, input_dict, flush=False)#
+#   try:
+#     (found_dict, offset) = self.search_for_toolhead_entry_and_offset(input_dict['name'], self.eeprom_map[self.main_map], input_dict['toolhead'])
+#   except KeyError:
+#     (found_dict, offset) = self.search_for_entry_and_offset(input_dict['name'], self.eeprom_map[self.main_map])
+#   data = self.encode_data(input_dict['data'], found_dict)
+#   self.data_buffer.append([offset, data])
 
-    @param str name: The name we are looking for
-    @param dict the_map: The map we are looking in
-    @param int toolhead: The toolhead we are looking for
-    """
-    toolhead_dict_name = self.get_toolhead_dict_name(toolhead)
-    found_dict = the_map[toolhead_dict_name]['sub_map'][name]
-    offset = int(the_map[toolhead_dict_name]['offset'], 16)
-    offset += int(found_dict['offset'], 16)
-    return found_dict, offset
+#   if flush:
+#     for data in self.data_buffer:
+#       self.s3g.write_to_EEPROM(data[0], data[1])
 
-  def search_for_entry_and_offset(self, name, the_map):
-    """
-    Given an EEPROM entry name, searches the eeprom map for
-    that entry and returns both its dict and the map that 
-    contained it.
+# def search_for_toolhead_entry_and_offset(self, name, the_map, toolhead):
+#   """Assuming we are looking for a toolhead eeprom value, find the 
+#   appropriate toolhead sub_map name and pull the correct values.
 
-    @param str name: The name of the entry we are looking for.
-    @return found_dict: The dictionary that is defined by the name
-    @return str sub_map_name: The name of the eeprom map that 
-      holds this entry
+#   @param str name: The name we are looking for
+#   @param dict the_map: The map we are looking in
+#   @param int toolhead: The toolhead we are looking for
     """
-    offset = 0
-    if name in the_map:
-      return the_map[name], int(the_map[name]['offset'], 16)
-    else:
-      for key in the_map:
-        try:
-          if 'sub_map' in the_map[key]:
-            (found_dict, sub_offset) = self.search_for_entry_and_offset(name, the_map[key]['sub_map'])
-            offset = int(the_map[key]['offset'], 16)
-            return found_dict, sub_offset+offset
-        #We didnt find the entry in there, so we pass
-        except EntryNotFoundError:
-          pass
-    raise EntryNotFoundError(name)
-  
-  def get_toolhead_dict_name(self, toolhead):
-    """
-    Gets the toolhead dict name thats stored in eeprom_offsets.
-    This is necessary, since an eeprom can have multiple toolhead
-    eeprom offsets
-    """
-    return 'T%i_DATA_BASE' %(toolhead)
+#   toolhead_dict_name = self.get_toolhead_dict_name(toolhead)
+#   found_dict = the_map[toolhead_dict_name]['sub_map'][name]
+#   offset = int(the_map[toolhead_dict_name]['offset'], 16)
+#   offset += int(found_dict['offset'], 16)
+#   return found_dict, offset
+
+# def search_for_entry_and_offset(self, name, the_map):
+#   """
+#   Given an EEPROM entry name, searches the eeprom map for
+#   that entry and returns both its dict and the map that 
+#   contained it.
+
+#   @param str name: The name of the entry we are looking for.
+#   @return found_dict: The dictionary that is defined by the name
+#   @return str sub_map_name: The name of the eeprom map that 
+#     holds this entry
+#   """
+#   offset = 0
+#   if name in the_map:
+#     return the_map[name], int(the_map[name]['offset'], 16)
+#   else:
+#     for key in the_map:
+#       try:
+#         if 'sub_map' in the_map[key]:
+#           (found_dict, sub_offset) = self.search_for_entry_and_offset(name, the_map[key]['sub_map'])
+#           offset = int(the_map[key]['offset'], 16)
+#           return found_dict, sub_offset+offset
+#       #We didnt find the entry in there, so we pass
+#       except EntryNotFoundError:
+#         pass
+#   raise EntryNotFoundError(name)
+# 
+# def get_toolhead_dict_name(self, toolhead):
+#   """
+#   Gets the toolhead dict name thats stored in eeprom_offsets.
+#   This is necessary, since an eeprom can have multiple toolhead
+#   eeprom offsets
+#   """
+#   return 'T%i_DATA_BASE' %(toolhead)
 
   def good_string_type(self, t):
     """

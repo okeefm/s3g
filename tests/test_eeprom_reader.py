@@ -33,7 +33,7 @@ class TestReadEepromMap(unittest.TestCase):
         os.path.abspath(os.path.dirname(__file__)),
         'test_files',
         )
-    self.m = 'eeprom_map.json'
+    self.m = 'eeprom_reader_test_map.json'
     self.reader = makerbot_driver.EEPROM.eeprom_reader(map_name = self.m, working_directory=self.wd)
 
   def tearDown(self):
@@ -74,9 +74,32 @@ class TestReadFromEeprom(unittest.TestCase):
     self.reader = makerbot_driver.EEPROM.eeprom_reader()
     self.reader.s3g = makerbot_driver.s3g()
     self.reader.s3g.read_from_EEPROM = self.read_from_eeprom_mock
+    with open(os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'test_files',
+        'eeprom_map.json',
+        )) as f:
+      self.reader.eeprom_map = json.load(f)
 
   def tearDown(self):
     self.reader = None
+
+  def test_get_dict_by_contect_first_level(self):
+    expected_dict = self.reader.eeprom_map[self.reader.main_map]['ACCELERATION_SETTINGS']
+    expected_offset = int(expected_dict['offset'], 16)
+    (got_dict, got_offset) = self.reader.get_dict_by_context('ACCELERATION_SETTINGS')
+    self.assertEqual(expected_dict, got_dict)
+    self.assertEqual(expected_offset, got_offset)
+
+  def test_get_dict_by_context_sub_level(self):
+    expected_dict = self.reader.eeprom_map[self.reader.main_map]['T0_DATA_BASE']['sub_map']['EXTRUDER_PID_BASE']['sub_map']['D_TERM_OFFSET']
+    expected_offset = int(self.reader.eeprom_map[self.reader.main_map]['T0_DATA_BASE']['offset'], 16)
+    expected_offset += int(self.reader.eeprom_map[self.reader.main_map]['T0_DATA_BASE']['sub_map']['EXTRUDER_PID_BASE']['offset'], 16)
+    expected_offset += int(expected_dict['offset'], 16)
+    (got_dict, got_offset) = self.reader.get_dict_by_context('D_TERM_OFFSET', 'T0_DATA_BASE', 'EXTRUDER_PID_BASE')
+    self.assertEqual(expected_dict, got_dict)
+    self.assertEqual(expected_offset, got_offset)
+    
 
   def test_read_from_eeprom_sub_map(self):
     input_dict = {

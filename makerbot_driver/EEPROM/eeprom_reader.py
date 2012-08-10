@@ -53,6 +53,29 @@ class eeprom_reader(object):
       with open(os.path.join(self.working_directory, 'my_eeprom_map.json'), 'w') as f:
         f.write(json.dumps(the_map, sort_keys=True, indent=2))
 
+  def get_dict_by_context(self, name, *args, **kwards):
+    """
+    Due to the nested nature of the eeprom map, we need to be given
+    some context when reading values.  In this instance, we are given the
+    actual value name we want to read, in addition to its precise location
+    (i.e. We can write the 'P' value for PID constants in both:
+        "T0_DATA_BASE", "EXTRUDER_PID_BASE", D_TERM_OFFSET" and
+        "T0_DATA_BASE", "HBP_PID_BASE", D_TERM_OFFSET" and
+
+    @param str name: The name of the value we want to read
+    @param args: The sub_map names of the eeprom_map
+    @return value: The value we read from the eeprom
+    """
+    the_dict = self.eeprom_map.get(self.main_map)
+    offset = 0
+    for arg in args:
+      offset += int(the_dict[arg]['offset'], 16)
+      the_dict = the_dict.get(arg)['sub_map']
+    the_dict = the_dict[name]
+    offset += int(the_dict['offset'], 16) 
+    return the_dict, offset
+    
+
   def read_eeprom_map(self, the_map, offset=0):
     """
     Given the name of an eeprom map help in self.eeprom_map, 
@@ -61,8 +84,6 @@ class eeprom_reader(object):
     {
         map_name  : {
             <value_name>  : <value>
-            ...
-            }
     }
     @param map_name: The map to read from
     @param int offset: The offset to begin reading from
@@ -119,6 +140,7 @@ class eeprom_reader(object):
     @param int offset: The offset to start reading from
     @return dict: The submap read off the eeprom
     """
+    #Remove this return statement to fix reading
     return self.read_eeprom_map(input_dict['sub_map'], offset=offset)
 
   def read_floating_point_from_eeprom(self, input_dict, offset):
