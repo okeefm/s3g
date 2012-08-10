@@ -106,6 +106,6 @@ sd_error_dict = {
 header = 0xD5
 maximum_payload_length = 32
 max_retry_count = 5
-timeout_length = .5
+timeout_length = 1.0
 s3g_version = 100
 max_tool_index = 127

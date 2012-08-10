@@ -43,7 +43,7 @@ Create an makerbot_driver object, and attach it to a serial port:
 
 ```python
 r = makerbot_driver.s3g()
-file = serial.Serial(port, 115200, timeout=.2)
+file = serial.Serial(port, 115200, timeout=1)
 r.writer = makerbot_driver.Writer.StreamWriter(file)
 ```
 
