@@ -17,6 +17,6 @@ parser.add_option("-m", "--machine_type", dest="machine",
 (options, args) = parser.parse_args()
 
 g = makerbot_driver.s3g.from_filename(options.serialportname)
-reader = makerbot_driver.EEPROM.eeprom_reader()
+reader = makerbot_driver.EEPROM.EepromReader()
 reader.s3g = g
 reader.read_entire_eeprom(print_map=True)

@@ -1,21 +1,5 @@
 """
 An eeprom reader!
-
-Uses a json file to read all values off a 
-given eeprom.  The eeprom map is in the form of:
-<name_of_eeprom> : {
-    <name_of_entry> : {
-        location  : <location>,
-        type      : <type>,
-    },
-    ...
-}
-When reading values, a new dictionary is generated that is in the form of:
-<name_of_eeprom> : {
-  <name_of_entry> : <value>
-  ...
-  }
-If any entry points at an eeprom sub-map (i.e. toolhead eeprom offsets), that value is defined as a completely new dictionary.
 """
 
 from errors import *
@@ -92,7 +76,7 @@ class EepromReader(object):
     return the_dict, offset
     
 
-  def read_eeprom_map(self, the_map, offset=0):
+  def read_eeprom_map(self, the_map, base=0):
     """
     Given the name of an eeprom map help in self.eeprom_map, 
     reads that entire map off the eeprom.  This generates
@@ -105,10 +89,11 @@ class EepromReader(object):
     @param int offset: The offset to begin reading from
     """
     for key in the_map:
-      the_map[key]['value'] = self.read_from_eeprom(the_map[key], offset)
+      offset = int(the_map[key]['offset'], 16)
+      the_map[key]['value'] = self.read_from_eeprom(the_map[key], offset=offset, base=base)
     return the_map
 
-  def read_from_eeprom(self, input_dict, offset=0):
+  def read_from_eeprom(self, input_dict, offset=0, base=0):
     """
     Reads information off an eeprom, starting from a given offset.
 
@@ -118,7 +103,7 @@ class EepromReader(object):
     @return value: The values read from the eeprom
     """
     try:
-#      offset = offset + int(input_dict['offset'], 16|)
+      offset = base + offset
       if 'sub_map' in input_dict:  
         return_val = self.read_eeprom_sub_map(input_dict, offset)
       elif 'floating_point' in input_dict:
@@ -158,7 +143,7 @@ class EepromReader(object):
     @return dict: The submap read off the eeprom
     """
     #Remove this return statement to fix reading
-    self.read_eeprom_map(input_dict['sub_map'], offset=offset)
+    self.read_eeprom_map(input_dict['sub_map'], base=offset)
 
   def read_floating_point_from_eeprom(self, input_dict, offset):
     """
