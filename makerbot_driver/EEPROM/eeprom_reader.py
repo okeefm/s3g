@@ -24,9 +24,7 @@ import json
 import struct
 import os
 
-from maker_driver import s3g
-
-class eeprom_reader(object):
+class EepromReader(object):
 
   def factory(self, s3gObj=None, map_name =None, working_directory = None):
     """ factory for creating an eeprom reader
@@ -67,7 +65,11 @@ class eeprom_reader(object):
       with open(os.path.join(self.working_directory, 'my_eeprom_map.json'), 'w') as f:
         f.write(json.dumps(the_map, sort_keys=True, indent=2))
 
-  def get_dict_by_context(self, name, *args, **kwards):
+  def read_data(self, name, context):
+    the_dict, offset = self.get_dict_by_context(name, context)
+    return self.read_from_eeprom(the_dict, offset)
+
+  def get_dict_by_context(self, name, context):
     """
     Due to the nested nature of the eeprom map, we need to be given
     some context when reading values.  In this instance, we are given the
@@ -82,9 +84,9 @@ class eeprom_reader(object):
     """
     the_dict = self.eeprom_map.get(self.main_map)
     offset = 0
-    for arg in args:
-      offset += int(the_dict[arg]['offset'], 16)
-      the_dict = the_dict.get(arg)['sub_map']
+    for c in context:
+      offset += int(the_dict[c]['offset'], 16)
+      the_dict = the_dict.get(c)['sub_map']
     the_dict = the_dict[name]
     offset += int(the_dict['offset'], 16) 
     return the_dict, offset
@@ -116,7 +118,7 @@ class eeprom_reader(object):
     @return value: The values read from the eeprom
     """
     try:
-      offset = offset + int(input_dict['offset'], 16)
+#      offset = offset + int(input_dict['offset'], 16|)
       if 'sub_map' in input_dict:  
         return_val = self.read_eeprom_sub_map(input_dict, offset)
       elif 'floating_point' in input_dict:
@@ -139,6 +141,7 @@ class eeprom_reader(object):
     @param int offset: The offset to read from
     @return str: The read string
     """
+    #add one for the null terminator
     val = self.s3g.read_from_EEPROM(offset, int(input_dict['length']))
     return [self.decode_string(val)]
 
@@ -155,7 +158,7 @@ class eeprom_reader(object):
     @return dict: The submap read off the eeprom
     """
     #Remove this return statement to fix reading
-    return self.read_eeprom_map(input_dict['sub_map'], offset=offset)
+    self.read_eeprom_map(input_dict['sub_map'], offset=offset)
 
   def read_floating_point_from_eeprom(self, input_dict, offset):
     """
@@ -194,7 +197,9 @@ class eeprom_reader(object):
   def read_value_from_eeprom(self, input_dict, offset):
     """
     Given an input dict with type information, and an offset,
-    pulls that data from the eeprom and unpacks it.
+    pulls that data from the eeprom and unpacks it. Reads value
+    type by type, so we dont run into any read-too-much-info
+    errors.
 
     @param dict input_dict: Dictionary with information required 
     to read off the eeprom.
@@ -202,22 +207,15 @@ class eeprom_reader(object):
     @return list: The pieces of data we read off the eeprom
     """
     if 'mult' in input_dict:
-      data = self.unpack_large_data_amount(input_dict, offset)
+      unpack_code = str(input_dict['type'] * int(input_dict['mult']))
     else:
-      #Get size of payload
       unpack_code = str(input_dict['type'])
-      size = struct.calcsize(unpack_code)
+    data = []
+    for char in unpack_code:
+      size = struct.calcsize(char)
       #Get the value to unpack
       val = self.s3g.read_from_EEPROM(offset, size)
-      data = self.unpack_value(val, unpack_code)
-    return data
-
-  def unpack_large_data_amount(self, input_dict, offset):
-    data = []
-    size = struct.calcsize(input_dict['type'])
-    for i in range(int(input_dict['mult'])):
-      val = self.s3g.read_from_EEPROM(offset, size)
-      data.append(self.unpack_value(val, input_dict['type']))
+      data.extend(self.unpack_value(val, char))
       offset += size
     return data
 
@@ -243,9 +241,9 @@ class eeprom_reader(object):
     """
     string = ''
     for char in s:
+      if char == 0:
+        return string
       string+=chr(char)
-      if string[-1] == '\x00':
-        return string[:-1]
     raise NonTerminatedStringError(s)
 
   def decode_floating_point(self, high_bit, low_bit):

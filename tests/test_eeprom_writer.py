@@ -32,44 +32,34 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
 
   def test_write_value_no_flush_toolhead(self):
     name = 'foobar'
-    value = 252645135
-    toolhead = 1
-    input_dict = {
-        'name'  : name,
-        'data' : [value],
-        'toolhead'  : toolhead
-        }
-    offset = int('0x001c', 16) + int('0x0000', 16)
-    expected_value = struct.pack('>I', value)
+    value = [252645135]
+    context = ['T0_DATA_BASE']
+    offset = 0x0016 + 0x0000
+    expected_value = struct.pack('>i', value[0])
     expected_buffer = [[offset, expected_value]]
-    self.writer.write_data(input_dict)
+    self.writer.write_data(name, value, context)
     self.assertEqual(expected_buffer, self.writer.data_buffer)
     self.assertEqual(len(self.write_to_eeprom_mock.mock_calls), 0)
   
   def test_write_value_flush_no_toolhead(self):
     name = 'foo'
-    value = 120
-    input_dict = {
-        'name'  : name,
-        'data' : [value], 
-        }
+    value = [120]
+    offset = 0x0000
+    context = []
     expected_packed_data = []
-    expected_packed_data.append([int(self.writer.eeprom_map[self.writer.main_map][name]['offset'], 16), struct.pack('>b', value)])
-    self.writer.write_data(input_dict)
+    expected_packed_data.append([offset, struct.pack('>b', value[0])])
+    self.writer.write_data(name, value, context)
     #add second value
     name = 'unus'
     values = [128.5, 256]
-    input_dict = {
-        'name'  : name,
-        'data'  : values
-      }
-    offset = self.writer.search_for_entry_and_offset(name, self.writer.eeprom_map[self.writer.main_map])[1]
+    context = ['barfoo']
+    offset = 0xaabb + 0x0004
     data = ''
     for value in values:
       bits = self.writer.calculate_floating_point(value)
       data += struct.pack('>BB', bits[0], bits[1])
     expected_packed_data.append([offset, data])
-    self.writer.write_data(input_dict, flush=True)
+    self.writer.write_data(name, values, context, flush=True)
     self.assertEqual(expected_packed_data, self.writer.data_buffer)
     calls = self.write_to_eeprom_mock.mock_calls
     self.assertEqual(calls[0][1], tuple(expected_packed_data[0]))
@@ -77,76 +67,25 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
 
   def test_write_value_no_flush_no_toolhead(self):
     name = 'foo'
-    value = 120
-    input_dict = {
-        'name'  : name,
-        'data' : [value], 
-        }
+    offset = 0x0000
+    value = [120]
+    context = []
     expected_packed_data = []
-    expected_packed_data.append([int(self.writer.eeprom_map[self.writer.main_map][name]['offset'], 16), struct.pack('>b', value)])
-    self.writer.write_data(input_dict)
+    expected_packed_data.append([offset, struct.pack('>b', value[0])])
+    self.writer.write_data(name, value, context)
     #add second value
     name = 'unus'
     values = [128.5, 256]
-    input_dict = {
-        'name'  : name,
-        'data'  : values
-      }
-    offset = self.writer.search_for_entry_and_offset(name, self.writer.eeprom_map[self.writer.main_map])[1]
+    offset = 0x0004 + 0xaabb
+    context = ['barfoo']
     data = ''
     for value in values:
       bits = self.writer.calculate_floating_point(value)
       data += struct.pack('>BB', bits[0], bits[1])
     expected_packed_data.append([offset, data])
-    self.writer.write_data(input_dict)
+    self.writer.write_data(name, values, context)
     self.assertEqual(expected_packed_data, self.writer.data_buffer)
     self.assertEqual(len(self.write_to_eeprom_mock.mock_calls), 0)
-
-  def test_search_for_toolhead_entry_and_offset(self):
-    toolhead = 0
-    entry = 'foobar'
-    expected_entry = self.writer.eeprom_map[self.writer.main_map]['T0_DATA_BASE']['sub_map']['foobar']
-    expected_offset = int(expected_entry['offset'], 16)
-    expected_offset += int(self.writer.eeprom_map[self.writer.main_map]['T0_DATA_BASE']['offset'], 16)
-    (got_entry, got_offset) = self.writer.search_for_toolhead_entry_and_offset(entry, self.writer.eeprom_map['eeprom_map'], toolhead)
-    self.assertEqual(expected_offset, got_offset)
-    self.assertEqual(expected_entry, got_entry)
-
-  def test_search_for_entry_and_offset_not_found(self):
-    entry = 'this is going to fail'
-    self.assertRaises(makerbot_driver.EEPROM.EntryNotFoundError, self.writer.search_for_entry_and_offset, entry, self.writer.eeprom_map[self.writer.main_map]) 
-
-  def test_search_for_entry_and_offset_non_recursive(self):
-    entry = 'foo'
-    expected_entry = self.writer.eeprom_map['eeprom_map']['foo']
-    expected_offset = int(expected_entry['offset'], 16)
-    (got_entry, got_offset) = self.writer.search_for_entry_and_offset(entry, self.writer.eeprom_map['eeprom_map'])
-    self.assertEqual(expected_offset, got_offset)
-    self.assertEqual(expected_entry, got_entry)
-
-  def test_search_for_entry_and_offset_recursive(self):
-    cases = [
-      ['bingbangboing','ACCELERATION_TABLE'],
-      ['ni','foo'],
-      ['unus', 'barfoo'],
-      ]
-    for case in cases:
-      entry = case[0]
-      sub_map = case[1]
-      expected_entry = self.writer.eeprom_map['eeprom_map'][sub_map]['sub_map'][entry]
-      expected_offset = int(expected_entry['offset'], 16) + int(self.writer.eeprom_map['eeprom_map'][sub_map]['offset'], 16)
-      (got_entry, got_offset) = self.writer.search_for_entry_and_offset(entry, self.writer.eeprom_map['eeprom_map'])
-      self.assertEqual(expected_entry, got_entry)
-      self.assertEqual(expected_offset, got_offset)
-
-  def test_get_tool_dict_name(self):
-    cases = [
-      [0, 'T0_DATA_BASE'],
-      [1, 'T1_DATA_BASE'],
-      [2, 'T2_DATA_BASE'],
-      ]
-    for case in cases:
-      self.assertEqual(case[1], self.writer.get_toolhead_dict_name(case[0]))
 
 class TestEepromWriter(unittest.TestCase):
   def setUp(self):

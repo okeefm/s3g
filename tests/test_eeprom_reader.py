@@ -23,7 +23,7 @@ class TestInit(unittest.TestCase):
     total_path = f.name
     name = total_path.split('/')[-1]
     path = tempfile.tempdir
-    reader = makerbot_driver.EEPROM.eeprom_reader(map_name=name, working_directory=path)
+    reader = makerbot_driver.EEPROM.EepromReader(map_name=name, working_directory=path)
     self.assertEqual(reader.eeprom_map, eeprom_map)
     self.assertEqual(path, reader.working_directory)
 
@@ -34,14 +34,14 @@ class TestReadEepromMap(unittest.TestCase):
         'test_files',
         )
     self.m = 'eeprom_reader_test_map.json'
-    self.reader = makerbot_driver.EEPROM.eeprom_reader(map_name = self.m, working_directory=self.wd)
+    self.reader = makerbot_driver.EEPROM.EepromReader(map_name = self.m, working_directory=self.wd)
 
   def tearDown(self):
     self.reader = None
 
   def test_read_eeprom_map(self):
     """
-    This function uses test_files/eeprom_map.json. 
+    This function uses test_files/eeprom_reader_test_map.json. 
     """
     with open(os.path.join(self.wd, self.m)) as f:
       vals = json.load(f)
@@ -71,7 +71,7 @@ class TestReadFromEeprom(unittest.TestCase):
 
   def setUp(self):
     self.read_from_eeprom_mock = mock.Mock()
-    self.reader = makerbot_driver.EEPROM.eeprom_reader()
+    self.reader = makerbot_driver.EEPROM.EepromReader()
     self.reader.s3g = makerbot_driver.s3g()
     self.reader.s3g.read_from_EEPROM = self.read_from_eeprom_mock
     with open(os.path.join(
@@ -211,14 +211,21 @@ class TestReadFromEeprom(unittest.TestCase):
         'offset'  : offset,
         'type'    : t,
         }
-    vals = (128, 4294967295,43690)
-    return_val = struct.pack('>%s' %(t), vals[0], vals[1], vals[2])
-    self.read_from_eeprom_mock.return_value = return_val
+    vals = [128, 4294967295,43690]
+    reversed_vals = vals[:]
+    reversed_vals.reverse()
+    reversed_type = list(t)
+    reversed_type.reverse()
+    packed_vals = []
+    for code, val in zip(reversed_type, reversed_vals):
+      packed_vals.append(struct.pack('>%s' %(code), val)) 
+    def return_mock_func(*args, **kwards):
+      return packed_vals.pop()
+    self.read_from_eeprom_mock.side_effect = return_mock_func
     got_values = self.reader.read_from_eeprom(input_dict)
     self.assertEqual(vals, got_values)
-    expected_call = (int(offset, 16), struct.calcsize(t))
     calls = self.read_from_eeprom_mock.mock_calls
-    self.assertEqual(expected_call, calls[0][1])
+    self.assertEqual(3, len(calls))
 
   def test_read_from_eeprom_value_missing_variables(self):
     dicts = [
@@ -236,7 +243,7 @@ class TestReadFromEeprom(unittest.TestCase):
 class TestEepromReader(unittest.TestCase):
 
   def setUp(self):
-    self.reader = makerbot_driver.EEPROM.eeprom_reader()
+    self.reader = makerbot_driver.EEPROM.EepromReader()
     self.reader.s3g = makerbot_driver.s3g()
     
   def tearDown(self):
@@ -303,6 +310,21 @@ class TestEepromReader(unittest.TestCase):
     for i in range(len(calls)):
       self.assertEqual(calls[i][1], (offset+i, 1))
 
+  def test_read_value_from_eeprom_mult(self):
+    input_dict = {
+        'type'  : 'B',
+        'mult'  : '10',
+        }
+    expected_values = range(int(input_dict['mult']))
+    reversed_values = expected_values[:]
+    reversed_values.reverse()
+    def return_mock_func(*args, **kwards):
+      return struct.pack('>%s' %(input_dict['type']), reversed_values.pop())
+    read_from_eeprom_mock = mock.Mock()
+    read_from_eeprom_mock.side_effect = return_mock_func
+    self.reader.s3g.read_from_EEPROM = read_from_eeprom_mock
+    self.assertEqual(expected_values, self.reader.read_value_from_eeprom(input_dict, 0))
+
   def test_read_value_from_eeprom_one_value(self):
     input_dict = {
         'type' : 'B',
@@ -313,16 +335,24 @@ class TestEepromReader(unittest.TestCase):
     read_from_eeprom_mock.return_value = packed_value
     self.reader.s3g.read_from_EEPROM = read_from_eeprom_mock
     expected_value = struct.unpack('>%s' %(input_dict['type']), packed_value)
-    self.assertEqual(expected_value, self.reader.read_value_from_eeprom(input_dict, 0))
+    self.assertEqual(list(expected_value), self.reader.read_value_from_eeprom(input_dict, 0))
 
   def test_read_value_from_eeprom_multiple_values(self):
     input_dict = {
         'type'  : 'BHi',
         }
-    packed_values = struct.pack('>%s' %(input_dict['type']), 255, 1, 65535)
-    expected_values = (255, 1, 65535)
+    expected_values = [255, 1, 65535]
+    reversed_values = expected_values[:]
+    reversed_values.reverse()
+    reversed_type = list(input_dict['type'])
+    reversed_type.reverse()
+    packed_values = []
+    for the_type, the_value in zip(reversed_type, reversed_values):
+      packed_values.append(struct.pack('>%s' %(the_type), the_value))
+    def return_mock_func(*args, **kwards):
+      return packed_values.pop()
     read_from_eeprom_mock = mock.Mock()
-    read_from_eeprom_mock.return_value = packed_values
+    read_from_eeprom_mock.side_effect = return_mock_func
     self.reader.s3g.read_from_EEPROM = read_from_eeprom_mock
     self.assertEqual(expected_values, self.reader.read_value_from_eeprom(input_dict, 0))
         
