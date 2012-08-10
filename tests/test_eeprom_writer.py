@@ -32,10 +32,10 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
 
   def test_write_value_no_flush_toolhead(self):
     name = 'foobar'
-    value = [252645135]
+    value = 252645135
     context = ['T0_DATA_BASE']
     offset = 0x0016 + 0x0000
-    expected_value = struct.pack('>i', value[0])
+    expected_value = struct.pack('>i', value)
     expected_buffer = [[offset, expected_value]]
     self.writer.write_data(name, value, context)
     self.assertEqual(expected_buffer, self.writer.data_buffer)
@@ -43,12 +43,11 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
   
   def test_write_value_flush_no_toolhead(self):
     name = 'foo'
-    value = [120]
+    value = 120
     offset = 0x0000
-    context = []
     expected_packed_data = []
-    expected_packed_data.append([offset, struct.pack('>b', value[0])])
-    self.writer.write_data(name, value, context)
+    expected_packed_data.append([offset, struct.pack('>b', value)])
+    self.writer.write_data(name, value)
     #add second value
     name = 'unus'
     values = [128.5, 256]
@@ -68,11 +67,10 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
   def test_write_value_no_flush_no_toolhead(self):
     name = 'foo'
     offset = 0x0000
-    value = [120]
-    context = []
+    value = 120
     expected_packed_data = []
-    expected_packed_data.append([offset, struct.pack('>b', value[0])])
-    self.writer.write_data(name, value, context)
+    expected_packed_data.append([offset, struct.pack('>b', value)])
+    self.writer.write_data(name, value)
     #add second value
     name = 'unus'
     values = [128.5, 256]

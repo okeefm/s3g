@@ -34,7 +34,7 @@ class EepromReader(object):
     #We always start with the main map
     self.main_map = 'eeprom_map'
 
-  def read_data(self, name, context):
+  def read_data(self, name, context=None):
     the_dict, offset = self.get_dict_by_context(name, context)
     return self.read_from_eeprom(the_dict, offset)
 

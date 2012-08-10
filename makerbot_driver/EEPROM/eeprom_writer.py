@@ -53,7 +53,9 @@ class EepromWriter(object):
     offset += int(the_dict['offset'], 16) 
     return the_dict, offset
 
-  def write_data(self, name, data, context, flush=False):
+  def write_data(self, name, data, context=None, flush=False):
+    if not isinstance(data, list):
+      data = [data]
     found_dict, offset = self.get_dict_by_context(name, context)
     data = self.encode_data(data, found_dict)
     self.data_buffer.append([offset, data])

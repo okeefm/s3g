@@ -59,7 +59,7 @@ class TestReadFromEeprom(unittest.TestCase):
   def test_get_dict_by_contect_first_level(self):
     expected_dict = self.reader.eeprom_map[self.reader.main_map]['ACCELERATION_SETTINGS']
     expected_offset = int(expected_dict['offset'], 16)
-    (got_dict, got_offset) = self.reader.get_dict_by_context('ACCELERATION_SETTINGS', None)
+    (got_dict, got_offset) = self.reader.get_dict_by_context('ACCELERATION_SETTINGS')
     self.assertEqual(expected_dict, got_dict)
     self.assertEqual(expected_offset, got_offset)
 
