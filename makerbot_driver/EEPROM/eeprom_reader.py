@@ -33,27 +33,12 @@ class EepromReader(object):
       self.eeprom_map = json.load(f)
     #We always start with the main map
     self.main_map = 'eeprom_map'
-    self.the_map = {}
-
-  def read_entire_eeprom(self, print_map = False):
-    """
-    Reads the entire eeprom from a connected eeprom.
-    We start reading from the entry labeled: 'eeprom_offsets',
-    and any sub-maps contained within.
-    @param bool print_map: boolean to print out the map as 
-      a json file.
-    """
-    the_map = self.read_eeprom_map(self.eeprom_map[self.main_map])
-    the_map = {self.main_map : the_map}
-    if print_map:
-      with open(os.path.join(self.working_directory, 'my_eeprom_map.json'), 'w') as f:
-        f.write(json.dumps(the_map, sort_keys=True, indent=2))
 
   def read_data(self, name, context):
     the_dict, offset = self.get_dict_by_context(name, context)
     return self.read_from_eeprom(the_dict, offset)
 
-  def get_dict_by_context(self, name, context):
+  def get_dict_by_context(self, name, context=None):
     """
     Due to the nested nature of the eeprom map, we need to be given
     some context when reading values.  In this instance, we are given the
@@ -68,32 +53,15 @@ class EepromReader(object):
     """
     the_dict = self.eeprom_map.get(self.main_map)
     offset = 0
-    for c in context:
-      offset += int(the_dict[c]['offset'], 16)
-      the_dict = the_dict.get(c)['sub_map']
+    if context:
+      for c in context:
+        offset += int(the_dict[c]['offset'], 16)
+        the_dict = the_dict.get(c)['sub_map']
     the_dict = the_dict[name]
     offset += int(the_dict['offset'], 16) 
     return the_dict, offset
-    
 
-  def read_eeprom_map(self, the_map, base=0):
-    """
-    Given the name of an eeprom map help in self.eeprom_map, 
-    reads that entire map off the eeprom.  This generates
-    a simplified eeprom map, which is in the form of:
-    {
-        map_name  : {
-            <value_name>  : <value>
-    }
-    @param map_name: The map to read from
-    @param int offset: The offset to begin reading from
-    """
-    for key in the_map:
-      offset = int(the_map[key]['offset'], 16)
-      the_map[key]['value'] = self.read_from_eeprom(the_map[key], offset=offset, base=base)
-    return the_map
-
-  def read_from_eeprom(self, input_dict, offset=0, base=0):
+  def read_from_eeprom(self, input_dict, offset):
     """
     Reads information off an eeprom, starting from a given offset.
 
@@ -102,18 +70,14 @@ class EepromReader(object):
     @param int offset: The offset to start reading from
     @return value: The values read from the eeprom
     """
-    try:
-      offset = base + offset
-      if 'sub_map' in input_dict:  
-        return_val = self.read_eeprom_sub_map(input_dict, offset)
-      elif 'floating_point' in input_dict:
-        return_val = self.read_floating_point_from_eeprom(input_dict, offset)
-      elif input_dict['type'] == 's':
-        return_val = self.read_string_from_eeprom(input_dict, offset)
-      else:
-        return_val = self.read_value_from_eeprom(input_dict, offset)
-    except KeyError as e:
-      raise MissingVariableError(e[0])
+    if 'sub_map' in input_dict:  
+      return_val = self.read_eeprom_sub_map(input_dict, offset)
+    elif 'floating_point' in input_dict:
+      return_val = self.read_floating_point_from_eeprom(input_dict, offset)
+    elif input_dict['type'] == 's':
+      return_val = self.read_string_from_eeprom(input_dict, offset)
+    else:
+      return_val = self.read_value_from_eeprom(input_dict, offset)
     return return_val
 
   def read_string_from_eeprom(self, input_dict, offset):
@@ -143,7 +107,7 @@ class EepromReader(object):
     @return dict: The submap read off the eeprom
     """
     #Remove this return statement to fix reading
-    self.read_eeprom_map(input_dict['sub_map'], base=offset)
+    return self.read_eeprom_map(input_dict['sub_map'], offset)
 
   def read_floating_point_from_eeprom(self, input_dict, offset):
     """

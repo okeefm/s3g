@@ -39,34 +39,6 @@ class TestReadEepromMap(unittest.TestCase):
   def tearDown(self):
     self.reader = None
 
-  def test_read_eeprom_map(self):
-    """
-    This function uses test_files/eeprom_reader_test_map.json. 
-    """
-    with open(os.path.join(self.wd, self.m)) as f:
-      vals = json.load(f)
-    eeprom_vals = vals['eeprom_map']
-
-    #=====Making Mock Values=====
-    read_string_from_eeprom_mock = mock.Mock()
-    read_string_from_eeprom_mock.return_value = eeprom_vals['string']['return_value']
-    self.reader.read_string_from_eeprom = read_string_from_eeprom_mock
-
-    read_floating_point_from_eeprom_mock = mock.Mock()
-    read_floating_point_from_eeprom_mock.return_value = eeprom_vals['floating_point']['return_value']
-    self.reader.read_floating_point_from_eeprom = read_floating_point_from_eeprom_mock
-    
-    read_value_from_eeprom_mock = mock.Mock()
-    read_value_from_eeprom_mock.return_value = eeprom_vals['value']['return_value']
-    self.reader.read_value_from_eeprom = read_value_from_eeprom_mock
-
-    expected_map = vals
-    for key in eeprom_vals:
-      expected_map['eeprom_map'][key]['value'] = eeprom_vals[key]['return_value']
-
-    got_map = self.reader.read_eeprom_map(vals['eeprom_map'])
-    self.assertEqual(expected_map['eeprom_map'], got_map)
-
 class TestReadFromEeprom(unittest.TestCase):
 
   def setUp(self):
@@ -87,7 +59,7 @@ class TestReadFromEeprom(unittest.TestCase):
   def test_get_dict_by_contect_first_level(self):
     expected_dict = self.reader.eeprom_map[self.reader.main_map]['ACCELERATION_SETTINGS']
     expected_offset = int(expected_dict['offset'], 16)
-    (got_dict, got_offset) = self.reader.get_dict_by_context('ACCELERATION_SETTINGS')
+    (got_dict, got_offset) = self.reader.get_dict_by_context('ACCELERATION_SETTINGS', None)
     self.assertEqual(expected_dict, got_dict)
     self.assertEqual(expected_offset, got_offset)
 
@@ -96,46 +68,18 @@ class TestReadFromEeprom(unittest.TestCase):
     expected_offset = int(self.reader.eeprom_map[self.reader.main_map]['T0_DATA_BASE']['offset'], 16)
     expected_offset += int(self.reader.eeprom_map[self.reader.main_map]['T0_DATA_BASE']['sub_map']['EXTRUDER_PID_BASE']['offset'], 16)
     expected_offset += int(expected_dict['offset'], 16)
-    (got_dict, got_offset) = self.reader.get_dict_by_context('D_TERM_OFFSET', 'T0_DATA_BASE', 'EXTRUDER_PID_BASE')
+    (got_dict, got_offset) = self.reader.get_dict_by_context('D_TERM_OFFSET',['T0_DATA_BASE', 'EXTRUDER_PID_BASE'])
     self.assertEqual(expected_dict, got_dict)
     self.assertEqual(expected_offset, got_offset)
     
-
-  def test_read_from_eeprom_sub_map(self):
-    input_dict = {
-        'offset'      :   '0xaabb',
-        'sub_map'  :   {
-            'offset'  : '0x00aa',
-            'type'          : 'h'
-          }
-        }
-    read_eeprom_map_mock = mock.Mock()
-    self.reader.read_eeprom_map = read_eeprom_map_mock
-    self.reader.read_from_eeprom(input_dict)
-    read_eeprom_map_mock.assert_called_once_with(input_dict['sub_map'], offset=int(input_dict['offset'], 16))
-
-  def test_read_eeprom_map_no_offset(self):
-    input_dict = {
-        'sub_map'  :   {
-            'offset'  : '0x00aa',
-            'type'    : 'b',
-          }
-        }
-    self.assertRaises(makerbot_driver.EEPROM.MissingVariableError, self.reader.read_from_eeprom, input_dict)
-
   def test_read_from_eeprom_floating_point_missing_information(self):
     dicts = [
         {
         'floating_point'  : 'True',
-        'offset'  : '0xaabb',
-        },
-        {
-        'floating_point'  : 'True',
-        'type'  : 'h',
         }
         ]
     for d in dicts:
-      self.assertRaises(makerbot_driver.EEPROM.MissingVariableError, self.reader.read_from_eeprom, d)
+      self.assertRaises(KeyError, self.reader.read_from_eeprom, d, 0)
 
   def test_read_from_eeprom_floating_point_good_value(self):
     offset = '0xaabb'
@@ -150,34 +94,11 @@ class TestReadFromEeprom(unittest.TestCase):
         }
     expected = [128.5]
     self.read_from_eeprom_mock.return_value = struct.pack('>B', 128)
-    got_value = self.reader.read_from_eeprom(input_dict)
+    got_value = self.reader.read_from_eeprom(input_dict, 0xaabb)
     self.assertEqual(expected, got_value)  
     calls = self.read_from_eeprom_mock.mock_calls
     self.assertEqual(calls[0][1], (int(offset, 16), 1))
     self.assertEqual(calls[1][1], (int(offset, 16)+1, 1))
-
-  def test_read_from_eeprom_floating_point_multiple(self):
-    offset = '0xaabb'
-    t = 'HHH'
-    #We get size of b because we read the individual bytes that
-    #make up the short
-    input_dict = {
-        'floating_point'  : 'True',
-        'offset'  : offset,
-        'type'  : t,
-        }
-    expected = [128.5, 230.90, 26.1]
-    return_values = [128, 128, 230, 230, 26, 26]
-    return_values.reverse()
-    def return_func(*args, **kwards):
-      return struct.pack('B', return_values.pop())
-    self.read_from_eeprom_mock.side_effect = return_func
-    got_value = self.reader.read_from_eeprom(input_dict)
-    self.assertEqual(expected, got_value)  
-    calls = self.read_from_eeprom_mock.mock_calls
-    for i in range(len(calls)):
-      self.assertEqual(calls[i][1], (int(offset, 16)+i, 1))
-    
 
   def test_read_from_eeprom_string_missing_info(self):
     input_dicts = [
@@ -187,7 +108,7 @@ class TestReadFromEeprom(unittest.TestCase):
         }
         ]
     for d in input_dicts:
-      self.assertRaises(makerbot_driver.EEPROM.MissingVariableError, self.reader.read_from_eeprom, d)
+      self.assertRaises(KeyError, self.reader.read_from_eeprom, d, 0xaabb)
 
   def test_read_from_eeprom_string(self):
     offset = '0xaabb'
@@ -200,7 +121,7 @@ class TestReadFromEeprom(unittest.TestCase):
     expected_string = ['abcdefghi']
     return_value = array.array("B", expected_string[0]+'\x00')
     self.read_from_eeprom_mock.return_value = return_value
-    got_value = self.reader.read_from_eeprom(input_dict)
+    got_value = self.reader.read_from_eeprom(input_dict, 0xaabb)
     self.assertEqual(expected_string, got_value)
     self.read_from_eeprom_mock.assert_called_once_with(int(offset, 16), length)
 
@@ -222,24 +143,11 @@ class TestReadFromEeprom(unittest.TestCase):
     def return_mock_func(*args, **kwards):
       return packed_vals.pop()
     self.read_from_eeprom_mock.side_effect = return_mock_func
-    got_values = self.reader.read_from_eeprom(input_dict)
+    got_values = self.reader.read_from_eeprom(input_dict, 0)
     self.assertEqual(vals, got_values)
     calls = self.read_from_eeprom_mock.mock_calls
     self.assertEqual(3, len(calls))
 
-  def test_read_from_eeprom_value_missing_variables(self):
-    dicts = [
-        {
-        'offset'  : '0xaabb',
-        },
-        {
-        'type'    : 'BBB',
-        }
-        ]
-    for d in dicts:
-      self.assertRaises(makerbot_driver.EEPROM.MissingVariableError, self.reader.read_from_eeprom, d)
-
-    
 class TestEepromReader(unittest.TestCase):
 
   def setUp(self):
@@ -276,7 +184,7 @@ class TestEepromReader(unittest.TestCase):
     read_eeprom_map_mock = mock.Mock()
     self.reader.read_eeprom_map = read_eeprom_map_mock
     self.reader.read_eeprom_sub_map(input_dict, offset)
-    read_eeprom_map_mock.assert_called_once_with(sub_map, offset=offset)
+    read_eeprom_map_mock.assert_called_once_with(sub_map, offset)
 
   def test_read_floating_point_from_eeprom_bad_size(self):
     input_dict = {
@@ -376,7 +284,7 @@ class TestEepromReader(unittest.TestCase):
         'offset'  : '0x0000',
         'type'    : 's',
         }
-    self.assertRaises(makerbot_driver.EEPROM.MissingVariableError, self.reader.read_from_eeprom, input_dict)
+    self.assertRaises(KeyError, self.reader.read_from_eeprom, input_dict, 0)
 
   def test_decode_string_no_null_terminator(self):
     #We pack the string into an array to mimick the way 
