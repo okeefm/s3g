@@ -24,10 +24,10 @@ parser.add_option("-s", "--gcode_start_end_sequences", dest="start_end_sequences
 vid = int('23c1', 16)
 pid = int('d314', 16)
 
-ports = list(serial.tools.list_ports.get_ports_by_vid_pid(vid, pid))
+ports = list(serial.tools.list_ports.list_ports_by_vid_pid(vid, pid))
 while len(ports) == 0:
   time.sleep(3)
-  ports = list(serial.tools.list_ports.get_ports_by_vid_pid(vid, pid))
+  ports = list(serial.tools.list_ports.list_ports_by_vid_pid(vid, pid))
   print "I Think you forgot to plug in your Replicator!  Please plug it in now."
 
 print_delay = 15

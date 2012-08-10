@@ -109,3 +109,4 @@ max_retry_count = 5
 timeout_length = 1.0
 s3g_version = 100
 max_tool_index = 127
+vid_pid = [0x23C1, 0xD314]

@@ -10,16 +10,16 @@ import urlparse
 class Uploader(object):
   """ Firmware Uploader is used to send firmware to a 3D printer."""
   
-  def __init__(self, base_url = None, base_path = None, autoUpdate= True):
+  def __init__(self, source_url = None, dest_path = None, autoUpdate= True):
     """Build an uploader.
-	@param base_url: specify a url to fetch firmware metadata from. Can be a directory
-    @param base_path: path to use as the local file store location
+	@param source_url: specify a url to fetch firmware metadata from. Can be a directory
+    @param dest_path: path to use as the local file store location
     @param autoUpdate: automatically and immedately fetch machine data
     """
     self._logger = logging.getLogger(self.__class__.__name__)
     self.product_filename = 'products.json'
-    self.base_url = base_url if base_url else 'http://firmware.makerbot.com'
-    self.base_path = base_path if base_path else os.getcwd()
+    self.source_url = source_url if source_url else 'http://firmware.makerbot.com'
+    self.dest_path = dest_path if dest_path else os.getcwd()
     
     self.run_subprocess = subprocess.check_call
     self.urlopen = urllib2.urlopen
@@ -46,7 +46,7 @@ class Uploader(object):
     Pulls the most recent products.json file and, using that
     to update internal manchine lists and metadata
     """
-    product_filename = self.pathjoin(self.base_url, self.product_filename)
+    product_filename = self.pathjoin(self.source_url, self.product_filename)
     filename = self.wget(product_filename)
     #Assuming wget works, this shouldnt be a problem
     self.products = self.load_json_values(filename)
@@ -60,7 +60,7 @@ class Uploader(object):
     machines = self.products['ExtrusionPrinters']
     for machine in machines:
       f = self.products['ExtrusionPrinters'][machine]
-      url = self.pathjoin(self.base_url,  self.products['ExtrusionPrinters'][machine])
+      url = self.pathjoin(self.source_url,  self.products['ExtrusionPrinters'][machine])
       self.wget(url)
 
   def wget(self, url):
@@ -74,11 +74,14 @@ class Uploader(object):
     @return file: local filename of the resource
     """
     filename = url.split('/')[-1] #urllib here might be useful
-    filename = os.path.join(self.base_path, filename) 
+    filename = os.path.join(self.dest_path, filename) 
     #If file is local
     if os.path.isfile(url):
+      if url == filename or \
+			( os.path.isfile(filename) and os.path.samefile(url, filename)):
+        return filename #someone silly is copying files overthemselves
       import shutil
-      shutil.copyfile(url, filename)
+      shutil.copy(url, filename)
       return filename
     else:
       self._logger.info('{"event":"downloading_url", "url":%s}' %(url))
@@ -102,7 +105,7 @@ class Uploader(object):
     @return dict values: The values parsed out of the machine board profile
     """
     path = os.path.join(
-        self.base_path,
+        self.dest_path,
         self.products['ExtrusionPrinters'][machine],
         )
     path = os.path.normpath(path)
@@ -147,7 +150,7 @@ class Uploader(object):
       hex_file = str(values['versions'][version][0])
     except KeyError:
       raise UnknownVersionError
-    hex_file_url = self.pathjoin(self.base_url, hex_file)
+    hex_file_url = self.pathjoin(self.source_url, hex_file)
     hex_file_path = self.wget(hex_file_url)
     #Get the path to the hex file
     process = 'avrdude'
