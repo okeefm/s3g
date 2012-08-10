@@ -16,7 +16,6 @@ class s3g(object):
   over the USB bus when queried.  
   """
 
-
   @classmethod
   def from_filename(cls, port, baudrate=115200, timeout=.2):
     """Constructs and returns an s3g object connected to the 
@@ -561,6 +560,11 @@ class s3g(object):
        payload += tool_payload
 
     return self.writer.send_query_payload(payload)
+
+  def read_named_value_from_EEPROM(self, name=None, context=None):
+    import EEPROM
+    eReader = EEPROM.EepromReader.factory(self)
+    return eReader.read_data(name, context)
 
   def read_from_EEPROM(self, offset, length):
     """
