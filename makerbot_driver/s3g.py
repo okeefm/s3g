@@ -527,6 +527,14 @@ class s3g(object):
 
     return self.writer.send_query_payload(payload)
 
+   def read_named_value_from_EEPROM(self, name=None):
+    from EEPROM import EepromReader
+    eReader = EEpromReader.factory(self)
+
+    return eReader.read_data(name)
+    
+
+
   def read_from_EEPROM(self, offset, length):
     """
     Read some data from the machine. The data structure is implementation specific.
