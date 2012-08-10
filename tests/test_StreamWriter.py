@@ -11,6 +11,42 @@ import time
 
 from makerbot_driver import Writer, Encoder, errors, constants
 
+class StreamMock(object):
+  def __init__(self):
+    self._open = True
+
+  def close(self):
+    self._open = False
+
+  def open(self):
+    self._open = True
+
+  def isOpen(self):
+    return self._open
+
+class StreamWriterOpenCloseTests(unittest.TestCase):
+  def setUp(self):
+    self.file = StreamMock()
+    self.writer = Writer.StreamWriter(self.file)
+
+  def tearDown(self):
+    self.file = None
+    self.writer = None
+
+  def test_open(self):
+    self.assertTrue(self.writer.is_open)
+
+  def test_close(self):
+    self.writer.close()
+    self.assertFalse(self.writer.is_open())
+
+  def test_is_open(self):
+    self.assertTrue(self.writer.is_open())
+    self.writer.close()
+    self.assertFalse(self.writer.is_open())
+    self.writer.open()
+    self.assertTrue(self.writer.is_open())
+
 class StreamWriterTests(unittest.TestCase):
 
   def setUp(self):

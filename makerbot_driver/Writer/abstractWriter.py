@@ -8,7 +8,7 @@ class AbstractWriter(object):
     """ Opens the currently set port"""
     raise NotImplementedError()
 
-  def isOpen(self):
+  def is_open(self):
     """ Fluch of file like objects. """
     raise NotImplementedError()
 
