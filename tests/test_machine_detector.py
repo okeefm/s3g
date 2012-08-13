@@ -1,4 +1,3 @@
-
 from __future__ import (absolute_import, print_function, unicode_literals)
 
 import os
@@ -141,18 +140,14 @@ class TestScanSerialPorts(unittest.TestCase):
   def tearDown(self):
     self.md = None
 
-  @unittest.skip("refactor skip")
+  @unittest.skip('refactor skip')
   def test_scan_serial_port_cant_find_vid_pid(self):
     #This return_value is a mocked list_ports_by_vid_pid that could not find a port with
     #the given VID/PID.  This is what it returns in that case
-    return_value = ({'port'  :   ['/dev/tty.usbmodemfa121', 'The Replicator', 'some_vid_info']},)
+    return_value = [{'port'  :   ['/dev/tty.usbmodemfa121', 'The Replicator', 'some_vid_info']},]
 
-    def mock_return_func(*args, **kwargs):
-      yield return_value
-    self.mock.side_effect = mock_return_func
+    self.mock.return_value = return_value
     with self.assertRaises(KeyError) as er:
-        import pdb
-        pdb.set_trace()
         self.md.scan()
 
   @unittest.skip("refactor skip")

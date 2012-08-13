@@ -74,8 +74,8 @@ class MachineDetector(object):
     scanNameList = []
     if botTypes == None:
         scanNameList.extend(botClasses.keys())
-    elif type(botTypes) == type('str'): 
-        scanNameList.extend((botTypes,))
+    elif isinstance(botTypes, str) or isinstance(botTypes, unicode):
+        scanNameList.append(botTypes)
     else :
         scanNameList.extend(botTypes)
 
