@@ -178,7 +178,7 @@ class EepromReader(object):
     @return value: The information unpacked from value
     """
     value = array.array('B', value)
-    return struct.unpack('>%s' %(code), value)
+    return struct.unpack('<%s' %(code), value)
         
   def decode_string(self, s):
     """

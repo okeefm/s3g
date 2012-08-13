@@ -109,7 +109,7 @@ class EepromWriter(object):
   def process_value(self, data, t):
     payload = ''
     for code, point in zip(t, data):
-      payload += struct.pack('>%s' %(code), point)
+      payload += struct.pack('<%s' %(code), point)
     return payload
 
   def process_string(self, data, t):
@@ -123,7 +123,7 @@ class EepromWriter(object):
     payload = ''
     for point in data:
       bits = self.calculate_floating_point(point)
-      payload += struct.pack('>BB', bits[0], bits[1])
+      payload += struct.pack('<BB', bits[0], bits[1])
     return payload
 
   def encode_string(self, string):
@@ -131,7 +131,7 @@ class EepromWriter(object):
     Packs a string into a byte array
     """
     terminated_string = self.terminate_string(string)
-    code = '>%is' %(len(terminated_string))
+    code = '<%is' %(len(terminated_string))
     return struct.pack(code, terminated_string)
 
   def terminate_string(self, string):
