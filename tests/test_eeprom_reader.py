@@ -93,7 +93,7 @@ class TestReadFromEeprom(unittest.TestCase):
         'type'  : t,
         }
     expected = [128.5]
-    self.read_from_eeprom_mock.return_value = struct.pack('>B', 128)
+    self.read_from_eeprom_mock.return_value = struct.pack('<B', 128)
     got_value = self.reader.read_from_eeprom(input_dict, 0xaabb)
     self.assertEqual(expected, got_value)  
     calls = self.read_from_eeprom_mock.mock_calls
@@ -139,7 +139,7 @@ class TestReadFromEeprom(unittest.TestCase):
     reversed_type.reverse()
     packed_vals = []
     for code, val in zip(reversed_type, reversed_vals):
-      packed_vals.append(struct.pack('>%s' %(code), val)) 
+      packed_vals.append(struct.pack('<%s' %(code), val)) 
     def return_mock_func(*args, **kwards):
       return packed_vals.pop()
     self.read_from_eeprom_mock.side_effect = return_mock_func
@@ -203,7 +203,7 @@ class TestEepromReader(unittest.TestCase):
     expected = [128.50]
     offset = int(input_dict['offset'], 16)
     read_from_eeprom_mock = mock.Mock()
-    read_from_eeprom_mock.return_value = struct.pack('>B', 128)
+    read_from_eeprom_mock.return_value = struct.pack('<B', 128)
     self.reader.s3g.read_from_EEPROM = read_from_eeprom_mock
     self.assertEqual(expected, self.reader.read_floating_point_from_eeprom(input_dict, offset))
 
@@ -211,7 +211,7 @@ class TestEepromReader(unittest.TestCase):
     offset = 0
     expected = [128.5]
     read_from_eeprom_mock = mock.Mock()
-    read_from_eeprom_mock.return_value = struct.pack('>B', 128)
+    read_from_eeprom_mock.return_value = struct.pack('<B', 128)
     self.reader.s3g.read_from_EEPROM = read_from_eeprom_mock
     got = self.reader.read_and_unpack_floating_point(offset)
     calls = read_from_eeprom_mock.mock_calls
@@ -227,7 +227,7 @@ class TestEepromReader(unittest.TestCase):
     reversed_values = expected_values[:]
     reversed_values.reverse()
     def return_mock_func(*args, **kwards):
-      return struct.pack('>%s' %(input_dict['type']), reversed_values.pop())
+      return struct.pack('<%s' %(input_dict['type']), reversed_values.pop())
     read_from_eeprom_mock = mock.Mock()
     read_from_eeprom_mock.side_effect = return_mock_func
     self.reader.s3g.read_from_EEPROM = read_from_eeprom_mock
@@ -238,11 +238,11 @@ class TestEepromReader(unittest.TestCase):
         'type' : 'B',
         }
     value = 120
-    packed_value = struct.pack('>%s' %(input_dict['type']), value)
+    packed_value = struct.pack('<%s' %(input_dict['type']), value)
     read_from_eeprom_mock = mock.Mock()
     read_from_eeprom_mock.return_value = packed_value
     self.reader.s3g.read_from_EEPROM = read_from_eeprom_mock
-    expected_value = struct.unpack('>%s' %(input_dict['type']), packed_value)
+    expected_value = struct.unpack('<%s' %(input_dict['type']), packed_value)
     self.assertEqual(list(expected_value), self.reader.read_value_from_eeprom(input_dict, 0))
 
   def test_read_value_from_eeprom_multiple_values(self):
@@ -256,7 +256,7 @@ class TestEepromReader(unittest.TestCase):
     reversed_type.reverse()
     packed_values = []
     for the_type, the_value in zip(reversed_type, reversed_values):
-      packed_values.append(struct.pack('>%s' %(the_type), the_value))
+      packed_values.append(struct.pack('<%s' %(the_type), the_value))
     def return_mock_func(*args, **kwards):
       return packed_values.pop()
     read_from_eeprom_mock = mock.Mock()
@@ -306,7 +306,7 @@ class TestEepromReader(unittest.TestCase):
         ['H', 3855],
         ]
     for case in cases:  
-      val = struct.pack('>%s' %(case[0]), case[1])
+      val = struct.pack('<%s' %(case[0]), case[1])
       got_val = self.reader.unpack_value(val, case[0])[0]
       self.assertEqual(case[1], got_val)
 

@@ -72,7 +72,7 @@ class s3g(object):
     [response_code, version] = makerbot_driver.Encoder.unpack_response('<BH', response)
     return version
 
-  def get_name(self, offset = 0x0022):
+  def get_name(self):
     """
     Get stored Bot Name
     @return a string for the name
@@ -88,10 +88,9 @@ class s3g(object):
     @return a uuid format string
     TODO: merge this function with future eeprom read/write module
     """
-    eeprom_offset_uuid = 0x01A4
-    uuid_bytes = self.read_from_EEPROM(eeprom_offset_uuid, 16)
-
-    return uuid.UUID(bytes = str(uuid_bytes))
+    reader = self.create_reader()
+    data = reader.read_data('UUID')
+    return data
 
   def get_advanced_name(self):
     """ 
@@ -100,7 +99,7 @@ class s3g(object):
     """
     return (self.get_name(), self.get_uuid())
 
-  def get_toolhead_count(self, offset = 0x0042):
+  def get_toolhead_count(self):
     """ 
     @return the toolhead count of this bot. -1 on error
     """
@@ -108,19 +107,13 @@ class s3g(object):
     data = reader.read_data('TOOL_COUNT')
     return data[0]
 
-  def get_vid_pid(self, offset=0x0044):
+  def get_vid_pid(self):
     """
     Returns vid and pid as an int
     """ 
     reader = self.create_reader()
     data = reader.read_data('VID_PID_INFO')
     return data[0], data[1]
-#    code = 'HH'
-#    length = struct.calcsize(code)
-#    data = self.read_from_EEPROM(offset, length)
-#    vid = makerbot_driver.Encoder.decode_uint16(data[:2])
-#    pid = makerbot_driver.Encoder.decode_uint16(data[2:])
-#    return vid, pid
 
   def get_verified_status(self, verified_pid=vid_pid[1]):
     """

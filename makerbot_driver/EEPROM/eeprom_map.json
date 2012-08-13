@@ -361,6 +361,11 @@
         }
       }
     }, 
+    "UUID": {
+      "mult": "16", 
+      "offset": "0x01A4", 
+      "type": "B"
+    }, 
     "VERSION_HIGH": {
       "offset": "0x0001", 
       "type": "B"
