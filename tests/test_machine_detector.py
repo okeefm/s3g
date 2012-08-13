@@ -90,7 +90,6 @@ class TestNewMachineDetector(unittest.TestCase):
     self.md.register_closed(expectedPort)
     self.assertFalse( self.md.is_open(expectedPort) )
     
-
   def test_register_a_bot_open(self):
     botClass = 'The Replicator'
     self.md.scan(botClass)
@@ -100,18 +99,15 @@ class TestNewMachineDetector(unittest.TestCase):
     self.assertTrue( self.md.is_open(expectedPort) )
     self.md.register_closed(expectedPort)
     self.assertFalse( self.md.is_open(expectedPort) )
-
-
     
   def test_get_bot_available(self):
     botClass = None 
     self.md.scan()
-    bots =  self.md.get_bots_available(botClass)
+    bots = self.md.get_bots_available(botClass)
     self.assertTrue(bots['/dev/ttyFake'] != None)
     self.assertTrue(bots['/dev/ttyFake2'] != None)
     self.assertTrue(bots['/dev/ttyFake'] == self.expected_info[0])
     self.assertTrue(bots['/dev/ttyFake2'] == self.expected_info[1])
-
 
   def test_get_first_bot_avaiable(self):    
     botClass = None 
@@ -119,8 +115,6 @@ class TestNewMachineDetector(unittest.TestCase):
     bot =  self.md.get_first_bot_available(botClass)
     self.assertTrue(bot != None)
     self.assertTrue(bot in self.expected_info)
-
-
 
 class TestGetVIDPID(unittest.TestCase):
   def setUp(self):

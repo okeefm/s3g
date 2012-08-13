@@ -27,11 +27,11 @@ g_machineDetector = None
 
 
 def get_gMachineDetector(everSeenCacheFile=None):
-    """ always returns a singleton MachineDetector."""
-    if g_machineDetector == None :
-        g_machineDetector = MachineDetector()
-    if everSeenCacheFile != None :
-        g_machineDetector.updateEverSeen(everSeenCacheFile)
+  """ always returns a singleton MachineDetector."""
+  if g_machineDetector == None :
+    g_machineDetector = MachineDetector()
+  if everSeenCacheFile != None :
+    g_machineDetector.updateEverSeen(everSeenCacheFile)
 
 # Data structure containing bot connection classess by VID/PID, as
 # well as what kinds of MakerBot may be constructed with those
@@ -137,30 +137,12 @@ class MachineDetector(object):
     return None
 
   def get_bots_available(self, botTypes=None):
-    """ returns the bot info dict for the first bot of the specified class 
+    """
+    Returns any currently connected bots given a type/multiple types
     @param botClass a single bot class or list of valid bot classes. If None,
         all bot classes are considered
-    @returns a dict bots we have see that match types, keyed by port name. 
-               None if no bot matches
+    @returns a dict of bots we have see that match types, keyed by port name. 
+        None if no bot matches
     """
-    # scan for all bot types
-    scanNameList = []
-    if botTypes == None:
-        scanNameList.extend(botClasses.keys())
-    elif type(botTypes) == type('str'): 
-        scanNameList.extend((botTypes,))
-    else :
-        scanNameList.extend(botTypes)
-
-    matches = {}  
-    for botType in scanNameList:
-        (vid,pid) = self.get_vid_pid_by_class(botType)
-        for bot in self.botsJustSeen.keys():
-            if ( self.botsJustSeen[bot]['VID'] == vid and 
-               self.botsJustSeen[bot]['PID'] == pid ):
-                matches[self.botsJustSeen[bot]['port']] = self.botsJustSeen[bot] 
-#        if bot in scanNameList:
-#            matches[self.botsJustSeen[bot]['port']] = self.botsJustSeen[bot] 
-    return matches
-
-
+    self.scan(botTypes)
+    return self.botsJustSeen
