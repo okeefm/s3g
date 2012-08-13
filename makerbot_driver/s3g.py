@@ -1,5 +1,6 @@
 # Some utilities for speaking s3g
 import struct
+import array
 import time
 import serial
 
@@ -116,20 +117,19 @@ class s3g(object):
     """
     Returns vid and pid as an int
     """ 
-    length = 2
-    data = []
-    for i in range(2):
-      datum = self.read_from_EEPROM(eeprom_offset, length)
-      data.append(Encoder.decode_uint16(data))
-      offset += length
-    return data[0], data[1]
+    code = 'HH'
+    length = struct.calcsize(code)
+    data = self.read_from_EEPROM(offset, length)
+    vid = Encoder.decode_uint16(data[:2])
+    pid = Encoder.decode_uint16(data[2:])
+    return vid, pid
 
   def get_verified_status(self, verified_pid=vid_pid[1]):
     """
     @returns true if this firmware is marked as verified
     """
     vid_pid = self.get_vid_pid()
-    return data == verified_pid
+    return vid_pid[1] == verified_pid
 
 
   def get_advanced_version(self):

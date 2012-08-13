@@ -36,8 +36,10 @@ def get_gMachineDetector(everSeenCacheFile=None):
 # Data structure containing bot connection classess by VID/PID, as
 # well as what kinds of MakerBot may be constructed with those
 botClasses = {
- 'The Replicator':{'vid':0x23C1, 'pid':0xD314,'botProfiles':'.*Replicator.*'}, 
- 'MightyBoard':{'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*Replicator.*'}, 
+ 'The Replicator':{'tool_count':1,'vid':0x23C1, 'pid':0xD314,'botProfiles':'.*ReplicatorSingle.*'}, 
+ 'The Replicator Dual':{'tool_count':2,'vid':0x23C1, 'pid':0xD314, 'botProfiles':'.*ReplicatorDual.*'},
+ 'MightyBoard':{'tool_count':1,'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*ReplicatorSingle.*'}, 
+ 'The MightBoard Dual':{'tool_count':2,'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*ReplicatorDual.*'},
 }
 
 class MachineDetector(object):

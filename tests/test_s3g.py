@@ -75,23 +75,40 @@ class S3gTests(unittest.TestCase):
     self.assertEqual(payload[3], 2)
 
   def test_get_verified_status_unverified(self):
-    pid_offset = 0x0046
+    vid = 0xc304
     pid = 0xb404
     expected_value = False
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
+    response_payload.extend(Encoder.encode_uint16(vid))
     response_payload.extend(Encoder.encode_uint16(pid))
     self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
 
     self.assertEqual(self.r.get_verified_status(), expected_value)
 
+  def test_get_vid_pid(self):
+    offset = 0x0044
+    length = 4
+    vid = 0xc304
+    pid = 0xb404
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    response_payload.extend(Encoder.encode_uint16(vid))
+    response_payload.extend(Encoder.encode_uint16(pid))
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+
+    got_vid, got_pid = self.r.get_vid_pid()
+
+    self.assertEqual(vid, got_vid)
+    self.assertEqual(pid, got_pid)
+
     packet = bytearray(self.inputstream.getvalue())
     payload = Encoder.decode_packet(packet)
     self.assertEqual(payload[0], constants.host_query_command_dict['READ_FROM_EEPROM'])
-    self.assertEqual(payload[1:3], Encoder.encode_uint16(pid_offset))
-    self.assertEqual(payload[3], 2)
-      
+    self.assertEqual(payload[1:3], Encoder.encode_uint16(offset))
+    self.assertEqual(payload[3], 4)
 
   def test_get_toolcount(self):
     toolcount = 3
