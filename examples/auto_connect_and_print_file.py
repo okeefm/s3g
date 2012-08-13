@@ -2,7 +2,7 @@ import os
 import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
-import s3g
+import makerbot_driver
 
 import serial
 import serial.tools.list_ports as lp
@@ -13,27 +13,19 @@ parser.add_option("-f", "--filename", dest="filename",
                   help="gcode file to print", default=False)
 parser.add_option("-s", "--gcode_start_end_sequences", dest="start_end_sequences",
                   help="run gcode start and end proceeses", default=True)
+parser.add_option("-m", "--machine", dest="machine",
+                  help="machine you want to connect to", default="The Replicator Dual")
 (options, args) = parser.parse_args()
 
-vid = int('23c1', 16)
-pid = int('d314', 16)
+md = makerbot_driver.MachineDetector()
+factory = makerbot_driver.BotFactory()
 
-ports = lp.list_ports_by_vid_pid(vid, pid)
-port = None
+bot = md.get_first_bot_available(options.machine)
+r, prof = factory.build_from_port(bot['port'])
 
-for port in ports:
-  thePort = port['port']
-  break
-
-if port == None:
-  print 'You dont have a replicator connected!!11'
-  sys.exit(1)
-
-r = s3g.s3g.from_filename(thePort)
-
-parser = s3g.Gcode.GcodeParser()
+parser = makerbot_driver.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
-parser.state.profile = s3g.Profile('ReplicatorDual')
+parser.state.profile = prof
 parser.s3g = r
 
 if options.start_end_sequences:

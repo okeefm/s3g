@@ -108,10 +108,11 @@ class s3g(object):
     """ 
     @return the toolhead count of this bot. -1 on error
     """
-    eeprom_length_toolcount = 2
+    eeprom_length_toolcount = 1
     data = self.read_from_EEPROM(offset, eeprom_length_toolcount)
-    data = Encoder.decode_uint16(data)
-    return data
+    data = array.array('B', data)
+    data = struct.unpack('<B', data)
+    return data[0]
 
   def get_vid_pid(self, offset=0x0044):
     """

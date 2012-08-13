@@ -34,12 +34,8 @@ class BotFactory(object):
 
     profile_regex = self.get_profile_regex(bot_setup_dict)
 
-    profile_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)),
-        'profiles',
-        )
-
     matches = makerbot_driver.search_profiles_with_regex(profile_regex)
+
     if len(matches) > 0:
       bestProfile = matches[0]
       s3gBot = self.create_s3g(portname)
@@ -93,7 +89,7 @@ class BotInquisitor(object):
     assign internal objects with <obj>.<internal_obj> = <obj> is a
     pain.
     """
-    return s3g.from_filename(self._portname)
+    return makerbot_driver.s3g.from_filename(self._portname)
 
   def query(self):
     """ open and query a bot for key settings needed to construct a bot."""
@@ -109,8 +105,8 @@ class BotInquisitor(object):
       settings['proper_name'] = s3gDriver.get_name()
       #Generate random UUID
       settings['uuid'] = uuid.uuid4()
-    if settings['fw_version'] >= 506:
-      #Get the real UUID
-      settings['uuid'] = s3gDriver.get_advanced_name()[1]
+      if settings['fw_version'] >= 506:
+        #Get the real UUID
+        settings['uuid'] = s3gDriver.get_advanced_name()[1]
     s3gDriver.close()
     return settings

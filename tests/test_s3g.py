@@ -113,10 +113,10 @@ class S3gTests(unittest.TestCase):
   def test_get_toolcount(self):
     toolcount = 3
     eeprom_offset_toolcount = 0x0042
-    eeprom_length_toolcount = 2
+    eeprom_length_toolcount = 1
     response_payload = bytearray()
     response_payload.append(constants.response_code_dict['SUCCESS'])
-    response_payload.extend(Encoder.encode_uint16(toolcount)) 
+    response_payload.append(toolcount) 
     self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
     
