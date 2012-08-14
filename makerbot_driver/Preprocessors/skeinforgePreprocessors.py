@@ -36,16 +36,16 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param input_path: The input file path
     @param output_path: The output file path
     """
+    for path in (input_path, output_path):
+      name, ext = os.path.splitext(path)
+      if ext != '.gcode':
+        raise NotGCodeFileError
     rp = RpmPreprocessor()
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as f:
       pass
     remove_rpm_path = f.name
     os.unlink(remove_rpm_path)
     rp.process_file(input_path, remove_rpm_path)
-    for path in (remove_rpm_path, output_path):
-      name, ext = os.path.splitext(path)
-      if ext != '.gcode':
-        raise NotGCodeFileError
     #Open both the files
     with contextlib.nested(open(remove_rpm_path), open(output_path, 'w')) as (i, o):
       #For each line in the input file
