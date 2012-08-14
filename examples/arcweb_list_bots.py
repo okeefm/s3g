@@ -13,7 +13,7 @@ parser.add_option("-v", "--verbose", dest="verbose", action="store_true", defaul
 vid = int('23c1', 16)
 pid = int('d314', 16)
 
-port = list(serial.tools.list_ports.get_ports_by_vid_pid(vid, pid))[0]
+port = list(serial.tools.list_ports.list_ports_by_vid_pid(vid, pid))[0]
 if options.verbose:
   return_info = port
 else:
