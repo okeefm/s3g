@@ -4,7 +4,7 @@ that runs several sub-preprocessors to cover
 common problems that most gcode files have.
 """
 
-from toolchangeProcessor import *
+from toolchangePreprocessor import *
 
 class DefaultPreprocessor(object):
 
