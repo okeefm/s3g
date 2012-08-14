@@ -80,6 +80,14 @@ class TestNewMachineDetector(unittest.TestCase):
     self.assertTrue( expectedPort in self.md.botsRecentlySeen.keys() )
     self.assertFalse( self.md.is_open(expectedPort))
 
+  def test_limited_scan_ok_list_bottype(self):
+    botClass = ['The Replicator']
+    self.md.scan(botClass)
+    expectedPort =  self.expected_info[0]['port']
+    self.assertTrue( expectedPort in self.md.botsJustSeen.keys() )
+    self.assertTrue( expectedPort in self.md.botsRecentlySeen.keys() )
+    self.assertFalse( self.md.is_open(expectedPort))
+
   def test_register_a_bot_open(self):
     botClass = 'The Replicator'
     self.md.scan(botClass)

@@ -18,10 +18,14 @@ parser.add_option("-m", "--machine", dest="machine",
 (options, args) = parser.parse_args()
 
 md = makerbot_driver.MachineDetector()
-factory = makerbot_driver.BotFactory()
-
 bot = md.get_first_bot_available(options.machine)
+if bot is None:
+  print "Cant Find %s" %(options.machine)
+  sys.exit()
+
+factory = makerbot_driver.BotFactory()
 r, prof = factory.build_from_port(bot['port'])
+
 
 parser = makerbot_driver.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
