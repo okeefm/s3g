@@ -20,131 +20,101 @@ except ImportError:
     return
     yield
 
-#import profile
-
-g_machineDetector = None
-
-
-
-def get_gMachineDetector(everSeenCacheFile=None):
-  """ always returns a singleton MachineDetector."""
-  global g_machineDetector
-  if g_machineDetector == None :
-    g_machineDetector = MachineDetector()
-  if everSeenCacheFile != None :
-    g_machineDetector.updateEverSeen(everSeenCacheFile)
-  return g_machineDetector
-
-# Data structure containing bot connection classess by VID/PID, as
-# well as what kinds of MakerBot may be constructed with those
-botClasses = {
- 'The Replicator':{'tool_count':1,'vid':0x23C1, 'pid':0xD314,'botProfiles':'.*ReplicatorSingle.*'}, 
- 'The Replicator Dual':{'tool_count':2,'vid':0x23C1, 'pid':0xD314, 'botProfiles':'.*ReplicatorDual.*'},
- 'MightyBoard':{'tool_count':1,'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*ReplicatorSingle.*'}, 
- 'The MightBoard Dual':{'tool_count':2,'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*ReplicatorDual.*'},
-}
+import s3g
+import profile
 
 class MachineDetector(object):
   """ Class used to detect machines, and query basic information from 
-  them. This is used to use MakerBot's pyserial to detect bots. """
-
+  them. This is used to use MakerBot's pyserial to detect machines. """
 
   def __init__(self):
     self._log = logging.getLogger(self.__class__.__name__)
-    self.everSeen = {} #dictionary of bots ever seen, UUID sorted. only 5.6 or newer bots
-    self.botsOpen= {} #dictionary of bots currently open as best we know, by port
-    self.botsRecentlySeen={}  #dictionary of bots seen in this running of the 
-            #environment (ie since singleton MachineDetector was created) by port
-    self.botsJustSeen={} # seen in the last scan, by port{}
-
+    #All machines
+    self.machines_ever_seen = []
+    #Bots seen since the inception of this object
+    self.machines_recently_seen = []
+    #Bots seen in the last scan
+    self.machines_just_seen = []
     #We save this func as a variable for testing purposes, 
     #otherwise we would have to do hacky things, like reload
     #libraries during testing, etc
     self.list_ports_by_vid_pid = list_ports_generator
-
+    self.machine_classes = {
+        'ReplicatorSingle':{'tool_count':1,'vid':0x23C1, 'pid':0xD314,'botProfiles':'.*ReplicatorSingle.*'}, 
+        'ReplicatorDual':{'tool_count':2,'vid':0x23C1, 'pid':0xD314, 'botProfiles':'.*ReplicatorDual.*'},
+        'MightyBoardSingle':{'tool_count':1,'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*ReplicatorSingle.*'}, 
+        'MightBoardDual':{'tool_count':2,'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*ReplicatorDual.*'},
+        }
 
   def scan(self,botTypes=None):
-    """ scans for connected bots, updates internal list of bots
+    """ scans for connected machines, updates internal list of machines
     based on scan results
     @param botTypes. This can be an individual botClass name, or a list
     of bot class names
     """
-    # clear our just seen list
-    self.botsJustSeen.clear()
-
     # scan for all bot types
     scanNameList = []
     if botTypes == None:
-        scanNameList.extend(botClasses.keys())
+        scanNameList.extend(self.machine_classes.keys())
     elif isinstance(botTypes, str) or isinstance(botTypes, unicode):
         scanNameList.append(botTypes)
-    else :
+    else:
         scanNameList.extend(botTypes)
 
     for botClass in scanNameList:
-        self._log.info( "scanning for BotClass " + botClass )
+        self._log.info( "scanning for BotClass " + str(botClass))
+        #Not all bot classes have a defined VID/PID
         try: 
-            vid = botClasses[botClass]['vid'] 
-            pid = botClasses[botClass]['pid']
-            newBots = list(self.list_ports_by_vid_pid(vid, pid))
-            for p in newBots:
-                self.botsJustSeen[p['port']] = p
-                self.botsRecentlySeen[p['port']] = p
+            vid = self.machine_classes[botClass]['vid'] 
+            pid = self.machine_classes[botClass]['pid']
+            new_bots = self.list_ports_by_vid_pid(vid, pid)
+            self.machines_just_seen = new_bots
+            if len(self.machines_just_seen) > 0:
+              self.machines_recently_seen = self.union(self.machines_recently_seen, self.machines_just_seen)
         except KeyError:
-            continue #bot name isn't one we recognize
+            continue #The bot doesnt have a VID/PID, so we cant scan for it
 
-  def register_open(self, botPort):
-    """ Register a port as an open bot. If that bot has been scanned, 
-    the dictionary value will be bot-data. If the bot was never found in a scan
-    the bot info is empty.
-    @param botPort Name of the port to register as open
-    @return True if a bot registered has been 'seen', false otherwise.
+  def union(self, m, n):
     """
-    botInfo = {}
-    if botPort in self.botsRecentlySeen.keys():
-        botInfo = self.botsRecentlySeen[botPort]
-        self.botsOpen[botPort] = botInfo
-        return True
-    self.botsOpen[botPort] = botInfo 
-    return False
-
-
-  def is_open(self, botPort):
-    """ test to see if a bot is registered as open. 
-    @return True if the specified port is registered as open. False otherwise
+    Given two lists of dictionries, returns the union
+    of them.  list_ports_vid_pid returns lists of 
+    dictionaries.
     """
-    return botPort in self.botsOpen.keys()
-       
+    u = []
+    for item in m:
+        u.append(item.copy())
+    for item in n:
+      if item not in m:
+        u.append(item)
+    return u
 
-  def register_closed(self, botPort):
-    """ register that a port is 'closed' 
-    @param botPort Name of the port to register as open
-    """
-    if botPort in self.botsOpen.keys():
-        del self.botsOpen[botPort]
-        return True
-    return False 
-
-  def get_vid_pid_by_class(self, botType):
-    """@returns a tuple of vid/pid if botType passed matches any class"""
-    if botType in botClasses.keys():
-      return botClasses[botType]['vid'], botClasses[botType]['pid']
-    return None,None
-
-  def get_first_bot_available(self, botTypes= None):
-    """ returns the bot dict for the very first bot avaiable"""
-    botsAll = self.get_bots_available(botTypes)
-    for port in botsAll.keys():
-        return botsAll[port]
-    return None
-
-  def get_bots_available(self, botTypes=None):
-    """
-    Returns any currently connected bots given a type/multiple types
-    @param botClass a single bot class or list of valid bot classes. If None,
-        all bot classes are considered
-    @returns a dict of bots we have see that match types, keyed by port name. 
-        None if no bot matches
-    """
+  def get_available_machines(self, botTypes = None):
     self.scan(botTypes)
-    return self.botsJustSeen
+    machines = {}
+    for machine in self.machines_just_seen:
+      try:
+        port = machine['port']
+        machines[port] = self.identify_machine(machine)
+      except KeyError:
+        pass
+    return machines
+
+  def identify_machine(self, machine_info):
+    the_profile = None
+    the_s3g = self.create_s3g(machine_info['port'])
+    version = the_s3g.get_version()
+    if version >= 500:
+      the_profile = self.identify_replicator(the_s3g)
+      the_profile.values['uuid'] = machine_info['iSerial']
+    return the_profile, the_s3g
+
+  def identify_replicator(self, the_s3g):
+    toolhead_count = the_s3g.get_toolhead_count()
+    if toolhead_count == 1:
+      p = profile.Profile('ReplicatorSingle')
+    elif toolhead_count == 2:
+      p = profile.Profile('ReplicatorDual')
+    return p
+
+  def create_s3g(self, port):
+    return s3g.from_filename(port)
