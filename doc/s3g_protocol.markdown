@@ -700,8 +700,8 @@ Response
 </tr>
 <tr>
  <td>3</td>
- <td>EXTRF *Deprecated*</td>
- <td>External reset flag was set at restart</td>
+ <td>ONBOARD_PROCESS</td>
+ <td>Bot is running an onboard process (the difference between an onboard script and an onboard process is important to the bot, but is not important to the s3g host)</td>
 </tr>
 <tr>
  <td>2</td>
@@ -754,6 +754,10 @@ Build State Return Values are as follows
 <tr>
   <td>4</td>
   <td>build cancelled</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>build sleeping</td>
 </tr>
 </table>
 

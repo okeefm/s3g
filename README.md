@@ -9,6 +9,10 @@ First, obtain a copy of our version of pyserial.  This can be done VIA git.  On 
 
     git clone git@github.com:makerbot/pyserial.git
 
+Dependent submodules must be up to date to run the virutalenv.  In the root directory of makerbot_driver, issue:
+  
+    git submodule update --init
+
 To create the VirtualEnv, inside the root directory of the makerbot_driver folder, issue:
 
     python virtualenv.py virtualenv
