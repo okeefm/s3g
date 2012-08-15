@@ -167,38 +167,6 @@ Parameters
     
     delay = P
 
-## G10 - Store offsets to position register
-Save the specified XYZ offsets to an offset register. When the register is activated by a G54 or G55 command, apply this offset to every position before sending it to the machine.
-
-Registers
-
-    P: (code) Coordinate offset register to write to (1, 2)
-    X: (code) X offset, in mm
-    Y: (code) Y offset, in mm
-    Z: (code) Z offset, in mm
-
-S3g Output (none)
-
-Parameters (none)
-
-## G54 - Use coordinate system from G10 P1
-Consider all future positions to be offset by the values stored in the position register P1.
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
-## G55 - Use coordinate system from G10 P2
-Consider all future positions to be offset by the values stored in the position register P2.
-
-Registers (none)
-
-S3g Output (none)
-
-Parameters (none)
-
 ## G92 - Position register: Set the specified axes positions to the given position
 Sets the position of the state machine and the bot.
 NB: There are two methods of forming the G92 command:
