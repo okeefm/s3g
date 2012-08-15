@@ -26,9 +26,6 @@ class GcodeParser(object):
     self.GCODE_INSTRUCTIONS = {
       1   : [self.linear_interpolation,         'XYZABEF', ''],
       4   : [self.dwell,                       'P',       ''],
-      10  : [self.store_offsets,                'XYZP',    ''],
-      54  : [self.use_p1_offsets,                '',        ''],
-      55  : [self.use_p2_offsets,                '',        ''],
       92  : [self.set_position,                 'XYZABE',  ''],
       130 : [self.set_potentiometer_values,      'XYZAB',   ''],
       161 : [self.find_axes_minimums,            'F',       'XYZ'],
@@ -180,18 +177,6 @@ class GcodeParser(object):
     stepped_position = multiply_vector(self.state.get_position(), self.state.get_axes_values('steps_per_mm'))
     self.s3g.set_extended_position(stepped_position)
       
-  def use_p1_offsets(self, codes, flags, comment):
-    """Sets the state machine to use the P0 offset.
-    """
-    self.state.offset_register = 1
-    self._log.info('{"event":"gcode_state_change", "change":"offset_register", "new_offset_register": %i}', self.state.offset_register)
-
-  def use_p2_offsets(self, codes, flags, comment):
-    """Sets the state machine to use the P1 offset.
-    """
-    self.state.offset_register = 2
-    self._log.info('{"event":"gcode_state_change", "change":"offset_register", "new_offset_register": %i}', self.state.offset_register)
-
   def wait_for_tool_ready(self, codes, flags, comment):
     """
     Waits for a toolhead for some amount of time.  If either of 
@@ -271,12 +256,6 @@ class GcodeParser(object):
 
     elif 100 == percentage:
       self.build_end_notification()
-
-  def store_offsets(self, codes, flags, comment):
-    """Given XYZ offsets and an offset index, stores those 
-    offsets in the state machine.
-    """
-    self.state.offsetPosition[codes['P']].SetPoint(codes)
 
   def linear_interpolation(self, codes, flags, comment):
     """Movement command that has two flavors: E and AB commands.

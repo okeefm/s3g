@@ -34,29 +34,6 @@ class s3gHelperFunctionTests(unittest.TestCase):
     expectedPosition = [0, 1, 2, 3, 4]
     self.assertEqual(expectedPosition, self.g.get_position())
 
-  def test_get_position_with_offset(self):
-    position = {
-        'X' : 0,
-        'Y' : 1,
-        'Z' : 2,
-        'A' : 3,
-        'B' : 4,
-        }
-    for key in position:
-      setattr(self.g.position, key, position[key])
-    offsetPosition = {
-        'X' : 100,
-        'Y' : 200,
-        'Z' : 300,
-        'A' : 400,
-        'B' : 500,
-        }
-    self.g.offset_register = 1
-    for key in offsetPosition:
-      setattr(self.g.offsetPosition[self.g.offset_register], key, offsetPosition[key])
-    expectedPosition = [100, 201, 302, 403, 504]
-    self.assertEqual(expectedPosition, self.g.get_position())
-
   def test_lose_position(self):
     position = {
           'X' : 1,

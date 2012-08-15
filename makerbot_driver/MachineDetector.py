@@ -60,7 +60,6 @@ class MachineDetector(object):
     #libraries during testing, etc
     self.list_ports_by_vid_pid = list_ports_generator
 
-
   def scan(self,botTypes=None):
     """ scans for connected bots, updates internal list of bots
     based on scan results

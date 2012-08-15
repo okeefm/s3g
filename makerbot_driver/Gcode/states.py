@@ -18,28 +18,9 @@ class GcodeStates(object):
     self._log = logging.getLogger(self.__class__.__name__)
     self.profile = None
     self.position = Point()    #Position, In MM!!
-
-    self.offsetPosition = {
-        1   :   Point(),
-        2   :   Point(),
-        }
-    
-    #Set offsets to 0
-    for key in self.offsetPosition:
-      self.offsetPosition[key].SetPoint(
-          {
-            'X' : 0,
-            'Y' : 0,
-            'Z' : 0,
-            'A' : 0,
-            'B' : 0,
-          }
-        )
-
     self.values = {}
     self.wait_for_ready_packet_delay = 100  #ms
     self.wait_for_ready_timeout =   600  #seconds
-    self.offset_register = None #Curent offset register
   
   def lose_position(self, axes):
     """Given a set of axes, loses the position of
@@ -51,10 +32,7 @@ class GcodeStates(object):
       setattr(self.position, axis, None)
 
   def get_position(self):
-    """Gets a usable position in steps to send to the machine by applying 
-    the applicable offsetes.  The offsets applied are the ones that are in 
-    use by the machine via G54/G55 command.  If no G54/G55 commands have b
-    een used, we apply no offsets
+    """Gets a usable position in steps to send to the machine
     @return list position: The current position of the machine in steps
     """
     #Check each axis first, since we need to report a bad axis if needed
@@ -65,10 +43,6 @@ class GcodeStates(object):
         raise gcode_error
     
     return_position = self.position.ToList()
-    
-    if self.offset_register != None:
-      offsets = self.offsetPosition[self.offset_register]
-      return_position = map(lambda x, y: x+y, return_position, offsets.ToList())
     
     return return_position
 
