@@ -35,7 +35,7 @@ class BotFactory(object):
     profile_regex = self.get_profile_regex(bot_setup_dict)
 
     matches = makerbot_driver.search_profiles_with_regex(profile_regex)
-
+	matches = list(matches)
     if len(matches) > 0:
       bestProfile = matches[0]
       s3gBot = self.create_s3g(portname)
@@ -91,8 +91,12 @@ class BotInquisitor(object):
     """
     return makerbot_driver.s3g.from_filename(self._portname)
 
-  def query(self):
-    """ open and query a bot for key settings needed to construct a bot."""
+
+  def query(self, leaveOpen=True):
+    """ open a connection to a bot and  query a bot for 
+		key settings needed to construct a bot from a profile
+		@param leaveOpen IF true, serial connection to the bot is left open.
+		@return a tuple of an (s3gObj, dictOfSettings"""
     import makerbot_driver.s3g as s3g
     import uuid
     settings = {}
@@ -108,5 +112,7 @@ class BotInquisitor(object):
       if settings['fw_version'] >= 506:
         #Get the real UUID
         settings['uuid'] = s3gDriver.get_advanced_name()[1]
-    s3gDriver.close()
-    return settings
+	if leaveOpen:
+	    s3gDriver.close()
+				
+    return s3gDriver, settings
