@@ -28,10 +28,12 @@ g_machineDetector = None
 
 def get_gMachineDetector(everSeenCacheFile=None):
   """ always returns a singleton MachineDetector."""
+  global g_machineDetector
   if g_machineDetector == None :
     g_machineDetector = MachineDetector()
   if everSeenCacheFile != None :
     g_machineDetector.updateEverSeen(everSeenCacheFile)
+  return g_machineDetector
 
 # Data structure containing bot connection classess by VID/PID, as
 # well as what kinds of MakerBot may be constructed with those
