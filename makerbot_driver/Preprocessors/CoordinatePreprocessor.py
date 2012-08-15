@@ -1,4 +1,6 @@
 from preprocessor import *
+import os
+import contextlib
 from .. import Gcode
 
 class CoordinatePreprocessor(Preprocessor):
