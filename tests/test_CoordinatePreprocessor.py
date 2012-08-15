@@ -30,4 +30,7 @@ class CoordinatePreprocessor(unittest.TestCase):
         ['G54\n', 'G54\n'],
         ]
     for case in cases:
-      self.assertEqual(Case[1], self.cp_transform_g55(case[0]))
+              self.assertEqual(case[1], self.cp._transform_g55(case[0]))
+
+if __name__ == "__main__":
+  unittest.main()

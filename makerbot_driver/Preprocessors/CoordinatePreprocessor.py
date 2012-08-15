@@ -1,4 +1,5 @@
 from preprocessor import *
+from .. import Gcode
 
 class CoordinatePreprocessor(Preprocessor):
 
