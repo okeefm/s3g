@@ -24,6 +24,7 @@ class BotFactory(object):
     """
     return BotInquisitor(portname)
 
+  
   def build_from_port(self, portname):
     """
     Returns a tuple of an open bot object, as well 
@@ -33,7 +34,7 @@ class BotFactory(object):
     bot_setup_dict = botInquisitor.query()
 
     profile_regex = self.get_profile_regex(bot_setup_dict)
-
+    
     matches = makerbot_driver.search_profiles_with_regex(profile_regex)
 	matches = list(matches)
     if len(matches) > 0:
@@ -44,6 +45,8 @@ class BotFactory(object):
       machine_info= None, None
     return machine_info
 
+
+
   def create_s3g(self, portname):
     """
     This is made to ameliorate testing.  Otherwise we would
@@ -51,6 +54,8 @@ class BotFactory(object):
     w/o being permanently attached to a specific port.
     """
     return makerbot_driver.s3g.from_filename(portname)
+
+
 
   def get_profile_regex(self, bot_setup_dict):
     """
@@ -78,9 +83,12 @@ class BotFactory(object):
           regex = makerbot_driver.botClasses[bot]['botProfiles']
     return regex
 
+
+
 class BotInquisitor(object):
     
   def __init__(self, portname):
+	""" build a bot Inqusitor for an exact port"""
     self._portname = portname
 
   def create_s3g(self):

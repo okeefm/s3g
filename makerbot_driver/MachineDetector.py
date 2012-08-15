@@ -68,7 +68,7 @@ class MachineDetector(object):
             vid = self.machine_classes[botClass]['vid'] 
             pid = self.machine_classes[botClass]['pid']
             new_bots = self.list_ports_by_vid_pid(vid, pid)
-            self.machines_just_seen = new_bots
+            self.machines_just_seen = list(new_bots)
             if len(self.machines_just_seen) > 0:
               self.machines_recently_seen = self.union(self.machines_recently_seen, self.machines_just_seen)
         except KeyError:
