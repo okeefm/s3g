@@ -32,6 +32,15 @@ class GcodeParser(object):
       162 : [self.find_axes_maximums,            'F',       'XYZ'],
     }
 
+    self.GCODE_DEPRECATED = {
+      21  : "not required: parser uses mm by default",
+      90  : "not required: parser uses absolute positioning by default",
+    }
+
+    self.MCODE_DEPRECATED = {
+       103 : "not required: firmware enables and disables motors automatically", 
+    }
+
     self.MCODE_INSTRUCTIONS = {
        18  : [self.disable_axes,                '',        'XYZAB'],
        70  : [self.display_message,             'P',       ''],
@@ -70,7 +79,11 @@ class GcodeParser(object):
           check_for_extraneous_codes(codes.keys(), self.GCODE_INSTRUCTIONS[codes['G']][1])
           check_for_extraneous_codes(flags, self.GCODE_INSTRUCTIONS[codes['G']][2])
           self.GCODE_INSTRUCTIONS[codes['G']][0](codes, flags, comment)
-
+          
+        elif codes['G'] in self.GCODE_DEPRECATED:
+          self._log.warning('{"deprecated":%s}', self.GCODE_DEPRECATED[codes['G']])
+          print ("WARNING: Deprecated Command : G%d   %s") % (codes['G'],self.GCODE_DEPRECATED[codes['G']]) 
+ 
         else:
           self._log.error('{"event":"unrecognized_command", "command":%s}', codes['G'])
           gcode_error = UnrecognizedCommandError()
@@ -81,6 +94,10 @@ class GcodeParser(object):
         if codes['M'] in self.MCODE_INSTRUCTIONS:
           check_for_extraneous_codes(codes.keys(), self.MCODE_INSTRUCTIONS[codes['M']][1])
           check_for_extraneous_codes(flags, self.MCODE_INSTRUCTIONS[codes['M']][2])
+
+        elif codes['M'] in self.MCODE_DEPRECATED:
+          self._log.warning('{"deprecated":%s}', self.MCODE_DEPRECATED[codes['M']])
+          print ("WARNING: Deprecated Command : M%d   %s") % (codes['M'],self.MCODE_DEPRECATED[codes['M']]) 
           self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
 
         else:
@@ -114,6 +131,9 @@ class GcodeParser(object):
       gcode_error.values['LineNumber'] = self.line_number
       raise gcode_error
     self.line_number += 1
+
+  def deprecated(self, codes, flags, comment):
+    return
 
   def set_potentiometer_values(self, codes, flags, comment):
     """Given a set of codes, sets the machine's potentiometer value to a specified value in the codes
