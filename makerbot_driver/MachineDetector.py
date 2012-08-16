@@ -19,9 +19,18 @@ except ImportError:
   def list_ports_generator():
     return
     yield
+    
 
-import s3g
-import profile
+def g_botClasses(): 
+    """ get our global list of bot classes"""
+    return botClasses
+
+# bot USB classes IE what VID/PID can map to what bot profiles
+botClasses = {
+        'The Replicator':{'vid':0x23C1, 'pid':0xD314,'botProfiles':'.*Replicator'}, 
+        'MightBoard':{'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*Replicator'},
+    }
+
 
 class MachineDetector(object):
   """ Class used to detect machines, and query basic information from 
@@ -29,22 +38,14 @@ class MachineDetector(object):
 
   def __init__(self):
     self._log = logging.getLogger(self.__class__.__name__)
-    #All machines
-    self.machines_ever_seen = []
     #Bots seen since the inception of this object
-    self.machines_recently_seen = []
-    #Bots seen in the last scan
-    self.machines_just_seen = []
+    self.machines_recently_seen = {}
+    #Bots seen in the last scan, 
+    self.machines_just_seen = {}
     #We save this func as a variable for testing purposes, 
     #otherwise we would have to do hacky things, like reload
     #libraries during testing, etc
     self.list_ports_by_vid_pid = list_ports_generator
-    self.machine_classes = {
-        'ReplicatorSingle':{'tool_count':1,'vid':0x23C1, 'pid':0xD314,'botProfiles':'.*ReplicatorSingle.*'}, 
-        'ReplicatorDual':{'tool_count':2,'vid':0x23C1, 'pid':0xD314, 'botProfiles':'.*ReplicatorDual.*'},
-        'MightyBoardSingle':{'tool_count':1,'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*ReplicatorSingle.*'}, 
-        'MightBoardDual':{'tool_count':2,'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*ReplicatorDual.*'},
-        }
 
   def scan(self,botTypes=None):
     """ scans for connected machines, updates internal list of machines
@@ -55,7 +56,7 @@ class MachineDetector(object):
     # scan for all bot types
     scanNameList = []
     if botTypes == None:
-        scanNameList.extend(self.machine_classes.keys())
+        scanNameList.extend(botClasses.keys())
     elif isinstance(botTypes, str) or isinstance(botTypes, unicode):
         scanNameList.append(botTypes)
     else:
@@ -65,12 +66,14 @@ class MachineDetector(object):
         self._log.info( "scanning for BotClass " + str(botClass))
         #Not all bot classes have a defined VID/PID
         try: 
-            vid = self.machine_classes[botClass]['vid'] 
-            pid = self.machine_classes[botClass]['pid']
+            vid = botClasses[botClass]['vid'] 
+            pid = botClasses[botClass]['pid']
             new_bots = self.list_ports_by_vid_pid(vid, pid)
-            self.machines_just_seen = list(new_bots)
-            if len(self.machines_just_seen) > 0:
-              self.machines_recently_seen = self.union(self.machines_recently_seen, self.machines_just_seen)
+            
+            self.machines_just_seen = {}
+            for bot in list(new_bots):
+                self.machines_just_seen[bot['port']] = bot
+            self.machines_recently_seen.update(self.machines_just_seen)            
         except KeyError:
             continue #The bot doesnt have a VID/PID, so we cant scan for it
 
@@ -88,33 +91,20 @@ class MachineDetector(object):
         u.append(item)
     return u
 
-  def get_available_machines(self, botTypes = None):
+  def get_first_machine(self, botType = None):
+    """ returns a list of machines sorted by currently connected ports
+    @return a port data dict of {'vid':vid, 'pid':pid 'port':port [...]}
+    """
+    for b in self.machines_just_seen.keys():
+        return b
+    return None
+
+  def get_available_machines(self, botTypes = None ):
+    """ returns a list of machines sorted by currently connected ports
+    port_data_dict includes {'vid':vid, 'pid':pid 'port':port [...]}
+    @return dict of {'portname',port_data_dict"""
+
     self.scan(botTypes)
-    machines = {}
-    for machine in self.machines_just_seen:
-      try:
-        port = machine['port']
-        machines[port] = self.identify_machine(machine)
-      except KeyError:
-        pass
-    return machines
+    return self.machines_just_seen
 
-  def identify_machine(self, machine_info):
-    the_profile = None
-    the_s3g = self.create_s3g(machine_info['port'])
-    version = the_s3g.get_version()
-    if version >= 500:
-      the_profile = self.identify_replicator(the_s3g)
-      the_profile.values['uuid'] = machine_info['iSerial']
-    return the_profile, the_s3g
 
-  def identify_replicator(self, the_s3g):
-    toolhead_count = the_s3g.get_toolhead_count()
-    if toolhead_count == 1:
-      p = profile.Profile('ReplicatorSingle')
-    elif toolhead_count == 2:
-      p = profile.Profile('ReplicatorDual')
-    return p
-
-  def create_s3g(self, port):
-    return s3g.from_filename(port)

@@ -25,26 +25,24 @@ class BotFactory(object):
     return BotInquisitor(portname)
 
   
-  def build_from_port(self, portname):
+  def build_from_port(self, portname, leaveOpen=True):
     """
-    Returns a tuple of an open bot object, as well 
-    as the Profile for that bot
+    Returns a tuple of an (s3gObj, ProfileObj) 
+    for a bot at port portname
     """
     botInquisitor = self.create_inquisitor(portname)
-    bot_setup_dict = botInquisitor.query()
+    s3gBot, bot_setup_dict = botInquisitor.query(leaveOpen)
 
+ 
     profile_regex = self.get_profile_regex(bot_setup_dict)
-
     matches = makerbot_driver.search_profiles_with_regex(profile_regex)
     matches = list(matches)
     if len(matches) > 0:
       bestProfile = matches[0]
-      s3gBot = self.create_s3g(portname)
-      machine_info = s3gBot, makerbot_driver.Profile(bestProfile)
+      machine_info = ( s3gBot, makerbot_driver.Profile(bestProfile))
     else:
-      machine_info= None, None
+      machine_info= ( None, None)
     return machine_info
-
 
 
   def create_s3g(self, portname):
@@ -69,6 +67,10 @@ class BotFactory(object):
     #First check for VID/PID matches
     if 'vid' in bot_setup_dict and 'pid' in bot_setup_dict:
       regex = self.get_profile_regex_has_vid_pid(bot_setup_dict)
+    if regex and bot_setup_dict.get('tool_count',0) == 1:
+        regex = regex + 'Single'
+    elif regex and bot_setup_dict.get('tool_count',0) == 2:
+        regex = regex + 'Dual'
     return regex
 
   def get_profile_regex_has_vid_pid(self, bot_setup_dict):
@@ -77,11 +79,10 @@ class BotFactory(object):
     tool_count at the final criterion to narrow our search.
     """
     vid_pid_matches = []
-    for bot in makerbot_driver.botClasses:
-      if makerbot_driver.botClasses[bot]['vid'] == bot_setup_dict['vid'] and makerbot_driver.botClasses[bot]['pid'] == bot_setup_dict['pid']:
-        if makerbot_driver.botClasses[bot]['tool_count'] == bot_setup_dict['tool_count']:
-          regex = makerbot_driver.botClasses[bot]['botProfiles']
-    return regex
+    for bot in makerbot_driver.g_botClasses().values():
+      if bot['vid'] == bot_setup_dict['vid'] and bot['pid'] == bot_setup_dict['pid']:
+            return bot['botProfiles']
+    return None
 
 
 
