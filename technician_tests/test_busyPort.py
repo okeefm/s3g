@@ -47,13 +47,13 @@ class InUseTechnicianTest(unittest.TestCase):
   def test_inuse_port(self):
     port = raw_input("specify a real active port on your OS to test>")
     r1 = makerbot_driver.s3g.from_filename( port )
-    s = r1.isOpen()
+    s = r1.is_open()
     self.assertTrue(s, "open expcted post construction")
     r1.close()
-    s = r1.isOpen()
+    s = r1.is_open()
     self.assertFalse(s, "close expcted.")
     r1.open()
-#    s = r1.isOpen()
+#    s = r1.is_open()
 #    self.assertFalse(s, "reopened. open expcted")
 	
 if __name__ == '__main__':
