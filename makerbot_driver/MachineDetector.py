@@ -20,6 +20,12 @@ except ImportError:
     return
     yield
     
+gMachineDetector = None
+def get_gMachineDetector():
+	global gMachineDetector
+	if(gMachineDetector == None):
+		gMachineDetector = MachineDetector()
+	return gMachineDetector
 
 def g_botClasses(): 
     """ get our global list of bot classes"""
