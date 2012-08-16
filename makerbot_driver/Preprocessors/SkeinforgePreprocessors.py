@@ -2,7 +2,7 @@
 A set of preprocessors for the skeinforge engine
 """
 
-from preprocessor import *
+from Preprocessor import *
 from RpmPreprocessor import *
 from errors import *
 from .. import Gcode
@@ -36,10 +36,7 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param input_path: The input file path
     @param output_path: The output file path
     """
-    for path in (input_path, output_path):
-      name, ext = os.path.splitext(path)
-      if ext != '.gcode':
-        raise NotGCodeFileError
+    self.inputs_are_gcode(input_path, output_path)
     rp = RpmPreprocessor()
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as f:
       pass

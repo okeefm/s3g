@@ -10,7 +10,7 @@ M103
 M108
 """
 
-from preprocessor import *
+from Preprocessor import *
 from errors import *
 from .. import Gcode
 import contextlib
@@ -35,10 +35,7 @@ class RpmPreprocessor(Preprocessor):
     @param input_path: The input file path
     @param output_path: The output file path
     """
-    for path in (input_path, output_path):
-      name, ext = os.path.splitext(path)
-      if ext != '.gcode':
-        raise NotGCodeFileError
+    self.inputs_are_gcode(input_path, output_path)
     #Open both the files
     with contextlib.nested(open(input_path), open(output_path, 'w')) as (i, o):
       #For each line in the input file

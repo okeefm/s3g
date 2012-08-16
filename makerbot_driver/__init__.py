@@ -1,4 +1,4 @@
-__all__ = ['Encoder', 'EEPROM','FileReader', 'Gcode', 'Writer', 'BotFactory', 'MachineDetector', 's3g', 'profile', 'constants', 'errors']
+__all__ = ['Preprocessors', 'Encoder', 'EEPROM','FileReader', 'Gcode', 'Writer', 'BotFactory', 'MachineDetector', 's3g', 'profile', 'constants', 'errors']
 
 __version__ = '0.1.0'
 
