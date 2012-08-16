@@ -52,6 +52,7 @@ setup(
     author_email=['cibomahto@gmail.com','david.sayles@makerbot.com','far@makerbot.com'],
     packages=[
         'makerbot_driver',
+        'makerbot_driver.EEPROM',
         'makerbot_driver.Encoder',
         'makerbot_driver.FileReader',
         'makerbot_driver.Firmware',
