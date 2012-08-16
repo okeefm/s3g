@@ -43,6 +43,13 @@ elif sys.version >= 3.0:
         "__version__.*'(.+)'",
         open(os.path.join('makerbot_driver', '__init__.py')).read()).group(1)
 
+# Walk the source tree to collect all the json files.
+import fnmatch
+json_files = []
+for (path,dirs,files) in os.walk('makerbot_driver'):
+    for f in files:
+        if fnmatch.fnmatch(f,'*.json'):
+            json_files.append(os.path.join(path,f))
 
 
 setup(
@@ -60,6 +67,7 @@ setup(
         'makerbot_driver.Preprocessors',
         'makerbot_driver.Writer'
     ],
+    package_data={'makerbot_driver.EEPROM':['*.json']},
     url='http://github.com/makerbot/s3g',
     license='LICENSE.txt',
     description='Python driver to connect to MakerBot 3D Printers which use the s3g protocol',

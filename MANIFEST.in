@@ -1,2 +1,2 @@
-include *.md *.png
-recursive-include doc *.md *.png
+include *.md *.png *.json
+recursive-include doc *.md *.png *.json
