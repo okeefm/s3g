@@ -343,6 +343,10 @@
       "offset": "0x0162", 
       "type": "iii"
     }, 
+    "TOOL_COUNT": {
+      "offset": "0x0042", 
+      "type": "B"
+    }, 
     "TOTAL_BUILD_TIME": {
       "eeprom_map": "build_time_offsets", 
       "offset": "0x01A0", 
@@ -356,6 +360,11 @@
           "type": "B"
         }
       }
+    }, 
+    "UUID": {
+      "mult": "16", 
+      "offset": "0x01A4", 
+      "type": "B"
     }, 
     "VERSION_HIGH": {
       "offset": "0x0001", 

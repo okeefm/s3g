@@ -181,7 +181,7 @@ const static uint16_t AXIS_HOME_POSITIONS_STEPS	= 0x000E;
 //$type:s  $length:16
 const static uint16_t MACHINE_NAME				= 0x0022;
 /// Tool count : 2 bytes
-//$:BEGIN_ENTRY
+//$BEGIN_ENTRY
 //$type:B 
 const static uint16_t TOOL_COUNT 				= 0x0042;
 /// Hardware ID. Must exactly match the USB VendorId/ProductId pair: 4 bytes
@@ -251,9 +251,14 @@ const static uint16_t AXIS_LENGTHS				= 0x018C;
 //$BEGIN_ENTRY
 //$eeprom_map: build_time_offsets
 const static uint16_t TOTAL_BUILD_TIME			= 0x01A0;
+/// UUID for this BOT 128 bytes
+//$BEGIN_ENTRY
+//$type:B $mult:16
+const static uint16_t UUID			= 0x01A4;
+
 
 /// start of free space
-const static uint16_t FREE_EEPROM_STARTS        = 0x01A4;
+const static uint16_t FREE_EEPROM_STARTS        = 0x0204;
 
 } 
 

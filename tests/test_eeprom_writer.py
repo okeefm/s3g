@@ -35,7 +35,7 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
     value = 252645135
     context = ['T0_DATA_BASE']
     offset = 0x0016 + 0x0000
-    expected_value = struct.pack('>i', value)
+    expected_value = struct.pack('<i', value)
     expected_buffer = [[offset, expected_value]]
     self.writer.write_data(name, value, context)
     self.assertEqual(expected_buffer, self.writer.data_buffer)
@@ -46,7 +46,7 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
     value = 120
     offset = 0x0000
     expected_packed_data = []
-    expected_packed_data.append([offset, struct.pack('>b', value)])
+    expected_packed_data.append([offset, struct.pack('<b', value)])
     self.writer.write_data(name, value)
     #add second value
     name = 'unus'
@@ -56,7 +56,7 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
     data = ''
     for value in values:
       bits = self.writer.calculate_floating_point(value)
-      data += struct.pack('>BB', bits[0], bits[1])
+      data += struct.pack('<BB', bits[0], bits[1])
     expected_packed_data.append([offset, data])
     self.writer.write_data(name, values, context, flush=True)
     self.assertEqual(expected_packed_data, self.writer.data_buffer)
@@ -69,7 +69,7 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
     offset = 0x0000
     value = 120
     expected_packed_data = []
-    expected_packed_data.append([offset, struct.pack('>b', value)])
+    expected_packed_data.append([offset, struct.pack('<b', value)])
     self.writer.write_data(name, value)
     #add second value
     name = 'unus'
@@ -79,7 +79,7 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
     data = ''
     for value in values:
       bits = self.writer.calculate_floating_point(value)
-      data += struct.pack('>BB', bits[0], bits[1])
+      data += struct.pack('<BB', bits[0], bits[1])
     expected_packed_data.append([offset, data])
     self.writer.write_data(name, values, context)
     self.assertEqual(expected_packed_data, self.writer.data_buffer)
@@ -104,7 +104,7 @@ class TestEepromWriter(unittest.TestCase):
     value = [10]*mult
     expected = ''
     for i in range(mult):
-      expected += struct.pack('>H', value[0])
+      expected += struct.pack('<H', value[0])
     got =self.writer.encode_data(value, input_dict)
     self.assertEqual(expected, got)
 
@@ -140,7 +140,7 @@ class TestEepromWriter(unittest.TestCase):
   def test_encode_string(self):
     string = 'The Replicator'
     terminated_string = string+'\x00'
-    code = '>%is' %(len(terminated_string))
+    code = '<%is' %(len(terminated_string))
     expected_payload = struct.pack(code, terminated_string)
     self.assertEqual(expected_payload, self.writer.encode_string(string))
 
@@ -165,7 +165,7 @@ class TestEepromWriter(unittest.TestCase):
         }
     string = 'TheReplicator'
     terminated_string = string+'\x00'
-    code = '>%is' %(len(terminated_string))
+    code = '<%is' %(len(terminated_string))
     expected_payload = struct.pack(code, terminated_string)
     self.assertEqual(expected_payload, self.writer.encode_data([string], input_dict))
 
@@ -176,7 +176,7 @@ class TestEepromWriter(unittest.TestCase):
         }
     value = [128.5]
     bits = self.writer.calculate_floating_point(value[0])
-    expected = struct.pack('>BB', bits[0], bits[1])
+    expected = struct.pack('<BB', bits[0], bits[1])
     self.assertEqual(expected, self.writer.encode_data(value, input_dict))
 
   def test_encode_data_floating_point_multiple(self):
@@ -188,7 +188,7 @@ class TestEepromWriter(unittest.TestCase):
     expected = ''
     for value in values:
       bits = self.writer.calculate_floating_point(value)
-      expected += struct.pack('>BB', bits[0], bits[1])
+      expected += struct.pack('<BB', bits[0], bits[1])
     self.assertEqual(expected, self.writer.encode_data(values, input_dict))
 
   def test_encode_data_normal_value(self):
@@ -197,7 +197,7 @@ class TestEepromWriter(unittest.TestCase):
         'type'  : t
         }
     value = [128]
-    expected_value = struct.pack('>%s' %(t), value[0])
+    expected_value = struct.pack('<%s' %(t), value[0])
     self.assertEqual(expected_value, self.writer.encode_data(value, input_dict))
 
   def test_encode_data_multiple_values(self):
@@ -206,7 +206,7 @@ class TestEepromWriter(unittest.TestCase):
         'type'  : t
         }
     values = [128, 252645135, 3855]
-    expected_value = struct.pack('>%s' %(t), values[0], values[1], values[2])
+    expected_value = struct.pack('<%s' %(t), values[0], values[1], values[2])
     self.assertEqual(expected_value, self.writer.encode_data(values, input_dict))
 
   def test_encode_data_non_matching_type_and_values_more_types(self):

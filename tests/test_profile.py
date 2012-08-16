@@ -20,7 +20,14 @@ class ProfileInitTests(unittest.TestCase):
   def test_good_profile_name(self):
     name = "ReplicatorSingle"
     p = makerbot_driver.Profile(name)
-    with open('makerbot_driver' + os.path.sep + 'profiles' + os.path.sep +name+'.json') as f:
+    path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        '..',
+        'makerbot_driver',
+        'profiles',
+        name+'.json',
+        )
+    with open(path) as f:
       expected_vals = json.load(f)
     self.assertEqual(expected_vals, p.values)
 
@@ -80,6 +87,16 @@ class ProfileInitTests(unittest.TestCase):
     profiledir = os.path.abspath(
       os.path.join(os.path.dirname(__file__), '..', 'makerbot_driver', 'profiles'))
     self.assertEqual(profiledir, makerbot_driver.profile._getprofiledir(None))
+
+  def test_search_profiles_with_regex(self):
+    cases = [
+      ['.*Dual.*', ['ReplicatorDual.json']],
+      ['.*Single.*', ['ReplicatorSingle.json']],
+      ['.*Replicator.*', ['ReplicatorDual.json', 'ReplicatorSingle.json']],
+      ['.*FAIL*', []],
+      ]
+    for case in cases:
+      self.assertEqual(case[1], makerbot_driver.search_profiles_with_regex(case[0]))
 
 if __name__ == '__main__':
   unittest.main()
