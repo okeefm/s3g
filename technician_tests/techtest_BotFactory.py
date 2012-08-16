@@ -31,7 +31,8 @@ class TestLiveBotConnected(unittest.TestCase):
     self.assertTrue(availMachine != None)
     print(availMachine)
     bFact = makerbot_driver.BotFactory()
-    s3gObj, profile = bFact.build_from_port(availMachine)
+    s3gObj, profile = bFact.build_from_port(availMachine, False)
+	# re-opening s3g here fails
     
 
 if __name__ == '__main__':
