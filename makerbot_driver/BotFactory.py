@@ -120,7 +120,7 @@ class BotInquisitor(object):
       if settings['fw_version'] >= 506:
         #Get the real UUID
         settings['uuid'] = s3gDriver.get_advanced_name()[1]
-    if leaveOpen:
+    if not leaveOpen:
         s3gDriver.close()
                 
     return s3gDriver, settings

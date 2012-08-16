@@ -33,7 +33,7 @@ class TestLiveBotConnected(unittest.TestCase):
     bFact = makerbot_driver.BotFactory()
     s3gObj, profile = bFact.build_from_port(availMachine, False)
 	# re-opening s3g here fails
-    
+    self.assertFalse(s3gObj.is_open())
 
 if __name__ == '__main__':
   unittest.main()

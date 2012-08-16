@@ -53,8 +53,11 @@ class InUseTechnicianTest(unittest.TestCase):
     s = r1.is_open()
     self.assertFalse(s, "close expcted.")
     r1.open()
-#    s = r1.is_open()
-#    self.assertFalse(s, "reopened. open expcted")
+    s = r1.is_open()
+    self.assertTrue(s, "reopened. open expcted")
+    r1.close()
+    s = r1.is_open()
+    self.assertFalse(s, "close expcted.")
 	
 if __name__ == '__main__':
   unittest.main()
