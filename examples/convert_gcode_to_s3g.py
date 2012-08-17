@@ -21,6 +21,11 @@ parser.add_option("-s", "--gcode_start_end_sequences", dest="start_end_sequences
 s = makerbot_driver.s3g()
 s.writer = makerbot_driver.Writer.FileWriter(open(options.output_file, 'w'))
 
+s.writer = makerbot_driver.Writer.FileWriter(open('preprocessor_output.gcode', 'w'))
+
+preprocessor = makerbot_driver.Preprocessors.Skeinforge50Preprocessor()
+preprocessor.process_file(options.input_file, 'preprocessor_output.gcode')
+
 parser = makerbot_driver.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
 parser.state.profile = makerbot_driver.Profile(options.machine)
@@ -30,7 +35,7 @@ if options.start_end_sequences:
   for line in parser.state.profile.values['print_start_sequence']:
     parser.execute_line(line)
 
-with open(options.input_file) as f:
+with open('preprocessor_output.gcode') as f:
   for line in f:
     print line
     parser.execute_line(line)

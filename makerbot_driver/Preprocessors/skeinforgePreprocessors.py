@@ -13,6 +13,10 @@ class Skeinforge50Preprocessor(Preprocessor):
   A Preprocessor that takes a skeinforge 50 file without start/end
   and replaces/removes deprecated commands with their replacements.
 
+  Gcode Removals:
+    G21
+    G90
+
   Removals:
     M105
     M101
@@ -24,6 +28,8 @@ class Skeinforge50Preprocessor(Preprocessor):
 
   def __init__(self):
     self.code_map = {
+        'G21'     :     self._transform_g21,
+        'G90'     :     self._transform_g90,
         'M108'    :     self._transform_m108,
         'M105'    :     self._transform_m105,
         'M101'    :     self._transform_m101,
@@ -63,6 +69,36 @@ class Skeinforge50Preprocessor(Preprocessor):
         line = self.code_map[key](line)
         break
     return line
+
+  def _transform_g21(self, input_line):
+    """
+    Given a line that has an "M105" command, transforms it into
+    the proper output.
+
+    @param str input_line: The line to be transformed
+    @return str: The transformed line
+    """
+    codes, flags, comments = Gcode.parse_line(input_line)
+    if 'G' in codes and codes['G'] == 21:
+      return_line = ''
+    else:
+      return_line = input_line
+    return return_line 
+
+  def _transform_g90(self, input_line):
+    """
+    Given a line that has an "M105" command, transforms it into
+    the proper output.
+
+    @param str input_line: The line to be transformed
+    @return str: The transformed line
+    """
+    codes, flags, comments = Gcode.parse_line(input_line)
+    if 'G' in codes and codes['G'] == 90:
+      return_line = ''
+    else:
+      return_line = input_line
+    return return_line 
 
   def _transform_m104(self, input_line):
     """

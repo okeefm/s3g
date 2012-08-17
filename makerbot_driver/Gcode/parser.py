@@ -80,10 +80,6 @@ class GcodeParser(object):
           check_for_extraneous_codes(flags, self.GCODE_INSTRUCTIONS[codes['G']][2])
           self.GCODE_INSTRUCTIONS[codes['G']][0](codes, flags, comment)
           
-        elif codes['G'] in self.GCODE_DEPRECATED:
-          self._log.warning('{"deprecated":%s}', self.GCODE_DEPRECATED[codes['G']])
-          print ("WARNING: Deprecated Command : G%d   %s") % (codes['G'],self.GCODE_DEPRECATED[codes['G']]) 
- 
         else:
           self._log.error('{"event":"unrecognized_command", "command":%s}', codes['G'])
           gcode_error = UnrecognizedCommandError()
@@ -95,15 +91,11 @@ class GcodeParser(object):
           check_for_extraneous_codes(codes.keys(), self.MCODE_INSTRUCTIONS[codes['M']][1])
           check_for_extraneous_codes(flags, self.MCODE_INSTRUCTIONS[codes['M']][2])
 
-        elif codes['M'] in self.MCODE_DEPRECATED:
-          self._log.warning('{"deprecated":%s}', self.MCODE_DEPRECATED[codes['M']])
-          print ("WARNING: Deprecated Command : M%d   %s") % (codes['M'],self.MCODE_DEPRECATED[codes['M']]) 
-          self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
-
         else:
           self._log.error('{"event":"unrecognized_command", "command":%s}', codes['M'])
           gcode_error = UnrecognizedCommandError()
           gcode_error.values['UnrecognizedCommand'] = codes['M']
+          gcode_error.values['Suggestion'] =  'Preprocessors are available in makerbot_driver/Preprocessors to correct for non supported commands'
           raise gcode_error
 
       # Not a G or M code, should we throw here?
@@ -121,6 +113,7 @@ class GcodeParser(object):
       gcode_error.values['MissingCode'] = e[0]
       gcode_error.values['LineNumber'] = self.line_number
       gcode_error.values['Command'] = command
+      gcode_error.values['Suggestion'] = 'Preprocessors are available in makerbot_driver/Preprocessors to correct for non supported commands'
       raise gcode_error
     except VectorLengthZeroError:
       self._log.warning('{"event":vector_length_zero_error"}')
