@@ -25,12 +25,13 @@ class ToolchangePreprocessor(object):
   def get_used_extruder(self, input_line):
     (codes, flags, comments) = Gcode.parse_line(input_line)
     axis = None
-    if codes['G'] is 1:
-      extruders = set(self.extruders.keys())
-      input_extruders = set(codes)
-      used_extruder = extruders.intersection(input_extruders)
-      if len(used_extruder) > 1:
-        raise Gcode.ConflictingCodesError
-      elif len(used_extruder) == 1:
-        axis = list(used_extruder)[0]
+    if 'G' in codes:
+      if codes['G'] is 1:
+        extruders = set(self.extruders.keys())
+        input_extruders = set(codes)
+        used_extruder = extruders.intersection(input_extruders)
+        if len(used_extruder) > 1:
+          raise Gcode.ConflictingCodesError
+        elif len(used_extruder) == 1:
+          axis = list(used_extruder)[0]
     return axis

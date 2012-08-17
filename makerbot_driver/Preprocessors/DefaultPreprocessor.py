@@ -19,4 +19,4 @@ class DefaultPreprocessor(object):
     tool_prepro = makerbot_driver.Preprocessors.ToolchangePreprocessor()
     tool_prepro.process_file(input_path, toolchange_path)
     coordinate_prepro = makerbot_driver.Preprocessors.CoordinatePreprocessor()
-    coordinate_prepro.process_file(toolchange_path, output_path_)
+    coordinate_prepro.process_file(toolchange_path, output_path)

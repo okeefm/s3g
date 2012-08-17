@@ -90,6 +90,7 @@ class GcodeParser(object):
         if codes['M'] in self.MCODE_INSTRUCTIONS:
           check_for_extraneous_codes(codes.keys(), self.MCODE_INSTRUCTIONS[codes['M']][1])
           check_for_extraneous_codes(flags, self.MCODE_INSTRUCTIONS[codes['M']][2])
+          self.MCODE_INSTRUCTIONS[codes['M']][0](codes, flags, comment)
 
         else:
           self._log.error('{"event":"unrecognized_command", "command":%s}', codes['M'])
@@ -281,10 +282,10 @@ class GcodeParser(object):
       self.state.values['feedrate'] = codes['F']
       self._log.info('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', codes['F'])
     if len(parse_out_axes(codes)) > 0 or 'E' in codes:
-      if 'A' in codes and 'B' in codes:
-        gcode_error = ConflictingCodesError()
-        gcode_error.values['ConflictingCodes'] = ['A', 'B']
-        raise gcode_error
+      #if 'A' in codes and 'B' in codes:
+      #  gcode_error = ConflictingCodesError()
+      #  gcode_error.values['ConflictingCodes'] = ['A', 'B']
+      #  raise gcode_error
       current_position = self.state.get_position()
       self.state.set_position(codes)
       try :
@@ -346,6 +347,7 @@ class GcodeParser(object):
     """
     self.state.values['tool_index'] = codes['T']
     self._log.info('{"event":"gcode_state_change", "change":"tool_change", "new_tool_index":%i}', codes['T'])
+    print self.state.values
     self.s3g.change_tool(codes['T'])
 
   def build_start_notification(self):
