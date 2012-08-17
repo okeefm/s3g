@@ -5,8 +5,16 @@ from .. import Gcode
 
 class CoordinatePreprocessor(Preprocessor):
 
+  """
+  Remove:
+  G10
+  G54
+  G55
+  """
+
   def __init__(self):
     self.code_map = {
+        'G10' : self._transform_g10,
         'G54' : self._transform_g54,
         'G55' : self._transform_g55,
         }
@@ -44,6 +52,21 @@ class CoordinatePreprocessor(Preprocessor):
         break
     return line
     
+  def _transform_g10(self, input_line):
+    """
+    Given a line that has an "G10" command, transforms it into
+    the proper output.
+
+    @param str input_line: The line to be transformed
+    @return str: The transformed line
+    """
+    codes, flags, comments = Gcode.parse_line(input_line)
+    if 'G' in codes and codes['G'] == 10:
+      return_line = ''
+    else:
+      return_line = input_line
+    return return_line
+
   def _transform_g54(self, input_line):
     """
     Given a line that has an "G54" command, transforms it into
