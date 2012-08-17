@@ -3,37 +3,31 @@ A set of preprocessors for the skeinforge engine
 """
 
 from preprocessor import *
+from RpmPreprocessor import *
 from errors import *
 from .. import Gcode
 import contextlib
 import os
+import tempfile
 
 class Skeinforge50Preprocessor(Preprocessor):
   """
   A Preprocessor that takes a skeinforge 50 file without start/end
   and replaces/removes deprecated commands with their replacements.
 
-  Gcode Removals:
+  Removals:
     G21
     G90
-
-  Removals:
     M105
-    M101
-    M103
+    M104
 
-  Replacements:
-    M108 T*   ->   M135 T*
   """
 
   def __init__(self):
     self.code_map = {
         'G21'     :     self._transform_g21,
         'G90'     :     self._transform_g90,
-        'M108'    :     self._transform_m108,
         'M105'    :     self._transform_m105,
-        'M101'    :     self._transform_m101,
-        'M103'    :     self._transform_m103,
         'M104'    :     self._transform_m104,
         }
 
@@ -50,8 +44,14 @@ class Skeinforge50Preprocessor(Preprocessor):
       name, ext = os.path.splitext(path)
       if ext != '.gcode':
         raise NotGCodeFileError
+    rp = RpmPreprocessor()
+    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as f:
+      pass
+    remove_rpm_path = f.name
+    os.unlink(remove_rpm_path)
+    rp.process_file(input_path, remove_rpm_path)
     #Open both the files
-    with contextlib.nested(open(input_path), open(output_path, 'w')) as (i, o):
+    with contextlib.nested(open(remove_rpm_path), open(output_path, 'w')) as (i, o):
       #For each line in the input file
       for read_line in i:
         line = self._transform_line(read_line)
@@ -72,8 +72,9 @@ class Skeinforge50Preprocessor(Preprocessor):
 
   def _transform_g21(self, input_line):
     """
-    Given a line that has an "M105" command, transforms it into
-    the proper output.
+    Given a line that has an "G21" command, transforms it into
+    the proper output.  The s3g gcode parser uses mm positioning by default, 
+    so this command is not required.
 
     @param str input_line: The line to be transformed
     @return str: The transformed line
@@ -83,12 +84,12 @@ class Skeinforge50Preprocessor(Preprocessor):
       return_line = ''
     else:
       return_line = input_line
-    return return_line 
+    return return_line
 
   def _transform_g90(self, input_line):
     """
-    Given a line that has an "M105" command, transforms it into
-    the proper output.
+    Given a line that has an "G90" command, transforms it into
+    the proper output. The s3g gcode parser uses absolute positioning by default.
 
     @param str input_line: The line to be transformed
     @return str: The transformed line
@@ -98,7 +99,7 @@ class Skeinforge50Preprocessor(Preprocessor):
       return_line = ''
     else:
       return_line = input_line
-    return return_line 
+    return return_line
 
   def _transform_m104(self, input_line):
     """
@@ -134,60 +135,4 @@ class Skeinforge50Preprocessor(Preprocessor):
       return_line = ''
     else:
       return_line = input_line
-    return return_line 
-
-  def _transform_m101(self, input_line):
-    """
-    Given a line that has an "M101" command, transforms it into
-    the proper output.
-
-    @param str input_line: The line to be transformed
-    @return str: The transformed line
-    """
-    codes, flags, comments = Gcode.parse_line(input_line)
-    if 'M' in codes and codes['M'] == 101:
-      return_line = ''
-    else:
-      return_line = input_line
     return return_line
-
-  def _transform_m103(self, input_line):
-    """
-    Given a line that has an "M103" command, transforms it into
-    the proper output.
-
-    @param str input_line: The line to be transformed
-    @return str: The transformed line
-    """
-    codes, flags, comments = Gcode.parse_line(input_line)
-    if 'M' in codes and codes['M'] == 103:
-      return_line = ''
-    else:
-      return_line = input_line
-    return return_line
-
-  def _transform_m108(self, input_line):
-    """
-    Given a line that has an "M108" command, transforms it into
-    the proper output.
-
-    @param str input_line: The line to be transformed
-    @return str: The transformed line
-    """
-    codes, flags, comments = Gcode.parse_line(input_line)
-    #Since were using variable_replace in gcode.utils, we need to make the codes dict 
-    #a dictionary of only strings
-    string_codes = {}
-    for key in codes:
-      string_codes[str(key)] = str(codes[key])
-    if 'T' not in codes:
-      transformed_line = '\n'
-    else:
-      transformed_line = 'M135 T#T' #Set the line up for variable replacement
-      transformed_line = Gcode.variable_substitute(transformed_line, string_codes)
-      if comments != '':
-        for char in ['\n', '\r']:
-          comments = comments.replace(char, '')
-        transformed_line += '; ' + comments
-      transformed_line += '\n'
-    return transformed_line
