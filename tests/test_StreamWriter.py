@@ -248,7 +248,7 @@ class StreamWriterTests(unittest.TestCase):
 
 
   def test_external_stop(self):
-    self.w.external_stop = True
+    self.w.set_external_stop()
     self.assertTrue(self.w.external_stop)
 
 
@@ -257,13 +257,13 @@ class StreamWriterTests(unittest.TestCase):
     response_payload.append(constants.response_code_dict['SUCCESS'])
     self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
-    self.w.external_stop = True
+    self.w.set_external_stop()
     self.assertRaises(Writer.ExternalStopError, self.w.send_command, 'asdf')
 
 
   def delay_and_external_stop_in_thread(self):
     time.sleep(constants.timeout_length)
-    self.w.external_stop = True
+    self.w.set_external_stop()
 
 
   def test_delay_and_external_stop_in_thread(self):
