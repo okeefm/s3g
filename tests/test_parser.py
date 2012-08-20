@@ -229,15 +229,6 @@ class Testlinear_interpolation(unittest.TestCase):
     self.assertAlmostEquals(ddaFeedrate, actual_params[1])
     self.assertEqual(self.g.state.values['feedrate'], code_feedrate)
 
-  def test_linear_interpolation_a_and_b(self):
-    codes = {
-        'A' : 0,
-        'B' : 0,
-        }
-    flags = []
-    comments = ''
-    self.assertRaises(makerbot_driver.Gcode.ConflictingCodesError, self.g.linear_interpolation, codes, flags, comments)
-
   def test_linear_interpolation_a_code_doesnt_throw_conflicting_codes_error(self):
     codes = {
         'A' : 10,

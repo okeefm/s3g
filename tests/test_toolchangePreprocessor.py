@@ -28,9 +28,6 @@ class TestToolchangePreprocessor(unittest.TestCase):
     for case in cases:
       self.assertEqual(case[0], self.p.get_used_extruder(case[1]))
 
-  def test_get_used_extruder_error(self):
-    self.assertRaises(makerbot_driver.Gcode.ConflictingCodesError, self.p.get_used_extruder, "G1 A9 B9")
-
   def test_process_file(self):
     input_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),

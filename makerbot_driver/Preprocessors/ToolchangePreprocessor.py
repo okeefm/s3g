@@ -31,7 +31,7 @@ class ToolchangePreprocessor(object):
         input_extruders = set(codes)
         used_extruder = extruders.intersection(input_extruders)
         if len(used_extruder) > 1:
-          raise Gcode.ConflictingCodesError
+          axis = 'A'
         elif len(used_extruder) == 1:
           axis = list(used_extruder)[0]
     return axis

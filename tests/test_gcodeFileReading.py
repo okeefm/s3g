@@ -94,17 +94,20 @@ class DualHeadReading(unittest.TestCase):
       'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode'), self.p) 
 
 def PreprocessAndExecuteFile(theFile, parser):
+  #Get the default Preprocessor
+  preprocessor = makerbot_driver.Preprocessors.DefaultPreprocessor()
+  #Make the temp file to process the gcode file into
+  with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as default_file:
+    default_process = default_file.name
+  with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as skeinforge_file:
+    skeinforge_process = skeinforge_file.name
+  preprocessor.process_file(theFile, default_process)
   #Get the skeinforge 50 preprocessor
   preprocessor = makerbot_driver.Preprocessors.Skeinforge50Preprocessor()
-  #Make the temp file to process the gcode file into
-  with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
-    pass
-  input_path = input_file.name
-  os.unlink(input_path)
-  preprocessor.process_file(theFile, input_path)
+  preprocessor.process_file(default_process, skeinforge_process)
   for line in parser.state.profile.values['print_start_sequence']:
     parser.execute_line(line)
-  with open(input_path) as f:
+  with open(skeinforge_process) as f:
     for line in f:
       parser.execute_line(line)
   parser.line_number = 1    #For better debugging, since the start.gcode is included in this number

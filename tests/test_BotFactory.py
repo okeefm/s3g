@@ -135,6 +135,7 @@ class TestBotInquisitor(unittest.TestCase):
     got_settings = self.inquisitor.query()
     self.assertEqual(expected_settings, got_settings)
 
+  @unittest.skip("skipping until UUID / iSerial conflict is straightened out.  Firmware no longer has a UUID value")
   def test_version_500_has_random_uuid(self):
     #Time to mock all of s3g's version!
     version = 500
@@ -156,6 +157,7 @@ class TestBotInquisitor(unittest.TestCase):
     self.assertEqual(str_uuid[14], '4')
     self.assertTrue(int(str_uuid[19], 16) >= 0x8 and int(str_uuid[19], 16) <= 0xb)
 
+  @unittest.skip("skipping until UUID / iSerial conflict is straightened out.  Firmware no longer has a UUID value")
   def test_version_506(self):
     #Time to mock all of s3g's version!
     version = 506

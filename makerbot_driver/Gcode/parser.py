@@ -32,15 +32,6 @@ class GcodeParser(object):
       162 : [self.find_axes_maximums,            'F',       'XYZ'],
     }
 
-    self.GCODE_DEPRECATED = {
-      21  : "not required: parser uses mm by default",
-      90  : "not required: parser uses absolute positioning by default",
-    }
-
-    self.MCODE_DEPRECATED = {
-       103 : "not required: firmware enables and disables motors automatically", 
-    }
-
     self.MCODE_INSTRUCTIONS = {
        18  : [self.disable_axes,                '',        'XYZAB'],
        70  : [self.display_message,             'P',       ''],
@@ -347,7 +338,6 @@ class GcodeParser(object):
     """
     self.state.values['tool_index'] = codes['T']
     self._log.info('{"event":"gcode_state_change", "change":"tool_change", "new_tool_index":%i}', codes['T'])
-    print self.state.values
     self.s3g.change_tool(codes['T'])
 
   def build_start_notification(self):

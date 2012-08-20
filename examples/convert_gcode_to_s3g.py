@@ -57,3 +57,8 @@ with open(preprocessor_output) as f:
 if options.start_end_sequences:
   for line in parser.state.profile.values['print_end_sequence']:
     parser.execute_line(line)
+
+s.writer.file.close()
+
+finito = makerbot_driver.Gcode.FileComplete()
+finito.finish(options.output_file)
