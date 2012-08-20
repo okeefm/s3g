@@ -2,7 +2,7 @@
 A set of preprocessors for the skeinforge engine
 """
 
-from preprocessor import *
+from Preprocessor import *
 from RpmPreprocessor import *
 from errors import *
 from .. import Gcode

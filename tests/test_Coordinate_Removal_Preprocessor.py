@@ -8,10 +8,10 @@ import tempfile
 
 import makerbot_driver
 
-class CoordinatePreprocessor(unittest.TestCase):
+class TestCoordinateRemovalPreprocessor(unittest.TestCase):
   
   def setUp(self):
-    self.cp = makerbot_driver.Preprocessors.CoordinatePreprocessor()
+    self.cp = makerbot_driver.Preprocessors.CoordinateRemovalPreprocessor()
     
   def tearDown(self):
     self.cp = None
