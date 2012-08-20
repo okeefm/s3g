@@ -8,7 +8,7 @@ import tempfile
 
 from Preprocessor import *
 from ToolchangePreprocessor import*
-from CoordinatePreprocessor import *
+from CoordinateRemovalPreprocessor import *
 
 class DefaultPreprocessor(Preprocessor):
 
@@ -21,5 +21,5 @@ class DefaultPreprocessor(Preprocessor):
       toolchange_path = f.name
     tool_prepro = ToolchangePreprocessor()
     tool_prepro.process_file(input_path, toolchange_path)
-    coordinate_prepro = CoordinatePreprocessor()
-    coordinate_prepro.process_file(toolchange_path, output_path_)
+    coordinate_prepro = CoordinateRemovalPreprocessor()
+    coordinate_prepro.process_file(toolchange_path, output_path)
