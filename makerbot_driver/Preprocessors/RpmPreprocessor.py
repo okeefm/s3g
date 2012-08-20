@@ -10,7 +10,7 @@ M103
 M108
 """
 
-from preprocessor import *
+from Preprocessor import *
 from errors import *
 from .. import Gcode
 import contextlib

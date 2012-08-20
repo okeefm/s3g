@@ -1,9 +1,9 @@
-from preprocessor import *
+from Preprocessor import *
 import os
 import contextlib
 from .. import Gcode
 
-class CoordinatePreprocessor(Preprocessor):
+class CoordinateRemovalPreprocessor(Preprocessor):
 
   """
   Remove:
