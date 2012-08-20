@@ -25,7 +25,6 @@ class StreamWriter(AbstractWriter):
     self.total_overflows = 0
     self.external_stop = False
 
-
   # TODO: test me
   def send_query_payload(self, payload):
     return self.send_command(payload)
