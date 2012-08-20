@@ -65,7 +65,7 @@
         "M134 T0"
         ]
       },
-    "heat_extruders" : {
+    "heat_tools" : {
       "heat_0" : [
         "M104 S$EXTRUDER_0_TEMP T0",
         "M133 T0"
@@ -91,7 +91,7 @@
       "no_cool" : [],
       "cool_platform" : ["M109 S0 T0"]
       },
-    "cool_extruders": {
+    "cool_tools": {
       "cool_0" : ["M104 S0 T0"]
       },
     "end_print" : {

@@ -199,3 +199,8 @@ class PointLengthError(ParameterError):
   """
   A point length error is caused when a point's length is either too long or too short.
   """
+
+class RecipeNotFoundError(KeyError):
+  """
+  A Recipe not found error is thrown when the Gcode Assembler tries to find a specific recipe, but fails.
+  """

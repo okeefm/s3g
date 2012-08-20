@@ -7,29 +7,30 @@
       "cool_platform" : "no_cool"
       },
     "variables" : {
-      "EXTRUDER_0_TEMP" : 220,
-      "EXTRUDER_1_TEMP" : 220
+      "TOOL_0_TEMP" : 220,
+      "TOOL_1_TEMP" : 220
       }
   },
   "ABS" : {
     "print_start_sequence" : {
-      "heat_platform" : "head_platform"
+      "heat_platform" : "heat_platform"
       },
     "print_end_sequence" : {
       "cool_platform" : "cool_platform"
       },
     "variables" : {
-      "EXTRUDER_0_TEMP" : 220,
-      "EXTRUDER_1_TEMP" : 220,
+      "TOOL_0_TEMP" : 220,
+      "TOOL_1_TEMP" : 220,
       "PLATFORM_TEMP" : 100
       }
     },
   "dualstrusion": {
     "print_start_sequence" : {
-      "heat_extruders" : "dualstrusion"
+      "heat_tools" : "dualstrusion"
       },
     "print_end_sequence" : {
-      "cool_extruders" : "dualstrusion"
-      }
+      "cool_tools" : "dualstrusion"
+      },
+    "variables" : {}
     }
 }
