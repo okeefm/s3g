@@ -1,7 +1,8 @@
 from errors import *
 from .. import Gcode
+from Preprocessor import *
 
-class ToolchangePreprocessor(object):
+class ToolchangePreprocessor(Preprocessor):
 
   def __init__(self):
     self.extruders = {
@@ -11,6 +12,7 @@ class ToolchangePreprocessor(object):
     self.current_extruder = 'A'
 
   def process_file(self, input_path, output_path):
+    self.inputs_are_gcode(input_path, output_path)
     output = open(output_path, 'w')
     with open(input_path) as f:
       for line in f:

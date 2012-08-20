@@ -39,14 +39,14 @@ class TestSingletonTPreprocessor(unittest.TestCase):
     input_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'test_files',
-        'test_singleton_t_preprocessor_input',
+        'test_singleton_t_preprocessor_input.gcode',
         )
     expected_output_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'test_files',
-        'test_singleton_t_preprocessor_output',
+        'test_singleton_t_preprocessor_output.gcode',
         )
-    with tempfile.NamedTemporaryFile(delete=False) as output_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.gcode') as output_file:
       pass
     got_output_path = output_file.name
     os.unlink(got_output_path)

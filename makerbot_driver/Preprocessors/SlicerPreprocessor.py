@@ -1,11 +1,13 @@
-from errors import *
 import contextlib
 import os
 import tempfile
 
+from errors import *
+from Preprocessor import *
 from RpmPreprocessor import *
 
-class SlicerPreprocessor(object):
+
+class SlicerPreprocessor(Preprocessor):
 
   def __init__(self):
     self.code_map = {
@@ -16,10 +18,7 @@ class SlicerPreprocessor(object):
         }
 
   def process_file(self, input_path, output_path):
-    for path in (input_path, output_path):
-      name, ext = os.path.splitext(path)
-      if ext != '.gcode':
-        raise NotGCodeFileError
+    self.inputs_are_gcode(input_path, output_path)
     rp = RpmPreprocessor()
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as f:
       pass

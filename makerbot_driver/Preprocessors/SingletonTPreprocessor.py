@@ -1,11 +1,13 @@
 from .. import Gcode
+from Preprocessor import *
 
-class SingletonTPreprocessor(object):
+class SingletonTPreprocessor(Preprocessor):
 
   def __init__(self):
     pass
 
   def process_file(self, input_path, output_path):
+    self.inputs_are_gcode(input_path, output_path)
     output = open(output_path, 'w')
     with open(input_path) as f:
       for line in f:

@@ -32,14 +32,14 @@ class TestToolchangePreprocessor(unittest.TestCase):
     input_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'test_files',
-        'test_toolchange_preprocessor_input'
+        'test_toolchange_preprocessor_input.gcode'
         )
     output_file = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'test_files',
-        'test_toolchange_preprocessor_output'
+        'test_toolchange_preprocessor_output.gcode'
         )  
-    with tempfile.NamedTemporaryFile(delete=False) as output:
+    with tempfile.NamedTemporaryFile(suffix='.gcode',delete=False) as output:
       pass
     output_path = output.name
     os.unlink(output_path)
