@@ -15,7 +15,7 @@ class TestGcodeAssembler(unittest.TestCase):
   def tearDown(self):
     self.ga = None
 
-  def test_get_recipe_routines_and_variables(self):
+  def test_get_recipes_and_variables(self):
     cases = ['ABS', 'PLA', 'dualstrusion']
     for case in cases:
       values = self.recipes.values[case]
@@ -23,11 +23,11 @@ class TestGcodeAssembler(unittest.TestCase):
       end_sequence = values['print_end_sequence']
       variables = values['variables']
       expected_values = (start_sequence, end_sequence, variables)
-      got_values = self.ga.get_recipe_routines_and_variables(case)
+      got_values = self.ga.get_recipes_and_variables(case)
       self.assertEqual(expected_values, got_values)
 
   def test_recipe_not_found(self):
-    self.assertRaises(makerbot_driver.RecipeNotFoundError, self.ga.get_recipe_routines_and_variables, 'this_isnt_a_recipe')
+    self.assertRaises(makerbot_driver.RecipeNotFoundError, self.ga.get_recipes_and_variables, 'this_isnt_a_recipe')
 
   def test_assemble_gcode_dualstrusion_pla(self):
     expected_start_template = {
