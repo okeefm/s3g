@@ -14,7 +14,7 @@ parser.add_option("-f", "--filename", dest="filename",
 parser.add_option("-s", "--gcode_start_end_sequences", dest="start_end_sequences",
                   help="run gcode start and end proceeses", default=True)
 parser.add_option("-m", "--machine", dest="machine",
-                  help="machine you want to connect to", default="ReplicatorDual")
+                  help="machine you want to connect to", default="The Replicator")
 (options, args) = parser.parse_args()
 
 md = makerbot_driver.MachineDetector()
