@@ -18,18 +18,19 @@ parser.add_option("-m", "--machine", dest="machine",
 (options, args) = parser.parse_args()
 
 md = makerbot_driver.MachineDetector()
-bot = md.get_first_machine(options.machine)
-if bot is None:
+md.scan(options.machine)
+port = md.get_first_machine()
+if port is None:
   print "Cant Find %s" %(options.machine)
   sys.exit()
 
 factory = makerbot_driver.BotFactory()
-r, prof = factory.build_from_port(bot['port'])
+r, prof = factory.build_from_port(port)
 
 assembler = makerbot_driver.GcodeAssembler(prof)
 start, end, variables = assembler.assemble_recipe()
-start_gcode = assembler.assemble_start_gcode(start)
-end_gcode = assembler.assemble_end_gcode(end)
+start_gcode = assembler.assemble_start_sequence(start)
+end_gcode = assembler.assemble_end_sequence(end)
 
 parser = makerbot_driver.Gcode.GcodeParser()
 parser.environment.update(variables)
