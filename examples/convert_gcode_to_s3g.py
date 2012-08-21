@@ -19,7 +19,7 @@ parser.add_option("-s", "--gcode_start_end_sequences", dest="start_end_sequences
 
 
 s = makerbot_driver.s3g()
-s.writer = makerbot_driver.Writer.FileWriter(open(options.output_file, 'w'))
+s.writer = makerbot_driver.Writer.FileWriter(open(options.output_file, 'wb'))
 
 parser = makerbot_driver.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
