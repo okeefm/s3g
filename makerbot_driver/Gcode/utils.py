@@ -134,7 +134,10 @@ def variable_substitute(line, environment):
   """
   variableDelineator = '#'
   for key in environment:
-    line = line.replace(variableDelineator + key, environment[key])
+    #Cast into strings to get rid of unicode
+    variable_key = str(variableDelineator+key)
+    variable_value = str(environment[key])
+    line = line.replace(variable_key, variable_value)
   if '#' in line:
     raise UndefinedVariableError
   return line

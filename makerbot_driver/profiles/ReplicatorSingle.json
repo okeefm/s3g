@@ -67,7 +67,8 @@
       },
     "heat_tools" : {
       "heat_0" : [
-        "M104 S#EXTRUDER_0_TEMP T0",
+        "M135 T0",
+        "M104 S#TOOL_0_TEMP T0",
         "M133 T0"
         ]
       },
@@ -81,7 +82,7 @@
     },
   "print_end_sequence" : {
     "end_position" : {
-      "replicator_end" : [
+      "replicator_end_position" : [
         "G1 Z155 F900",
         "G162 X Y F2000",
         "M18 X Y Z A B(Turn off steppers after a build)"
