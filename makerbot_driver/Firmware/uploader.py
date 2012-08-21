@@ -6,6 +6,8 @@ from errors import *
 import logging    
 import urlparse
 
+import serial
+
 
 class Uploader(object):
   """ Firmware Uploader is used to send firmware to a 3D printer."""
@@ -167,6 +169,11 @@ class Uploader(object):
     flags.append('-U'+'flash:w:'+hex_file_path+':i')
     return [process] + flags
 
+  def toggle_machine(self, port):
+    toggle_baud = 9800
+    s = serial.Serial(port, baudrate=toggle_baud, timeout=1)
+    s.close()
+
   def upload_firmware(self, port, machine, version):
     """
     Given a port, machine name and version number, invokes avrdude to upload a specific firmware
@@ -178,4 +185,5 @@ class Uploader(object):
     """
     self._logger.info('{"event":"uploading_firmware", "port":%s, "machine":%s, "version":%s}' %(port, machine, version))
     call = self.parse_avrdude_command(port, machine, version)
+    self.toggle_machine(port)
     self.run_subprocess(call)
