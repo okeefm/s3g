@@ -28,7 +28,7 @@ class SingleHeadReading(unittest.TestCase):
       pass
     input_path = input_file.name
     os.unlink(input_path)
-    self.writer = makerbot_driver.Writer.FileWriter(open(input_path, 'w'))
+    self.writer = makerbot_driver.Writer.FileWriter(open(input_path, 'wb'))
     self.s3g.writer = self.writer
     self.p.s3g = self.s3g
 
@@ -38,7 +38,6 @@ class SingleHeadReading(unittest.TestCase):
     self.writer = None
     self.s3g = None
     self.p = None
-
 
   def test_single_head_skeinforge_single_20mm_box(self):
     PreprocessAndExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
@@ -50,7 +49,7 @@ class SingleHeadReading(unittest.TestCase):
 
   def test_single_head_miracle_grue(self):
     PreprocessAndExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
-      'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode'), self.p) 
+      'doc', 'gcode_samples', 'miracle_grue_single_extrusion_tiny_snake.gcode'), self.p) 
 
 class DualHeadReading(unittest.TestCase):
 
@@ -66,7 +65,7 @@ class DualHeadReading(unittest.TestCase):
       pass
     input_path = input_file.name
     os.unlink(input_path)
-    self.writer = makerbot_driver.Writer.FileWriter(open(input_path, 'w'))
+    self.writer = makerbot_driver.Writer.FileWriter(open(input_path, 'wb'))
     self.s3g.writer = self.writer
     self.p.s3g = self.s3g
 
@@ -91,7 +90,7 @@ class DualHeadReading(unittest.TestCase):
 
   def test_single_head_miracle_grue(self):
     PreprocessAndExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
-      'doc', 'gcode_samples', 'miracle_grue_single_extrusion.gcode'), self.p) 
+      'doc', 'gcode_samples', 'miracle_grue_single_extrusion_tiny_snake.gcode'), self.p) 
 
 def PreprocessAndExecuteFile(theFile, parser):
   #Get the skeinforge 50 preprocessor

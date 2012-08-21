@@ -8,6 +8,7 @@ import mock
 import io
 import struct
 import array
+import tempfile
 
 import makerbot_driver
 
@@ -37,12 +38,13 @@ class FileReaderTestsInputStream(unittest.TestCase):
 class FileReaderTestsWithS3g(unittest.TestCase):
   def setUp(self):
     self.r = makerbot_driver.s3g()
-    self.inputstream = io.BytesIO() # File that we will send responses on
+    with tempfile.NamedTemporaryFile(delete=True, suffix='.gcode') as f:
+      self.path = f.name
 
-    self.r.writer = makerbot_driver.Writer.FileWriter(self.inputstream)
+    self.r.writer = makerbot_driver.Writer.FileWriter(open(self.path, 'wb'))
 
     self.d = makerbot_driver.FileReader.FileReader()
-    self.d.file = self.inputstream
+    self.d.file = open(self.path, 'rb')
 
   def tearDown(self):
     self.r = None
@@ -56,7 +58,9 @@ class FileReaderTestsWithS3g(unittest.TestCase):
     self.r.queue_extended_point_new(point, duration, [])
     self.r.set_extended_position(point)
     self.r.set_build_percent(0)
-    self.inputstream.seek(0)
+
+    self.d.file.seek(0)
+    self.r.writer.file.seek(0)
 
     payloads = self.d.ReadFile()
     cmdNumbers = [

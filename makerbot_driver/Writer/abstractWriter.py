@@ -1,5 +1,8 @@
 class AbstractWriter(object):
 
+  def set_external_stop(self):
+    self.external_stop = True
+
   def close(self):
     """ Close port """
     raise NotImplementedError()
