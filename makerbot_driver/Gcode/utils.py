@@ -292,6 +292,9 @@ def calculate_DDA_speed(initial_position, target_position, target_feedrate, max_
   longest_axis = find_longest_axis(displacement_vector_steps)
 
   fastest_feedrate = float(abs(displacement_vector[longest_axis]))/calculate_vector_magnitude(displacement_vector)*actual_feedrate
+  if fastest_feedrate == 0.0:
+    import pdb
+    pdb.set_trace()
 
   # Now we know the feedrate of the fastest axis, in mm/min. Convert it to us/step. 
   dda_speed = compute_DDA_speed(fastest_feedrate, abs(steps_per_mm[longest_axis]))
