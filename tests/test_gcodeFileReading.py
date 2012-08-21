@@ -49,7 +49,7 @@ class SingleHeadReading(unittest.TestCase):
 
   def test_single_head_miracle_grue(self):
     PreprocessAndExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
-      'doc', 'gcode_samples', 'miracle_grue_single_extrusion_tiny_snake.gcode'), self.p) 
+      'doc', 'gcode_samples', 'miracle_grue_single_extrusion_20_mm_box.gcode'), self.p) 
 
 class DualHeadReading(unittest.TestCase):
 
@@ -90,7 +90,7 @@ class DualHeadReading(unittest.TestCase):
 
   def test_single_head_miracle_grue(self):
     PreprocessAndExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
-      'doc', 'gcode_samples', 'miracle_grue_single_extrusion_tiny_snake.gcode'), self.p) 
+      'doc', 'gcode_samples', 'miracle_grue_single_extrusion_20_mm_box.gcode'), self.p) 
 
 def PreprocessAndExecuteFile(theFile, parser):
   #Get the skeinforge 50 preprocessor
