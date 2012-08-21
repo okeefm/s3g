@@ -21,7 +21,7 @@ class Uploader(object):
     self._logger = logging.getLogger(self.__class__.__name__)
     self.product_filename = 'products.json'
     self.source_url = source_url if source_url else 'http://firmware.makerbot.com'
-    self.dest_path = dest_path if dest_path else os.getcwd()
+    self.dest_path = dest_path if dest_path else os.path.abspath(os.path.dirname(__file__))
     
     self.run_subprocess = subprocess.check_call
     self.urlopen = urllib2.urlopen
