@@ -14,7 +14,7 @@ class Uploader(object):
   
   def __init__(self, source_url = None, dest_path = None, autoUpdate= True):
     """Build an uploader.
-	@param source_url: specify a url to fetch firmware metadata from. Can be a directory
+    @param source_url: specify a url to fetch firmware metadata from. Can be a directory
     @param dest_path: path to use as the local file store location
     @param autoUpdate: automatically and immedately fetch machine data
     """
@@ -75,24 +75,20 @@ class Uploader(object):
     @param str url: The url we want to wget
     @return file: local filename of the resource
     """
-    filename = url.split('/')[-1] #urllib here might be useful
-    filename = os.path.join(self.dest_path, filename) 
-    #If file is local
-    if os.path.isfile(url):
-      if url == filename or \
-			( os.path.isfile(filename) and os.path.samefile(url, filename)):
-        return filename #someone silly is copying files overthemselves
+    local_path = os.path.basename(url)
+    local_path = os.path.join(self.dest_path, local_path)
+    if os.path.isfile(url) and not url == local_path:
+      self._logger.info('{"event":"copying_local_file", "file":%s}' %(url))
       import shutil
-      shutil.copy(url, filename)
-      return filename
+      shutil.copy(url, local_path)
     else:
       self._logger.info('{"event":"downloading_url", "url":%s}' %(url))
       #Download the file
       dl_file = self.urlopen(url)
       #Write out the file
-      with open(filename, 'w') as f:
+      with open(local_path, 'w') as f:
         f.write(dl_file.read())
-      return filename 
+    return local_path 
     
   def load_json_values(self, path):
     with open(path) as f:
