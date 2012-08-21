@@ -70,22 +70,22 @@
     "heat_platform" : {
       "no_heat" : [],
       "heat_platform" : [
-        "M109 S$PLATFORM_TEMP T0",
+        "M109 S#PLATFORM_TEMP T0",
         "M134 T0"
         ]
       },
     "heat_tools" : {
       "heat_0" : [
-        "M104 S$TOOL_0_TEMP T0",
+        "M104 S#TOOL_0_TEMP T0",
         "M133 T0"
         ],
       "heat_1" : [
-        "M104 S$TOOL_1_TEMP T1",
+        "M104 S#TOOL_1_TEMP T1",
         "M133 T1"
         ],
       "dualstrusion" : [
-        "M104 S$TOOL_0_TEMP T0",
-        "M104 S$TOOL_1_TEMP T1",
+        "M104 S#TOOL_0_TEMP T0",
+        "M104 S#TOOL_1_TEMP T1",
         "M133 T0",
         "M133 T1"
         ]

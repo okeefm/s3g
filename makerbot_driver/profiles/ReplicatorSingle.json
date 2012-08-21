@@ -61,13 +61,13 @@
     "heat_platform" : {
       "no_heat" : [],
       "heat_platform" : [
-        "M109 S$PLATFORM_TEMP T0",
+        "M109 S#PLATFORM_TEMP T0",
         "M134 T0"
         ]
       },
     "heat_tools" : {
       "heat_0" : [
-        "M104 S$EXTRUDER_0_TEMP T0",
+        "M104 S#EXTRUDER_0_TEMP T0",
         "M133 T0"
         ]
       },
