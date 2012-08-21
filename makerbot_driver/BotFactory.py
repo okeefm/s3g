@@ -35,11 +35,11 @@ class BotFactory(object):
 
  
     profile_regex = self.get_profile_regex(bot_setup_dict)
-    matches = makerbot_driver.search_profiles_with_regex(profile_regex)
+    matches = makerbot_driver.search_profiles_with_regex(profile_regex, self.profile_dir)
     matches = list(matches)
     if len(matches) > 0:
       bestProfile = matches[0]
-      machine_info = ( s3gBot, makerbot_driver.Profile(bestProfile))
+      machine_info = ( s3gBot, makerbot_driver.Profile(bestProfile, self.profile_dir))
     else:
       machine_info= ( None, None)
     return machine_info
