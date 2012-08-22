@@ -166,8 +166,9 @@ class Uploader(object):
     return [process] + flags
 
   def toggle_machine(self, port):
-    toggle_baud = 9800
-    s = serial.Serial(port, baudrate=toggle_baud, timeout=1)
+    s = serial.Serial(port)
+    s.baudrate=9600
+    s.baudrate=115200
     s.close()
 
   def upload_firmware(self, port, machine, version):
