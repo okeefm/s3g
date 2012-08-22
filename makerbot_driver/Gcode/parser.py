@@ -26,9 +26,6 @@ class GcodeParser(object):
     self.GCODE_INSTRUCTIONS = {
       1   : [self.linear_interpolation,         'XYZABEF', ''],
       4   : [self.dwell,                       'P',       ''],
-      10  : [self.store_offsets,                'XYZP',    ''],
-      54  : [self.use_p1_offsets,                '',        ''],
-      55  : [self.use_p2_offsets,                '',        ''],
       92  : [self.set_position,                 'XYZABE',  ''],
       130 : [self.set_potentiometer_values,      'XYZAB',   ''],
       161 : [self.find_axes_minimums,            'F',       'XYZ'],
@@ -73,7 +70,7 @@ class GcodeParser(object):
           check_for_extraneous_codes(codes.keys(), self.GCODE_INSTRUCTIONS[codes['G']][1])
           check_for_extraneous_codes(flags, self.GCODE_INSTRUCTIONS[codes['G']][2])
           self.GCODE_INSTRUCTIONS[codes['G']][0](codes, flags, comment)
-
+          
         else:
           self._log.error('{"event":"unrecognized_command", "command":%s}', codes['G'])
           gcode_error = UnrecognizedCommandError()
@@ -90,6 +87,7 @@ class GcodeParser(object):
           self._log.error('{"event":"unrecognized_command", "command":%s}', codes['M'])
           gcode_error = UnrecognizedCommandError()
           gcode_error.values['UnrecognizedCommand'] = codes['M']
+          gcode_error.values['Suggestion'] =  'Preprocessors are available in makerbot_driver/Preprocessors to correct for non supported commands'
           raise gcode_error
 
       # Not a G or M code, should we throw here?
@@ -107,6 +105,7 @@ class GcodeParser(object):
       gcode_error.values['MissingCode'] = e[0]
       gcode_error.values['LineNumber'] = self.line_number
       gcode_error.values['Command'] = command
+      gcode_error.values['Suggestion'] = 'Preprocessors are available in makerbot_driver/Preprocessors to correct for non supported commands'
       raise gcode_error
     except VectorLengthZeroError:
       self._log.warning('{"event":vector_length_zero_error"}')
@@ -117,6 +116,9 @@ class GcodeParser(object):
       gcode_error.values['LineNumber'] = self.line_number
       raise gcode_error
     self.line_number += 1
+
+  def deprecated(self, codes, flags, comment):
+    return
 
   def set_potentiometer_values(self, codes, flags, comment):
     """Given a set of codes, sets the machine's potentiometer value to a specified value in the codes
@@ -180,18 +182,6 @@ class GcodeParser(object):
     stepped_position = multiply_vector(self.state.get_position(), self.state.get_axes_values('steps_per_mm'))
     self.s3g.set_extended_position(stepped_position)
       
-  def use_p1_offsets(self, codes, flags, comment):
-    """Sets the state machine to use the P0 offset.
-    """
-    self.state.offset_register = 1
-    self._log.info('{"event":"gcode_state_change", "change":"offset_register", "new_offset_register": %i}', self.state.offset_register)
-
-  def use_p2_offsets(self, codes, flags, comment):
-    """Sets the state machine to use the P1 offset.
-    """
-    self.state.offset_register = 2
-    self._log.info('{"event":"gcode_state_change", "change":"offset_register", "new_offset_register": %i}', self.state.offset_register)
-
   def wait_for_tool_ready(self, codes, flags, comment):
     """
     Waits for a toolhead for some amount of time.  If either of 
@@ -272,12 +262,6 @@ class GcodeParser(object):
     elif 100 == percentage:
       self.build_end_notification()
 
-  def store_offsets(self, codes, flags, comment):
-    """Given XYZ offsets and an offset index, stores those 
-    offsets in the state machine.
-    """
-    self.state.offsetPosition[codes['P']].SetPoint(codes)
-
   def linear_interpolation(self, codes, flags, comment):
     """Movement command that has two flavors: E and AB commands.
     E Commands require a preset toolhead to use, and simply increment
@@ -289,10 +273,10 @@ class GcodeParser(object):
       self.state.values['feedrate'] = codes['F']
       self._log.info('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', codes['F'])
     if len(parse_out_axes(codes)) > 0 or 'E' in codes:
-      if 'A' in codes and 'B' in codes:
-        gcode_error = ConflictingCodesError()
-        gcode_error.values['ConflictingCodes'] = ['A', 'B']
-        raise gcode_error
+      #if 'A' in codes and 'B' in codes:
+      #  gcode_error = ConflictingCodesError()
+      #  gcode_error.values['ConflictingCodes'] = ['A', 'B']
+      #  raise gcode_error
       current_position = self.state.get_position()
       self.state.set_position(codes)
       try :

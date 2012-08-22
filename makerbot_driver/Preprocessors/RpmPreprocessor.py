@@ -1,36 +1,31 @@
 """
-A set of preprocessors for the skeinforge engine
+A preprocessor that will remove all
+RPM commands from a gcode file.
+
+Removals:
+
+M101
+M102
+M103
+M108
 """
 
-from preprocessor import *
+from Preprocessor import *
 from errors import *
 from .. import Gcode
 import contextlib
 import os
 
-class Skeinforge50Preprocessor(Preprocessor):
-  """
-  A Preprocessor that takes a skeinforge 50 file without start/end
-  and replaces/removes deprecated commands with their replacements.
-
-  Removals:
-    M105
-    M101
-    M103
-
-  Replacements:
-    M108 T*   ->   M135 T*
-  """
+class RpmPreprocessor(Preprocessor):
 
   def __init__(self):
     self.code_map = {
-        'M108'    :     self._transform_m108,
-        'M105'    :     self._transform_m105,
         'M101'    :     self._transform_m101,
+        'M102'    :     self._transform_m102,
         'M103'    :     self._transform_m103,
-        'M104'    :     self._transform_m104,
+        'M108'    :     self._transform_m108,
         }
-
+       
   def process_file(self, input_path, output_path):
     """
     Given a filepath, reads each line of that file and, if necessary, 
@@ -40,10 +35,7 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param input_path: The input file path
     @param output_path: The output file path
     """
-    for path in (input_path, output_path):
-      name, ext = os.path.splitext(path)
-      if ext != '.gcode':
-        raise NotGCodeFileError
+    self.inputs_are_gcode(input_path, output_path)
     #Open both the files
     with contextlib.nested(open(input_path), open(output_path, 'w')) as (i, o):
       #For each line in the input file
@@ -64,42 +56,6 @@ class Skeinforge50Preprocessor(Preprocessor):
         break
     return line
 
-  def _transform_m104(self, input_line):
-    """
-    Given a line that has an "M104" command, transforms it into 
-    the proper output.  Skeinforge-50 has a tendency to output
-    M104 commands at the end of a print to cool down the extruder.
-    However, it tends to omit the obligatory T code required by s3g's
-    Gcode parser.  So, we totally remove this line if there is no T 
-    code, and keep this line if there is a T code.
-
-    @param str input_line: The line to be transformed
-    @return str: The transformed line
-    """
-    codes, flags, comments = Gcode.parse_line(input_line)
-    if 'M' not in codes or codes['M'] != 104:
-      return_line = input_line
-    elif 'T' in codes:
-      return_line = input_line
-    else:
-      return_line = ''
-    return return_line      
-
-  def _transform_m105(self, input_line):
-    """
-    Given a line that has an "M105" command, transforms it into
-    the proper output.
-
-    @param str input_line: The line to be transformed
-    @return str: The transformed line
-    """
-    codes, flags, comments = Gcode.parse_line(input_line)
-    if 'M' in codes and codes['M'] == 105:
-      return_line = ''
-    else:
-      return_line = input_line
-    return return_line 
-
   def _transform_m101(self, input_line):
     """
     Given a line that has an "M101" command, transforms it into
@@ -110,6 +66,21 @@ class Skeinforge50Preprocessor(Preprocessor):
     """
     codes, flags, comments = Gcode.parse_line(input_line)
     if 'M' in codes and codes['M'] == 101:
+      return_line = ''
+    else:
+      return_line = input_line
+    return return_line
+
+  def _transform_m102(self, input_line):
+    """
+    Given a line that has an "M102" command, transforms it into
+    the proper output.
+
+    @param str input_line: The line to be transformed
+    @return str: The transformed line
+    """
+    codes, flags, comments = Gcode.parse_line(input_line)
+    if 'M' in codes and codes['M'] == 102:
       return_line = ''
     else:
       return_line = input_line

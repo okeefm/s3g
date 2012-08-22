@@ -94,23 +94,6 @@ class s3g(object):
     name = reader.read_data('MACHINE_NAME')
     return name[0]
 
-  def get_uuid(self):
-    """
-    Get stored Bot UUID
-    @return a uuid format string
-    TODO: merge this function with future eeprom read/write module
-    """
-    reader = self.create_reader()
-    data = reader.read_data('UUID')
-    return data
-
-  def get_advanced_name(self):
-    """ 
-    Get the name and UUID of a specific bot.
-    @return a name, uuid tuple
-    """
-    return (self.get_name(), self.get_uuid())
-
   def get_toolhead_count(self):
     """ 
     @return the toolhead count of this bot. -1 on error

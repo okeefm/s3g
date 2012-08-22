@@ -108,7 +108,7 @@ def PreprocessAndExecuteFile(theFile, parser):
   preprocessor.process_file(theFile, input_path)
   for line in start_gcode:
     parser.execute_line(line)
-  with open(input_path) as f:
+  with open(skeinforge_process) as f:
     for line in f:
       parser.execute_line(line)
   for line in end_gcode:

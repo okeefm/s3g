@@ -8,76 +8,48 @@ import tempfile
 
 import makerbot_driver
 
-class PreprocessorTests(unittest.TestCase):
+class RpmPreprocessor(unittest.TestCase):
 
-  def test_can_create_preprocessor(self):
-    p = makerbot_driver.Preprocessors.Preprocessor()
-
-  def test_can_preprocess_file(self):
-    input_path = 'input'
-    output_path = 'output'
-    p = makerbot_driver.Preprocessors.Preprocessor()
-    p.process_file(input_path, output_path)
-    
-class Skeinforge50PreprocessorTests(unittest.TestCase):
-  
   def setUp(self):
-    self.sp = makerbot_driver.Preprocessors.Skeinforge50Preprocessor()
+    self.rp = makerbot_driver.Preprocessors.RpmPreprocessor()
     
   def tearDown(self):
-    self.sp = None
-
-  def test_transform_m104_non_m104_command(self):
-    input_string = 'G1;M104\n'
-    expected_string = 'G1;M104\n'
-    got_string = self.sp._transform_m104(input_string)
-    self.assertEqual(expected_string, got_string)
-
-  def test_transoform_m104_command_has_t_code(self):
-    input_string = 'M104 T2 S0\n'
-    expected_string = 'M104 T2 S0\n'
-    got_string = self.sp._transform_m104(input_string)
-    self.assertEqual(expected_string, got_string)
-
-  def test_transform_m104_command_no_t_code(self):
-    input_string = 'M104 S0\n'
-    expected_string = '\n'
-    got_string = self.sp._transform_m104(input_string)
-
-  def test_transform_m105_non_m105_command(self):
-    input_string = 'G1;M105\n'
-    expected_string = 'G1;M105\n'
-    got_string = self.sp._transform_m105(input_string)
-    self.assertEqual(expected_string, got_string)
-
-  def test_transform_m105(self):
-    input_string = 'M105\n'
-    expected_string = ''
-    got_string = self.sp._transform_m105(input_string)
-    self.assertEqual(expected_string, got_string)
+    self.rp = None
 
   def test_transform_m101_non_m101_command(self):
     input_string = 'G1;M101\n'
     expected_string = 'G1;M101\n'
-    got_string = self.sp._transform_m101(input_string)
+    got_string = self.rp._transform_m101(input_string)
     self.assertEqual(expected_string, got_string)
 
   def test_transform_m101(self):
     input_string = 'M101\n'
     expected_string = ''
-    got_string = self.sp._transform_m101(input_string)
+    got_string = self.rp._transform_m101(input_string)
+    self.assertEqual(expected_string, got_string)
+
+  def test_transform_m102_non_m102_command(self):
+    input_string = 'G1;M102\n'
+    expected_string = 'G1;M102\n'
+    got_string = self.rp._transform_m102(input_string)
+    self.assertEqual(expected_string, got_string)
+
+  def test_transform_m102(self):
+    input_string = 'M102\n'
+    expected_string = ''
+    got_string = self.rp._transform_m102(input_string)
     self.assertEqual(expected_string, got_string)
 
   def test_transform_m103_non_m103_command(self):
     input_string = 'G1;M103\n'
     expected_string = 'G1;M103\n'
-    got_string = self.sp._transform_m103(input_string)
+    got_string = self.rp._transform_m103(input_string)
     self.assertEqual(expected_string, got_string)
 
   def test_transform_m103(self):
     input_string = 'M103\n'
     expected_string = ''
-    got_string = self.sp._transform_m103(input_string)
+    got_string = self.rp._transform_m103(input_string)
     self.assertEqual(expected_string, got_string)
 
   def test_transform_m108(self):
@@ -92,17 +64,17 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
         'M108 (heres a comment) T0;heres another comment\n'   :   'M135 T0; heres another commentheres a comment\n',
         }
     for key in input_output_dict:
-      self.assertEqual(input_output_dict[key], self.sp._transform_m108(key))
+      self.assertEqual(input_output_dict[key], self.rp._transform_m108(key))
 
   def test_transform_line(self):
     inputs = [
         ['M108 T0\n', 'M135 T0\n'],
         ['M101\n'     , ''],
-        ['M105\n'     , ''],
-        ['M162 X Y Z' , 'M162 X Y Z'],
+        ['M103\n'     , ''],
+        ['M102\n'     , ''],
         ]
     for i in inputs:
-      self.assertEqual(i[1], self.sp._transform_line(i[0]))
+      self.assertEqual(i[1], self.rp._transform_line(i[0]))
 
   def test_process_file_input_doesnt_exist(self):
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
@@ -110,7 +82,7 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
     input_path = input_file.name
     os.unlink(input_path)
     output_file = 'test.gcode'
-    self.assertRaises(IOError, self.sp.process_file, input_path, output_file)
+    self.assertRaises(IOError, self.rp.process_file, input_path, output_file)
 
   def test_process_file_input_file_isnt_gcode(self):
     with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as input_file:
@@ -118,14 +90,14 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
     input_path = input_file.name
     os.unlink(input_path)
     output_path = 'test.gcode'
-    self.assertRaises(makerbot_driver.Preprocessors.NotGCodeFileError, self.sp.process_file, input_path, output_path)
+    self.assertRaises(makerbot_driver.Preprocessors.NotGCodeFileError, self.rp.process_file, input_path, output_path)
 
   def test_process_file_output_file_isnt_gcode(self):
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
       pass
     input_path = input_file.name
     bad_output = 'something'
-    self.assertRaises(makerbot_driver.Preprocessors.NotGCodeFileError, self.sp.process_file, input_path, bad_output)
+    self.assertRaises(makerbot_driver.Preprocessors.NotGCodeFileError, self.rp.process_file, input_path, bad_output)
     os.unlink(input_path)
 
   def test_process_file_good_inputs(self):
@@ -133,7 +105,7 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
       pass
     input_path = input_file.name
     output_path = 'test.gcode'
-    self.sp.process_file(input_path, output_path)
+    self.rp.process_file(input_path, output_path)
     os.unlink(input_path)
     os.unlink(output_path)
 
@@ -151,8 +123,8 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
       pass
     output_path = output_file.name
     os.unlink(output_path)
-    self.sp.process_file(input_path, output_path)
-    expected_output = "M135 T0\n"
+    self.rp.process_file(input_path, output_path)
+    expected_output = "M135 T0\nM105"
     with open(output_path, 'r') as f:
       got_output = f.read()
     self.assertEqual(expected_output, got_output)

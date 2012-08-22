@@ -229,15 +229,6 @@ class Testlinear_interpolation(unittest.TestCase):
     self.assertAlmostEquals(ddaFeedrate, actual_params[1])
     self.assertEqual(self.g.state.values['feedrate'], code_feedrate)
 
-  def test_linear_interpolation_a_and_b(self):
-    codes = {
-        'A' : 0,
-        'B' : 0,
-        }
-    flags = []
-    comments = ''
-    self.assertRaises(makerbot_driver.Gcode.ConflictingCodesError, self.g.linear_interpolation, codes, flags, comments)
-
   def test_linear_interpolation_a_code_doesnt_throw_conflicting_codes_error(self):
     codes = {
         'A' : 10,
@@ -440,64 +431,6 @@ class gcodeTests(unittest.TestCase):
     self.mock.set_build_percent.assert_called_once_with(build_percentage)
     self.mock.build_end_notification.assert_called_once_with()
     self.assertEqual(None, self.g.state.values['build_name'])
-
-  def test_store_offsets_all_codes_accounted_for(self):
-    codes = 'XYZP'
-    flags = ''
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[10][1])
-    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[10][2])
-
-  def test_store_offsets_no_p(self):
-    codes = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        }
-    self.assertRaises(KeyError, self.g.store_offsets, codes, [],  '')
-
-  def test_store_offsets_good_codes(self):
-    xOff = 1
-    yOff = 2
-    zOff = 3
-    codes = {
-        'X' : xOff,
-        'Y' : yOff,
-        'Z' : zOff,
-        'P' : 1,
-        }
-    self.g.store_offsets(codes, [], '')
-    p1Offset = makerbot_driver.Gcode.Point()
-    p2Offset = makerbot_driver.Gcode.Point()
-    for axis, offset in zip(['X', 'Y', 'Z'], [xOff, yOff, zOff]):
-      setattr(p1Offset, axis, offset)
-      setattr(p2Offset, axis, 0)  #The p2 offset is [0, 0, 0, 0, 0]
-    for axis in ['A', 'B']: #There are no A/B offsets
-      setattr(p1Offset, axis, 0)
-      setattr(p2Offset, axis, 0)
-    self.assertEqual(p1Offset.ToList(), self.g.state.offsetPosition[1].ToList())
-    self.assertEqual(p2Offset.ToList(), self.g.state.offsetPosition[2].ToList())
-
-  def test_use_p2_offsets_all_codes_accounted_for(self):
-    codes = ''
-    flags = ''
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[55][1])
-    self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[55][2])
-
-  def test_use_p2_offsets(self):
-    codes = {}
-    self.g.use_p2_offsets(codes, [], '')
-    self.assertEqual(2, self.g.state.offset_register)
-
-  def test_use_p1_offsets_all_codes_accounted_for(self):
-    codes = ''
-    flags = ''
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[54][1])
-    self.assertEqual(codes, self.g.GCODE_INSTRUCTIONS[54][2])
-
-  def test_use_p1_offsets(self):
-    codes = {}
-    self.g.use_p1_offsets(codes, [], '')
-    self.assertEqual(1, self.g.state.offset_register) 
 
   def test_set_position_all_codes_accounted_for(self):
     codes = 'XYZABE'
