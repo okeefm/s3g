@@ -28,6 +28,18 @@ class s3g(object):
     """
     r = s3g()
     s = serial.Serial(port, baudrate=baudrate, timeout=timeout)
+
+    # begin baud rate hack
+    #
+    # There is an interaction between the 8U2 firmware and PySerial where
+    # PySerial thinks the 8U2 is already running at the specified baud rate and
+    # it doesn't actually issue the ioctl calls to set the baud rate. We work
+    # around it by setting the baud rate twice, to two different values. This
+    # forces PySerial to issue the correct ioctl calls.
+    s.baudrate = 9600
+    s.baudrate = baudrate
+    # end baud rate hack
+
     r.writer = makerbot_driver.Writer.StreamWriter(s)
     return r
 
