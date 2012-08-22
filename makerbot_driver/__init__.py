@@ -10,7 +10,7 @@ import Firmware
 import Gcode
 import Writer
 from BotFactory import *
-from s3g import s3g as s3g
+from s3g import *
 from profile import *
 from constants import *
 from errors import *
