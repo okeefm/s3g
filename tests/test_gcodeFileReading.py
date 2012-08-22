@@ -39,17 +39,48 @@ class SingleHeadReading(unittest.TestCase):
     self.s3g = None
     self.p = None
 
+  def test_single_head_slicer(self):
+    the_file = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        '..',
+        'doc',
+        'gcode_samples',
+        'slic3r_single_extrusion_20mm_box.gcode'
+        )
+    the_file = preprocess_file_with_prepro(the_file, 'SlicerPreprocessor')
+    execute_file(the_file, self.p)
+
   def test_single_head_skeinforge_single_20mm_box(self):
-    PreprocessAndExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
-      'doc', 'gcode_samples', 'skeinforge_single_extrusion_20mm_box.gcode'), self.p) 
+    the_file = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), 
+        '..',
+        'doc', 
+        'gcode_samples', 
+        'skeinforge_single_extrusion_20mm_box.gcode'
+        )
+    the_file = preprocess_file_with_prepro(the_file, 'Skeinforge50Preprocessor')
+    execute_file(the_file, self.p) 
 
   def test_single_head_skeinforge_single_snake(self):
-    PreprocessAndExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
-      'doc', 'gcode_samples', 'skeinforge_single_extrusion_snake.gcode'), self.p) 
+    the_file = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), 
+        '..',
+        'doc', 
+        'gcode_samples', 
+        'skeinforge_single_extrusion_snake.gcode'
+        )
+    the_file = preprocess_file_with_prepro(the_file, 'Skeinforge50Preprocessor')
+    execute_file(the_file, self.p) 
 
   def test_single_head_miracle_grue(self):
-    PreprocessAndExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
-      'doc', 'gcode_samples', 'miracle_grue_single_extrusion_20_mm_box.gcode'), self.p) 
+    the_file = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), 
+        '..',
+        'doc', 
+        'gcode_samples', 
+        'miracle_grue_single_extrusion_20_mm_box.gcode'
+        )
+    execute_file(the_file, self.p) 
 
 class DualHeadReading(unittest.TestCase):
 
@@ -77,38 +108,64 @@ class DualHeadReading(unittest.TestCase):
     self.p = None
 
   def test_dual_head_skeinforge_hilbert_cube(self):
-    PreprocessAndExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
-      'doc', 'gcode_samples', 'skeinforge_dual_extrusion_hilbert_cube.gcode'), self.p) 
+    the_file = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), 
+        '..',
+        'doc', 
+        'gcode_samples', 
+        'skeinforge_dual_extrusion_hilbert_cube.gcode')
+    the_file = preprocess_file_with_prepro(the_file, 'Skeinforge50Preprocessor')
+    the_file = preprocess_file_with_prepro(the_file, 'CoordinateRemovalPreprocessor')
+    execute_file(the_file, self.p) 
 
   def test_single_head_skeinforge_single_20mm_box(self):
-    PreprocessAndExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
-      'doc', 'gcode_samples', 'skeinforge_single_extrusion_20mm_box.gcode'), self.p) 
+    the_file = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), 
+        '..',
+        'doc', 
+        'gcode_samples', 
+        'skeinforge_single_extrusion_20mm_box.gcode'
+        )
+    the_file = preprocess_file_with_prepro(the_file, 'Skeinforge50Preprocessor')
+    execute_file(the_file, self.p) 
 
   def test_single_head_skeinforge_single_snake(self):
-    PreprocessAndExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
-      'doc', 'gcode_samples', 'skeinforge_single_extrusion_snake.gcode'), self.p) 
+    the_file = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), 
+        '..',
+        'doc', 
+        'gcode_samples', 
+        'skeinforge_single_extrusion_snake.gcode')
+    the_file = preprocess_file_with_prepro(the_file, 'Skeinforge50Preprocessor')
+    execute_file(the_file, self.p) 
 
   def test_single_head_miracle_grue(self):
-    PreprocessAndExecuteFile(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..',
-      'doc', 'gcode_samples', 'miracle_grue_single_extrusion_20_mm_box.gcode'), self.p) 
+    the_file = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        '..',
+        'doc',
+        'gcode_samples',
+        'miracle_grue_single_extrusion_20_mm_box.gcode',
+        )
+    execute_file(the_file,self.p) 
 
-def PreprocessAndExecuteFile(theFile, parser):
+def preprocess_file_with_prepro(the_file, prepro):
+  factory = makerbot_driver.Preprocessors.PreprocessorFactory()
+  prepro = factory.create_preprocessor_from_name(prepro)
+  with tempfile.NamedTemporaryFile(delete=True, suffix='.gcode') as f:
+    processed_file_path = f.name
+  prepro.process_file(the_file, processed_file_path)
+  return processed_file_path
+
+def execute_file(the_file, parser):
   ga = makerbot_driver.GcodeAssembler(parser.state.profile)
   start, end, variables = ga.assemble_recipe()
   start_gcode = ga.assemble_start_sequence(start)
   end_gcode = ga.assemble_end_sequence(end)
   parser.environment.update(variables)
-  #Get the skeinforge 50 preprocessor
-  preprocessor = makerbot_driver.Preprocessors.Skeinforge50Preprocessor()
-  #Make the temp file to process the gcode file into
-  with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
-    pass
-  input_path = input_file.name
-  os.unlink(input_path)
-  preprocessor.process_file(theFile, input_path)
   for line in start_gcode:
     parser.execute_line(line)
-  with open(skeinforge_process) as f:
+  with open(the_file) as f:
     for line in f:
       parser.execute_line(line)
   for line in end_gcode:

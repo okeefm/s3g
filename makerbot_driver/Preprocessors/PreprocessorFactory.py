@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 import makerbot_driver
 
-class PreProFactory(object):
+class PreprocessorFactory(object):
 
   def __init__(self):
     pass
