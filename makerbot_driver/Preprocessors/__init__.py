@@ -1,5 +1,6 @@
-all = ['Preprocessor', 'Skeinforge50Preprocessor', 'ToolchangePreprocessor', 'SingletonTPreprocessor', 'DefaultPreprocessor', 'RpmPreprocessor', 'SlicerPreprocessor', 'CoordinateRemovalPreprocessor', 'RemoveStartEndGcode', 'errors']
+all = ['PreprocessorFactory', 'Preprocessor', 'Skeinforge50Preprocessor', 'ToolchangePreprocessor', 'SingletonTPreprocessor', 'DefaultPreprocessor', 'RpmPreprocessor', 'SlicerPreprocessor', 'CoordinateRemovalPreprocessor', 'RemoveStartEndGcode', 'errors']
 
+from PreprocessorFactory import *
 from Preprocessor import *
 from SkeinforgePreprocessors import *
 from ToolchangePreprocessor import *
