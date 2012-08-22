@@ -77,10 +77,11 @@ class Uploader(object):
     """
     local_path = os.path.basename(url)
     local_path = os.path.join(self.dest_path, local_path)
-    if os.path.isfile(url) and not url == local_path:
-      self._logger.info('{"event":"copying_local_file", "file":%s}' %(url))
-      import shutil
-      shutil.copy(url, local_path)
+    if os.path.isfile(url):
+      if not url == local_path:
+        self._logger.info('{"event":"copying_local_file", "file":%s}' %(url))
+        import shutil
+        shutil.copy(url, local_path)
     else:
       self._logger.info('{"event":"downloading_url", "url":%s}' %(url))
       #Download the file
