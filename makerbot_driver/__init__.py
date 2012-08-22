@@ -1,4 +1,4 @@
-__all__ = ['Encoder', 'EEPROM','FileReader', 'Gcode', 'Writer', 'BotFactory', 'MachineDetector', 's3g', 'profile', 'constants', 'errors']
+__all__ = ['Encoder', 'EEPROM','FileReader', 'Gcode', 'Writer', 'BotFactory', 'MachineDetector', 's3g', 'profile', 'constants', 'errors', 'GcodeAssembler']
 
 __version__ = '0.1.0'
 
@@ -15,3 +15,4 @@ from profile import *
 from constants import *
 from errors import *
 from MachineDetector import *
+from GcodeAssembler import *

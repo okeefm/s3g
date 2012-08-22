@@ -1,0 +1,36 @@
+{
+  "PLA" : {
+    "print_start_sequence" : {
+      "heat_platform" : "no_heat"
+      },
+    "print_end_sequence" : {
+      "cool_platform" : "no_cool"
+      },
+    "variables" : {
+      "TOOL_0_TEMP" : 220,
+      "TOOL_1_TEMP" : 220
+      }
+  },
+  "ABS" : {
+    "print_start_sequence" : {
+      "heat_platform" : "heat_platform"
+      },
+    "print_end_sequence" : {
+      "cool_platform" : "cool_platform"
+      },
+    "variables" : {
+      "TOOL_0_TEMP" : 220,
+      "TOOL_1_TEMP" : 220,
+      "PLATFORM_TEMP" : 100
+      }
+    },
+  "dualstrusion": {
+    "print_start_sequence" : {
+      "heat_tools" : "dualstrusion"
+      },
+    "print_end_sequence" : {
+      "cool_tools" : "dualstrusion"
+      },
+    "variables" : {}
+    }
+}

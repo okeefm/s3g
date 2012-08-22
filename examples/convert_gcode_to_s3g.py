@@ -23,18 +23,24 @@ s.writer = makerbot_driver.Writer.FileWriter(open(options.output_file, 'wb'))
 
 parser = makerbot_driver.Gcode.GcodeParser()
 parser.state.values["build_name"] = 'test'
-parser.state.profile = makerbot_driver.Profile(options.machine)
+profile = makerbot_driver.Profile(options.machine)
+parser.state.profile = profile
 parser.s3g = s
 
+ga = makerbot_driver.GcodeAssembler(profile)
+start, end, variables = ga.assemble_recipe()
+start_gcode = ga.assemble_start_sequence(start)
+end_gcode = ga.assemble_end_sequence(end)
+parser.environment.update(variables)
+
 if options.start_end_sequences:
-  for line in parser.state.profile.values['print_start_sequence']:
+  for line in start_gcode:
     parser.execute_line(line)
 
 with open(options.input_file) as f:
   for line in f:
-    print line
     parser.execute_line(line)
 
 if options.start_end_sequences:
-  for line in parser.state.profile.values['print_end_sequence']:
+  for line in end_gcode:
     parser.execute_line(line)
