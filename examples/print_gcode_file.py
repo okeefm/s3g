@@ -14,9 +14,9 @@ parser.add_option("-f", "--filename", dest="filename",
 parser.add_option("-m", "--machine", dest="machine",
                   help="machine you want to connect to", default="The Replicator")
 parser.add_option("-p", "--port", dest="port",
-                  help="The port you want to connect to", default=None)
+                  help="The port you want to connect to (OPTIONAL)", default=None)
 parser.add_option("-s", "--sequences", dest="sequences",
-                  help="Dont use makerbot_driver's start/end sequences",
+                  help="Flag to not use makerbot_driver's start/end sequences",
                   default=True, action="store_false")
 (options, args) = parser.parse_args()
 

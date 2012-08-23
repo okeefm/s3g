@@ -4,11 +4,10 @@ from errors import *
 
 class GcodeAssembler(object):
   """
-  An assembler that builds start and end gcodes 
-  To add a new element to the template to the 
-  recipe, we need to add in 2 places :(  
-  the start/end order, the defaults coded
-  into assemble recipe.
+  An assembler that builds start and end gcodes. 
+  In makerbot_driver/profiles/recipes.json there are
+  several recipes defined, each with a set of routines.
+  
   """
 
   def __init__(self, machine_profile):
@@ -76,11 +75,15 @@ class GcodeAssembler(object):
       for return_val, dual_val in zip(return_values, dual_values):
         return_val.update(dual_val)
     elif tool_0:
-      return_values[0]['heat_tools'] = 'heat_0'
-      return_values[1]['cool_tools'] = 'cool_0'
+      #Update start routine
+      return_values[0].update({'heat_tools' : 'heat_0'})
+      #Update end routine
+      return_values[1].update({'cool_tools' : 'cool_0'})
     elif tool_1:
-      return_values[0]['heat_tools'] = 'heat_1'
-      return_values[1]['cool_tools'] = 'cool_1'
+      #Update start routine
+      return_values[0].update({'heat_tools' : 'heat_1'})
+      #Update end routine
+      return_values[1].update({'cool_tools' : 'cool_1'})
     #Add material values to the return template values
     material_values = self.get_recipes_and_variables(material)
     for return_val, mat_val in zip(return_values, material_values):

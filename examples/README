@@ -1,11 +1,9 @@
-This example shows how to use Processing to control a makerbot.
+#Examples
+A series of scripts that should allow users easy access to the makerbot_driver.
 
-To use it, you will to install the python libraries pyserial and pyosc. Then run:
+##How To Use Each Script
+All scripts must be given commands using standard line parsing.  To see a list of all parameters, issue:
 
-    python osc_demo.py -s /dev/tty.usbmodemfd121
+    python <name_of_script>.py --help
 
-to start the python OSC server.
-
-
-Next, start Processing and run the osc_s3g_demo sketch. You will need the oscP5
-library. Click and drag on the window to change the head position of the makerbot.
+This will output all parameters you as a user can supply to execute these scripts.

@@ -1,3 +1,8 @@
+"""
+Given a gcode file as input, transform that 
+file into s3g commands for a makerbot printer.
+"""
+
 import os
 import sys
 lib_path = os.path.abspath('../')
@@ -15,7 +20,7 @@ parser.add_option("-o", "--outputfile", dest="output_file",
 parser.add_option("-m", "--machine_type", dest="machine",
                   help="machine type", default="ReplicatorDual")
 parser.add_option("-s", "--sequences", dest="sequences",
-                  help="Dont use makerbot_driver's start/end sequences",
+                  help="Flag to not use makerbot_driver's start/end sequences",
                   default=True, action="store_false")
 (options, args) = parser.parse_args()
 
