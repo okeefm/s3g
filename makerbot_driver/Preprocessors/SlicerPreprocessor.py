@@ -20,7 +20,7 @@ class SlicerPreprocessor(Preprocessor):
 
   def process_file(self, input_path, output_path):
     self.inputs_are_gcode(input_path, output_path)
-    remove_start_end_gcode = makerbot_driver.Preprocessors.RemoveRepGStartEndGcode()
+    remove_start_end_gcode = RemoveRepGStartEndGcode()
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
       remove_start_end_path = f.name
     remove_start_end_gcode.process_file(input_path, remove_start_end_path)

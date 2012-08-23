@@ -10,7 +10,7 @@ class GcodeAssembler(object):
   
   """
 
-  def __init__(self, machine_profile):
+  def __init__(self, machine_profile, profiledir=None):
     self.machine_profile = machine_profile
     self.start_order = [
         'begin_print',
@@ -26,7 +26,7 @@ class GcodeAssembler(object):
         'cool_tools',
         'end_print',
         ]
-    self.recipes = Profile('recipes')
+    self.recipes = Profile('recipes', profiledir)
     
   def assemble_recipe(self,
       material='PLA',
