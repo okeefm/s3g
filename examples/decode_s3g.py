@@ -10,12 +10,15 @@ import makerbot_driver
 import optparse
 
 parser = optparse.OptionParser()
-parser.add_option("-f", "--filename", dest="filename",
-                  help="File name of the s3g file to parse")
+parser.add_option("-i", "--input_file", dest="input_file",
+                  help="input file to parse")
+parser.add_option("-o", "--output_file", dest="output_file",
+                  help="output file with decoded information")
 (options, args) = parser.parse_args()
 
 reader = makerbot_driver.FileReader.FileReader()
-reader.file = open(options.filename)
+reader.file = open(options.input_file, 'rb')
 payloads = reader.ReadFile()
-for payload in payloads:
-  print payload
+with open(options.output_file, 'w') as f:
+  for payload in payloads:
+    f.write(payload)

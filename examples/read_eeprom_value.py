@@ -1,0 +1,45 @@
+import os
+import sys
+lib_path = os.path.abspath('../')
+sys.path.append(lib_path)
+import makerbot_driver
+
+import serial
+import serial.tools.list_ports
+import optparse
+
+parser = optparse.OptionParser()
+parser.add_option("-p", "--port", dest="port",
+                  help="serial port (ex: /dev/ttyUSB0)", default=None)
+parser.add_option("-m", "--machine_type", dest="machine",
+                  help="machine type", default="The Replicator")
+parser.add_option("-e", "--eeprom_entry", dest="eeprom_entry",
+                  help="eeprom entry to write to")
+parser.add_option("-c", "--context", dest="context",
+                  help="context for the eeprom_entry, as comma separated values", 
+                  default="")
+(options, args) = parser.parse_args()
+
+context = options.context.replace(' ', '')
+context = context.split(',')
+for c in context:
+  if c == '':
+    context.remove(c)
+
+if options.port == None:
+  md = makerbot_driver.MachineDetector()
+  md.scan(options.machine)
+  port = md.get_first_machine()
+  if port is None:
+    print "Cant Find %s" %(options.machine)
+    sys.exit()
+else:
+  port = options.port
+factory = makerbot_driver.BotFactory()
+r, prof = factory.build_from_port(port)
+
+reader = makerbot_driver.EEPROM.EepromReader()
+reader.s3g  = r
+
+
+print reader.read_data(options.eeprom_entry, context)
