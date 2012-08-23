@@ -29,24 +29,15 @@ class TestToolchangePreprocessor(unittest.TestCase):
       self.assertEqual(case[0], self.p.get_used_extruder(case[1]))
 
   def test_process_file(self):
-    input_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)),
-        'test_files',
-        'test_toolchange_preprocessor_input.gcode'
-        )
-    output_file = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)),
-        'test_files',
-        'test_toolchange_preprocessor_output.gcode'
-        )  
-    with tempfile.NamedTemporaryFile(suffix='.gcode',delete=False) as output:
-      pass
-    output_path = output.name
-    os.unlink(output_path)
-    self.p.process_file(input_path, output_path)
-    got_output = open(output_path)
-    expected_output = open(output_file)
-    self.assertEqual(expected_output.read(), got_output.read())
+    the_input = "G1 X50 Y50\nG1 X0 Y0 A50\nG1 X0 Y0 B50\nG1 X0 Y0 B50\nG1 X0 Y0 B50\nG1 X0 Y0 A50\nG1 X0 Y0 B50\n"
+    expected_output = "G1 X50 Y50\nG1 X0 Y0 A50\nM135 T1\nG1 X0 Y0 B50\nG1 X0 Y0 B50\nG1 X0 Y0 B50\nM135 T0\nG1 X0 Y0 A50\nM135 T1\nG1 X0 Y0 B50\n"
+    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
+      input_file.write(the_input)
+    with tempfile.NamedTemporaryFile(suffix='.gcode',delete=True) as output:
+      output_path = output.name
+    self.p.process_file(input_file.name, output_path)
+    with open(output_path) as exp:
+      self.assertEqual(expected_output, exp.read())
 
 if __name__ == '__main__':
   unittest.main()

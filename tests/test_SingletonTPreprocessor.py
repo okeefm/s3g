@@ -36,24 +36,15 @@ class TestSingletonTPreprocessor(unittest.TestCase):
       self.assertEqual(case[1], self.p.turn_into_toolchange(case[0]))
 
   def test_process_file(self):
-    input_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)),
-        'test_files',
-        'test_singleton_t_preprocessor_input.gcode',
-        )
-    expected_output_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)),
-        'test_files',
-        'test_singleton_t_preprocessor_output.gcode',
-        )
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.gcode') as output_file:
-      pass
-    got_output_path = output_file.name
-    os.unlink(got_output_path)
-    self.p.process_file(input_path, got_output_path)
-    with open(expected_output_path) as exp:
-      with open(got_output_path) as got:
-        self.assertEqual(exp.read(), got.read())    
+    the_input = "T0\nG1 X8 Y9\nT1\nG92 X0 Y0\nT7\n"
+    expected_output = "M135 T0\nG1 X8 Y9\nM135 T1\nG92 X0 Y0\nM135 T7\n"
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.gcode') as input_file:
+      input_file.write(the_input)
+    with tempfile.NamedTemporaryFile(delete=True, suffix='.gcode') as output_file:
+      output_path = output_file.name
+    self.p.process_file(input_file.name, output_path)
+    with open(output_path) as exp:
+      self.assertEqual(expected_output, exp.read())
 
 if __name__ == '__main__':
   unittest.main()
