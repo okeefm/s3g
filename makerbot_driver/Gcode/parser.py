@@ -271,7 +271,7 @@ class GcodeParser(object):
     """
     if 'F' in codes:
       self.state.values['feedrate'] = codes['F']
-      self._log.info('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', codes['F'])
+      self._log.debug('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', codes['F'])
     if len(parse_out_axes(codes)) > 0 or 'E' in codes:
       #if 'A' in codes and 'B' in codes:
       #  gcode_error = ConflictingCodesError()
@@ -337,25 +337,25 @@ class GcodeParser(object):
     """Sends a chagne tool command to the machine.
     """
     self.state.values['tool_index'] = codes['T']
-    self._log.info('{"event":"gcode_state_change", "change":"tool_change", "new_tool_index":%i}', codes['T'])
+    self._log.debug('{"event":"gcode_state_change", "change":"tool_change", "new_tool_index":%i}', codes['T'])
     self.s3g.change_tool(codes['T'])
 
   def build_start_notification(self):
     """Sends a build start notification command to the machine.
     """
-    self._log.info('{"event":"build_start"}')
+    self._log.debug('{"event":"build_start"}')
     try:
       self.s3g.build_start_notification(self.state.values['build_name'])
     except KeyError:
-      self._log.info('{"event":"no_build_name_defined"}')
+      self._log.debug('{"event":"no_build_name_defined"}')
       raise NoBuildNameError
 
   def build_end_notification(self):
     """Sends a build end notification command to the machine
     """
-    self._log.info('{"event":"build_end"}')
+    self._log.debug('{"event":"build_end"}')
     self.state.values['build_name'] = None
-    self._log.info('{"event":"gcode_state_change", "change":"remove_build_name"}')
+    self._log.debug('{"event":"gcode_state_change", "change":"remove_build_name"}')
     self.s3g.build_end_notification()
 
   def enable_extra_output(self, codes, flags, comment):

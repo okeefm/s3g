@@ -27,7 +27,7 @@ class GcodeStates(object):
     those axes.
     @param list axes: A list of axes to lose
     """
-    self._log.info('{"event":"gcode_state_change", "change":"lose_position"}')
+    self._log.debug('{"event":"gcode_state_change", "change":"lose_position"}')
     for axis in axes:
       setattr(self.position, axis, None)
 
@@ -50,7 +50,7 @@ class GcodeStates(object):
     if not isinstance(build_name, str):
       raise TypeError
     else:
-      self._log.info('{"event":"gcode_state_change", "change":"build_name"}')
+      self._log.debug('{"event":"gcode_state_change", "change":"build_name"}')
       self.values['build_name'] = build_name
 
   def set_position(self, codes):

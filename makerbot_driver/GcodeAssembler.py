@@ -5,6 +5,10 @@ from errors import *
 class GcodeAssembler(object):
   """
   An assembler that builds start and end gcodes 
+  To add a new element to the template to the 
+  recipe, we need to add in 2 places :(  
+  the start/end order, the defaults coded
+  into assemble recipe.
   """
 
   def __init__(self, machine_profile):
@@ -39,7 +43,7 @@ class GcodeAssembler(object):
       end_print='replicator_end',
       ):
     """
-    The recipe assembler.  Has several build in
+    The recipe assembler.  Has several built in
     defaults a user could use to create a generic
     sequence recipe.  If both tool_0 and tool_1 are
     set to true, will assume it should output in

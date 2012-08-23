@@ -24,7 +24,7 @@ class Profile(object):
     if not name.endswith(extension):
       name += extension
     path = os.path.join(self.path,name)
-    self._log.info('{"event":"open_profile", "path":%s}', path)
+    self._log.debug('{"event":"open_profile", "path":%s}', path)
     with open(path) as f:
       self.values = json.load(f) 
 
