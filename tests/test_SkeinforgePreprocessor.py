@@ -88,7 +88,16 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
 
   def test_process_file_can_proces_parsable_file(self):
     #Make input temp file
-    test_gcode_file = "M103\nM101\nM108 R2.51 T0\nM105"
+    start_gcode = '***begin start gcode\n
+                  G162 X Y F2000\n
+                  G161 Z F2000\n
+                  G92 X0 Y0 Z0 A0 B0\n
+                  (**** end of start.gcode ****)\n' 
+    end_gcode = '(******* End.gcode*******)
+                G162 X Y F2000\n
+                G161 Z F2000\n
+                (*********end End.gcode*******)'
+    test_gcode_file = start_gcode+"M103\nM101\nM108 R2.51 T0\nM105"+end_gcode
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
       pass
     input_path = input_file.name

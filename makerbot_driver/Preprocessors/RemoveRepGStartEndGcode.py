@@ -1,7 +1,7 @@
 from errors import *
 from .. import Gcode
 
-class RemoveStartEndGcode(object):
+class RemoveRepGStartEndGcode(object):
 
   def __init__(self):
       return

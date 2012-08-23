@@ -4,6 +4,7 @@ A set of preprocessors for the skeinforge engine
 
 from Preprocessor import *
 from RpmPreprocessor import *
+from RemoveRepGStartEndGcode import *
 from errors import *
 from .. import Gcode
 import contextlib
@@ -41,12 +42,16 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param output_path: The output file path
     """
     self.inputs_are_gcode(input_path, output_path)
+    start_end_gcode_preprocessor = RemoveRepGStartEndGcode()
+    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
+      remvoed_start_end = f.name
+    start_end_gcode_preprocessor.process_file(input_path, removed_start_end)
     rp = RpmPreprocessor()
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as f:
       pass
     remove_rpm_path = f.name
     os.unlink(remove_rpm_path)
-    rp.process_file(input_path, remove_rpm_path)
+    rp.process_file(removed_start_end, remove_rpm_path)
     #Open both the files
     with contextlib.nested(open(remove_rpm_path), open(output_path, 'w')) as (i, o):
       #For each line in the input file

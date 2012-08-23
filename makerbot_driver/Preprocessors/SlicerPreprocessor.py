@@ -5,6 +5,7 @@ import tempfile
 from errors import *
 from Preprocessor import *
 from RpmPreprocessor import *
+from RemoveRepGStartEndGcode import *
 
 
 class SlicerPreprocessor(Preprocessor):
@@ -19,12 +20,16 @@ class SlicerPreprocessor(Preprocessor):
 
   def process_file(self, input_path, output_path):
     self.inputs_are_gcode(input_path, output_path)
+    remove_start_end_gcode = makerbot_driver.Preprocessors.RemoveRepGStartEndGcode()
+    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
+      remove_start_end_path = f.name
+    remove_start_end_gcode.process_file(input_path, remove_start_end_path)
     rp = RpmPreprocessor()
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as f:
       pass
     remove_rpm_path = f.name
     os.unlink(remove_rpm_path)
-    rp.process_file(input_path, remove_rpm_path)
+    rp.process_file(remove_start_end_path, remove_rpm_path)
     #Open both the files
     with contextlib.nested(open(remove_rpm_path), open(output_path, 'w')) as (i, o):
       #For each line in the input file
