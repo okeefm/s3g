@@ -19,12 +19,7 @@ class FileComplete(object):
     while byte:
       data = struct.unpack('>B', byte);
       byte = s_file.read(1)
-
-      if(checksum > 65250) or (checksum < 255):
-        print checksum
       # we are using a 2byte checksum
       checksum = (data[0] + checksum) % 65536
-    print bytes(checksum)
     #add checksum to end of file
     s_file.write(bytes(checksum))
-
