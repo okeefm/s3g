@@ -60,8 +60,11 @@ class EepromWriter(object):
     data = self.encode_data(data, found_dict)
     self.data_buffer.append([offset, data])
     if flush:
-      for data in self.data_buffer:
-        self.s3g.write_to_EEPROM(data[0], data[1])
+      self.flush_data()
+
+  def flush_data(self):
+    for data in self.data_buffer:
+      self.s3g.write_to_EEPROM(data[0], data[1])
 
   def good_string_type(self, t):
     """

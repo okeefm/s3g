@@ -30,6 +30,26 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
   def tearDown(self):
     self.writer = None
 
+  def test_flush_data_no_data(self):
+    self.writer.flush_data()
+    self.assertEqual(0, len(self.write_to_eeprom_mock.mock_calls))
+
+  def test_flush_data(self):
+    values = [
+        ['a', 1],
+        ['b', 2],
+        ['c', 3],
+        ]
+    for value in values:
+      self.writer.data_buffer.append(value)
+    self.writer.flush_data()
+    calls = self.write_to_eeprom_mock.mock_calls
+    self.assertEqual(len(values), len(calls))
+    for call, value in zip(calls, values):
+      params = call[1]
+      self.assertEqual(value[0], params[0])
+      self.assertEqual(value[1], params[1])
+
   def test_write_value_no_flush_toolhead(self):
     name = 'foobar'
     value = 252645135
