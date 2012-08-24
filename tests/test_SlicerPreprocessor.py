@@ -59,27 +59,21 @@ class SlicerPreprocessor(unittest.TestCase):
     for case in cases:
       self.assertEqual(case[1], self.sp._transform_m107(case[0]))
 
-#  def test_process_file(self):
-#    start_gcode = "***begin start gcode\n
-#                  G162 X Y F2000\n
-#                  G161 Z F2000\n
-#                  G92 X0 Y0 Z0 A0 B0\n
-#                  (**** end of start.gcode ****)\n"
-#    end_gcode = "(******* End.gcode*******)
-#                G162 X Y F2000\n
-#                G161 Z F2000\n
-#                (*********end End.gcode*******)"
-#    with tempfile.NamedTemporaryFile(suffix='.gcode') as f:
-#      input_file = f.name
-#    with tempfile.NamedTemporaryFile(suffix='.gcode') as f:
-#      output_file = f.name
-#    the_input = start_gcode+"G90\nG21\nM107 S500\nM106 S500\nM101\nM102\nM108\nG1 X0 Y0 Z0 A0 B0"+end_gcode
-#    expected_output = '\nG1 X0 Y0 Z0 A0 B0'
-#    with open(input_file, 'w') as f:
-#      f.write(the_input)
-#    self.sp.process_file(input_file, output_file)
-#    with open(output_file) as f:
-#      self.assertEqual(expected_output, f.read())
-#
+  def test_process_file(self):
+    start_gcode = "(**** start.gcode for The Replicator, dual head ****)\nG162 X Y F2000\nG161 Z F2000\nG92 X0 Y0 Z0 A0 B0\n(**** end of start.gcode ****)\n" 
+    end_gcode = "(******* End.gcode*******)\nG162 X Y F2000\nG161 Z F2000\n(*********end End.gcode*******)\n"
+    the_input = start_gcode+"G90\nG21\nM107 S500\nM106 S500\nM101\nM102\nM108\nG1 X0 Y0 Z0 A0 B0\n"+end_gcode
+    expected_output = 'G1 X0 Y0 Z0 A0 B0'
+    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as f:
+      f.write(the_input)
+      input_file = f.name
+    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
+      output_file = f.name
+    self.sp.process_file(input_file, output_file)
+    with open(output_file) as f:
+      got_output = f.read()
+      got_output = got_output.lstrip('\n').rstrip('\n')
+      self.assertEqual(expected_output, got_output)
+
 if __name__ == '__main__':
   unittest.main()

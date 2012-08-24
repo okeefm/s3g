@@ -1,13 +1,14 @@
 from errors import *
 from .. import Gcode
+from Preprocessor import *
 
-class RemoveRepGStartEndGcode(object):
+class RemoveRepGStartEndGcode(Preprocessor):
 
   def __init__(self):
-      return
+    pass
 
   def process_file(self, input_path, output_path):
-
+    self.inputs_are_gcode(input_path, output_path)
     startgcode = False
     endgcode = False
 

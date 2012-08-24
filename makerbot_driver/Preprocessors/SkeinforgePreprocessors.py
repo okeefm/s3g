@@ -47,10 +47,8 @@ class Skeinforge50Preprocessor(Preprocessor):
       removed_start_end = f.name
     start_end_gcode_preprocessor.process_file(input_path, removed_start_end)
     rp = RpmPreprocessor()
-    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as f:
-      pass
-    remove_rpm_path = f.name
-    os.unlink(remove_rpm_path)
+    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
+      remove_rpm_path = f.name
     rp.process_file(removed_start_end, remove_rpm_path)
     #Open both the files
     with contextlib.nested(open(remove_rpm_path), open(output_path, 'w')) as (i, o):

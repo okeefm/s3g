@@ -86,12 +86,11 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
     os.unlink(input_path)
     os.unlink(output_path)
 
-  @unittest.skip('skipping for now')
   def test_process_file_can_proces_parsable_file(self):
     #Make input temp file
-    start_gcode = "***begin start gcode\nG162 X Y F2000\nG161 Z F2000\nG92 X0 Y0 Z0 A0 B0\n(**** end of start.gcode ****)\n" 
+    start_gcode = "(**** start.gcode for The Replicator, dual head ****)\nG162 X Y F2000\nG161 Z F2000\nG92 X0 Y0 Z0 A0 B0\n(**** end of start.gcode ****)\n" 
     end_gcode = "(******* End.gcode*******)\nG162 X Y F2000\nG161 Z F2000\n(*********end End.gcode*******)\n"
-    test_gcode_file = start_gcode+"M103\nM101\nM108 R2.51 T0\nM105"+end_gcode
+    test_gcode_file = start_gcode+"M103\nM101\nM108 R2.51 T0\nM105\n"+end_gcode
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
       pass
     input_path = input_file.name
@@ -99,14 +98,13 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
     f.write(test_gcode_file)
     f.close()
     #Make output temp file
-    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as output_file:
-      pass
-    output_path = output_file.name
-    os.unlink(output_path)
+    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as output_file:
+      output_path = output_file.name
     self.sp.process_file(input_path, output_path)
-    expected_output = "M135 T0\n"
+    expected_output = "M135 T0"
     with open(output_path, 'r') as f:
       got_output = f.read()
+    got_output = got_output.rstrip('\n').lstrip('\n')
     self.assertEqual(expected_output, got_output)
 
 if __name__ == '__main__':
