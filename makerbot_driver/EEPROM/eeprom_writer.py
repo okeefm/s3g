@@ -21,7 +21,7 @@ class EepromWriter(object):
     return eeprom_writer
 
   def __init__(self, map_name=None, working_directory=None):
-    self.map_name = map_name if map_name else 'eeprom_map.json'
+    self.map_name = map_name if map_name else 'eeprom_map_5.6.json'
     self.working_directory = working_directory if working_directory else os.path.abspath(os.path.dirname(__file__))
     #Load the eeprom map
     with open(os.path.join(self.working_directory, self.map_name)) as f:

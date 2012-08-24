@@ -4,15 +4,6 @@ Eeprom.hh file.  Expects blocks of information in the form of:
 //$BEGIN_ENTRY
 //$S:<some size>
 const static uint16_t <some name> = <some address>
-
-Takes the above information and turns it into a python
-dict in the form of:
-{
-  <some name> : {
-      size  : <some size>,
-      address : <some address>,
-      }
-}
 """
 
 class EndOfNamespaceError(IOError):
@@ -24,11 +15,13 @@ class EndOfEepromError(IOError):
     pass
 
 import json
+import optparse
 
 class eeprom_analyzer(object):
 
-  def __init__(self):
-    self.filename = 'eeprom_map.json'
+  def __init__(self, input_file, output_file):
+    self.output_file = output_file
+    self.input_file = input_file
     self.eeprom_map = {}
 
   def parse_file(self):
@@ -40,8 +33,8 @@ class eeprom_analyzer(object):
         try:
           while True:
             self.find_next_entry()
-            variables = self.parse_out_variables(self.file.readline())
-            (name, location) = self.parse_out_name_and_location(self.file.readline())
+            variables = self.parse_out_variables(self.input_file.readline())
+            (name, location) = self.parse_out_name_and_location(self.input_file.readline())
             v = {
                 'offset'  : location,
                 }
@@ -53,16 +46,16 @@ class eeprom_analyzer(object):
           self.eeprom_map[namespace_name]  = namespace
     except EndOfEepromError:
       collated_map = {'eeprom_map' : self.collate_maps(self.eeprom_map['eeprom_offsets'])}
-      self.dump_json('eeprom_map.json', collated_map)
+      self.dump_json(collated_map)
       
   def find_next_entry(self):
     namespace_end = '}'
     entry_line = '//$BEGIN_ENTRY'
-    line = self.file.readline()
+    line = self.input_file.readline()
     while entry_line not in line:
       if namespace_end in line:
         raise EndOfNamespaceError
-      line = self.file.readline()
+      line = self.input_file.readline()
     return line
 
   def find_next_namespace(self):
@@ -75,11 +68,11 @@ class eeprom_analyzer(object):
     """
     namespace = 'namespace'
     end_of_eeprom = '#endif'
-    line = self.file.readline()
+    line = self.input_file.readline()
     while not line.startswith(namespace):
       if end_of_eeprom in line:
         raise EndOfEepromError
-      line = self.file.readline()
+      line = self.input_file.readline()
     return self.parse_out_namespace_name(line)
 
   def parse_out_namespace_name(self, line):
@@ -127,10 +120,9 @@ class eeprom_analyzer(object):
     #Dont return the first, since its empty
     return parts[1:]
 
-  def dump_json(self, name, eeprom_map):
+  def dump_json(self, eeprom_map):
     output = json.dumps(eeprom_map, sort_keys=True, indent=2) 
-    with(open(name, 'w')) as f:
-      f.write(output)
+    self.output_file.write(output)
 
   def collate_maps(self, the_map):
 #    main_map = 'eeprom_offsets'
@@ -146,3 +138,15 @@ class eeprom_analyzer(object):
         self.collate_maps(collated_map[key]['sub_map'])
 #    collated_map = {'eeprom_map'  : collated_map}
     return collated_map
+
+if __name__ == '__main__':
+  parser = optparse.OptionParser()
+  parser.add_option('-i', '--input_file', dest='input_file',
+                    help='The file you would like to parse',
+                    default = 'EepromMap_5.6.hh')
+  parser.add_option('-o', '--output_file', dest='output_file',
+                    help='where you would like to save the map to',
+                    ) 
+  (options, args) = parser.parse_args()
+  ea = eeprom_analyzer(open(options.input_file), open(options.output_file, 'w'))
+  ea.parse_file()

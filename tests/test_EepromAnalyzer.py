@@ -13,7 +13,11 @@ import makerbot_driver
 class TestLineReader(unittest.TestCase):
 
   def setUp(self):
-    self.reader = makerbot_driver.EEPROM.eeprom_analyzer()
+    with tempfile.NamedTemporaryFile(suffix='.hh', delete=False) as f:
+      input_file = f.name
+    with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as f:
+      output_file = f.name
+    self.reader = makerbot_driver.EEPROM.eeprom_analyzer(open(input_file), open(output_file, 'w'))
 
   def tearDown(self):
     self.reader = None
@@ -51,16 +55,12 @@ class TestLineReader(unittest.TestCase):
         'b' : 2,
         'c' : 3,
         }
-    with tempfile.NamedTemporaryFile(suffix = '.json',delete=False) as input_file:
-      pass
-    input_path = input_file.name
-    os.unlink(input_path)
-    filename = input_path
-    self.reader.dump_json(filename, test_dic)
-    with open(input_path) as f:
+    self.reader.dump_json(test_dic)
+    output_file = self.reader.output_file.name
+    self.reader.output_file.close()
+    with open(output_file, 'r') as f:
       written_vals = json.load(f)
     self.assertEqual(test_dic, written_vals)
-    
 
 if __name__ == '__main__':
   unittest.main()

@@ -26,7 +26,7 @@ class EepromReader(object):
     @param map_name filename of the map to use. eeprom_map.json if not specifie
     @param working_directory drectory containing the map file name
     """
-    self.map_name = map_name if map_name else 'eeprom_map.json'
+    self.map_name = map_name if map_name else 'eeprom_map_5.6.json'
     self.working_directory = working_directory if working_directory else os.path.abspath(os.path.dirname(__file__))
     #Load the eeprom map
     with open(os.path.join(self.working_directory, self.map_name)) as f:
