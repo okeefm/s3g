@@ -11,17 +11,19 @@ import os
 class EepromReader(object):
 
   @classmethod
-  def factory(cls, s3gObj=None, map_name=None, working_directory=None):
+  def factory(cls, s3gObj=None, fw_version='5.6', working_directory=None):
     """ factory for creating an eeprom reader
    @param s3gObj an makerbot_driver.s3g object
    @param eeprom_map json file.
    @param working_directory container of eeprom_map name file
    """
+    eeprom_map_template = 'eeprom_map_%s.json'
+    map_name = eeprom_map_template %(fw_version)
     eeprom_reader = EepromReader(map_name, working_directory)
     eeprom_reader.s3g = s3gObj
     return eeprom_reader
 
-  def __init__(self,  map_name = None, working_directory = None):
+  def __init__(self,  map_name=None, working_directory=None):
     """ generic constructor. 
     @param map_name filename of the map to use. eeprom_map.json if not specifie
     @param working_directory drectory containing the map file name
