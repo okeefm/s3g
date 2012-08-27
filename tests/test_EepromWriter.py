@@ -262,5 +262,112 @@ class TestEepromWriter(unittest.TestCase):
     for case in cases:
       self.assertRaises(FloatingPointError, self.writer.calculate_floating_point, case)
 
+  def test_bifurcate_data_even(self):
+    data = range(100)
+    a, b = self.writer._bifurcate_data(data)
+    self.assertEqual(a+b, data)
+    self.assertEqual(len(a), len(b))
+
+  def test_bifurcate_data_off(self):
+    data = range(101)
+    a, b = self.writer._bifurcate_data(data)
+    self.assertEqual(a+b, data)
+    self.assertEqual(abs(len(a)-len(b)), 1)
+
+  def test_bifurcate_data_1(self):
+    data = range(1)
+    a, b = self.writer._bifurcate_data(data)
+    self.assertEqual(a+b, data)
+    self.assertEqual(len(a), 0)
+    self.assertEqual(len(b), 1)
+
+  def test_bifurcate_data_0(self):
+    data = range(0)
+    a, b = self.writer._bifurcate_data(data)
+    self.assertEqual(a+b, data)
+    self.assertEqual(len(a), 0)
+    self.assertEqual(len(b), 0)
+
+  def test_flush_out_data_first_is_fine(self):
+    data = range(15)
+    offset = 0
+    s3g_mock = mock.Mock()
+    self.writer.s3g = s3g_mock
+    self.writer._flush_out_data(offset, data)
+    calls = s3g_mock.mock_calls
+    self.assertEqual(1, len(calls))
+    params = calls[0][1]
+    self.assertEqual(params[0], offset)
+    self.assertEqual(params[1], data)
+
+  def test_flush_out_data_first_is_too_big(self):
+    """
+    This is kinda a weird test, since the function actually
+    gets called three times, but the firt time it returns an error.
+    """
+    data = range(makerbot_driver.maximum_payload_length)
+    offset = 0
+    s3g_mock = mock.Mock()
+    def mock_write_to_EEPROM(*args, **kwards):
+      if len(args[1]) > makerbot_driver.maximum_payload_length - 4:
+        raise makerbot_driver.EEPROMLengthError(len(args[1]))
+    the_func = mock.Mock(side_effect = mock_write_to_EEPROM)
+    s3g_mock.write_to_EEPROM = the_func
+    s3g_mock.side_effect = mock_write_to_EEPROM
+    self.writer.s3g = s3g_mock
+    a, b = self.writer._bifurcate_data(data)
+    expect_a_offset = offset
+    expect_b_offset = offset+len(a)
+    self.writer._flush_out_data(offset, data)
+    calls = the_func.mock_calls
+    self.assertEqual(len(calls), 3)
+    first_params = calls[0][1]
+    second_params = calls[1][1]
+    third_params = calls[2][1]
+    #check first params (this would have raised an error)
+    self.assertEqual(first_params[0], offset)
+    self.assertEqual(first_params[1], data)
+    #Check second params
+    self.assertEqual(second_params[0], expect_a_offset)
+    self.assertEqual(second_params[1], a)
+    #Chcek third params
+    self.assertEqual(third_params[0], expect_b_offset)
+    self.assertEqual(third_params[1], b)
+
+  def test_flush_data_too_big(self):
+    """
+    This is kinda a weird test, since the function actually
+    gets called three times, but the firt time it returns an error.
+    """
+    data = range(makerbot_driver.maximum_payload_length)
+    offset = 0
+    self.writer.data_buffer.append([offset, data])
+    s3g_mock = mock.Mock()
+    def mock_write_to_EEPROM(*args, **kwards):
+      if len(args[1]) > makerbot_driver.maximum_payload_length - 4:
+        raise makerbot_driver.EEPROMLengthError(len(args[1]))
+    the_func = mock.Mock(side_effect = mock_write_to_EEPROM)
+    s3g_mock.write_to_EEPROM = the_func
+    s3g_mock.side_effect = mock_write_to_EEPROM
+    self.writer.s3g = s3g_mock
+    a, b = self.writer._bifurcate_data(data)
+    expect_a_offset = offset
+    expect_b_offset = offset+len(a)
+    self.writer.flush_data()
+    calls = the_func.mock_calls
+    self.assertEqual(len(calls), 3)
+    first_params = calls[0][1]
+    second_params = calls[1][1]
+    third_params = calls[2][1]
+    #check first params (this would have raised an error)
+    self.assertEqual(first_params[0], offset)
+    self.assertEqual(first_params[1], data)
+    #Check second params
+    self.assertEqual(second_params[0], expect_a_offset)
+    self.assertEqual(second_params[1], a)
+    #Chcek third params
+    self.assertEqual(third_params[0], expect_b_offset)
+    self.assertEqual(third_params[1], b)
+
 if __name__ == '__main__':
   unittest.main()
