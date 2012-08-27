@@ -85,6 +85,10 @@
       "offset": "0x0160", 
       "type": "B"
     }, 
+    "FIRST_BOOT_FLAG": {
+      "offset": "0x0156", 
+      "type": "B"
+    }, 
     "INTERNAL_VERSION": {
       "offset": "0x0048", 
       "type": "H"

@@ -213,6 +213,8 @@ const static uint16_t LED_STRIP_SETTINGS		= 0x0140;
 //$eeprom_map:buzz_eeprom_offsets
 const static uint16_t BUZZ_SETTINGS		= 0x014A;
 ///  1 byte. 0x01 for 'never booted before' 0x00 for 'have been booted before)
+//$BEGIN_ENTRY
+//$type:B
 const static uint16_t FIRST_BOOT_FLAG  = 0x0156;
 /// 7 bytes, short int x 3 entries, 1 byte on/off
 //$BEGIN_ENTRY

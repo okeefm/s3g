@@ -179,12 +179,8 @@ class TestEepromReader(unittest.TestCase):
             'floating_point'  : 'True'
             }
         }
-    sub_map = input_dict['sub_map']
-    offset = int(input_dict['offset'], 16)
-    read_eeprom_map_mock = mock.Mock()
-    self.reader.read_eeprom_map = read_eeprom_map_mock
-    self.reader.read_eeprom_sub_map(input_dict, offset)
-    read_eeprom_map_mock.assert_called_once_with(sub_map, offset)
+    offset = 0x0000
+    self.assertRaises(makerbot_driver.EEPROM.SubMapReadError, self.reader.read_from_eeprom, input_dict, offset)
 
   def test_read_floating_point_from_eeprom_bad_size(self):
     input_dict = {

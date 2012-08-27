@@ -38,3 +38,9 @@ class SubMapNotFoundError(Exception):
   """
   def __init__(self, value):
     self.value = value
+
+class SubMapReadError(Exception):
+  """A SubMapReadError is raised when the user attempts to read a SubMap
+  """
+  def __init__(self, value):
+    self.value = value

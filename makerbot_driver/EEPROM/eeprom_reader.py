@@ -106,8 +106,7 @@ class EepromReader(object):
     @param int offset: The offset to start reading from
     @return dict: The submap read off the eeprom
     """
-    #Remove this return statement to fix reading
-    return self.read_eeprom_map(input_dict['sub_map'], offset)
+    raise SubMapReadError(input_dict)
 
   def read_floating_point_from_eeprom(self, input_dict, offset):
     """

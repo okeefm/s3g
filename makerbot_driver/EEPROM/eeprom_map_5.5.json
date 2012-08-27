@@ -73,6 +73,10 @@
       "offset": "0x0160", 
       "type": "B"
     }, 
+    "FIRST_BOOT_FLAG": {
+      "offset": "0x0156", 
+      "type": "B"
+    }, 
     "LED_STRIP_SETTINGS": {
       "eeprom_map": "blink_eeprom_offsets", 
       "offset": "0x0140", 
