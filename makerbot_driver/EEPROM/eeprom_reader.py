@@ -34,6 +34,25 @@ class EepromReader(object):
     #We always start with the main map
     self.main_map = 'eeprom_map'
 
+  #TODO: Test me
+  def read_entire_map(self):
+    """
+    Reads all entries on a mapped eeprom using an eeprom_map as
+    a guide.
+   
+    @return dict: The read eeprom map
+    """
+    input_map = self.eeprom_map[self.main_map]
+    self._read_map(input_map)
+    return {self.main_map : input_map}
+    
+  def _read_map(self, input_map, context=[]):
+    for value in input_map:
+      if 'sub_map' in input_map[value]:
+        self._read_map(input_map[value]['sub_map'], context=context+[value])
+      else:
+        input_map[value]['value'] = self.read_data(value, context)
+
   def read_data(self, name, context=None):
     the_dict, offset = self.get_dict_by_context(name, context)
     return self.read_from_eeprom(the_dict, offset)

@@ -3,6 +3,7 @@ An eeprom writer!
 """
 
 from errors import *
+from ..errors import EEPROMLengthError
 import json
 import struct
 import os
@@ -29,6 +30,32 @@ class EepromWriter(object):
     #We always start with the main map
     self.main_map = 'eeprom_map'
     self.data_buffer = []
+
+  def write_entire_map(self, input_map):
+    """
+    Writes all values defined in input_map to the
+    eeprom.  Assumes the map is nested inside an 
+    entry defined by self.main_map ("eeprom_map")
+
+    @param dict input_map: The input map iterated
+      on to write data
+    """
+    input_values = input_map[self.main_map]
+    self._write_map(input_values)
+    self.flush_data()
+
+  #TODO: Test me
+  def _write_map(self, input_map, context=[]):
+    for value in input_map:
+      if 'sub_map' in input_map[value]:
+        self._write_map(input_map[value]['sub_map'], context=context+[value])
+      else:
+        data = input_map[value]['value']
+        #Strings are stored as unicode, so we must convert them to utf8
+        for i in range(len(data)):
+          if isinstance(data[i], unicode):
+            data[i] = data[i].encode("utf8")
+        self.write_data(value, data, context)
 
   def get_dict_by_context(self, name, context=None):
     """
@@ -64,7 +91,21 @@ class EepromWriter(object):
 
   def flush_data(self):
     for data in self.data_buffer:
-      self.s3g.write_to_EEPROM(data[0], data[1])
+      self._flush_out_data(data[0], data[1])
+
+  def _flush_out_data(self, offset, data):
+    try:
+      self.s3g.write_to_EEPROM(offset, data)
+    except EEPROMLengthError:
+      a, b = self._bifurcate_data(data)
+      self._flush_out_data(offset, a)
+      self._flush_out_data(offset+len(a), b)
+
+  def _bifurcate_data(self, data):
+    length = len(data)/2
+    a = data[:length]
+    b = data[length:]
+    return a, b
 
   def good_string_type(self, t):
     """
