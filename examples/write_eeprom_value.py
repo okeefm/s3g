@@ -54,7 +54,6 @@ else:
 factory = makerbot_driver.BotFactory()
 r, prof = factory.build_from_port(port)
 
-writer = makerbot_driver.EEPROM.EepromWriter()
-writer.s3g  = r
+writer = makerbot_driver.EEPROM.EepromWriter.factory(r, fw_version=options.version)
 
 writer.write_data(options.eeprom_entry, values, context, flush=True)

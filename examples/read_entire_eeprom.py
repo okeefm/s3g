@@ -33,8 +33,7 @@ else:
 factory = makerbot_driver.BotFactory()
 r, prof = factory.build_from_port(port)
 
-reader = makerbot_driver.EEPROM.EepromReader()
-reader.s3g  = r
+reader = makerbot_driver.EEPROM.EepromReader.factory(r, fw_version=options.version)
 
 entire_map = reader.read_entire_map()
 

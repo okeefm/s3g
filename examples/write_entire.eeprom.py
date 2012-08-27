@@ -33,8 +33,7 @@ else:
 factory = makerbot_driver.BotFactory()
 r, prof = factory.build_from_port(port)
 
-writer= makerbot_driver.EEPROM.EepromWriter()
-writer.s3g  = r
+writer = makerbot_driver.EEPROM.EepromWriter.factory(r, fw_version=options.version)
 
 with open(options.input_file) as f:
   eeprom_map = json.load(f)
