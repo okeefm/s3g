@@ -17,8 +17,8 @@ parser.add_option("-v", "--version", dest="version",
                   help="The version of eeprom you want to read",
                   default="5.6"
                   )
-parser.add_option("-o", "--output_file", dest="output_file",
-                  help="The file you want to write out to")
+parser.add_option("-i", "--input_file", dest="input_file",
+                  help="The file you want to write from")
 (options, args) = parser.parse_args()
 
 if options.port == None:
@@ -33,11 +33,10 @@ else:
 factory = makerbot_driver.BotFactory()
 r, prof = factory.build_from_port(port)
 
-reader = makerbot_driver.EEPROM.EepromReader()
-reader.s3g  = r
+writer= makerbot_driver.EEPROM.EepromWriter()
+writer.s3g  = r
 
-entire_map = reader.read_entire_map()
+with open(options.input_file) as f:
+  eeprom_map = json.load(f)
 
-dump = json.dumps(entire_map, sort_keys=True, indent=2)
-with open(options.output_file, 'w') as f:
-  f.write(dump)
+writer.write_entire_map(eeprom_map)
