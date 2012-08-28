@@ -13,6 +13,8 @@ parser.add_option("-p", "--port", dest="port",
                   help="The port you want to connect to (OPTIONAL)", default=None)
 parser.add_option("-m", "--machine_type", dest="machine",
                   help="machine type", default="The Replicator")
+parser.add_option("-v", "--version", dest="version",
+                  help="version you want to upload to", default="5.5")
 parser.add_option("-e", "--eeprom_entry", dest="eeprom_entry",
                   help="eeprom entry to read from")
 parser.add_option("-c", "--context", dest="context",

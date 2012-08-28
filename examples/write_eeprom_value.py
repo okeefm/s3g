@@ -13,13 +13,15 @@ parser.add_option("-p", "--port", dest="port",
                   help="The port you want to connect to (OPTIONAL)", default=None)
 parser.add_option("-m", "--machine_type", dest="machine",
                   help="machine type", default="The Replicator")
+parser.add_option("-v", "--version", dest="version",
+                  help="version you want to upload to", default="5.5")
 parser.add_option("-e", "--eeprom_entry", dest="eeprom_entry",
                   help="eeprom entry to write to")
 parser.add_option("-c", "--context", dest="context",
                   help="context for the eeprom_entry, as comma separated values surrounded by quotations.", 
                   default="")
-parser.add_option("-v", "--value", dest="value",
-                  help="the value you want to write to on the eeprom")
+parser.add_option("-d", "--data", dest="data",
+                  help="the data you want to write to on the eeprom")
 (options, args) = parser.parse_args()
 
 def process_comma_separated_values(string):
@@ -32,13 +34,13 @@ def process_comma_separated_values(string):
 
 context = process_comma_separated_values(options.context)
 
-values = process_comma_separated_values(options.value)
+data = process_comma_separated_values(options.data)
 
 #Try to convert ints to ints, since they are passed 
 #in as strings
-for i in range(len(values)):
+for i in range(len(data)):
   try:
-    values[i] = int(values[i])
+    data[i] = int(data[i])
   except ValueError:
     pass
 
@@ -56,4 +58,4 @@ r, prof = factory.build_from_port(port)
 
 writer = makerbot_driver.EEPROM.EepromWriter.factory(r, fw_version=options.version)
 
-writer.write_data(options.eeprom_entry, values, context, flush=True)
+writer.write_data(options.eeprom_entry, data, context, flush=True)
