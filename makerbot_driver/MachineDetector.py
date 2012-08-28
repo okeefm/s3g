@@ -69,7 +69,7 @@ class MachineDetector(object):
         scanNameList.extend(botTypes)
 
     for botClass in scanNameList:
-        self._log.info( "scanning for BotClass " + str(botClass))
+        self._log.debug( "scanning for BotClass " + str(botClass))
         #Not all bot classes have a defined VID/PID
         try: 
             vid = botClasses[botClass]['vid'] 
