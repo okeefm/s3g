@@ -253,6 +253,7 @@ class GcodeParser(object):
       raise BadPercentageError
 
     self.s3g.set_build_percent(percentage)
+    self.state.percentage = percentage
 
     # Side effect: If the build percentage is 0 or 100, then also send a build start or build end notification.
     # TODO: Should this be called first? is order of operations important?

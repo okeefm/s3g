@@ -21,6 +21,7 @@ class GcodeStates(object):
     self.values = {}
     self.wait_for_ready_packet_delay = 100  #ms
     self.wait_for_ready_timeout =   600  #seconds
+    self.percentage = 0
   
   def lose_position(self, axes):
     """Given a set of axes, loses the position of

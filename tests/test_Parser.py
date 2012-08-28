@@ -418,6 +418,7 @@ class gcodeTests(unittest.TestCase):
     self.g.state.values['build_name'] = 'test'
 
     self.g.set_build_percentage(codes, [], '')
+    self.assertEqual(0, self.g.state.percentage)
     self.mock.set_build_percent.assert_called_once_with(build_percentage)
     self.mock.build_start_notification.assert_called_once_with(self.g.state.values['build_name'])
 
@@ -428,6 +429,7 @@ class gcodeTests(unittest.TestCase):
     comments = ''
 
     self.g.set_build_percentage(codes, flags, comments)
+    self.assertEqual(100, self.g.state.percentage)
     self.mock.set_build_percent.assert_called_once_with(build_percentage)
     self.mock.build_end_notification.assert_called_once_with()
     self.assertEqual(None, self.g.state.values['build_name'])
