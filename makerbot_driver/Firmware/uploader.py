@@ -134,7 +134,7 @@ class Uploader(object):
     return self.products['ExtrusionPrinters'].keys()
 
 
-  def parse_avrdude_command(self, port, machine, version):
+  def parse_avrdude_command(self, port, machine, version, local_avr=True):
     """
     Given a port, machine name and version number parses out a command that invokes avrdude
 
@@ -153,8 +153,15 @@ class Uploader(object):
     hex_file_path = self.wget(hex_file_url)
     #Get the path to the hex file
     process = 'avrdude'
+    if local_avr:
+      process = './'+process
+    config_file = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        'avrdude.conf'
+        )
     flags = []
     #get the part
+    flags.append('-C'+config_file)
     flags.append('-p'+str(values['part']))
     #get the baudrate
     flags.append('-b'+str(values['baudrate']))
@@ -184,4 +191,10 @@ class Uploader(object):
     self._logger.info('{"event":"uploading_firmware", "port":%s, "machine":%s, "version":%s}' %(port, machine, version))
     call = self.parse_avrdude_command(port, machine, version)
     self.toggle_machine(port)
-    self.run_subprocess(call)
+    try:
+      self._logger.info('{"event":"trying local avrdude"}')
+      self.run_subprocess(call)
+    except OSError:
+      self._logger.info('{"event":"trying external avrdude"}')
+      call = self.parse_avrdude_command(port, machine, version, local_avr=False)
+      self.run_subprocess(call)

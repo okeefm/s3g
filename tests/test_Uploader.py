@@ -294,8 +294,7 @@ class TestParseAvrdudeCommand(unittest.TestCase):
     version = 'x.x'
     self.assertRaises(makerbot_driver.Firmware.UnknownVersionError, self.uploader.parse_avrdude_command, port, machine, version)
  
-
-  def test_parse_avrdude_command(self):
+  def test_parse_avrdude_command_local(self):
     machine = 'Example'
     wget_mock = mock.Mock()
     self.uploader.wget = wget_mock
@@ -311,14 +310,26 @@ class TestParseAvrdudeCommand(unittest.TestCase):
         )
     #Mock up the actual path to the hex_file
     wget_mock.return_value = hex_path
-    avrdude_path = 'avrdude'
-    expected_call = "%s -p%s -b%i -c%s -P/dev/tty.usbmodemfa121 -Uflash:w:%s:i" %(avrdude_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
+    avrdude_path = './avrdude'
+    avrdude_conf_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        '..',
+        'makerbot_driver',
+        'Firmware',
+        'avrdude.conf',
+        )
+    expected_call = "%s -C%s -p%s -b%i -c%s -P/dev/tty.usbmodemfa121 -Uflash:w:%s:i" %(avrdude_path, avrdude_conf_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
     expected_call = expected_call.split(' ')
     got_call = self.uploader.parse_avrdude_command(port, machine, version)
     #expected_call = expected_call.split(' ')
     expected_avrdude = expected_call[0]
     self.assertEqual(expected_avrdude, avrdude_path)
-    for i in range(1, 5):
+    expected_conf = expected_call[1]
+    got_conf = got_call[1]
+    expected_conf = expected_conf.replace('-C', '')
+    got_conf = got_conf.replace('-C', '')
+    self.assertEqual(os.path.abspath(expected_conf), os.path.abspath(got_conf))
+    for i in range(2, 5):
       self.assertEqual(expected_call[i], got_call[i])
     #DO something really hacky, since windows paths have colons in them
     #and splitting at each colon will result in the test failing on windows
@@ -339,8 +350,6 @@ class TestParseAvrdudeCommand(unittest.TestCase):
     got_op_parts[2] = os.path.relpath(expected_op_parts[2])
     for i in range(len(expected_op_parts)):
       self.assertEqual(expected_op_parts[i], got_op_parts[i])
-
-
 
   def test_update_firmware(self):
     machine = 'Example'
@@ -365,6 +374,63 @@ class TestParseAvrdudeCommand(unittest.TestCase):
     self.uploader.upload_firmware(port, machine, version)
     check_call_mock.assert_called_once_with(expected_call)
     self.uploader.toggle_machine.assert_called_once_with(port)
+
+  def test_parse_avrdude_command_global(self):
+    machine = 'Example'
+    wget_mock = mock.Mock()
+    self.uploader.wget = wget_mock
+    with open(os.path.join(self.uploader.source_url, machine+'.json')) as f:
+      example_profile = json.load(f)
+    example_values = example_profile['firmware']
+    port = '/dev/tty.usbmodemfa121'
+    version = '0.1'
+    hex_url = example_values['versions'][version][0]
+    hex_path = os.path.join(
+        self.uploader.dest_path, 
+        hex_url,
+        )
+    #Mock up the actual path to the hex_file
+    wget_mock.return_value = hex_path
+    avrdude_path = 'avrdude'
+    avrdude_conf_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        '..',
+        'makerbot_driver',
+        'Firmware',
+        'avrdude.conf',
+        )
+    expected_call = "%s -C%s -p%s -b%i -c%s -P/dev/tty.usbmodemfa121 -Uflash:w:%s:i" %(avrdude_path, avrdude_conf_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
+    expected_call = expected_call.split(' ')
+    got_call = self.uploader.parse_avrdude_command(port, machine, version, local_avr=False)
+    #expected_call = expected_call.split(' ')
+    expected_avrdude = expected_call[0]
+    self.assertEqual(expected_avrdude, avrdude_path)
+    expected_conf = expected_call[1]
+    got_conf = got_call[1]
+    expected_conf = expected_conf.replace('-C', '')
+    got_conf = got_conf.replace('-C', '')
+    self.assertEqual(os.path.abspath(expected_conf), os.path.abspath(got_conf))
+    for i in range(2, 5):
+      self.assertEqual(expected_call[i], got_call[i])
+    #DO something really hacky, since windows paths have colons in them
+    #and splitting at each colon will result in the test failing on windows
+    #DUMB
+    expected_op = expected_call[-1]
+    expected_op_parts = []
+    expected_op_parts.extend(expected_op[:9].split(':'))
+    expected_op_parts.append(expected_op[10:-2])
+    expected_op_parts.append(expected_op[-1])
+    #Get the path relative from here
+    expected_op_parts[2] = os.path.relpath(expected_op_parts[2])
+    got_op = got_call[-1]
+    got_op_parts = []
+    got_op_parts.extend(expected_op[:9].split(':'))
+    got_op_parts.append(expected_op[10:-2])
+    got_op_parts.append(expected_op[-1])
+    #Get the path relative from here
+    got_op_parts[2] = os.path.relpath(expected_op_parts[2])
+    for i in range(len(expected_op_parts)):
+      self.assertEqual(expected_op_parts[i], got_op_parts[i])
 
 if __name__ == "__main__":
   unittest.main()
