@@ -27,6 +27,8 @@ if not options.platform:
     platform_folder = 'windows'
   elif platform.system() == "Darwin":
     platform_folder = 'mac'
+  elif platform.system() == 'Linux':
+    print "Nothing to copy; use distribution utility to obtain AVRDude."
 else:
   #Lets use the user specified args!
   acceptable_platforms = ['windows', 'mac']

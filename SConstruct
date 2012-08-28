@@ -23,5 +23,13 @@ if run_test:
     else: 
         env.Command('test', 'test.sh', 'test.sh')
 
+path_to_avrdude = os.path.join(
+    'makerbot_driver',
+    'Firmware',
+    'avrdude',
+    )
+
+env.Command(path_to_avrdude, vcmd, 'python copy_avrdude.py')
+
 #if run_test:
 #    env.Command('test', 'unit_tests.py', 'python unit_tests.py')
