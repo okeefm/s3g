@@ -194,7 +194,7 @@ class Uploader(object):
     try:
       self._logger.info('{"event":"trying local avrdude"}')
       self.run_subprocess(call)
-    except os.OSError:
+    except OSError:
       self._logger.info('{"event":"trying external avrdude"}')
       call = self.parse_avrdude_command(port, machine, version, local_avr=False)
       self.run_subprocess(call)
