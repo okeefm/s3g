@@ -25,6 +25,26 @@ To activate the VirtualEnv, in the root directory of the makerbot_driver driver,
 
     . virtualenv/bin/activate
 
+##AVRDude
+
+makerbot_driver uses AVRDude to upload firmware to the machine.  Because AVRDude is platform
+specific, the user needs to copy over the correct AVRDude executable to makerbot_driver/Firmware.
+
+On all platforms, the protocol for invoking AVRDude is to first search for a local AVRDude executable.
+In the event that no local binary is found, we attempt to invoke an AVRDude defined in the user's path.
+
+###Mac and Windows Distributions
+
+Running the copy_avrdude.py script will copy the correct avrdude executable from conveyor_bins.
+To execute:
+
+    python copy_avrdude.py
+
+###Linux Distributions
+
+On linux systems, we request that the user use a distribution service (i.e. 'apt-get') to pull
+down AVRDude.
+
 ##Machine Connection
 
 To connect to a machine, you will need the following module:
