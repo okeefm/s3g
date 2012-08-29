@@ -68,7 +68,9 @@ class MachineDetector(object):
         scanNameList.append(botTypes)
     else:
         scanNameList.extend(botTypes)
-
+    # Empty the machines just seen list. We are rescanning all bots connected to
+    # the system.
+    self.machines_just_seen = {}
     for botClass in scanNameList:
         self._log.debug( "scanning for BotClass " + str(botClass))
         #Not all bot classes have a defined VID/PID
@@ -77,7 +79,6 @@ class MachineDetector(object):
             pid = botClasses[botClass]['pid']
             new_bots = self.list_ports_by_vid_pid(vid, pid)
             
-            self.machines_just_seen = {}
             for bot in list(new_bots):
                 self.machines_just_seen[bot['port']] = bot
             self.machines_recently_seen.update(self.machines_just_seen)            
