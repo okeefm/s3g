@@ -2,7 +2,7 @@ all = ['PreprocessorFactory', 'Preprocessor', 'ProgressPreprocessor', 'Skeinforg
 
 from PreprocessorFactory import *
 from Preprocessor import *
-from ProgressPreprocessor.py import *
+from ProgressPreprocessor import *
 from SkeinforgePreprocessors import *
 from ToolchangePreprocessor import *
 from SingletonTPreprocessor import *
