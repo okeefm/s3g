@@ -33,7 +33,7 @@ def g_botClasses():
 
 # bot USB classes IE what VID/PID can map to what bot profiles
 botClasses = {
-        'The Replicator 2':{'vid':0x23C1, 'pid':0xB015,'botProfiles':'.*Replicator'}, 
+        'The Replicator 2':{'pid':0x23C1, 'vid':0xB015,'botProfiles':'.*ReplicatorTwo'}, 
         'The Replicator':{'vid':0x23C1, 'pid':0xD314,'botProfiles':'.*Replicator'}, 
         'MightBoard':{'vid':0x23C1, 'pid':0xB404, 'botProfiles':'.*Replicator'},
     }
