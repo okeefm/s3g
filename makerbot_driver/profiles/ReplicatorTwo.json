@@ -29,6 +29,7 @@
       "stepper_axis"  : "A"
     }
   },
+  "heated_platforms" : {},
   "baudrate"  : 115200,
   "VID"       : 9153,
   "PID"       : 54036,
