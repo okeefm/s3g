@@ -70,7 +70,9 @@ class BufferOverflowError(Exception):
 
 class BuildCancelledError(Exception):
   """
-  Signifies the cancellation of a build
+  Signifies the cancellation of a build.  This is ALSO
+  not mispelled, its just the British way of spelling 
+  Cancelled.
   """
 
 class ActiveBuildError(Exception):
