@@ -9,3 +9,5 @@ htmlcov
 build
 dist
 pys3g.egg-info
+
+makerbot_driver/Firmware/avrdude
