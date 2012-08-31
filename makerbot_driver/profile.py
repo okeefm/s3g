@@ -35,10 +35,11 @@ def list_profiles(profiledir=None):
   @return A generator of profiles without their .json extensions
   """
   path = _getprofiledir(profiledir)
+  not_profiles = ['recipes']
   profile_extension = '.json'
   for f in os.listdir(path):
     root, ext = os.path.splitext(f)
-    if profile_extension == ext:
+    if profile_extension == ext and root not in not_profiles:
       yield root
 
 def search_profiles_with_regex(regex, profiledir=None):
