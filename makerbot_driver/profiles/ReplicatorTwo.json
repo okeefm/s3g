@@ -29,9 +29,6 @@
       "stepper_axis"  : "A"
     }
   },
-  "heated_platforms" : {
-    }
-  },
   "baudrate"  : 115200,
   "VID"       : 9153,
   "PID"       : 54036,
@@ -57,7 +54,7 @@
         ]
       },
     "heat_platform" : {
-      "no_heat" : [],
+      "no_heat" : []
       },
     "heat_tools" : {
       "heat_0" : [
@@ -83,7 +80,7 @@
         ]
       },
     "cool_platform": {
-      "no_cool" : [],
+      "no_cool" : []
       },
     "cool_tools": {
       "cool_0" : ["M104 S0 T0"]
