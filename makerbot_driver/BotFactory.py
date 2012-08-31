@@ -67,10 +67,12 @@ class BotFactory(object):
     #First check for VID/PID matches
     if 'vid' in bot_setup_dict and 'pid' in bot_setup_dict:
       regex = self.get_profile_regex_has_vid_pid(bot_setup_dict)
-    if regex and bot_setup_dict.get('tool_count',0) == 1:
-        regex = regex + 'Single'
-    elif regex and bot_setup_dict.get('tool_count',0) == 2:
-        regex = regex + 'Dual'
+      #If we are not dealing with a Rep2
+      if '2' not in regex:
+        if regex and bot_setup_dict.get('tool_count',0) == 1:
+          regex = regex + 'Single'
+        elif regex and bot_setup_dict.get('tool_count',0) == 2:
+          regex = regex + 'Dual'
     return regex
 
   def get_profile_regex_has_vid_pid(self, bot_setup_dict):
