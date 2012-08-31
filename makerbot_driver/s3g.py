@@ -911,9 +911,14 @@ class s3g(object):
 
   def build_start_notification(self, build_name):
     """
-    Notify the machine that a build has been started
+    Notify the machine that a build has been started.
+    If the build_name is too long, we will truncate it to its
+    maximum allowed length relative to the maximum_payload_length.
     @param str build_name Name of the build
     """
+    other_info_in_packet = 7
+    if len(build_name) > maximum_payload_length - other_info_in_packet:
+      build_name = build_name[:maximum_payload_length-other_info_in_packet]
     payload = struct.pack(
       '<BI',
       host_action_command_dict['BUILD_START_NOTIFICATION'],

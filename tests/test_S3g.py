@@ -616,6 +616,26 @@ class S3gTests(unittest.TestCase):
     self.assertEquals(payload[5:-1], message)
     self.assertEquals(payload[-1], 0x00)
 
+  def test_build_start_notification_long_name(self):
+    build_name = 'abcdefghijklmnopqrstuvwzyx0123456789'
+    max_build_name_length = constants.maximum_payload_length-7
+    expected_build_name = build_name[:max_build_name_length]
+
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.build_start_notification(build_name)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = Encoder.decode_packet(packet)
+    self.assertEquals(payload[0], constants.host_action_command_dict['BUILD_START_NOTIFICATION'])
+    self.assertEquals(payload[1:5], Encoder.encode_uint32(0)) # Reserved uint32
+    self.assertEquals(payload[5:-1], expected_build_name)
+    self.assertEquals(payload[-1], 0x00)
+    
+
   def test_build_start_notification(self):
     build_name = 'abcdefghijkl'
 
