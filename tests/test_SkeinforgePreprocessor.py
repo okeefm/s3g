@@ -92,16 +92,13 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
     end_gcode = "(******* End.gcode*******)\nG162 X Y F2000\nG161 Z F2000\n(*********end End.gcode*******)\n"
     test_gcode_file = start_gcode+"M103\nM101\nM108 R2.51 T0\nM105\n"+end_gcode
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
-      pass
-    input_path = input_file.name
-    f = open(input_path, 'w')
-    f.write(test_gcode_file)
-    f.close()
+      input_path = input_file.name
+      input_file.write(test_gcode_file)
     #Make output temp file
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as output_file:
       output_path = output_file.name
     self.sp.process_file(input_path, output_path)
-    expected_output = "M135 T0"
+    expected_output = "M73 P50 (progress (50%): 1/2)\nM135 T0"
     with open(output_path, 'r') as f:
       got_output = f.read()
     got_output = got_output.rstrip('\n').lstrip('\n')

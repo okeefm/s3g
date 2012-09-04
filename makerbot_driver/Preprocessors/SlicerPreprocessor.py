@@ -6,6 +6,7 @@ from errors import *
 from Preprocessor import *
 from RpmPreprocessor import *
 from RemoveRepGStartEndGcode import *
+from ProgressPreprocessor import *
 
 
 class SlicerPreprocessor(Preprocessor):
@@ -20,22 +21,29 @@ class SlicerPreprocessor(Preprocessor):
 
   def process_file(self, input_path, output_path):
     self.inputs_are_gcode(input_path, output_path)
+
     remove_start_end_gcode = RemoveRepGStartEndGcode()
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
       remove_start_end_path = f.name
     remove_start_end_gcode.process_file(input_path, remove_start_end_path)
+
     rp = RpmPreprocessor()
-    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as f:
-      pass
-    remove_rpm_path = f.name
-    os.unlink(remove_rpm_path)
+    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
+      remove_rpm_path = f.name
     rp.process_file(remove_start_end_path, remove_rpm_path)
+
+    with tempfile.NamedTemporaryFile(suffix=".gcode", delete=True) as f:
+      progress_path = f.name
+
     #Open both the files
-    with contextlib.nested(open(remove_rpm_path), open(output_path, 'w')) as (i, o):
+    with contextlib.nested(open(remove_rpm_path), open(progress_path, 'w')) as (i, o):
       #For each line in the input file
       for read_line in i:
         line = self._transform_line(read_line)
         o.write(line)            
+
+    pp = ProgressPreprocessor()
+    pp.process_file(progress_path, output_path)
 
   def _transform_line(self, line):
     """Given a line, transforms that line into its correct output

@@ -5,9 +5,9 @@ Inserts progress commands in skeinforge gcode
 import os
 import sys
 import re
-import Preprocessor
+from Preprocessor import *
 
-class ProgressPreprocessor(Preprocessor.Preprocessor):
+class ProgressPreprocessor(Preprocessor):
     
     def __init__(self):
         self.command = re.compile('([A-Z]\d+(\.\d+)? )+')
