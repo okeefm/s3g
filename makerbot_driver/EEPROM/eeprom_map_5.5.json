@@ -1,4 +1,9 @@
 {
+  "eeprom_data": {
+    "EEPROM_SIZE": {
+      "offset": "0x0200"
+    }
+  }, 
   "eeprom_map": {
     "ACCELERATION_SETTINGS": {
       "eeprom_map": "acceleration_eeprom_offsets", 
