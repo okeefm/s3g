@@ -177,6 +177,8 @@ enum HeatMask{
 
 namespace eeprom_info {
 
+//$BEGIN_ENTRY
+//
 const static uint16_t EEPROM_SIZE = 0x0200;
 const int MAX_MACHINE_NAME_LEN = 16;
 
