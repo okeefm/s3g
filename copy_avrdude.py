@@ -47,5 +47,7 @@ path_to_avr = os.path.join(
 if not os.path.isfile(os.path.join(path_to_firmware, 'avrdude')):
   print 'Copying avrdude into %s' %(path_to_firmware)
   shutil.copy(path_to_avr, path_to_firmware)
+  sys.exit(0)
 else:
   print 'AVRDude detected in %s, exiting' %(path_to_firmware)
+  sys.exit(0)
