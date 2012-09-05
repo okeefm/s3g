@@ -31,7 +31,18 @@ class EepromWriter(object):
       self.eeprom_map = json.load(f)
     #We always start with the main map
     self.main_map = 'eeprom_map'
+    self.data_map = 'eeprom_data'
     self.data_buffer = []
+
+  def reset_eeprom_completely(self):
+    """
+    Using the size of the eeprom in the eeprom map, writes "0xFF" to each
+    eeprom entry.
+    """
+    offset = 0
+    size = int(self.eeprom_map[self.data_map]['EEPROM_SIZE']['offset'], 16)
+    for i in range(size):
+      self.s3g.write_to_EEPROM(offset+i, struct.pack('<B', 255))
 
   def write_entire_map(self, input_map):
     """

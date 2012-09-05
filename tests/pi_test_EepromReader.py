@@ -282,11 +282,21 @@ class TestEepromReader(unittest.TestCase):
         }
     self.assertRaises(KeyError, self.reader.read_from_eeprom, input_dict, 0)
 
+  @unittest.skip("we no longer throw errors, we instead report an error value")
   def test_decode_string_no_null_terminator(self):
     #We pack the string into an array to mimick the way 
     #the actual function call reads in the value.
-    string = array.array("B", 'iasef')
-    self.assertRaises(makerbot_driver.EEPROM.NonTerminatedStringError, self.reader.decode_string, string)
+    carray = array.array("B", 'iasef')
+    with self.assertRaises(makerbot_driver.EEPROM.NonTerminatedStringError):
+       self.reader.decode_string(carray) 
+
+  def test_decode_string_no_null_terminator(self):
+    #We pack the string into an array to mimick the way 
+    #the actual function call reads in the value.
+    carray = array.array("B", 'iasef')
+    value = self.reader.decode_string(carray, 'err_default')
+    self.assertEqual(value, 'err_default')
+    
 
   def test_decode_string_good_string(self):
     #We pack the string into an array to mimick the way 

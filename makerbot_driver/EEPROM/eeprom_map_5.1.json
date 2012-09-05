@@ -5,37 +5,6 @@
     }
   }, 
   "eeprom_map": {
-    "ACCELERATION_SETTINGS": {
-      "eeprom_map": "acceleration_eeprom_offsets", 
-      "offset": "0x016E", 
-      "sub_map": {
-        "ACCELERATION_RATE_OFFSET": {
-          "offset": "0x02", 
-          "type": "H"
-        }, 
-        "ACTIVE_OFFSET": {
-          "offset": "0x00", 
-          "type": "B"
-        }, 
-        "AXIS_JERK_OFFSET": {
-          "floating_point": "True", 
-          "offset": "0x0E", 
-          "type": "HHHHH"
-        }, 
-        "AXIS_RATES_OFFSET": {
-          "offset": "0x04", 
-          "type": "HHHHH"
-        }, 
-        "DEFAULTS_FLAG": {
-          "offset": "0x1A", 
-          "type": "B"
-        }, 
-        "MINIMUM_SPEED": {
-          "offset": "0x18", 
-          "type": "H"
-        }
-      }
-    }, 
     "AXIS_HOME_DIRECTION": {
       "offset": "0x000C", 
       "type": "B"
@@ -47,6 +16,10 @@
     "AXIS_INVERSION": {
       "offset": "0x0002", 
       "type": "B"
+    }, 
+    "AXIS_LENGTHS": {
+      "offset": "0x0138", 
+      "type": "HHH"
     }, 
     "BUZZ_SETTINGS": {
       "eeprom_map": "buzz_eeprom_offsets", 

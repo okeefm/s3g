@@ -22,7 +22,8 @@ class eeprom_analyzer(object):
   def __init__(self, input_file, output_file):
     self.output_file = output_file
     self.input_file = input_file
-    self.eeprom_map = {}
+    self.eeprom_map = {} #Contains entries and offsets
+    self.eeprom_data = {} #Contains data about the eeprom (i.e. length)
 
   def parse_file(self):
     self.eeprom_map = {}
@@ -33,19 +34,26 @@ class eeprom_analyzer(object):
         try:
           while True:
             self.find_next_entry()
+            #At this point we are on a line thats supposed to have variables
             variables = self.parse_out_variables(self.input_file.readline())
+            #AT this point we are at the variable declaration in the .hh file
             (name, location) = self.parse_out_name_and_location(self.input_file.readline())
+            #Begin creating the dict for this entry
             v = {
                 'offset'  : location,
                 }
+            #Parse all variables and add them to the dict
             for variable in variables:
               variable = variable.split(':')
               v[variable[0]] = variable[1]
             namespace[name] = v
         except EndOfNamespaceError:
-          self.eeprom_map[namespace_name]  = namespace
+          if namespace_name == "eeprom_info":
+            self.eeprom_data = namespace
+          else:
+            self.eeprom_map[namespace_name]  = namespace
     except EndOfEepromError:
-      collated_map = {'eeprom_map' : self.collate_maps(self.eeprom_map['eeprom_offsets'])}
+      collated_map = {'eeprom_data' : self.eeprom_data, 'eeprom_map' : self.collate_maps(self.eeprom_map['eeprom_offsets'])}
       self.dump_json(collated_map)
       
   def find_next_entry(self):
@@ -125,18 +133,12 @@ class eeprom_analyzer(object):
     self.output_file.write(output)
 
   def collate_maps(self, the_map):
-#    main_map = 'eeprom_offsets'
-#    collated_map = self.eeprom_map[main_map]
     collated_map = the_map
-#    for key in self.eeprom_map[main_map]:
     for key in the_map:
-#      if 'eeprom_map' in self.eeprom_map[main_map][key]:
       if 'eeprom_map' in the_map[key]:
-#        sub_map_name = self.eeprom_map[main_map][key]['eeprom_map']
         sub_map_name = the_map[key]['eeprom_map']
         collated_map[key]['sub_map'] = self.eeprom_map[sub_map_name]
         self.collate_maps(collated_map[key]['sub_map'])
-#    collated_map = {'eeprom_map'  : collated_map}
     return collated_map
 
 if __name__ == '__main__':
