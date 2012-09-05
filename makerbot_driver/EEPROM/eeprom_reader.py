@@ -101,7 +101,7 @@ class EepromReader(object):
       return_val = self.read_value_from_eeprom(input_dict, offset)
     return return_val
 
-  def read_string_from_eeprom(self, input_dict, offset):
+  def read_string_from_eeprom(self, input_dict, offset, default='eeprom_err'):
     """
     Given an input dict with a length, returns a string
     of that length.
@@ -113,7 +113,7 @@ class EepromReader(object):
     """
     #add one for the null terminator
     val = self.s3g.read_from_EEPROM(offset, int(input_dict['length']))
-    return [self.decode_string(val)]
+    return [self.decode_string(val,)] 
 
   def read_eeprom_sub_map(self, input_dict, offset):
     """
@@ -200,12 +200,12 @@ class EepromReader(object):
     value = array.array('B', value)
     return struct.unpack('<%s' %(code), value)
         
-  def decode_string(self, s):
+  def decode_string(self, s, default='eeprom_err'):
     """
     Given a string s, determines if its a valid string
     and returns it without the null terminator.
 
-    @param str s: The string with a null terminator on it
+    @param str s: The string as an interable with a null terminator 
     @return str: The string w/o a null terminator
     """
     string = ''
@@ -213,7 +213,9 @@ class EepromReader(object):
       if char == 0:
         return string
       string+=chr(char)
-    raise NonTerminatedStringError(s)
+    #log error
+    return default
+    #raise NonTerminatedStringError(s)
 
   def decode_floating_point(self, high_bit, low_bit):
     """
