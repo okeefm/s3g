@@ -25,7 +25,7 @@ The second declares any variables for this eeprom entry:
 Here is a list of currently supported variables:
 
     * type: The length of this entry, in standard format characters (reference: http://docs.python.org/library/struct.html#format-characters)
-    * floating_point : Signifies that this entry uses Mightyboard's floating point calculation.  Mightyboard firmware uses 2 separate bytes to calculate a floating point number by doing: high_byte + (low_byte/255). 
+    * floating_point : Signifies that this entry uses Mightyboard's floating point calculation.  Mightyboard firmware uses 2 separate bytes to calculate a floating point number by doing: high_byte + (low_byte/255).  All floating point values must be defined as an unsigned short ("H").
     * eeprom_map : Signifies that this eeprom value's offset points to an eeprom submap, defined somewhere else in the EepromMap.hh file
     * tool_index : Defines which toolhead this entry defines
     * mult : Sometimes its a bit intractable to write out 40 B characters, so the mult variable is a form of shorthand that tells us that the actual "type" of this entry is <type> * <mult>
