@@ -3,8 +3,10 @@ An interface that all future preprocessors should inherit from
 """
 
 import os
+import re
 
 from errors import *
+from .. import Gcode
 
 class Preprocessor(object):
 
@@ -19,3 +21,11 @@ class Preprocessor(object):
       name, ext = os.path.splitext(path)
       if ext != '.gcode':
         raise NotGCodeFileError
+
+  def _remove_variables(self, input_line):
+    variable_regex = "#[^ ^\n^\r]*"
+    m = re.search(variable_regex, input_line)
+    while m is not None:
+      input_line = input_line.replace(m.group(), '0')
+      m = re.search(variable_regex, input_line)
+    return input_line

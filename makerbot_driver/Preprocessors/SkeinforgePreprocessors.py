@@ -71,6 +71,7 @@ class Skeinforge50Preprocessor(Preprocessor):
     """
     for key in self.code_map:
       if key in line:
+        line = self._remove_variables(line)
         #transform the line
         line = self.code_map[key](line)
         break
@@ -142,3 +143,4 @@ class Skeinforge50Preprocessor(Preprocessor):
     else:
       return_line = input_line
     return return_line
+

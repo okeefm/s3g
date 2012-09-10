@@ -48,6 +48,7 @@ class SlicerPreprocessor(Preprocessor):
     """
     for key in self.code_map:
       if key in line:
+        line = self._remove_variables(line)
         #transform the line
         line = self.code_map[key](line)
         break
