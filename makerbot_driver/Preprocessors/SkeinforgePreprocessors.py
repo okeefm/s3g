@@ -71,7 +71,6 @@ class Skeinforge50Preprocessor(Preprocessor):
     """
     for key in self.code_map:
       if key in line:
-        line = self._remove_variables(line)
         #transform the line
         line = self.code_map[key](line)
         break
@@ -86,7 +85,8 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = Gcode.parse_line(input_line)
+    removed_var_line = self._remove_variables(input_line)
+    codes, flags, comments = Gcode.parse_line(removed_var_line)
     if 'G' in codes and codes['G'] == 21:
       return_line = ''
     else:
@@ -101,7 +101,8 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = Gcode.parse_line(input_line)
+    removed_var_line = self._remove_variables(input_line)
+    codes, flags, comments = Gcode.parse_line(removed_var_line)
     if 'G' in codes and codes['G'] == 90:
       return_line = ''
     else:
@@ -120,7 +121,8 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = Gcode.parse_line(input_line)
+    removed_var_line = self._remove_variables(input_line)
+    codes, flags, comments = Gcode.parse_line(removed_var_line)
     if 'M' not in codes or codes['M'] != 104:
       return_line = input_line
     elif 'T' in codes:
@@ -137,10 +139,10 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = Gcode.parse_line(input_line)
+    removed_var_line = self._remove_variables(input_line)
+    codes, flags, comments = Gcode.parse_line(removed_var_line)
     if 'M' in codes and codes['M'] == 105:
       return_line = ''
     else:
       return_line = input_line
     return return_line
-
