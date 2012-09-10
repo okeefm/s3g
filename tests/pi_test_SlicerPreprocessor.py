@@ -60,9 +60,7 @@ class SlicerPreprocessor(unittest.TestCase):
       self.assertEqual(case[1], self.sp._transform_m107(case[0]))
 
   def test_process_file(self):
-    start_gcode = "(**** start.gcode for The Replicator, dual head ****)\nG162 X Y F2000\nG161 Z F2000\nG92 X0 Y0 Z0 A0 B0\n(**** end of start.gcode ****)\n" 
-    end_gcode = "(******* End.gcode*******)\nG162 X Y F2000\nG161 Z F2000\n(*********end End.gcode*******)\n"
-    the_input = start_gcode+"G90\nG21\nM107 S500\nM106 S500\nM101\nM102\nM108\nG1 X0 Y0 Z0 A0 B0\n"+end_gcode
+    the_input = "G90\nG21\nM107 S500\nM106 S500\nM101\nM102\nM108\nG1 X0 Y0 Z0 A0 B0\n"
     expected_output = 'M73 P50 (progress (50%): 1/2)\nG1 X0 Y0 Z0 A0 B0'
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as f:
       f.write(the_input)

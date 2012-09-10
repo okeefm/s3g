@@ -44,15 +44,10 @@ class Skeinforge50Preprocessor(Preprocessor):
     """
     self.inputs_are_gcode(input_path, output_path)
 
-    start_end_gcode_preprocessor = RemoveRepGStartEndGcode()
-    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
-      removed_start_end = f.name
-    start_end_gcode_preprocessor.process_file(input_path, removed_start_end)
-
     rp = RpmPreprocessor()
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
       remove_rpm_path = f.name
-    rp.process_file(removed_start_end, remove_rpm_path)
+    rp.process_file(input_path, remove_rpm_path)
 
     with tempfile.NamedTemporaryFile(suffix=".gcode", delete=True) as f:
       progress_path = f.name
