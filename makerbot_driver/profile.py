@@ -25,8 +25,18 @@ class Profile(object):
       name += extension
     path = os.path.join(self.path,name)
     self._log.debug('{"event":"open_profile", "path":%s}', path)
-    with open(path) as f:
-      self.values = json.load(f) 
+    if  os.path.isfile(path):
+       with open(path) as fh:
+          try:
+             self.values = json.load(fh) 
+          except Exception, e:
+            self._log.debug('profile load fail for %s on err %s', 
+             os.path.abspath(path), str(e) )
+            raise e
+    else:
+        self._log.debug("no such profile file %s for %s", path, name)
+        raise IOError("no such profile file %s for %s", path, name)
+              
 
 def list_profiles(profiledir=None):
   """

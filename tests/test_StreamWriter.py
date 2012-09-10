@@ -104,6 +104,23 @@ class StreamWriterTests(unittest.TestCase):
     self.assertEqual(Encoder.encode_payload(payload), self.inputstream.getvalue())
 
 
+  def test_send_packet_timeout(self):
+    """
+    Time out when no data is received. The input stream should have max_rety_count copies of the
+    payload packet in it.
+    """
+    payload = 'abcde'
+    packet = Encoder.encode_payload(payload)
+    expected_packet = Encoder.encode_payload(payload)
+
+    self.assertRaises(errors.TransmissionError,self.w.send_packet, packet)
+
+    self.inputstream.seek(0)
+    for i in range (0, constants.max_retry_count):
+      for byte in expected_packet:
+        self.assertEquals(byte, ord(self.inputstream.read(1)))
+
+
   def test_send_packet_many_bad_responses(self):
     """
     Passing case: test that the transmission can recover from one less than the alloted
@@ -244,6 +261,25 @@ class StreamWriterTests(unittest.TestCase):
     self.assertRaises(Writer.ExternalStopError, self.w.send_command, 'asdf')
 
 
+  def delay_and_external_stop_in_thread(self):
+    time.sleep(constants.timeout_length)
+    self.w.set_external_stop()
+
+
+  def test_delay_and_external_stop_in_thread(self):
+    self.assertFalse(self.w.external_stop)
+    self.delay_and_external_stop_in_thread()
+    self.assertTrue(self.w.external_stop)
+
+
+  def test_eternal_stop_works_multithreaded(self):
+    t = threading.Thread(target=self.delay_and_external_stop_in_thread)
+    try:
+      t.start()
+      self.w.send_packet('')
+    except Writer.ExternalStopError:
+      self.assertTrue(self.w.external_stop)
+    t.join()    #Kill that thread!
 
 class TestUnderlyingFile(unittest.TestCase):
   """ test StreamWriter calls underlying file open/close """
