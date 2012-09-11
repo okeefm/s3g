@@ -22,15 +22,10 @@ class SlicerPreprocessor(Preprocessor):
   def process_file(self, input_path, output_path):
     self.inputs_are_gcode(input_path, output_path)
 
-    remove_start_end_gcode = RemoveRepGStartEndGcode()
-    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
-      remove_start_end_path = f.name
-    remove_start_end_gcode.process_file(input_path, remove_start_end_path)
-
     rp = RpmPreprocessor()
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
       remove_rpm_path = f.name
-    rp.process_file(remove_start_end_path, remove_rpm_path)
+    rp.process_file(input_path, remove_rpm_path)
 
     with tempfile.NamedTemporaryFile(suffix=".gcode", delete=True) as f:
       progress_path = f.name
@@ -53,6 +48,7 @@ class SlicerPreprocessor(Preprocessor):
     """
     for key in self.code_map:
       if key in line:
+        line = self._remove_variables(line)
         #transform the line
         line = self.code_map[key](line)
         break
