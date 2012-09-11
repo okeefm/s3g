@@ -1,5 +1,6 @@
 {
   "type"  :  "The Replicator Dual",
+  "machinename" : ["TheReplicator"],
   "axes"  : {
     "X" : {
       "platform_length"        : 227,
