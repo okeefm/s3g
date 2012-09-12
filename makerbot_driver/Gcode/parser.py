@@ -45,6 +45,8 @@ class GcodeParser(object):
        133 : [self.wait_for_tool_ready,           'PT',      ''],
        134 : [self.wait_for_platform_ready,       'PT',      ''],
        135 : [self.change_tool,                 'T',       ''],
+       136 : [self.build_start_notification, '', ''],
+       137 : [self.build_end_notification, '', ''],
     }
 
   def execute_line(self, command):
@@ -256,14 +258,6 @@ class GcodeParser(object):
     self.s3g.set_build_percent(percentage)
     self.state.percentage = percentage
 
-    # Side effect: If the build percentage is 0 or 100, then also send a build start or build end notification.
-    # TODO: Should this be called first? is order of operations important?
-    if 0 == percentage:
-      self.build_start_notification()
-
-    elif 100 == percentage:
-      self.build_end_notification()
-
   def linear_interpolation(self, codes, flags, comment):
     """Movement command that has two flavors: E and AB commands.
     E Commands require a preset toolhead to use, and simply increment
@@ -342,7 +336,7 @@ class GcodeParser(object):
     self._log.debug('{"event":"gcode_state_change", "change":"tool_change", "new_tool_index":%i}', codes['T'])
     self.s3g.change_tool(codes['T'])
 
-  def build_start_notification(self):
+  def build_start_notification(self, codes, flags, comments):
     """Sends a build start notification command to the machine.
     """
     self._log.debug('{"event":"build_start"}')
@@ -352,7 +346,7 @@ class GcodeParser(object):
       self._log.debug('{"event":"no_build_name_defined"}')
       raise NoBuildNameError
 
-  def build_end_notification(self):
+  def build_end_notification(self, codes, flags, comments):
     """Sends a build end notification command to the machine
     """
     self._log.debug('{"event":"build_end"}')
