@@ -5,6 +5,7 @@ A set of preprocessors for the skeinforge engine
 from Preprocessor import *
 from RpmPreprocessor import *
 from RemoveRepGStartEndGcode import *
+from ProgressPreprocessor import *
 from errors import *
 from .. import Gcode
 import contextlib
@@ -42,20 +43,25 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param output_path: The output file path
     """
     self.inputs_are_gcode(input_path, output_path)
-    start_end_gcode_preprocessor = RemoveRepGStartEndGcode()
-    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
-      removed_start_end = f.name
-    start_end_gcode_preprocessor.process_file(input_path, removed_start_end)
+
     rp = RpmPreprocessor()
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
       remove_rpm_path = f.name
-    rp.process_file(removed_start_end, remove_rpm_path)
+    rp.process_file(input_path, remove_rpm_path)
+
+    with tempfile.NamedTemporaryFile(suffix=".gcode", delete=True) as f:
+      progress_path = f.name
+
     #Open both the files
-    with contextlib.nested(open(remove_rpm_path), open(output_path, 'w')) as (i, o):
+    with contextlib.nested(open(remove_rpm_path), open(progress_path, 'w')) as (i, o):
       #For each line in the input file
       for read_line in i:
         line = self._transform_line(read_line)
         o.write(line)            
+
+    #Do this last for the most accurate progress updates
+    pp = ProgressPreprocessor()
+    pp.process_file(progress_path, output_path)
 
   def _transform_line(self, line):
     """Given a line, transforms that line into its correct output
@@ -79,7 +85,8 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = Gcode.parse_line(input_line)
+    removed_var_line = self._remove_variables(input_line)
+    codes, flags, comments = Gcode.parse_line(removed_var_line)
     if 'G' in codes and codes['G'] == 21:
       return_line = ''
     else:
@@ -94,7 +101,8 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = Gcode.parse_line(input_line)
+    removed_var_line = self._remove_variables(input_line)
+    codes, flags, comments = Gcode.parse_line(removed_var_line)
     if 'G' in codes and codes['G'] == 90:
       return_line = ''
     else:
@@ -113,7 +121,8 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = Gcode.parse_line(input_line)
+    removed_var_line = self._remove_variables(input_line)
+    codes, flags, comments = Gcode.parse_line(removed_var_line)
     if 'M' not in codes or codes['M'] != 104:
       return_line = input_line
     elif 'T' in codes:
@@ -130,7 +139,8 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = Gcode.parse_line(input_line)
+    removed_var_line = self._remove_variables(input_line)
+    codes, flags, comments = Gcode.parse_line(removed_var_line)
     if 'M' in codes and codes['M'] == 105:
       return_line = ''
     else:

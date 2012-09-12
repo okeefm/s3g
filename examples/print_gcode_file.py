@@ -12,7 +12,8 @@ parser = optparse.OptionParser()
 parser.add_option("-f", "--filename", dest="filename",
                   help="gcode file to print", default=False)
 parser.add_option("-m", "--machine", dest="machine",
-                  help="machine you want to connect to", default="The Replicator")
+                  help="machine type to scan for, example ReplicatorSingle", default="The Replicator")
+
 parser.add_option("-p", "--port", dest="port",
                   help="The port you want to connect to (OPTIONAL)", default=None)
 parser.add_option("-s", "--sequences", dest="sequences",
@@ -25,7 +26,7 @@ if options.port == None:
   md.scan(options.machine)
   port = md.get_first_machine()
   if port is None:
-    print "Cant Find %s" %(options.machine)
+    print "Can't Find %s" %(options.machine)
     sys.exit()
 else:
   port = options.port

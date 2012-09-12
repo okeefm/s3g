@@ -13,9 +13,12 @@ import makerbot_driver
 import makerbot_driver.profile
 
 class ProfileInitTests(unittest.TestCase):
+
   def test_bad_profile_name(self):
     bad_name = 'this_is_going_to_fail :('
-    self.assertRaises(IOError, makerbot_driver.Profile, bad_name)
+
+    with self.assertRaises(IOError):
+      makerbot_driver.Profile(bad_name)
 
   def test_good_profile_name(self):
     name = "ReplicatorSingle"

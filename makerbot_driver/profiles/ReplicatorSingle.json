@@ -75,8 +75,7 @@
     "anchor" : {
       "replicator_anchor" : [
         "G130 X127 Y127 A127 B127 (Set Stepper motor Vref to defaults)",
-        "G1 Z0.2      (Position Height)",
-        "G1 A2.0      (Create Anchor)"
+        "G1 Z0.2      (Position Height)"
         ]
       }
     },

@@ -7,8 +7,26 @@ import unittest
 import struct
 import json
 import mock
+import struct
 
 import makerbot_driver
+
+class TestResetEEPROMCompletely(unittest.TestCase):
+  def setUp(self):
+    self.s3g = mock.Mock()
+    self.eeprom_writer = makerbot_driver.EEPROM.EepromWriter()
+    self.eeprom_writer.s3g = self.s3g
+
+  def tearDown(self):
+    self.eeprom_writer = None
+
+  def test_reset_eeprom_completely(self):
+    self.eeprom_writer.reset_eeprom_completely()
+    expected_num_commands = int(self.eeprom_writer.eeprom_map[self.eeprom_writer.data_map]['EEPROM_SIZE']['offset'], 16)
+    self.assertEqual(expected_num_commands, len(self.s3g.mock_calls))
+    for command in self.s3g.mock_calls:
+      command = command[1]
+      self.assertEqual(struct.unpack('>B',command[1])[0], 0xff)
 
 class TestEepromWriterUseTestEepromMap(unittest.TestCase):
   def setUp(self):

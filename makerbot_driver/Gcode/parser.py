@@ -87,7 +87,8 @@ class GcodeParser(object):
           self._log.error('{"event":"unrecognized_command", "command":%s}', codes['M'])
           gcode_error = UnrecognizedCommandError()
           gcode_error.values['UnrecognizedCommand'] = codes['M']
-          gcode_error.values['Suggestion'] =  'Preprocessors are available in makerbot_driver/Preprocessors to correct for non supported commands'
+          gcode_error.values['Suggestion'] =  'This gcode command is not valid for makerbot_driver. makerbot_driver/PreProcessors' \
+          ' can be used for backwards compatiblity with older gcode.'
           raise gcode_error
 
       # Not a G or M code, should we throw here?
