@@ -97,7 +97,7 @@ class StreamWriter(AbstractWriter):
         # Buffer overflow error- wait a while for the buffer to clear, then try again.
         # TODO: This could hang forever if the machine gets stuck; is that what we want?
 
-        self._log.warning('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}', overflow_count,retry_count)
+        self._log.debug('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}', overflow_count,retry_count)
 
         self.total_overflows += 1
         overflow_count += 1

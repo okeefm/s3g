@@ -1,5 +1,6 @@
 {
   "type"  :  "The Replicator Dual",
+  "machinenames" : ["TheReplicator"],
   "axes"  : {
     "X" : {
       "platform_length"        : 227,
@@ -48,7 +49,10 @@
   "PID"       : 54036,
   "print_start_sequence" : {
     "begin_print" : {
-      "replicator_begin" : ["M73 P0 (enable build progress)"]
+      "replicator_begin" : [
+          "M136 (set build percentage)",
+          "M73 P0 (enable build progress)"
+          ]
       }, 
     "homing" : {
       "replicator_homing" : [
@@ -121,9 +125,10 @@
       },
     "end_print" : {
       "replicator_end" : [
-        "M73 P100 (end  build progress )",
         "M70 P5 (We <3 Making Things!)",
-        "M72 P1  ( Play Ta-Da song )"
+        "M72 P1  ( Play Ta-Da song )",
+        "M73 P100 (end  build progress )",
+        "M137 (build end notification)"
         ]
       }
     },

@@ -188,7 +188,7 @@ class EepromReader(object):
       offset += size
     return data
 
-  def unpack_value(self, value, code):
+  def unpack_value(self, value, the_type):
     """
     Given a value and code, puts the value into an
     array and unpacks the value.
@@ -198,9 +198,9 @@ class EepromReader(object):
     @return value: The information unpacked from value
     """
     value = array.array('B', value)
-    return struct.unpack('<%s' %(code), value)
+    return struct.unpack('<%s' %(the_type), value)
         
-  def decode_string(self, s, default='eeprom_err'):
+  def decode_string(self, instring, default='eeprom_err'):
     """
     Given a string s, determines if its a valid string
     and returns it without the null terminator.
@@ -209,7 +209,7 @@ class EepromReader(object):
     @return str: The string w/o a null terminator
     """
     string = ''
-    for char in s:
+    for char in instring:
       if char == 0:
         return string
       string+=chr(char)

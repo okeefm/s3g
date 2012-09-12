@@ -420,7 +420,6 @@ class gcodeTests(unittest.TestCase):
     self.g.set_build_percentage(codes, [], '')
     self.assertEqual(0, self.g.state.percentage)
     self.mock.set_build_percent.assert_called_once_with(build_percentage)
-    self.mock.build_start_notification.assert_called_once_with(self.g.state.values['build_name'])
 
   def test_set_build_percentage_100_percent(self):
     build_percentage = 100
@@ -431,8 +430,37 @@ class gcodeTests(unittest.TestCase):
     self.g.set_build_percentage(codes, flags, comments)
     self.assertEqual(100, self.g.state.percentage)
     self.mock.set_build_percent.assert_called_once_with(build_percentage)
+
+  def test_build_start_notification(self):
+    codes = {}
+    flags = []
+    comments = ""
+    b_name = "test"
+    
+    self.g.state.values['build_name'] = b_name
+    self.g.build_start_notification(codes, flags, comments)
+    self.mock.build_start_notification.assert_called_once_with(b_name)
+
+  def test_build_start_notification_no_build_name_set(self):
+    codes = {}
+    flags = []
+    comments = ''
+    self.assertRaises(
+        makerbot_driver.Gcode.NoBuildNameError, 
+        self.g.build_start_notification, 
+        codes,
+        flags,
+        comments,
+        )
+
+  def test_build_end_notification(self):
+    codes = {}
+    flags = []
+    comments = ''
+    self.g.state.values['build_name'] = "test"
+    self.g.build_end_notification(codes, flags, comments)
+    self.assertEqual(self.g.state.values['build_name'], None)
     self.mock.build_end_notification.assert_called_once_with()
-    self.assertEqual(None, self.g.state.values['build_name'])
 
   def test_set_position_all_codes_accounted_for(self):
     codes = 'XYZABE'
@@ -740,25 +768,6 @@ class gcodeTests(unittest.TestCase):
     comments = ''
     self.g.wait_for_platform_ready(codes, flags, comments)
     self.assertTrue('tool_index' not in self.g.state.values)
-
-  def test_build_start_notification(self):
-    name = 'test'
-    self.g.state.values['build_name'] = name
-    self.g.build_start_notification()
-    self.mock.build_start_notification.assert_called_once_with(name)
-
-  def test_build_start_notification_no_build_name_set(self):
-    codes = {}
-    flags = []
-    comments = ''
-    self.assertRaises(
-        makerbot_driver.Gcode.NoBuildNameError, 
-        self.g.build_start_notification, 
-        )
-    
-  def test_build_end_notification(self):
-    self.g.build_end_notification()
-    self.mock.build_end_notification.assert_called_once_with()
 
   def test_enable_extra_device_all_codes_accounted_for(self):
     codes = 'T'
