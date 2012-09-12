@@ -120,23 +120,22 @@ class EepromWriter(object):
     b = data[length:]
     return a, b
 
-  def good_string_type(self, t):
+  def good_string_type(self, the_type):
     """
     Given a struct packing code for a string type of primitive,
     determines if its an acceptable code.
     """
     value = False
-    value = len(t) is 1
-    value = t == 's'
+    value = the_type == 's'
     return value
 
-  def good_floating_point_type(self, t):
+  def good_floating_point_type(self, the_type):
     """
     Given a struct packing code for a floating_point
     number, determines if it is an acceptable code
     """
     value = False
-    for char in t:
+    for char in the_type:
       value = char.upper() == 'H'
     return value
 
@@ -163,20 +162,20 @@ class EepromWriter(object):
       payload = self.process_value(data, pack_code)
     return payload
 
-  def process_value(self, data, t):
+  def process_value(self, data, the_type):
     payload = ''
-    for code, point in zip(t, data):
+    for code, point in zip(the_type, data):
       payload += struct.pack('<%s' %(code), point)
     return payload
 
-  def process_string(self, data, t):
-    if not self.good_string_type(t):
-      raise IncompatableTypeError(t)
+  def process_string(self, data, the_type):
+    if not self.good_string_type(the_type):
+      raise IncompatableTypeError(the_type)
     return self.encode_string(data[0]) 
 
-  def process_floating_point(self, data, t):
-    if not self.good_floating_point_type(t):
-      raise IncompatableTypeError(t)
+  def process_floating_point(self, data, the_type):
+    if not self.good_floating_point_type(the_type):
+      raise IncompatableTypeError(the_type)
     payload = ''
     for point in data:
       bits = self.calculate_floating_point(point)
