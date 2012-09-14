@@ -117,9 +117,6 @@ class BotInquisitor(object):
       settings['proper_name'] = s3gDriver.get_name()
       #Generate random UUID
       settings['uuid'] = uuid.uuid4()
-      if settings['fw_version'] >= 506:
-        #Get the real UUID
-        settings['uuid'] = s3gDriver.get_advanced_name()[1]
     if not leaveOpen:
         s3gDriver.close()
                 
