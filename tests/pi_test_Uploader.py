@@ -3,6 +3,7 @@ import sys
 lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
+import subprocess
 import unittest
 import json
 import mock
@@ -372,7 +373,7 @@ class TestParseAvrdudeCommand(unittest.TestCase):
     self.uploader.run_subprocess = check_call_mock
     expected_call = self.uploader.parse_avrdude_command(port, machine, version)
     self.uploader.upload_firmware(port, machine, version)
-    check_call_mock.assert_called_once_with(expected_call)
+    check_call_mock.assert_called_once_with(expected_call, stderr=subprocess.STDOUT)
     self.uploader.toggle_machine.assert_called_once_with(port)
 
   def test_parse_avrdude_command_global(self):
