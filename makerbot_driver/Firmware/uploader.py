@@ -22,8 +22,8 @@ class Uploader(object):
     self.product_filename = 'products.json'
     self.source_url = source_url if source_url else 'http://firmware.makerbot.com'
     self.dest_path = dest_path if dest_path else os.path.abspath(os.path.dirname(__file__))
-    self.run_subprocess = subprocess.check_output
-
+    
+    self.run_subprocess = subprocess.check_call
     self.urlopen = urllib2.urlopen
     if autoUpdate:
         self.update()
@@ -192,15 +192,9 @@ class Uploader(object):
     call = self.parse_avrdude_command(port, machine, version)
     self.toggle_machine(port)
     try:
-      try:
-        self._logger.info('{"event":"trying local avrdude"}')
-        output = self.run_subprocess(call, stderr=subprocess.STDOUT)
-        self._logger.debug('avrdude output: %r', output)
-      except OSError as e:
-        self._logger.info('{"event":"trying external avrdude"}')
-        call = self.parse_avrdude_command(port, machine, version, local_avr=False)
-        output = self.run_subprocess(call, stderr=subprocess.STDOUT)
-        self._logger.debug('avrdude output: %r', output)
-    except subprocess.CalledProcessError as e:
-      self._logger.debug('avrdude output: %r', e.output)
-      raise
+      self._logger.info('{"event":"trying local avrdude"}')
+      self.run_subprocess(call)
+    except OSError:
+      self._logger.info('{"event":"trying external avrdude"}')
+      call = self.parse_avrdude_command(port, machine, version, local_avr=False)
+      self.run_subprocess(call)
