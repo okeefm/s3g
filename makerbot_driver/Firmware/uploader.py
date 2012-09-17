@@ -5,6 +5,7 @@ import urllib2
 from errors import *
 import logging    
 import urlparse
+import tempfile
 
 import serial
 
@@ -21,7 +22,7 @@ class Uploader(object):
     self._logger = logging.getLogger(self.__class__.__name__)
     self.product_filename = 'products.json'
     self.source_url = source_url if source_url else 'http://firmware.makerbot.com'
-    self.dest_path = dest_path if dest_path else os.path.abspath(os.path.dirname(__file__))
+    self.dest_path = dest_path if dest_path else tempfile.mkdtemp()
     
     self.run_subprocess = subprocess.check_call
     self.urlopen = urllib2.urlopen
