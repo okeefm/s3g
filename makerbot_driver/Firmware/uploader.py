@@ -5,9 +5,24 @@ import urllib2
 from errors import *
 import logging    
 import urlparse
+import tempfile
 
 import serial
 
+def _check_output(*popenargs, **kwargs):
+    if 'stdout' in kwargs:
+        raise ValueError('stdout argument not allowed, it will be overridden.')
+    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
+    output, unused_err = process.communicate()
+    retcode = process.poll()
+    if retcode:
+        cmd = kwargs.get("args")
+        if cmd is None:
+            cmd = popenargs[0]
+        e = subprocess.CalledProcessError(retcode, cmd)
+        setattr(e, 'output', output)
+        raise e
+    return output
 
 class Uploader(object):
   """ Firmware Uploader is used to send firmware to a 3D printer."""
@@ -21,9 +36,9 @@ class Uploader(object):
     self._logger = logging.getLogger(self.__class__.__name__)
     self.product_filename = 'products.json'
     self.source_url = source_url if source_url else 'http://firmware.makerbot.com'
-    self.dest_path = dest_path if dest_path else os.path.abspath(os.path.dirname(__file__))
+    self.dest_path = dest_path if dest_path else tempfile.mkdtemp()
     
-    self.run_subprocess = subprocess.check_call
+    self.run_subprocess = _check_output
     self.urlopen = urllib2.urlopen
     if autoUpdate:
         self.update()
@@ -192,9 +207,15 @@ class Uploader(object):
     call = self.parse_avrdude_command(port, machine, version)
     self.toggle_machine(port)
     try:
-      self._logger.info('{"event":"trying local avrdude"}')
-      self.run_subprocess(call)
-    except OSError:
-      self._logger.info('{"event":"trying external avrdude"}')
-      call = self.parse_avrdude_command(port, machine, version, local_avr=False)
-      self.run_subprocess(call)
+      try:
+        self._logger.info('{"event":"trying local avrdude"}')
+        output = self.run_subprocess(call, stderr=subprocess.STDOUT)
+        self._logger.debug('output=%r', output)
+      except OSError:
+        self._logger.info('{"event":"trying external avrdude"}')
+        call = self.parse_avrdude_command(port, machine, version, local_avr=False)
+        output = self.run_subprocess(call, stderr=subprocess.STDOUT)
+        self._logger.debug('output=%r', output)
+    except subprocess.CalledProcessError as e:
+        self._logger.error('avrdude failed: %s', e.output)
+        raise

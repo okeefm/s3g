@@ -6,6 +6,7 @@ sys.path.append(lib_path)
 import unittest
 import json
 import mock
+import subprocess
 import tempfile
 
 import makerbot_driver
@@ -368,11 +369,11 @@ class TestParseAvrdudeCommand(unittest.TestCase):
     #Mock up the actual path to the hex_file
     wget_mock.return_value = hex_path
 
-    check_call_mock = mock.Mock()
-    self.uploader.run_subprocess = check_call_mock
+    check_output_mock = mock.Mock()
+    self.uploader.run_subprocess = check_output_mock
     expected_call = self.uploader.parse_avrdude_command(port, machine, version)
     self.uploader.upload_firmware(port, machine, version)
-    check_call_mock.assert_called_once_with(expected_call)
+    check_output_mock.assert_called_once_with(expected_call, stderr=subprocess.STDOUT)
     self.uploader.toggle_machine.assert_called_once_with(port)
 
   def test_parse_avrdude_command_global(self):
