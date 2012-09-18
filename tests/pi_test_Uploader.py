@@ -8,6 +8,7 @@ import json
 import mock
 import subprocess
 import tempfile
+import platform
 
 import makerbot_driver
 
@@ -311,7 +312,16 @@ class TestParseAvrdudeCommand(unittest.TestCase):
         )
     #Mock up the actual path to the hex_file
     wget_mock.return_value = hex_path
-    avrdude_path = './avrdude'
+    avrdude = "avrdude"
+    if platform.system == "Windows":
+      avrdude += ".exe"
+    avrdude_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        '..',
+        'makerbot_driver',
+        'Firmware',
+        avrdude
+        )
     avrdude_conf_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         '..',
@@ -324,7 +334,7 @@ class TestParseAvrdudeCommand(unittest.TestCase):
     got_call = self.uploader.parse_avrdude_command(port, machine, version)
     #expected_call = expected_call.split(' ')
     expected_avrdude = expected_call[0]
-    self.assertEqual(expected_avrdude, avrdude_path)
+    self.assertEqual(os.path.abspath(expected_avrdude), os.path.abspath(avrdude_path))
     expected_conf = expected_call[1]
     got_conf = got_call[1]
     expected_conf = expected_conf.replace('-C', '')

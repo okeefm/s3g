@@ -7,6 +7,7 @@ import makerbot_driver
 
 import optparse
 import time
+import subprocess
 
 parser = optparse.OptionParser()
 parser.add_option("-m", "--machine", dest="machine",
@@ -16,10 +17,6 @@ parser.add_option("-v", "--version", dest="version",
 parser.add_option("-p", "--port", dest="port",
                 help="port machine is connected to (OPTIONAL)", default=None)
 (options, args) = parser.parse_args()
-
-s = 10
-
-print 'Press the reset button on your machine in %s seconds, if needed' %(s)
 
 if options.port == None:
   md = makerbot_driver.MachineDetector()
@@ -33,7 +30,11 @@ else:
 
 machine_name = options.machine.replace(' ', '')
 
-time.sleep(s)
-
 u = makerbot_driver.Firmware.Uploader()
-u.upload_firmware(port, machine_name, options.version)
+u.download_firmware(machine_name, options.version)
+fw_filename = os.path.join(u.dest_path, 'Mighty-mb40-v%s.hex' %(options.version))
+print "Press the upload button NOW!!!!!!!!!!!"
+try:
+  u.upload_firmware(port, machine_name, fw_filename)
+except subprocess.CalledProcessError as e:
+  print e.output

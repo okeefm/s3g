@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import json
 import os
 import subprocess
+import platform
 import urllib2
 import logging    
 import urlparse
@@ -174,8 +175,14 @@ class Uploader(object):
     values = self.get_firmware_values(machine)
     values = values['firmware']
     process = 'avrdude'
+    if platform.system() == "Windows":
+      process += ".exe"
     if local_avr:
-      process = './'+process
+      path = os.path.join(
+          os.path.abspath(os.path.dirname(__file__)),
+          process,
+          )
+      process = path
     config_file = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
         'avrdude.conf'
