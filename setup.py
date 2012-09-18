@@ -67,7 +67,8 @@ setup(
         'makerbot_driver.Preprocessors',
         'makerbot_driver.Writer'
     ],
-    package_data={'makerbot_driver.EEPROM':['*.json']},
+    package_data={'makerbot_driver.EEPROM':['*.json'],
+                  'makerbot_driver.Firmware':['*.conf']},
     url='http://github.com/makerbot/s3g',
     license='LICENSE.txt',
     description='Python driver to connect to MakerBot 3D Printers which use the s3g protocol',
