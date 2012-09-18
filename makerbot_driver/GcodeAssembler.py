@@ -1,6 +1,7 @@
+from __future__ import absolute_import
+
 import json
-from profile import *
-from errors import *
+import makerbot_driver
 
 class GcodeAssembler(object):
   """
@@ -26,7 +27,7 @@ class GcodeAssembler(object):
         'cool_tools',
         'end_print',
         ]
-    self.recipes = Profile('recipes', profiledir)
+    self.recipes = makerbot_driver.Profile('recipes', profiledir)
     
   def assemble_recipe(self,
       material='PLA',
@@ -143,7 +144,7 @@ class GcodeAssembler(object):
     """
     
     if not key in self.recipes.values:
-      raise RecipeNotFoundError
+      raise makerbot_driver.errors.RecipeNotFoundError
     values = self.recipes.values[key]
     start_routines = values['print_start_sequence']
     end_routines = values['print_end_sequence']

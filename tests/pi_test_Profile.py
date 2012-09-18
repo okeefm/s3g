@@ -10,6 +10,7 @@ import shutil
 import tempfile
 
 import makerbot_driver
+#Import this to test _getprofiledir
 import makerbot_driver.profile
 
 class ProfileInitTests(unittest.TestCase):
@@ -99,7 +100,7 @@ class ProfileInitTests(unittest.TestCase):
       ['.*FAIL*', []],
       ]
     for case in cases:
-      self.assertEqual(case[1], makerbot_driver.search_profiles_with_regex(case[0]))
+      self.assertEqual(case[1], makerbot_driver.profile.search_profiles_with_regex(case[0]))
 
 if __name__ == '__main__':
   unittest.main()

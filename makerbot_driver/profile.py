@@ -36,7 +36,6 @@ class Profile(object):
     else:
         self._log.debug("no such profile file %s for %s", path, name)
         raise IOError("no such profile file %s for %s", path, name)
-              
 
 def list_profiles(profiledir=None):
   """

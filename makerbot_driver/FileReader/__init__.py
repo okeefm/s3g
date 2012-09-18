@@ -1,5 +1,5 @@
-__all__  = ['fileReader', 'fileReaderConstants', 'fileReaderErrors']
+__all__  = ['FileReader', 'constants', 'errors']
 
-from fileReader import *
-from fileReaderConstants import *
-from fileReaderErrors import *
+from FileReader import *
+from constants import *
+from errors import *

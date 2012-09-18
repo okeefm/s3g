@@ -1,12 +1,12 @@
 """ An implementation of S3g that sends s3g packets to a stream.
 """
+from __future__ import absolute_import
+
 import time
-from abstractWriter import *
-from writerErrors import *
-from .. import errors
-from .. import Encoder
-from .. import constants
 import logging
+
+from . import AbstractWriter
+import makerbot_driver
 
 class StreamWriter(AbstractWriter):
   """ Represents a writer to a data stream, usually a tty or USB connection
@@ -48,7 +48,7 @@ class StreamWriter(AbstractWriter):
     return self.file.isOpen()
 
   def send_command(self, payload):
-    packet = Encoder.encode_payload(payload)
+    packet = makerbot_driver.Encoder.encode_payload(payload)
     return self.send_packet(packet)
 
   def send_packet(self, packet):
@@ -64,8 +64,8 @@ class StreamWriter(AbstractWriter):
     while True:
       if self.external_stop:
         self._log.error('{"event":"external_stop"}')
-        raise ExternalStopError
-      decoder = Encoder.PacketStreamDecoder()
+        raise makerbot_driver.Writer.ExternalStopError
+      decoder = makerbot_driver.Encoder.PacketStreamDecoder()
       self.file.write(packet)
       self.file.flush()
 
@@ -77,9 +77,9 @@ class StreamWriter(AbstractWriter):
           # Try to read a byte
           data = ''
           while data == '':
-            if (time.time() > start_time + constants.timeout_length):
+            if (time.time() > start_time + makerbot_driver.constants.timeout_length):
               self._log.error('{"event":"machine_timeout"}')
-              raise errors.TimeoutError(len(data), decoder.state)
+              raise makerbot_driver.errors.TimeoutError(len(data), decoder.state)
 
             # pySerial streams handle blocking read. Be sure to set up a timeout when
             # initializing them, or this could hang forever
@@ -88,12 +88,12 @@ class StreamWriter(AbstractWriter):
           data = ord(data)
           decoder.parse_byte(data)
        
-        Encoder.check_response_code(decoder.payload[0])        
+        makerbot_driver.Encoder.check_response_code(decoder.payload[0])        
  
         # TODO: Should we chop the response code?
         return decoder.payload
 
-      except (errors.BufferOverflowError) as e:
+      except (makerbot_driver.BufferOverflowError) as e:
         # Buffer overflow error- wait a while for the buffer to clear, then try again.
         # TODO: This could hang forever if the machine gets stuck; is that what we want?
 
@@ -104,7 +104,7 @@ class StreamWriter(AbstractWriter):
 
         time.sleep(.2)
 
-      except errors.RetryableError as e:
+      except makerbot_driver.RetryableError as e:
         # Sent a packet to the host, but got a malformed response or timed out waiting
         # for a reply. Retry immediately.
 
@@ -120,6 +120,6 @@ class StreamWriter(AbstractWriter):
         self._log.error('{"event":"unhandled_exception", "exception":"%s", "message":"%s", "retry_count"=%i}', type(e),e.__str__(),retry_count)
         raise e
 
-      if retry_count >= constants.max_retry_count:
+      if retry_count >= makerbot_driver.max_retry_count:
         self._log.error('{"event":"transmission_error"}')
-        raise errors.TransmissionError(received_errors)
+        raise makerbot_driver.TransmissionError(received_errors)

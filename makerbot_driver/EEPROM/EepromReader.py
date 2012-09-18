@@ -2,11 +2,14 @@
 An eeprom reader!
 """
 
-from errors import *
+from __future__ import (absolute_import)
+
 import array
 import json
 import struct
 import os
+
+import makerbot_driver
 
 class EepromReader(object):
 
@@ -127,7 +130,7 @@ class EepromReader(object):
     @param int offset: The offset to start reading from
     @return dict: The submap read off the eeprom
     """
-    raise SubMapReadError(input_dict)
+    raise makerbot_driver.EEPROM.SubMapReadError(input_dict)
 
   def read_floating_point_from_eeprom(self, input_dict, offset):
     """
@@ -141,7 +144,7 @@ class EepromReader(object):
     unpack_code = input_dict['type']
     for c in unpack_code:
       if not c.upper() == 'H':
-        raise PoorlySizedFloatingPointError(unpack_code)
+        raise makerbot_driver.EEPROM.PoorlySizedFloatingPointError(unpack_code)
     fp_vals = []
     for i in range(len(input_dict['type'])):
       size = struct.calcsize(input_dict['type'][i])

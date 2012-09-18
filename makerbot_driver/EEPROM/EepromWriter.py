@@ -1,12 +1,13 @@
 """
 An eeprom writer!
 """
+from __future__ import (absolute_import)
 
-from errors import *
-from ..errors import EEPROMLengthError
 import json
 import struct
 import os
+
+import makerbot_driver
 
 class EepromWriter(object):
 
@@ -109,7 +110,7 @@ class EepromWriter(object):
   def _flush_out_data(self, offset, data):
     try:
       self.s3g.write_to_EEPROM(offset, data)
-    except EEPROMLengthError:
+    except makerbot_driver.errors.EEPROMLengthError:
       a, b = self._bifurcate_data(data)
       self._flush_out_data(offset, a)
       self._flush_out_data(offset+len(a), b)
@@ -153,7 +154,7 @@ class EepromWriter(object):
     else:
       pack_code = str(input_dict['type'])
     if len(pack_code) is not len(data):
-      raise MismatchedTypeAndValueError([len(pack_code), len(data)])
+      raise makerbot_driver.EEPROM.errors.MismatchedTypeAndValueError([len(pack_code), len(data)])
     if 'floating_point' in input_dict:
       payload = self.process_floating_point(data, pack_code)
     elif 's' in pack_code:
@@ -170,12 +171,12 @@ class EepromWriter(object):
 
   def process_string(self, data, the_type):
     if not self.good_string_type(the_type):
-      raise IncompatableTypeError(the_type)
+      raise makerbot_driver.EEPROM.errors.IncompatableTypeError(the_type)
     return self.encode_string(data[0]) 
 
   def process_floating_point(self, data, the_type):
     if not self.good_floating_point_type(the_type):
-      raise IncompatableTypeError(the_type)
+      raise makerbot_driver.EEPROM.errors.IncompatableTypeError(the_type)
     payload = ''
     for point in data:
       bits = self.calculate_floating_point(point)

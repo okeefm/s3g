@@ -1,7 +1,9 @@
+from __future__ import absolute_import
+
 import struct
 import array
 
-from .. import errors
+import makerbot_driver
 
 def decode_bitfield(number):
   """
@@ -121,7 +123,7 @@ def unpack_response(format, data):
   try:
     return struct.unpack(format, buffer(data))
   except struct.error as e:
-    raise errors.ProtocolError("Unexpected data returned from machine. Expected length=%i, got=%i, error=%s"%
+    raise makerbot_driver.errors.ProtocolError("Unexpected data returned from machine. Expected length=%i, got=%i, error=%s"%
       (struct.calcsize(format),len(data),str(e)))
 
 def unpack_response_with_string(format, data):
@@ -135,13 +137,13 @@ def unpack_response_with_string(format, data):
   """
   #The +1 is for the null terminator of the string
   if (len(data) < struct.calcsize(format) + 1):
-    raise errors.ProtocolError("Not enough data received from machine, expected=%i, got=%i"%
+    raise makerbot_driver.errors.ProtocolError("Not enough data received from machine, expected=%i, got=%i"%
       (struct.calcsize(format)+1,len(data))
     )
 
   #Check for a null terminator on the string
   elif (data[-1]) != 0:
-    raise errors.ProtocolError("Expected null terminated string.")
+    raise makerbot_driver.errors.ProtocolError("Expected null terminated string.")
 
   output = unpack_response(format, data[0:struct.calcsize(format)])
   output += data[struct.calcsize(format):],

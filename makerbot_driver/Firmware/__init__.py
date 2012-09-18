@@ -1,4 +1,4 @@
-all = ['uploader']
+all = ['Uploader']
 
-from uploader import *
+from Uploader import *
 from errors import *

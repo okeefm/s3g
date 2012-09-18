@@ -2,12 +2,12 @@
 A file parser that decodes an s3g file
 """
 
-import struct
+from __future__ import absolute_import
 
-from fileReaderErrors import *
-from fileReaderConstants import *
-from .. import constants
+import struct
 import logging
+
+import makerbot_driver
 
 class FileReader(object):
 
@@ -24,7 +24,7 @@ class FileReader(object):
   
     if len(data) != count:
       self._log.error('{"event":"insufficient_data"}')
-      raise InsufficientDataError 
+      raise makerbot_driver.FileReader.InsufficientDataError 
     
     return data 
 
@@ -41,10 +41,10 @@ class FileReader(object):
       b += self.ReadBytes(1)
       if b == '':   #We just read in an empty string, so we ran out of data
         self._log.error('{"event":"insufficient_data"}')
-        raise InsufficientDataError
-      if len(b) > constants.maximum_payload_length:
+        raise makerbot_driver.FileReader.InsufficientDataError
+      if len(b) > makerbot_driver.constants.maximum_payload_length:
         self._log.error('{"event":"string_too_long"}')
-        raise StringTooLongError
+        raise makerbot_driver.FileReader.StringTooLongError
       elif b[-1] == '\x00':
         return b
 
@@ -57,14 +57,14 @@ class FileReader(object):
     """
     try:
       cmd = ord(self.ReadBytes(1))
-    except InsufficientDataError:
-      raise EndOfFileError
+    except makerbot_driver.FileReader.errors.InsufficientDataError:
+      raise makerbot_driver.FileReader.errors.EndOfFileError
 
     # TODO: Break the tool action commands out of here
-    if (not cmd in constants.slave_action_command_dict.values()) and \
-       (not cmd in constants.host_action_command_dict.values()):
+    if (not cmd in makerbot_driver.constants.slave_action_command_dict.values()) and \
+       (not cmd in makerbot_driver.constants.host_action_command_dict.values()):
       self._log.error('{"event":"bad_read_command", "command":%s}' , cmd)
-      raise BadCommandError(cmd)
+      raise makerbot_driver.FileReader.errors.BadCommandError(cmd)
 
     return cmd
 
@@ -101,23 +101,23 @@ class FileReader(object):
 
   def ParseHostAction(self, cmd):
     try:
-      return self.ParseOutParameters(hostFormats[cmd])
+      return self.ParseOutParameters(makerbot_driver.FileReader.constants.hostFormats[cmd])
     except KeyError:
       self._log.error('{"event":"bad_host_command", "bad_command":%s}' , cmd)
-      raise BadHostCommandError(cmd)
+      raise makerbot_driver.FileReader.errors.BadHostCommandError(cmd)
 
   def ParseToolAction(self, cmd):
-    if cmd != constants.host_action_command_dict['TOOL_ACTION_COMMAND']:
+    if cmd != makerbot_driver.constants.host_action_command_dict['TOOL_ACTION_COMMAND']:
       self._log.error('{"event":"cmd_is_not_tool_action_cmd", "bad_cmd":%s}' , cmd)
-      raise NotToolActionCmdError
+      raise makerbot_driver.FileReader.errors.NotToolActionCmdError
     data = []
-    data.extend(self.ParseOutParameters(hostFormats[cmd]))
+    data.extend(self.ParseOutParameters(makerbot_driver.FileReader.constants.hostFormats[cmd]))
     slaveCmd = data[1]
     try:
-      data.extend(self.ParseOutParameters(slaveFormats[slaveCmd]))
+      data.extend(self.ParseOutParameters(makerbot_driver.FileReader.constants.slaveFormats[slaveCmd]))
     except KeyError:
       self._log.error('{"event":"bad_slave_cmd", "bad_cmd":%s}' , slaveCmd)
-      raise BadSlaveCommandError(slaveCmd)
+      raise makerbot_driver.FileReader.errors.BadSlaveCommandError(slaveCmd)
     return data
 
   def ParseNextPayload(self):
@@ -126,7 +126,7 @@ class FileReader(object):
     @return list: a list of the cmd and  all information associated with that command
     """
     cmd = self.GetNextCommand()
-    if cmd == constants.host_action_command_dict['TOOL_ACTION_COMMAND']:
+    if cmd == makerbot_driver.constants.host_action_command_dict['TOOL_ACTION_COMMAND']:
       params = self.ParseToolAction(cmd)
     else:
       params = self.ParseHostAction(cmd)
@@ -145,7 +145,7 @@ class FileReader(object):
         payload = self.ParseNextPayload()
         payloads.append(payload)
     # TODO: We aren't catching partial packets at the end of files here.
-    except EndOfFileError:
+    except makerbot_driver.FileReader.errors.EndOfFileError:
       self._log.debug('{"event":"done_reading_file"}')
       return payloads
 

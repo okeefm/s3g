@@ -2,11 +2,11 @@
 A state machine for the gcode parser which keeps track of certain
 variables.
 """
+from __future__ import absolute_import
 
-from utils import *
-from errors import *
-from point import *
 import logging
+
+import makerbot_driver
 
 class GcodeStates(object):
   """ 
@@ -17,7 +17,7 @@ class GcodeStates(object):
   def __init__(self):
     self._log = logging.getLogger(self.__class__.__name__)
     self.profile = None
-    self.position = Point()    #Position, In MM!!
+    self.position = makerbot_driver.Gcode.Point()    #Position, In MM!!
     self.values = {}
     self.wait_for_ready_packet_delay = 100  #ms
     self.wait_for_ready_timeout =   600  #seconds
@@ -39,7 +39,7 @@ class GcodeStates(object):
     #Check each axis first, since we need to report a bad axis if needed
     for axis in ['X', 'Y', 'Z', 'A', 'B']:
       if getattr(self.position, axis) == None:
-        gcode_error = UnspecifiedAxisLocationError()
+        gcode_error = makerbot_driver.Gcode.UnspecifiedAxisLocationError()
         gcode_error.values['UnspecifiedAxis'] = axis
         raise gcode_error
     
@@ -66,13 +66,13 @@ class GcodeStates(object):
     """
     if 'E' in codes:
       if 'A' in codes or 'B' in codes:
-        gcode_error = ConflictingCodesError()
+        gcode_error = makerbot_driver.Gcode.ConflictingCodesError()
         gcode_error.values['ConflictingCodes'] = ['E', 'A', 'B']
         raise gcode_error
       
       #Cant interpolate E unless a tool_head is specified
       if not 'tool_index' in self.values:
-        raise NoToolIndexError
+        raise makerbot_driver.Gcode.NoToolIndexError
 
       elif self.values['tool_index'] == 0:
         setattr(self.position, 'A', codes['E'])

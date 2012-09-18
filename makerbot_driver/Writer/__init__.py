@@ -1,6 +1,6 @@
-__all__ = ['abstractWriter', 'fileWriter', 'streamWriter', 'writerErrors']
+__all__ = ['AbstractWriter', 'FileWriter', 'StreamWriter', 'errors']
 
-from abstractWriter import *
-from fileWriter import *
-from streamWriter import *
-from writerErrors import *
+from AbstractWriter import *
+from StreamWriter import *
+from FileWriter import *
+from errors import *

@@ -1,12 +1,14 @@
+from __future__ import absolute_import
+
 import json
 import os
 import subprocess
 import urllib2
-from errors import *
 import logging    
 import urlparse
 import tempfile
 
+import makerbot_driver
 import serial
 
 def _check_output(*popenargs, **kwargs):
@@ -154,7 +156,7 @@ class Uploader(object):
     try:
       hex_file = str(values['versions'][version][0])
     except KeyError:
-      raise UnknownVersionError
+      raise makerbot_driver.Firmware.errors.UnknownVersionError
     hex_file_url = self.pathjoin(self.source_url, hex_file)
     hex_file_path = self.wget(hex_file_url)
     return hex_file_path
