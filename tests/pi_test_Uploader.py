@@ -293,7 +293,7 @@ class TestParseAvrdudeCommand(unittest.TestCase):
     port = '/dev/tty.usbmodemfa121'
     machine = 'Example'
     version = 'x.x'
-    self.assertRaises(makerbot_driver.Firmware.UnknownVersionError, self.uploader.parse_avrdude_command, port, machine, version)
+    self.assertRaises(makerbot_driver.Firmware.UnknownVersionError, self.uploader.download_firmware, machine, version)
  
   def test_parse_avrdude_command_local(self):
     machine = 'Example'

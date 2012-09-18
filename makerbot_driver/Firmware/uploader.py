@@ -148,16 +148,7 @@ class Uploader(object):
     """
     return self.products['ExtrusionPrinters'].keys()
 
-
-  def parse_avrdude_command(self, port, machine, version, local_avr=True):
-    """
-    Given a port, machine name and version number parses out a command that invokes avrdude
-
-    @param str port: The port the machine is connected to
-    @param str machine: The machine we are uploading to
-    @param str version: The version of firmware we want to upload to
-    @return str command: The command that invokes avrdude
-    """
+  def download_firmware(self, machine, version):
     values = self.get_firmware_values(machine)
     values = values['firmware']
     try:
@@ -166,7 +157,20 @@ class Uploader(object):
       raise UnknownVersionError
     hex_file_url = self.pathjoin(self.source_url, hex_file)
     hex_file_path = self.wget(hex_file_url)
-    #Get the path to the hex file
+    return hex_file_path
+
+  def parse_avrdude_command(self, port, machine, filename, local_avr=True):
+    """
+    Given a port, machine name, and firmware filename, parses out a command
+    that invokes avrdude
+
+    @param str port: The port the machine is connected to
+    @param str machine: The machine we are uploading to
+    @param str filename: The firmware we want to upload
+    @return str command: The command that invokes avrdude
+    """
+    values = self.get_firmware_values(machine)
+    values = values['firmware']
     process = 'avrdude'
     if local_avr:
       process = './'+process
@@ -185,7 +189,7 @@ class Uploader(object):
     #get the port
     flags.append('-P'+port)
     #get the operation
-    flags.append('-U'+'flash:w:'+hex_file_path+':i')
+    flags.append('-U'+'flash:w:'+filename+':i')
     return [process] + flags
 
   def toggle_machine(self, port):
@@ -194,17 +198,17 @@ class Uploader(object):
     s.baudrate=115200
     s.close()
 
-  def upload_firmware(self, port, machine, version):
+  def upload_firmware(self, port, machine, filename):
     """
-    Given a port, machine name and version number, invokes avrdude to upload a specific firmware
-    version to a specific type of machine.
+    Given a port, machine name, and firmware filename, invokes avrdude to
+    upload that firmware to a specific type of machine.
 
     @param str port: The port the machine is connected to
     @param str machine: The machine we are uploading to
-    @param str version: The version of firmware we want to upload to
+    @param str filename: The firmware we want to upload
     """
-    self._logger.info('{"event":"uploading_firmware", "port":%s, "machine":%s, "version":%s}' %(port, machine, version))
-    call = self.parse_avrdude_command(port, machine, version)
+    self._logger.info('{"event":"uploading_firmware", "port":%s, "machine":%s, "filename":%s}' %(port, machine, filename))
+    call = self.parse_avrdude_command(port, machine, filename)
     self.toggle_machine(port)
     try:
       try:
@@ -213,7 +217,7 @@ class Uploader(object):
         self._logger.debug('output=%r', output)
       except OSError:
         self._logger.info('{"event":"trying external avrdude"}')
-        call = self.parse_avrdude_command(port, machine, version, local_avr=False)
+        call = self.parse_avrdude_command(port, machine, filename, local_avr=False)
         output = self.run_subprocess(call, stderr=subprocess.STDOUT)
         self._logger.debug('output=%r', output)
     except subprocess.CalledProcessError as e:

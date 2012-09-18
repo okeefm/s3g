@@ -39,14 +39,14 @@ class eeprom_analyzer(object):
             #AT this point we are at the variable declaration in the .hh file
             (name, location) = self.parse_out_name_and_location(self.input_file.readline())
             #Begin creating the dict for this entry
-            v = {
+            new_dict = {
                 'offset'  : location,
                 }
             #Parse all variables and add them to the dict
             for variable in variables:
               variable = variable.split(':')
-              v[variable[0]] = variable[1]
-            namespace[name] = v
+              new_dict[variable[0]] = variable[1]
+            namespace[name] = new_dict
         except EndOfNamespaceError:
           if namespace_name == "eeprom_info":
             self.eeprom_data = namespace
@@ -75,7 +75,7 @@ class eeprom_analyzer(object):
     @return str name: The name of the current namespace
     """
     namespace = 'namespace'
-    end_of_eeprom = '#endif'
+    end_of_eeprom = '#endif // EEPROMMAP_HHe'
     line = self.input_file.readline()
     while not line.startswith(namespace):
       if end_of_eeprom in line:
