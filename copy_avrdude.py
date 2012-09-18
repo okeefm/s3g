@@ -25,8 +25,10 @@ path_to_firmware = os.path.join(
 if not options.platform:
   if platform.system() == "Windows": 
     platform_folder = 'windows'
+    avrdude_name = "avrdude.exe"
   elif platform.system() == "Darwin":
     platform_folder = 'mac'
+    avrdude_name = "avrdude"
   elif platform.system() == 'Linux':
     print "Nothing to copy; use distribution utility to obtain AVRDude."
     sys.exit(0)
@@ -41,7 +43,7 @@ else:
 path_to_avr = os.path.join(
     tool_path,
     platform_folder,
-    'avrdude'
+    avrdude_name
     )
 
 if not os.path.isfile(os.path.join(path_to_firmware, 'avrdude')):
