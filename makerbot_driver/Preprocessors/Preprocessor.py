@@ -9,7 +9,6 @@ from errors import *
 from .. import Gcode
 
 class Preprocessor(object):
-
   def __init__(self):
     pass
 
@@ -17,10 +16,7 @@ class Preprocessor(object):
     pass
 
   def inputs_are_gcode(self, input_path, output_path):
-    for path in (input_path, output_path):
-      name, ext = os.path.splitext(path)
-      if ext != '.gcode':
-        raise NotGCodeFileError
+    pass
 
   def _remove_variables(self, input_line):
     variable_regex = "#[^ ^\n^\r]*"
