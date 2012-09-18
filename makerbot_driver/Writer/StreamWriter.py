@@ -4,6 +4,7 @@ from __future__ import absolute_import
 
 import time
 import logging
+import threading
 
 from . import AbstractWriter
 import makerbot_driver
@@ -24,6 +25,7 @@ class StreamWriter(AbstractWriter):
     self.total_retries = 0
     self.total_overflows = 0
     self.external_stop = False
+    self._condition = threading.Condition()
 
   # TODO: test me
   def send_query_payload(self, payload):
@@ -34,18 +36,25 @@ class StreamWriter(AbstractWriter):
     self.send_command(payload)
 
   def close(self):
-    if self.is_open() and self.file != None: 
-      self.file.close() 
+    with self._condition:
+      if self.is_open() and self.file != None: 
+        self.file.close() 
  
   def open(self):
     """ Open or re-open an already defined stream connection """
-    if self.file != None:
-      self.file.open() 
+    with self._condition:
+      if self.file != None:
+        self.file.open() 
 
   def is_open(self):
     """@returns true if a port is open and active, False otherwise """
-    if self.file == None: return False
-    return self.file.isOpen()
+    with self._condition:
+      if self.file == None: return False
+      return self.file.isOpen()
+
+  def set_external_stop(self):
+    with self._condition:
+      self.external_stop = True
 
   def send_command(self, payload):
     packet = makerbot_driver.Encoder.encode_payload(payload)
@@ -65,9 +74,12 @@ class StreamWriter(AbstractWriter):
       if self.external_stop:
         self._log.error('{"event":"external_stop"}')
         raise makerbot_driver.Writer.ExternalStopError
+
       decoder = makerbot_driver.Encoder.PacketStreamDecoder()
-      self.file.write(packet)
-      self.file.flush()
+
+      with self._condition:
+        self.file.write(packet)
+        self.file.flush()
 
       # Timeout if a response is not received within 1 second.
       start_time = time.time()

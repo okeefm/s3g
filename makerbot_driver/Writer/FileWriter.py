@@ -5,6 +5,7 @@ if a user tries to write a query command to file, we throw a AttemptedQueryComma
 """
 from __future__ import absolute_import
 import logging
+import threading
 
 from . import AbstractWriter
 import makerbot_driver
@@ -22,22 +23,30 @@ class FileWriter(AbstractWriter):
     self.check_binary_mode()
     self._log = logging.getLogger(self.__class__.__name__)
     self.external_stop = False
+    self._condition = threading.Condition()
 
   def close(self):
-    if not self.file.closed:
-      self.file.close()
+    with self._condition:
+      if not self.file.closed:
+        self.file.close()
 
   def is_open(self):
-    return not self.file.closed
+    with self._condition:
+      return not self.file.closed
 
   def check_binary_mode(self):
     mode = str(self.file.mode)
     if 'b' not in mode:
       raise makerbot_driver.Writer.NonBinaryModeFileError
 
+  def set_external_stop(self):
+    with self._condition:
+      self.external_stop = True
+
   def send_action_payload(self, payload):
     if self.external_stop:
       self._log.error('{"event":"external_stop"}')
       raise makerbot_driver.Writer.ExternalStopError
     self.check_binary_mode()
-    self.file.write(bytes(payload))
+    with self._condition:
+      self.file.write(bytes(payload))
