@@ -84,22 +84,6 @@ class RpmPreprocessor(unittest.TestCase):
     output_file = 'test.gcode'
     self.assertRaises(IOError, self.rp.process_file, input_path, output_file)
 
-  def test_process_file_input_file_isnt_gcode(self):
-    with tempfile.NamedTemporaryFile(suffix='.txt', delete=False) as input_file:
-      pass
-    input_path = input_file.name
-    os.unlink(input_path)
-    output_path = 'test.gcode'
-    self.assertRaises(makerbot_driver.Preprocessors.NotGCodeFileError, self.rp.process_file, input_path, output_path)
-
-  def test_process_file_output_file_isnt_gcode(self):
-    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
-      pass
-    input_path = input_file.name
-    bad_output = 'something'
-    self.assertRaises(makerbot_driver.Preprocessors.NotGCodeFileError, self.rp.process_file, input_path, bad_output)
-    os.unlink(input_path)
-
   def test_process_file_good_inputs(self):
     with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as input_file:
       pass
