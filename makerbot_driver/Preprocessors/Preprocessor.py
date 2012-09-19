@@ -1,21 +1,14 @@
 """
 An interface that all future preprocessors should inherit from
 """
-
 import os
 import re
-
-from errors import *
-from .. import Gcode
 
 class Preprocessor(object):
   def __init__(self):
     pass
 
-  def process_file(self, input_path, output_path):
-    pass
-
-  def inputs_are_gcode(self, input_path, output_path):
+  def process_file(self, input_file):
     pass
 
   def _remove_variables(self, input_line):

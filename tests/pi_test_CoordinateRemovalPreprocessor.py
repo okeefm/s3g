@@ -4,7 +4,6 @@ lib_path = os.path.abspath('../')
 sys.path.append(lib_path)
 
 import unittest
-import tempfile
 
 import makerbot_driver
 
@@ -30,27 +29,31 @@ class TestCoordinateRemovalPreprocessor(unittest.TestCase):
         ['G54\n', 'G54\n'],
         ]
     for case in cases:
-              self.assertEqual(case[1], self.cp._transform_g55(case[0]))
+      self.assertEqual(case[1], self.cp._transform_g55(case[0]))
 
-  def test_process_file(self):
-    the_input = "G54\nG55\nG1 X0 Y0 Z0\nG54"
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.gcode') as f:
-      input_path = f.name
-      f.write(the_input)
-    with tempfile.NamedTemporaryFile(delete=True, suffix='.gcode') as f:
-      output_path = f.name
-    expected_output = 'G1 X0 Y0 Z0\n'
-    self.cp.process_file(input_path, output_path)
-    with open(output_path) as f:
-      self.assertEqual(f.read(), expected_output)
-
-  def test_transform_line(self):
+  def test_transform_g10(self):
     cases = [
-      ['G54', ''],
-      ['G55', ''],
-      ]
+        ["G11\n", "G11\n"],
+        ["G10\n", ""],
+        ]
     for case in cases:
-      self.assertEqual(case[1], self.cp._transform_line(case[0]))
+      self.assertEqual(case[1], self.cp._transform_g10(case[0]))
+
+  def test_transform_g90(self):
+    cases = [
+        ["G11\n", "G11\n"],
+        ["G90\n", ""],
+        ]
+    for case in cases:
+      self.assertEqual(case[1], self.cp._transform_g90(case[0]))
+
+  def test_transform_g21(self):
+    cases = [
+        ["G11\n", "G11\n"],
+        ["G21\n", ""],
+        ]
+    for case in cases:
+      self.assertEqual(case[1], self.cp._transform_g21(case[0]))
 
 if __name__ == "__main__":
   unittest.main()

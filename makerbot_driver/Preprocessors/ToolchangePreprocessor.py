@@ -1,39 +1,37 @@
-from errors import *
-from .. import Gcode
-from Preprocessor import *
+from __future__ import absolute_import
 
-class ToolchangePreprocessor(Preprocessor):
+import makerbot_driver
+from .LineTransformPreprocessor import LineTransformPreprocessor
+
+class ToolchangePreprocessor(LineTransformPreprocessor):
 
   def __init__(self):
     self.extruders = {
         'A' : 'M135 T0\n',
         'B' : 'M135 T1\n'
         }
+    self.code_map = {
+        "[abAB]" : self.insert_tool_change,
+        }
     self.current_extruder = 'A'
 
-  def process_file(self, input_path, output_path):
-    self.inputs_are_gcode(input_path, output_path)
-    output = open(output_path, 'w')
-    with open(input_path) as f:
-      for line in f:
-        extruder = self.get_used_extruder(line)
-        if extruder is not self.current_extruder and extruder is not None:
-          addendum = self.extruders[extruder]
-          output.write(addendum)
-          self.current_extruder = extruder
-        output.write(line)
-    output.close()
-
-  def get_used_extruder(self, input_line):
-    (codes, flags, comments) = Gcode.parse_line(input_line)
-    axis = None
+  def insert_tool_change(self, input_line):
+    (codes, flags, comments) = makerbot_driver.Gcode.parse_line(input_line)
+    return_lines = [input_line]
     if 'G' in codes:
       if codes['G'] is 1:
+        axis = None
         extruders = set(self.extruders.keys())
         input_extruders = set(codes)
         used_extruder = extruders.intersection(input_extruders)
+        #Always default to the A extruder if there are 2 extruders moving
         if len(used_extruder) > 1:
           axis = 'A'
+        #Theres only one extruder, get that one
         elif len(used_extruder) == 1:
           axis = list(used_extruder)[0]
-    return axis
+        if axis is not None:
+          if not axis == self.current_extruder:
+            return_lines.insert(0, self.extruders[axis])
+            self.current_extruder = axis
+    return return_lines

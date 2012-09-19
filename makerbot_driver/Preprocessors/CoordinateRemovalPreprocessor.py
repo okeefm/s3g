@@ -1,15 +1,17 @@
-from Preprocessor import *
-import os
-import contextlib
-from .. import Gcode
+from __future__ import absolute_import
 
-class CoordinateRemovalPreprocessor(Preprocessor):
+import makerbot_driver
+from .LineTransformPreprocessor import LineTransformPreprocessor
+
+class CoordinateRemovalPreprocessor(LineTransformPreprocessor):
 
   """
   Remove:
   G10
   G54
   G55
+  G21
+  G90
   """
 
   def __init__(self):
@@ -17,37 +19,9 @@ class CoordinateRemovalPreprocessor(Preprocessor):
         'G10' : self._transform_g10,
         'G54' : self._transform_g54,
         'G55' : self._transform_g55,
+        'G21' : self._transform_g21,
+        'G90' : self._transform_g90,
         }
-
-  def process_file(self, input_path, output_path):
-    """
-    Given a filepath, reads each line of that file and, if necessary, 
-    transforms it into another format.  If either of these filepaths
-    do not lead to .gcode files, we throw a NotGCodeFileError.
-
-    @param input_path: The input file path
-    @param output_path: The output file path
-    """
-    self.inputs_are_gcode(input_path, output_path)
-    #Open both the files
-    with contextlib.nested(open(input_path), open(output_path, 'w')) as (i, o):
-      #For each line in the input file
-      for read_line in i:
-        line = self._transform_line(read_line)
-        o.write(line)            
-
-  def _transform_line(self, line):
-    """Given a line, transforms that line into its correct output
-
-    @param str line: Line to transform
-    @return str: Transformed line
-    """
-    for key in self.code_map:
-      if key in line:
-        #transform the line
-        line = self.code_map[key](line)
-        break
-    return line
     
   def _transform_g10(self, input_line):
     """
@@ -57,7 +31,7 @@ class CoordinateRemovalPreprocessor(Preprocessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = Gcode.parse_line(input_line)
+    codes, flags, comments = makerbot_driver.Gcode.parse_line(input_line)
     if 'G' in codes and codes['G'] == 10:
       return_line = ''
     else:
@@ -72,7 +46,7 @@ class CoordinateRemovalPreprocessor(Preprocessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = Gcode.parse_line(input_line)
+    codes, flags, comments = makerbot_driver.Gcode.parse_line(input_line)
     if 'G' in codes and codes['G'] == 54:
       return_line = ''
     else:
@@ -87,9 +61,37 @@ class CoordinateRemovalPreprocessor(Preprocessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = Gcode.parse_line(input_line)
+    codes, flags, comments = makerbot_driver.Gcode.parse_line(input_line)
     if 'G' in codes and codes['G'] == 55:
       return_line = ''
     else:
       return_line = input_line
+    return return_line
+
+  def _transform_g21(self, input_line):
+    """
+    given a line with a G21 command, transforms it into the 
+    proper output.
+
+    @param str input_line: The line to be transformed
+    @return str: The transformed line
+    """
+    codes, flags, comments = makerbot_driver.Gcode.parse_line(input_line)
+    return_line = input_line
+    if codes.get('G', -1) == 21:
+      return_line = ''
+    return return_line
+
+  def _transform_g90(self, input_line):
+    """
+    given a line with a G90 command, transforms it into the 
+    proper output.
+
+    @param str input_line: The line to be transformed
+    @return str: The transformed line
+    """
+    codes, flags, comments = makerbot_driver.Gcode.parse_line(input_line)
+    return_line = input_line
+    if codes.get('G', -1) == 90:
+      return_line = ''
     return return_line
