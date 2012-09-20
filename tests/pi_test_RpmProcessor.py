@@ -8,10 +8,10 @@ import tempfile
 
 import makerbot_driver
 
-class RpmPreprocessor(unittest.TestCase):
+class RpmProcessor(unittest.TestCase):
 
   def setUp(self):
-    self.rp = makerbot_driver.Preprocessors.RpmPreprocessor()
+    self.rp = makerbot_driver.GcodeProcessors.RpmProcessor()
     
   def tearDown(self):
     self.rp = None
@@ -68,8 +68,8 @@ class RpmPreprocessor(unittest.TestCase):
 
   def test_process_file_can_proces_parsable_file(self):
     #Make input temp file
-    inlines = ["M103\n","M101\n","M108 R2.51 T0\n","M105\n"]
-    got_output = self.rp.process_file(inlines)
+    gcodes = ["M103\n","M101\n","M108 R2.51 T0\n","M105\n"]
+    got_output = self.rp.process_gcode(gcodes)
     expected_output = ["M135 T0\n","M105\n"]
     self.assertEqual(expected_output, got_output)
 

@@ -6,10 +6,10 @@ sys.path.append(lib_path)
 import unittest
 import makerbot_driver
 
-class TestPreprocessor(unittest.TestCase):
+class TestProcessor(unittest.TestCase):
 
   def setUp(self):
-    self.p = makerbot_driver.Preprocessors.Preprocessor()
+    self.p = makerbot_driver.GcodeProcessors.Processor()
 
   def tearDown(self):
     self.p = None

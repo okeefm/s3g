@@ -8,15 +8,15 @@ import mock
 
 import makerbot_driver
 
-class TestLineTransformPreprocessor(unittest.TestCase):
+class TestLineTransformProcessor(unittest.TestCase):
 
   def setUp(self):
-    self.p = makerbot_driver.Preprocessors.LineTransformPreprocessor()
+    self.p = makerbot_driver.GcodeProcessors.LineTransformProcessor()
 
   def tearDown(self):
     self.p = None
 
-  def test_transform_line(self):
+  def test_transform_code(self):
     tg1 = "G1_TRANSFORMED"
     def _transform_g1(*args, **kwargs):
       return tg1
@@ -31,7 +31,7 @@ class TestLineTransformPreprocessor(unittest.TestCase):
         ["G3 X0 Y0", ["G3 X0 Y0"]],
         ]
     for case in cases:
-      self.assertEqual(self.p._transform_line(case[0]), case[1])
+      self.assertEqual(self.p._transform_code(case[0]), case[1])
 
   def test_process_file_no_code_map(self):
     lines = [
@@ -39,32 +39,32 @@ class TestLineTransformPreprocessor(unittest.TestCase):
         "G1 X1 Y1 Z1",
         "G2 X2 Y2 Z2",
         ]
-    inlines = lines
-    outlines = self.p.process_file(inlines)
-    self.assertEqual(lines, outlines)
+    gcodes = lines
+    outlines = self.p.process_gcode(gcodes)
+    self.assertEqual(gcodes, outlines)
 
   def test_process_file_code_map(self):
     tg1 = "G1_TRANSFORMED"
     def _transform_g1(*args, **kwargs):
       return tg1
-    input_lines = [
+    gcodes = [
         "G0 X0 Y0 Z0",
         "G1 X0 Y0 Z0",
         "G2 X2 Y2 Z2",
         ]
-    expected_lines = [
-        input_lines[0],
+    expected_output = [
+        gcodes[0],
         tg1,
-        input_lines[2],
+        gcodes[2],
         ]
     self.p.code_map.update({"G1" : _transform_g1})
-    got_lines = self.p.process_file(input_lines)
-    self.assertEqual(expected_lines, got_lines)
+    got_output = self.p.process_gcode(gcodes)
+    self.assertEqual(expected_output, got_output)
 
   def test_process_file_empty_iter(self):
     lines = []
     expected_output = []
-    got_output = self.p.process_file(lines)
+    got_output = self.p.process_gcode(lines)
     self.assertEqual(got_output, expected_output)
 
   def test_prune_empty_strings(self):

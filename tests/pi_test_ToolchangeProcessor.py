@@ -7,10 +7,10 @@ import unittest
 import tempfile
 import makerbot_driver 
 
-class TestToolchangePreprocessor(unittest.TestCase):
+class TestToolchangeProcessor(unittest.TestCase):
 
   def setUp(self):
-    self.p = makerbot_driver.Preprocessors.ToolchangePreprocessor()
+    self.p = makerbot_driver.GcodeProcessors.ToolchangeProcessor()
 
   def tearDown(self):
     self.p = None
@@ -43,10 +43,10 @@ class TestToolchangePreprocessor(unittest.TestCase):
       self.assertEqual(case[0], self.p.insert_tool_change(case[1]))
 
   def test_process_file(self):
-    the_input = ["G1 X50 Y50","\n","G1 X0 Y0 A50","\n","G1 X0 Y0 B50","\n","G1 X0 Y0 B50","\n","G1 X0 Y0 B50","\n","G1 X0 Y0 A50","\n","G1 X0 Y0 B50","\n"]
+    gcodes = ["G1 X50 Y50","\n","G1 X0 Y0 A50","\n","G1 X0 Y0 B50","\n","G1 X0 Y0 B50","\n","G1 X0 Y0 B50","\n","G1 X0 Y0 A50","\n","G1 X0 Y0 B50","\n"]
     expected_output = ["G1 X50 Y50","\n","G1 X0 Y0 A50","\n","M135 T1\n", "G1 X0 Y0 B50","\n","G1 X0 Y0 B50","\n","G1 X0 Y0 B50","\n","M135 T0\n", "G1 X0 Y0 A50","\n","M135 T1\n", "G1 X0 Y0 B50","\n"]
-    got_output = self.p.process_file(iter(the_input))
-    self.assertEqual(expected_output, list(got_output))
+    got_output = self.p.process_gcode(gcodes)
+    self.assertEqual(expected_output, got_output)
 
 if __name__ == '__main__':
   unittest.main()

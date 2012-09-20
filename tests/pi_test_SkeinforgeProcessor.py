@@ -8,40 +8,40 @@ import tempfile
 
 import makerbot_driver
 
-class Skeinforge50PreprocessorTests(unittest.TestCase):
+class Skeinforge50ProcessorTests(unittest.TestCase):
   
   def setUp(self):
-    self.sp = makerbot_driver.Preprocessors.Skeinforge50Preprocessor()
+    self.sp = makerbot_driver.GcodeProcessors.Skeinforge50Processor()
     
   def tearDown(self):
     self.sp = None
 
   def test_process_file_empty_file(self):
-    inlines = []
+    gcodes = []
     expected_output = []
-    got_output = self.sp.process_file(inlines)
+    got_output = self.sp.process_gcode(gcodes)
     self.assertEqual(expected_output, got_output)
 
   def test_process_file_progress_updates(self):
-    the_input = ["G90\n","G21\n","M104 S500\n","M105 S500\n","M101\n","M102\n","M108\n","G1 X0 Y0 Z0 A0 B0\n"]
+    gcodes = ["G90\n","G21\n","M104 S500\n","M105 S500\n","M101\n","M102\n","M108\n","G1 X0 Y0 Z0 A0 B0\n"]
     expected_output = ['G1 X0 Y0 Z0 A0 B0\n', 'M73 P100 (progress (100%))\n']
-    got_output = self.sp.process_file(the_input)
+    got_output = self.sp.process_gcode(gcodes)
     self.assertEqual(expected_output, got_output)
 
   def test_process_file_no_progress_updates(self):
-    the_input = ["G90\n","G21\n","M104 S500\n","M105 S500\n","M101\n","M102\n","M108\n","G1 X0 Y0 Z0 A0 B0\n"]
+    gcodes = ["G90\n","G21\n","M104 S500\n","M105 S500\n","M101\n","M102\n","M108\n","G1 X0 Y0 Z0 A0 B0\n"]
     expected_output = ['G1 X0 Y0 Z0 A0 B0\n']
-    got_output = self.sp.process_file(the_input, add_progress=False)
+    got_output = self.sp.process_gcode(gcodes, add_progress=False)
     self.assertEqual(expected_output, got_output)
 
   def test_process_file_remove_start_end_with_progress(self):
-    the_input = ["(**** start.gcode\n", "G1 X0 Y0 Z0\n", "(end of start.gcode\n", "G1 X9 Y9 Z9\n", "(**** End.gcode\n", "G1 X0 Y0 Z0\n", "(end End.gcode\n"]
+    gcodes= ["(**** start.gcode\n", "G1 X0 Y0 Z0\n", "(end of start.gcode\n", "G1 X9 Y9 Z9\n", "(**** End.gcode\n", "G1 X0 Y0 Z0\n", "(end End.gcode\n"]
     expected_output = ["G1 X9 Y9 Z9\n", "M73 P100 (progress (100%))\n"]
-    got_output = self.sp.process_file(the_input, remove_start_end=True)
+    got_output = self.sp.process_gcode(gcodes, remove_start_end=True)
     self.assertEqual(expected_output, got_output)
 
   def test_process_file_stress_test(self):
-    the_input = [
+    gcodes= [
         "G90\n",
         "G1 A0\n",
         "G1 B0\n",
@@ -59,7 +59,7 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
         "G1 A0\n",
         "G1 B0\n",
         ]
-    got_output = self.sp.process_file(the_input, add_progress=False)
+    got_output = self.sp.process_gcode(gcodes, add_progress=False)
     self.assertEqual(expected_output, got_output)
         
 

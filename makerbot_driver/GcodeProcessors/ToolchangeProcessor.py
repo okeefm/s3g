@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 
 import makerbot_driver
-from .LineTransformPreprocessor import LineTransformPreprocessor
+from .LineTransformProcessor import LineTransformProcessor
 
-class ToolchangePreprocessor(LineTransformPreprocessor):
+class ToolchangeProcessor(LineTransformProcessor):
 
   def __init__(self):
     self.extruders = {

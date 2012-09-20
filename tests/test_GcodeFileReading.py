@@ -47,7 +47,7 @@ class SingleHeadReading(unittest.TestCase):
         'gcode_samples',
         'slic3r_single_extrusion_20mm_box.gcode'
         )
-    the_file = preprocess_file_with_prepro(the_file, 'SlicerPreprocessor')
+    the_file = process_file_with_pro(the_file, 'SlicerProcessor')
     execute_file(the_file, self.p)
 
   def test_single_head_skeinforge_single_20mm_box(self):
@@ -58,7 +58,7 @@ class SingleHeadReading(unittest.TestCase):
         'gcode_samples', 
         'skeinforge_single_extrusion_20mm_box.gcode'
         )
-    the_file = preprocess_file_with_prepro(the_file, 'Skeinforge50Preprocessor')
+    the_file = process_file_with_pro(the_file, 'Skeinforge50Processor')
     execute_file(the_file, self.p) 
 
   def test_single_head_skeinforge_single_snake(self):
@@ -69,7 +69,7 @@ class SingleHeadReading(unittest.TestCase):
         'gcode_samples', 
         'skeinforge_single_extrusion_snake.gcode'
         )
-    the_file = preprocess_file_with_prepro(the_file, 'Skeinforge50Preprocessor')
+    the_file = process_file_with_pro(the_file, 'Skeinforge50Processor')
     execute_file(the_file, self.p) 
 
   def test_single_head_miracle_grue(self):
@@ -114,8 +114,8 @@ class DualHeadReading(unittest.TestCase):
         'doc', 
         'gcode_samples', 
         'skeinforge_dual_extrusion_hilbert_cube.gcode')
-    the_file = preprocess_file_with_prepro(the_file, 'Skeinforge50Preprocessor')
-    the_file = preprocess_file_with_prepro(the_file, 'CoordinateRemovalPreprocessor')
+    the_file = process_file_with_pro(the_file, 'Skeinforge50Processor')
+    the_file = process_file_with_pro(the_file, 'CoordinateRemovalProcessor')
     execute_file(the_file, self.p) 
 
   def test_single_head_skeinforge_single_20mm_box(self):
@@ -126,7 +126,7 @@ class DualHeadReading(unittest.TestCase):
         'gcode_samples', 
         'skeinforge_single_extrusion_20mm_box.gcode'
         )
-    the_file = preprocess_file_with_prepro(the_file, 'Skeinforge50Preprocessor')
+    the_file = process_file_with_pro(the_file, 'Skeinforge50Processor')
     execute_file(the_file, self.p) 
 
   def test_single_head_skeinforge_single_snake(self):
@@ -136,7 +136,7 @@ class DualHeadReading(unittest.TestCase):
         'doc', 
         'gcode_samples', 
         'skeinforge_single_extrusion_snake.gcode')
-    the_file = preprocess_file_with_prepro(the_file, 'Skeinforge50Preprocessor')
+    the_file = process_file_with_pro(the_file, 'Skeinforge50Processor')
     execute_file(the_file, self.p) 
 
   def test_single_head_miracle_grue(self):
@@ -149,12 +149,12 @@ class DualHeadReading(unittest.TestCase):
         )
     execute_file(the_file,self.p) 
 
-def preprocess_file_with_prepro(the_file, prepro):
-  factory = makerbot_driver.Preprocessors.PreprocessorFactory()
-  prepro = factory.create_preprocessor_from_name(prepro)
+def process_file_with_pro(the_file, pro):
+  factory = makerbot_driver.GcodeProcessors.ProcessorFactory()
+  pro = factory.create_processor_from_name(pro)
   f = open(the_file)
   lines = list(f)
-  output = prepro.process_file(lines)
+  output = pro.process_gcode(lines)
   with tempfile.NamedTemporaryFile(delete=False, suffix='.gcode') as f:
     processed_file_path = f.name
     for line in output:

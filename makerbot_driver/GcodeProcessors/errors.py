@@ -4,7 +4,7 @@ class NotGCodeFileError(Exception):
   process_file that is not a .gcode file
   """
 
-class PreprocessorNotFoundError(Exception):
+class ProcessorNotFoundError(Exception):
   """
   A PreprocessorNotFoundError is raised when a preprocessor
   is searched for by the factory, but not found.

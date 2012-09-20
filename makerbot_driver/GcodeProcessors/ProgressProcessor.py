@@ -3,9 +3,9 @@ Inserts progress commands in skeinforge gcode
 """
 from __future__ import absolute_import
 
-from .Preprocessor import *
+from .Processor import *
 
-class ProgressPreprocessor(Preprocessor):
+class ProgressProcessor(Processor):
     
     def __init__(self):
         self.command = re.compile('([A-Z]\d+(\.\d+)? )+')
@@ -19,14 +19,14 @@ class ProgressPreprocessor(Preprocessor):
         progressmsg = "M73 P%s (progress (%s%%))\n" % (percent, percent)
         return progressmsg
     
-    def process_file(self, inlines):
+    def process_gcode(self, gcodes):
         output = []
-        count_total = len(inlines)
+        count_total = len(gcodes)
         count_current = 0
         current_percent = 0
-        for line in inlines:
+        for code in gcodes:
             count_current += 1
-            output.append(line)
+            output.append(code)
             new_percent = self.get_percent(count_current, count_total)
             if new_percent > current_percent:
                 progressmsg = self.create_progress_msg(new_percent)
@@ -35,7 +35,7 @@ class ProgressPreprocessor(Preprocessor):
         return output
 
 def main():
-    ProgressPreprocessor().process_file(sys.argv[1], sys.argv[2])
+    ProgressProcessor().process_gcode(sys.argv[1], sys.argv[2])
 
 if __name__=="__main__":
     sys.exit(main())

@@ -7,10 +7,10 @@ import unittest
 
 import makerbot_driver
 
-class TestTemperaturePreprocessor(unittest.TestCase):
+class TestTemperatureProcessor(unittest.TestCase):
 
   def setUp(self):
-    self.p = makerbot_driver.Preprocessors.TemperaturePreprocessor()
+    self.p = makerbot_driver.GcodeProcessors.TemperatureProcessor()
 
   def tearDown(self):
     self.p = None

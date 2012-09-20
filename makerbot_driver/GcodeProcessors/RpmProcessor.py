@@ -12,9 +12,9 @@ M108
 from __future__ import absolute_import
 
 import makerbot_driver
-from .LineTransformPreprocessor import LineTransformPreprocessor
+from .LineTransformProcessor import LineTransformProcessor
 
-class RpmPreprocessor(LineTransformPreprocessor):
+class RpmProcessor(LineTransformProcessor):
 
   def __init__(self):
     self.code_map = {

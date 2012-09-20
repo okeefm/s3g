@@ -7,10 +7,10 @@ import unittest
 
 import makerbot_driver
 
-class TestCoordinateRemovalPreprocessor(unittest.TestCase):
+class TestCoordinateRemovalProcessor(unittest.TestCase):
   
   def setUp(self):
-    self.cp = makerbot_driver.Preprocessors.CoordinateRemovalPreprocessor()
+    self.cp = makerbot_driver.GcodeProcessors.CoordinateRemovalProcessor()
     
   def tearDown(self):
     self.cp = None
