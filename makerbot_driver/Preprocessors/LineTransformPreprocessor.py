@@ -18,8 +18,16 @@ class LineTransformPreprocessor(Preprocessor):
     output = []
     for line in inlines:
       tline = self._transform_line(line)
-      output.extend(tline)
+      pruned_tline = self.prune_empty_strings(tline)
+      output.extend(pruned_tline)
     return output
+
+  def prune_empty_strings(self, inlines):
+    outlines = []
+    for line in inlines:
+      if not line == "":
+        outlines.append(line)
+    return outlines
 
   def _transform_line(self, line):
     tline = line

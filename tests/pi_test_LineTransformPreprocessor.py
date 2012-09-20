@@ -67,5 +67,15 @@ class TestLineTransformPreprocessor(unittest.TestCase):
     got_output = self.p.process_file(lines)
     self.assertEqual(got_output, expected_output)
 
+  def test_prune_empty_strings(self):
+    cases = [
+        [["","",""], []],
+        [["", 1, ""], [1]],
+        [[1, 2, 3], [1, 2, 3]],
+        [[1, "", 2, "", 3, ""], [1, 2, 3]],
+        ]
+    for case in cases:
+      self.assertEqual(case[1], self.p.prune_empty_strings(case[0]))
+
 if __name__ == "__main__":
   unittest.main()

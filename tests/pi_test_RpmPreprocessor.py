@@ -68,9 +68,9 @@ class RpmPreprocessor(unittest.TestCase):
 
   def test_process_file_can_proces_parsable_file(self):
     #Make input temp file
-    inlines = ["M103","\n","M101","\n","M108 R2.51 T0","\n","M105"]
+    inlines = ["M103\n","M101\n","M108 R2.51 T0\n","M105\n"]
     got_output = self.rp.process_file(inlines)
-    expected_output = ['', '\n', '', "\n", "M135 T0\n", "\n", "M105"]
+    expected_output = ["M135 T0\n","M105\n"]
     self.assertEqual(expected_output, got_output)
 
 if __name__ == '__main__':

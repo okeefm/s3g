@@ -1,12 +1,12 @@
 """
 A set of preprocessors for the skeinforge engine
 """
-from Preprocessor import Preprocessor
-from CoordinateRemovalPreprocessor import CoordinateRemovalPreprocessor
-from TemperaturePreprocessor import TemperaturePreprocessor
-from RpmPreprocessor import RpmPreprocessor
-from RemoveRepGStartEndGcode import RemoveRepGStartEndGcode
-from ProgressPreprocessor import ProgressPreprocessor
+from .Preprocessor import Preprocessor
+from .CoordinateRemovalPreprocessor import CoordinateRemovalPreprocessor
+from .TemperaturePreprocessor import TemperaturePreprocessor
+from .RpmPreprocessor import RpmPreprocessor
+from .RemoveRepGStartEndGcode import RemoveRepGStartEndGcode
+from .ProgressPreprocessor import ProgressPreprocessor
 
 class Skeinforge50Preprocessor(Preprocessor):
   """
@@ -17,7 +17,7 @@ class Skeinforge50Preprocessor(Preprocessor):
   def __init__(self):
     pass
 
-  def process_file(self, input_file, add_progress=True, remove_start_end=False):
+  def process_file(self, inlines, add_progress=True, remove_start_end=False):
     """
     Given a filepath, reads each line of that file and, if necessary, 
     transforms it into another format.  If either of these filepaths
@@ -26,20 +26,21 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param input_path: The input file path
     @param output_path: The output file path
     """
+    output = []
     if remove_start_end:
       remove_start_end_prepro = RemoveRepGStartEndGcode()
-      output = remove_start_end_prepro.process_file(input_file)
+      inlines = remove_start_end_prepro.process_file(inlines)
     preprocessors = [
-        CoordinatePreprocessor(),
+        CoordinateRemovalPreprocessor(),
         TemperaturePreprocessor(),
-        RPMPreprocessor(),
+        RpmPreprocessor(),
         ]
-    for line in input_line:
+    for line in inlines:
       tline = [line]
       for prepro in preprocessors:
         tline = prepro.process_file(tline)
       output.extend(tline)
     if add_progress:
       progress_prepro = ProgressPreprocessor()
-      output = progress_prepro(output) 
+      output = progress_prepro.process_file(output) 
     return output

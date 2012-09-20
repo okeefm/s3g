@@ -152,9 +152,13 @@ class DualHeadReading(unittest.TestCase):
 def preprocess_file_with_prepro(the_file, prepro):
   factory = makerbot_driver.Preprocessors.PreprocessorFactory()
   prepro = factory.create_preprocessor_from_name(prepro)
-  with tempfile.NamedTemporaryFile(delete=True, suffix='.gcode') as f:
+  f = open(the_file)
+  lines = list(f)
+  output = prepro.process_file(lines)
+  with tempfile.NamedTemporaryFile(delete=False, suffix='.gcode') as f:
     processed_file_path = f.name
-  prepro.process_file(the_file, processed_file_path)
+    for line in output:
+      f.write(line)
   return processed_file_path
 
 def execute_file(the_file, parser):

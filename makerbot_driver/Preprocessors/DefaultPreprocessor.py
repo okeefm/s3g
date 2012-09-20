@@ -3,23 +3,27 @@ The Default Preprocessor is a preprocessor
 that runs several sub-preprocessors to cover
 common problems that most gcode files have.
 """
+from __future__ import absolute_import
 
-import tempfile
-
-from Preprocessor import *
-from ToolchangePreprocessor import*
-from CoordinateRemovalPreprocessor import *
+import makerbot_driver
+from .Preprocessor import Preprocessor
+from .ToolchangePreprocessor import ToolchangePreprocessor
+from .CoordinateRemovalPreprocessor import CoordinateRemovalPreprocessor
 
 class DefaultPreprocessor(Preprocessor):
 
   def __init__(self):
     pass
 
-  def process_file(self, input_path, output_path):
-    self.inputs_are_gcode(input_path, output_path)
-    with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
-      toolchange_path = f.name
-    tool_prepro = ToolchangePreprocessor()
-    tool_prepro.process_file(input_path, toolchange_path)
-    coordinate_prepro = CoordinateRemovalPreprocessor()
-    coordinate_prepro.process_file(toolchange_path, output_path)
+  def process_file(self, inlines):
+    preprocessors = [
+        ToolchangePreprocessor(),
+        CoordinateRemovalPreprocessor(),
+        ]
+    output = []
+    for line in inlines:
+      tline = [line]
+      for prepro in preprocessors:
+        tline = prepro.process_file(tline)
+      output.extend(tline)
+    return output
