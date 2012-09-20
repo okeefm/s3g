@@ -40,5 +40,28 @@ class Skeinforge50PreprocessorTests(unittest.TestCase):
     got_output = self.sp.process_file(the_input, remove_start_end=True)
     self.assertEqual(expected_output, got_output)
 
+  def test_process_file_stress_test(self):
+    the_input = [
+        "G90\n",
+        "G1 A0\n",
+        "G1 B0\n",
+        "M101\n",
+        "G21\n",
+        "G1 A0\n",
+        "M104\n",
+        "M108\n",
+        "G1 B0\n",
+        "M105\n",
+        ]
+    expected_output = [
+        "G1 A0\n",
+        "G1 B0\n",
+        "G1 A0\n",
+        "G1 B0\n",
+        ]
+    got_output = self.sp.process_file(the_input, add_progress=False)
+    self.assertEqual(expected_output, got_output)
+        
+
 if __name__ == '__main__':
   unittest.main()
