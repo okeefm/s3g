@@ -1,44 +1,38 @@
 """
 Inserts progress commands in skeinforge gcode
 """
+from __future__ import absolute_import
 
-import os
-import sys
-import re
-from Preprocessor import *
+from .Preprocessor import *
 
 class ProgressPreprocessor(Preprocessor):
     
     def __init__(self):
         self.command = re.compile('([A-Z]\d+(\.\d+)? )+')
-        self.countTotal = 1
-        self.countCurrent = 0
-    
-    def count_commands(self, infh):
-        self.countTotal = 1
-        self.countCurrent = 0
-        for line in infh:
-            if self.command.match(line):
-                self.countTotal += 1
 
-    def print_progress(self, outfh):
-        curPercent = int((self.countCurrent * 100) / self.countTotal)
-        lastPercent = int(((self.countCurrent - 1) * 100 ) / self.countTotal)
-        if lastPercent != curPercent:
-            progressmsg = "M73 P%s (progress (%s%%): %s/%s)\n" % (curPercent, curPercent, self.countCurrent, self.countTotal)
-            outfh.write(progressmsg)
+    def get_percent(self, count_current, count_total):
+        decimal = 1.0 * count_current / count_total
+        percent = int(decimal*100)
+        return percent
+
+    def create_progress_msg(self, percent):
+        progressmsg = "M73 P%s (progress (%s%%))\n" % (percent, percent)
+        return progressmsg
     
-    def process_file(self, input_path, output_path):
-        self.inputs_are_gcode(input_path, output_path)
-        with open(input_path, 'r') as infh:
-            with open(output_path, 'w') as outfh:
-                self.count_commands(infh)
-                infh.seek(0)
-                for line in infh:
-                    if self.command.match(line):
-                        self.countCurrent += 1
-                        self.print_progress(outfh)
-                    outfh.write(line)
+    def process_file(self, inlines):
+        output = []
+        count_total = len(inlines)
+        count_current = 0
+        current_percent = 0
+        for line in inlines:
+            count_current += 1
+            output.append(line)
+            new_percent = self.get_percent(count_current, count_total)
+            if new_percent > current_percent:
+                progressmsg = self.create_progress_msg(new_percent)
+                output.append(progressmsg)
+                current_percent = new_percent
+        return output
 
 def main():
     ProgressPreprocessor().process_file(sys.argv[1], sys.argv[2])

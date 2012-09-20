@@ -14,12 +14,12 @@ class LineTransformPreprocessor(Preprocessor):
   def __init__(self):
     self.code_map = {}
 
-  def process_file(self, input_file):
+  def process_file(self, inlines):
     output = []
-    for line in input_file:
+    for line in inlines:
       tline = self._transform_line(line)
       output.extend(tline)
-    return iter(output)
+    return output
 
   def _transform_line(self, line):
     tline = line

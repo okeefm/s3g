@@ -29,8 +29,8 @@ class TestSingletonTPreprocessor(unittest.TestCase):
   def test_process_file(self):
     the_input = ["T0","\n","G1 X8 Y9","\n","T1","\n","G92 X0 Y0","\n","T7","\n"]
     expected_output = ["M135 T0\n","\n","G1 X8 Y9","\n","M135 T1\n","\n","G92 X0 Y0","\n","M135 T7\n","\n"]
-    got_output = self.p.process_file(iter(the_input))
-    self.assertEqual(expected_output, list(got_output))
+    got_output = self.p.process_file(the_input)
+    self.assertEqual(expected_output, got_output)
 
 if __name__ == '__main__':
   unittest.main()

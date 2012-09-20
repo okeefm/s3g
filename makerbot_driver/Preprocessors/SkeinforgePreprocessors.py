@@ -2,10 +2,11 @@
 A set of preprocessors for the skeinforge engine
 """
 from Preprocessor import Preprocessor
-from CoordinatePreprocessor import CoordinatePreprocessor
+from CoordinateRemovalPreprocessor import CoordinateRemovalPreprocessor
 from TemperaturePreprocessor import TemperaturePreprocessor
-from RemoveRepGStartEndGcode import RemoveRepGStartEndGcode
 from RpmPreprocessor import RpmPreprocessor
+from RemoveRepGStartEndGcode import RemoveRepGStartEndGcode
+from ProgressPreprocessor import ProgressPreprocessor
 
 class Skeinforge50Preprocessor(Preprocessor):
   """
@@ -25,18 +26,20 @@ class Skeinforge50Preprocessor(Preprocessor):
     @param input_path: The input file path
     @param output_path: The output file path
     """
+    if remove_start_end:
+      remove_start_end_prepro = RemoveRepGStartEndGcode()
+      output = remove_start_end_prepro.process_file(input_file)
     preprocessors = [
         CoordinatePreprocessor(),
         TemperaturePreprocessor(),
         RPMPreprocessor(),
         ]
-    output = []
     for line in input_line:
-      tline = iter([line])
+      tline = [line]
       for prepro in preprocessors:
         tline = prepro.process_file(tline)
       output.extend(tline)
-    if remove_start_end:
-      remove_start_end_prepro = RemoveRepGStartEndGcode()
-      output = remove_start_end_prepro.process_file(output)
+    if add_progress:
+      progress_prepro = ProgressPreprocessor()
+      output = progress_prepro(output) 
     return output

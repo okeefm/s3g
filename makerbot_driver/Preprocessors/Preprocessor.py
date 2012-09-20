@@ -8,7 +8,7 @@ class Preprocessor(object):
   def __init__(self):
     pass
 
-  def process_file(self, input_file):
+  def process_file(self, inline):
     pass
 
   def _remove_variables(self, input_line):

@@ -39,9 +39,9 @@ class TestLineTransformPreprocessor(unittest.TestCase):
         "G1 X1 Y1 Z1",
         "G2 X2 Y2 Z2",
         ]
-    inlines = iter(lines)
+    inlines = lines
     outlines = self.p.process_file(inlines)
-    self.assertEqual(lines, list(outlines))
+    self.assertEqual(lines, outlines)
 
   def test_process_file_code_map(self):
     tg1 = "G1_TRANSFORMED"
@@ -58,14 +58,14 @@ class TestLineTransformPreprocessor(unittest.TestCase):
         input_lines[2],
         ]
     self.p.code_map.update({"G1" : _transform_g1})
-    got_lines = self.p.process_file(iter(input_lines))
-    self.assertEqual(expected_lines, list(got_lines))
+    got_lines = self.p.process_file(input_lines)
+    self.assertEqual(expected_lines, got_lines)
 
   def test_process_file_empty_iter(self):
-    lines = iter([])
+    lines = []
     expected_output = []
     got_output = self.p.process_file(lines)
-    self.assertEqual(list(got_output), expected_output)
+    self.assertEqual(got_output, expected_output)
 
 if __name__ == "__main__":
   unittest.main()
