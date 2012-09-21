@@ -6,24 +6,15 @@ common problems that most gcode files have.
 from __future__ import absolute_import
 
 import makerbot_driver
-from .Processor import Processor
+from .BundleProcessor import BundleProcessor
 from .ToolchangeProcessor import ToolchangeProcessor
 from .CoordinateRemovalProcessor import CoordinateRemovalProcessor
 
-class DefaultProcessor(Processor):
+class DefaultProcessor(BundleProcessor):
 
   def __init__(self):
-    pass
-
-  def process_gcode(self, gcodes):
-    processors = [
+    super(DefaultProcessor, self).__init__()
+    self.processors = [
         ToolchangeProcessor(),
         CoordinateRemovalProcessor(),
         ]
-    output = []
-    for code in gcodes:
-      tcode = [code]
-      for pro in processors:
-        tcode = pro.process_gcode(tcode)
-      output.extend(tcode)
-    return output

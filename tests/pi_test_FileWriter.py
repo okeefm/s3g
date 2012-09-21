@@ -31,7 +31,7 @@ class s3gFileWriterTests(unittest.TestCase):
 
   def test_write_external_stop(self):
     self.w.external_stop = True
-    self.assertRaises(makerbot_driver.Writer.ExternalStopError, self.w.send_action_payload, 'asdf')
+    self.assertRaises(makerbot_driver.ExternalStopError, self.w.send_action_payload, 'asdf')
 
   def test_is_open(self):
     self.assertTrue(self.w.is_open())

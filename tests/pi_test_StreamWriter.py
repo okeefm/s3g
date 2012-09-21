@@ -241,7 +241,7 @@ class StreamWriterTests(unittest.TestCase):
     self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
     self.w.set_external_stop()
-    self.assertRaises(Writer.ExternalStopError, self.w.send_command, 'asdf')
+    self.assertRaises(errors.ExternalStopError, self.w.send_command, 'asdf')
 
 
 

@@ -1,4 +1,4 @@
-all = ['ProcessorFactory', 'Processor', 'ProgressProcessor', 'Skeinforge50Processor', 'ToolchangeProcessor', 'SingletonTProcessor', 'DefaultProcessor', 'RpmProcessor', 'SlicerProcessor', 'CoordinateRemovalProcessor', 'RemoveRepGStartEndGcode', 'LineTransformProcessor', 'TemperatureProcessor', 'AbpProcessor', 'errors']
+all = ['ProcessorFactory', 'Processor', 'ProgressProcessor', 'Skeinforge50Processor', 'ToolchangeProcessor', 'SingletonTProcessor', 'DefaultProcessor', 'RpmProcessor', 'SlicerProcessor', 'CoordinateRemovalProcessor', 'RemoveRepGStartEndGcode', 'LineTransformProcessor', 'TemperatureProcessor', 'AbpProcessor', 'BundleProcessor', 'errors']
 
 from ProcessorFactory import *
 from Processor import *
@@ -14,4 +14,5 @@ from RemoveRepGStartEndGcode import *
 from LineTransformProcessor import *
 from TemperatureProcessor import *
 from AbpProcessor import *
+from BundleProcessor import *
 from errors import *

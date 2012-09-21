@@ -8,6 +8,7 @@ from .Processor import *
 class ProgressProcessor(Processor):
     
     def __init__(self):
+        super(ProgressProcessor, self).__init__()
         self.command = re.compile('([A-Z]\d+(\.\d+)? )+')
 
     def get_percent(self, count_current, count_total):
@@ -30,7 +31,10 @@ class ProgressProcessor(Processor):
             new_percent = self.get_percent(count_current, count_total)
             if new_percent > current_percent:
                 progressmsg = self.create_progress_msg(new_percent)
-                output.append(progressmsg)
+                with self._condition:
+                    if self._external_stop:
+                        raise makerbot_driver.ExternalStopError
+                    output.append(progressmsg)
                 current_percent = new_percent
         return output
 

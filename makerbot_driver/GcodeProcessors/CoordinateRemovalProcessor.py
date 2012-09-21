@@ -15,6 +15,7 @@ class CoordinateRemovalProcessor(LineTransformProcessor):
   """
 
   def __init__(self):
+    super(CoordinateRemovalProcessor, self).__init__()
     self.code_map = {
         'G10' : self._transform_g10,
         'G54' : self._transform_g54,

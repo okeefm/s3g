@@ -258,7 +258,7 @@ class StreamWriterTests(unittest.TestCase):
     self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
     self.w.set_external_stop()
-    self.assertRaises(Writer.ExternalStopError, self.w.send_command, 'asdf')
+    self.assertRaises(errors.ExternalStopError, self.w.send_command, 'asdf')
 
 
   def delay_and_external_stop_in_thread(self):
@@ -277,7 +277,7 @@ class StreamWriterTests(unittest.TestCase):
     try:
       t.start()
       self.w.send_packet('')
-    except Writer.ExternalStopError:
+    except errors.ExternalStopError:
       self.assertTrue(self.w.external_stop)
     t.join()    #Kill that thread!
 

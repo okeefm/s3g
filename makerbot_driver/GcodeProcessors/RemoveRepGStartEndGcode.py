@@ -5,9 +5,6 @@ from .Processor import Processor
 
 class RemoveRepGStartEndGcode(Processor):
 
-  def __init__(self):
-    pass
-
   def process_gcode(self, gcodes):
     startgcode = False
     endgcode = False
@@ -26,7 +23,10 @@ class RemoveRepGStartEndGcode(Processor):
         elif (self.get_comment_match(code, '**** End.gcode')):
           endgcode = True
         else:
-          output.append(code)
+          with self._condition:
+              if self._external_stop:
+                  raise makerbot_driver.ExternalStopError
+              output.append(code)
     return output
 
   def get_comment_match(self, gcode, match):

@@ -17,6 +17,7 @@ from .LineTransformProcessor import LineTransformProcessor
 class RpmProcessor(LineTransformProcessor):
 
   def __init__(self):
+    super(RpmProcessor, self).__init__()
     self.code_map = {
         'M101'    :     self._transform_m101,
         'M102'    :     self._transform_m102,

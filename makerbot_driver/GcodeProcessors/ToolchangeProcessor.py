@@ -6,6 +6,7 @@ from .LineTransformProcessor import LineTransformProcessor
 class ToolchangeProcessor(LineTransformProcessor):
 
   def __init__(self):
+    super(ToolchangeProcessor, self).__init__()
     self.extruders = {
         'A' : 'M135 T0\n',
         'B' : 'M135 T1\n'

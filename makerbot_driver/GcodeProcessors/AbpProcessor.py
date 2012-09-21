@@ -6,6 +6,7 @@ from .LineTransformProcessor import LineTransformProcessor
 class AbpProcessor(LineTransformProcessor):
 
   def __init__(self):
+    super(AbpProcessor, self).__init__()
     self.code_map = {
         "M106" : self._transform_m106,
         "M107" : self._transform_m107,

@@ -12,6 +12,7 @@ from . import Processor
 class LineTransformProcessor(Processor):
 
   def __init__(self):
+    super(LineTransformProcessor, self).__init__()
     self.code_map = {}
 
   def process_gcode(self, gcodes):
@@ -19,7 +20,10 @@ class LineTransformProcessor(Processor):
     for code in gcodes:
       tcode = self._transform_code(code)
       pruned_tcode = self.prune_empty_strings(tcode)
-      output.extend(pruned_tcode)
+      with self._condition:
+        if self._external_stop:
+          raise makerbot_driver.ExternalStopError
+        output.extend(pruned_tcode)
     return output
 
   def prune_empty_strings(self, gcodes):

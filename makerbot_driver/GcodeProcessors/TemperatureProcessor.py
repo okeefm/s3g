@@ -6,6 +6,7 @@ from .LineTransformProcessor import LineTransformProcessor
 class TemperatureProcessor(LineTransformProcessor):
 
   def __init__(self):
+    super(TemperatureProcessor, self).__init__()
     self.code_map = {
         "M104" : self._transform_m104,
         "M105" : self._transform_m105,

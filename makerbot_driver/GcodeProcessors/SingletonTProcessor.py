@@ -6,6 +6,7 @@ from .LineTransformProcessor import LineTransformProcessor
 class SingletonTProcessor(LineTransformProcessor):
 
   def __init__(self):
+    super(SingletonTProcessor, self).__init__()
     self.code_map = { 
         "T[0-9]$" : self._transform_singleton
         }
