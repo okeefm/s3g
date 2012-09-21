@@ -46,7 +46,7 @@ class FileWriter(AbstractWriter):
   def send_action_payload(self, payload):
     if self.external_stop:
       self._log.error('{"event":"external_stop"}')
-      raise makerbot_driver.Writer.ExternalStopError
+      raise makerbot_driver.ExternalStopError
     self.check_binary_mode()
     with self._condition:
       self.file.write(bytes(payload))

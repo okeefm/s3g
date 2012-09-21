@@ -73,7 +73,7 @@ class StreamWriter(AbstractWriter):
     while True:
       if self.external_stop:
         self._log.error('{"event":"external_stop"}')
-        raise makerbot_driver.Writer.ExternalStopError
+        raise makerbot_driver.ExternalStopError
 
       decoder = makerbot_driver.Encoder.PacketStreamDecoder()
 

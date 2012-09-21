@@ -206,3 +206,10 @@ class RecipeNotFoundError(KeyError):
   """
   A Recipe not found error is thrown when the Gcode Assembler tries to find a specific recipe, but fails.
   """
+
+class ExternalStopError(Exception):
+  """
+  An ExternalStopError is thrown when an external
+  source wishes to force the StreamWriter to stop 
+  sending packets to a stream.
+  """
