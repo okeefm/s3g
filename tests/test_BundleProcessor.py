@@ -90,5 +90,33 @@ class TestBundlePreprocessorCallbacks(unittest.TestCase):
       self.assertTrue(percent > cur_percent)
       cur_percent = percent
 
+  def set_external_stop(self):
+    time.sleep(.5)
+    self.bp.set_external_stop()
+
+  def test_external_stop(self):
+    t = threading.Thread(target=self.set_external_stop)
+    path_to_gcode = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        '..',
+        'doc',
+        'gcode_samples',
+        'skeinforge_dual_extrusion_hilbert_cube.gcode',
+        )
+    with open(path_to_gcode) as f:
+      lines = list(f)
+    self.bp.processors = [
+        makerbot_driver.GcodeProcessors.RpmProcessor(),
+        makerbot_driver.GcodeProcessors.SingletonTProcessor(),
+        makerbot_driver.GcodeProcessors.TemperatureProcessor(),
+        ]
+    t.start()
+    try:
+      self.bp.process_gcode(lines)
+      self.assertTrue(False)
+    except makerbot_driver.ExternalStopError:
+      pass
+    t.join()
+
 if __name__ == "__main__":
   unittest.main()
