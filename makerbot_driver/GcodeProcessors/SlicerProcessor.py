@@ -16,5 +16,4 @@ class SlicerProcessor(BundleProcessor):
         RpmProcessor(),
         CoordinateRemovalProcessor(),
         AbpProcessor(),
-        ProgressProcessor(),
         ]

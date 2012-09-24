@@ -15,45 +15,35 @@ class TestCoordinateRemovalProcessor(unittest.TestCase):
   def tearDown(self):
     self.cp = None
 
-  def test_transform_g54(self):
+  def test_regexs(self):
     cases = [
-        ['G54\n'  , '',],
-        ['G55\n'  , 'G55\n',],
+        ['G54\n'  , [''],],
+        [';G54', [';G54']],
+        ['(G54', ['(G54']],
+        ['g54', ['']],
+        ['G55\n', ['']],
+        [';G55', [';G55']],
+        ['(G55', ['(G55']],
+        ['g55', ['']],
+        [';G10', [';G10']],
+        ['(G10', ['(G10']],
+        ['g10', ['']],
+        ["G10\n", [""]],
+        ["G90\n", [""]],
+        [';G90', [';G90']],
+        ['(G90', ['(G90']],
+        ['g90', ['']],
+        ["G11\n", ["G11\n"]],
+        ["G21\n", [""]],
+        [';G21', [';G21']],
+        ['(G21', ['(G21']],
+        ['g21', ['']],
+        ['G1 X0 Y0', ['G1 X0 Y0']],
+        ['G92 X0 Y0', ['G92 X0 Y0']],
+        ['THIS IS A TEST', ['THIS IS A TEST']],
         ]
     for case in cases:
-      self.assertEqual(case[1], self.cp._transform_g54(case[0]))
-
-  def test_transform_g55(self):
-    cases = [
-        ['G55\n', '',],
-        ['G54\n', 'G54\n'],
-        ]
-    for case in cases:
-      self.assertEqual(case[1], self.cp._transform_g55(case[0]))
-
-  def test_transform_g10(self):
-    cases = [
-        ["G11\n", "G11\n"],
-        ["G10\n", ""],
-        ]
-    for case in cases:
-      self.assertEqual(case[1], self.cp._transform_g10(case[0]))
-
-  def test_transform_g90(self):
-    cases = [
-        ["G11\n", "G11\n"],
-        ["G90\n", ""],
-        ]
-    for case in cases:
-      self.assertEqual(case[1], self.cp._transform_g90(case[0]))
-
-  def test_transform_g21(self):
-    cases = [
-        ["G11\n", "G11\n"],
-        ["G21\n", ""],
-        ]
-    for case in cases:
-      self.assertEqual(case[1], self.cp._transform_g21(case[0]))
+      self.assertEqual(case[1], self.cp._transform_code(case[0]))
 
 if __name__ == "__main__":
   unittest.main()

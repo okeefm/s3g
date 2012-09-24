@@ -16,41 +16,26 @@ class RpmProcessor(unittest.TestCase):
   def tearDown(self):
     self.rp = None
 
-  def test_transform_m101_non_m101_command(self):
-    input_string = 'G1;M101\n'
-    expected_string = 'G1;M101\n'
-    got_string = self.rp._transform_m101(input_string)
-    self.assertEqual(expected_string, got_string)
-
-  def test_transform_m101(self):
-    input_string = 'M101\n'
-    expected_string = ''
-    got_string = self.rp._transform_m101(input_string)
-    self.assertEqual(expected_string, got_string)
-
-  def test_transform_m102_non_m102_command(self):
-    input_string = 'G1;M102\n'
-    expected_string = 'G1;M102\n'
-    got_string = self.rp._transform_m102(input_string)
-    self.assertEqual(expected_string, got_string)
-
-  def test_transform_m102(self):
-    input_string = 'M102\n'
-    expected_string = ''
-    got_string = self.rp._transform_m102(input_string)
-    self.assertEqual(expected_string, got_string)
-
-  def test_transform_m103_non_m103_command(self):
-    input_string = 'G1;M103\n'
-    expected_string = 'G1;M103\n'
-    got_string = self.rp._transform_m103(input_string)
-    self.assertEqual(expected_string, got_string)
-
-  def test_transform_m103(self):
-    input_string = 'M103\n'
-    expected_string = ''
-    got_string = self.rp._transform_m103(input_string)
-    self.assertEqual(expected_string, got_string)
+  def test_regexs(self):
+    cases = [
+        ["M101", [""]],
+        ["m101", [""]],
+        [";M101", [";M101"]],
+        ["(M101", ["(M101"]],
+        ["M102", [""]],
+        ["m102", [""]],
+        [";M102", [";M102"]],
+        ["(M102", ["(M102"]],
+        ["M103", [""]],
+        ["m103", [""]],
+        [";M103", [";M103"]],
+        ["(M103", ["(M103"]],
+        ["G1 X0 Y0", ["G1 X0 Y0"]],
+        ["G92 X0 Y0", ["G92 X0 Y0"]],
+        ["THIS IS A TEST", ["THIS IS A TEST"]],
+        ]
+    for case in cases:
+      self.assertEqual(case[1], self.rp._transform_code(case[0]))
 
   def test_transform_m108(self):
     input_output_dict = {

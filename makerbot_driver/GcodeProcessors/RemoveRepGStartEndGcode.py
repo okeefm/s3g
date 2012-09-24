@@ -5,9 +5,11 @@ from .Processor import Processor
 
 class RemoveRepGStartEndGcode(Processor):
 
-  def process_gcode(self, gcodes):
+  def process_gcode(self, gcodes, callback=None):
     startgcode = False
     endgcode = False
+    count_total = len(gcodes)
+    count_current = 0
     output = []
 
     for code in gcodes:
@@ -27,6 +29,10 @@ class RemoveRepGStartEndGcode(Processor):
               if self._external_stop:
                   raise makerbot_driver.ExternalStopError
               output.append(code)
+        count_current += 1
+        percent = self.get_percent(count_current, count_total)
+        if callback is not None:
+          callback(percent)
     return output
 
   def get_comment_match(self, gcode, match):

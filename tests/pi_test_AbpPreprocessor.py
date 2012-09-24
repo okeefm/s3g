@@ -15,23 +15,24 @@ class TestABPProcessor(unittest.TestCase):
   def tearDown(self):
     self.abp = None
 
-  def test_transform_m107(self):
+  def test_regexs(self):
     cases = [
-        ['M107\n', ''],
-        ['M107', ''],
-        ['M106', 'M106'],
+        ['M107\n', ['']],
+        ['M107', ['']],
+        ['m107', ['']],
+        ['(M107', ['(M107']],
+        [';M107', [';M107']],
+        ['M106\n', ['']],
+        ['M106', ['']],
+        ['m106', ['']],
+        ['(M106', ['(M106']],
+        [';M106', [';M106']],
+        ['THIS IS A TEST', ['THIS IS A TEST']],
+        ['G1 X0 Y0', ['G1 X0 Y0']],
+        ['G92 X0 Y0', ['G92 X0 Y0']],
         ]
     for case in cases:
-      self.assertEqual(case[1], self.abp._transform_m107(case[0]))
-
-  def test_transform_m106(self):
-    cases = [
-        ['M106\n', ''],
-        ['M106', ''],
-        ['M107', 'M107'],
-        ]
-    for case in cases:
-      self.assertEqual(case[1], self.abp._transform_m106(case[0]))
+      self.assertEqual(case[1], self.abp._transform_code(case[0]))
 
 if __name__ == "__main__":
   unittest.main()

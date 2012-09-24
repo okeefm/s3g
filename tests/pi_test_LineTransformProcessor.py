@@ -27,7 +27,6 @@ class TestLineTransformProcessor(unittest.TestCase):
     cases = [
         ["G1 X0 Y0", [tg1]],
         ["G2 X0 Y0", [tg2]],
-        ["(some comments)G1 X0 Y0", [tg1]],
         ["G3 X0 Y0", ["G3 X0 Y0"]],
         ]
     for case in cases:

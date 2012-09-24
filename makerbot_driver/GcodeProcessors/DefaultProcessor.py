@@ -18,3 +18,4 @@ class DefaultProcessor(BundleProcessor):
         ToolchangeProcessor(),
         CoordinateRemovalProcessor(),
         ]
+    self.do_progress = False

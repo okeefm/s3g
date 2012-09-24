@@ -15,29 +15,19 @@ class TestTemperatureProcessor(unittest.TestCase):
   def tearDown(self):
     self.p = None
 
-  def test_transform_m104(self):
+  def test_regex(self):
     cases = [
-        ["M104\n", ""],
-        ["M105\n", "M105\n"],
-        ["(comments)M104", ""],
-        ["M104(comments)\n", ""],
-        ["(comments)M104(comments)\n", ""],
-        ["", ""],
+        ["M104\n", [""]],
+        ["M104(comments)\n", [""]],
+        ["", [""]],
+        ["M105\n", [""]],
+        ["M105(comments)\n", [""]],
+        ["G1 X0 Y0", ["G1 X0 Y0"]],
+        ["G92 X0 Y0", ["G92 X0 Y0"]],
+        ["THIS IS A TEST", ["THIS IS A TEST"]],
         ]
     for case in cases:
-      self.assertEqual(case[1], self.p._transform_m104(case[0]))
-
-  def test_transform_m105(self):
-    cases = [
-        ["M105\n", ""],
-        ["M104\n", "M104\n"],
-        ["(comments)M105", ""],
-        ["M105(comments)\n", ""],
-        ["(comments)M105(comments)\n", ""],
-        ["", ""],
-        ]
-    for case in cases:
-      self.assertEqual(case[1], self.p._transform_m105(case[0]))
+      self.assertEqual(case[1], self.p._transform_code(case[0]))
 
 if __name__ == "__main__":
   unittest.main()

@@ -11,6 +11,8 @@ M108
 """
 from __future__ import absolute_import
 
+import re
+
 import makerbot_driver
 from .LineTransformProcessor import LineTransformProcessor
 
@@ -19,10 +21,10 @@ class RpmProcessor(LineTransformProcessor):
   def __init__(self):
     super(RpmProcessor, self).__init__()
     self.code_map = {
-        'M101'    :     self._transform_m101,
-        'M102'    :     self._transform_m102,
-        'M103'    :     self._transform_m103,
-        'M108'    :     self._transform_m108,
+        re.compile('[^;(]*[mM]101')    :     self._transform_m101,
+        re.compile('[^;(]*[mM]102')    :     self._transform_m102,
+        re.compile('[^;(]*[mM]103')    :     self._transform_m103,
+        re.compile('[^;(]*[mM]108')    :     self._transform_m108,
         }
 
   def _transform_m101(self, input_line):
@@ -33,12 +35,7 @@ class RpmProcessor(LineTransformProcessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = makerbot_driver.Gcode.parse_line(input_line)
-    if 'M' in codes and codes['M'] == 101:
-      return_line = ''
-    else:
-      return_line = input_line
-    return return_line
+    return ""
 
   def _transform_m102(self, input_line):
     """
@@ -48,12 +45,7 @@ class RpmProcessor(LineTransformProcessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = makerbot_driver.Gcode.parse_line(input_line)
-    if 'M' in codes and codes['M'] == 102:
-      return_line = ''
-    else:
-      return_line = input_line
-    return return_line
+    return ""
 
   def _transform_m103(self, input_line):
     """
@@ -63,12 +55,7 @@ class RpmProcessor(LineTransformProcessor):
     @param str input_line: The line to be transformed
     @return str: The transformed line
     """
-    codes, flags, comments = makerbot_driver.Gcode.parse_line(input_line)
-    if 'M' in codes and codes['M'] == 103:
-      return_line = ''
-    else:
-      return_line = input_line
-    return return_line
+    return ""
 
   def _transform_m108(self, input_line):
     """

@@ -10,7 +10,7 @@ class Processor(object):
     self._external_stop = False
     self._condition = threading.Condition()
 
-  def process_gcode(self, gcodes):
+  def process_gcode(self, gcodes, callback=None):
     pass
 
   def _remove_variables(self, gcode):
@@ -20,6 +20,11 @@ class Processor(object):
       gcode = gcode.replace(m.group(), '0')
       m = re.search(variable_regex, gcode)
     return gcode 
+
+  def get_percent(self, count_current, count_total):
+    decimal = 1.0 * count_current / count_total
+    percent = int(decimal*100)
+    return percent
 
   def set_external_stop(self):
     with self._condition:
