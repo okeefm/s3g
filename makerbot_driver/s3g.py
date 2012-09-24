@@ -10,7 +10,6 @@ from errors import *
 import uuid
 
 
-
 class s3g(object):
   """ Represents an interface to a s3g driven bot. Contains methods and functions to 
   read and write data to the bot.  No data is cached by this driver, all data is requested
