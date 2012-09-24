@@ -4,6 +4,11 @@ import os
 
 import makerbot_driver
 
+class ReturnObject(object):
+
+  def __init__(self):
+    pass
+
 class BotFactory(object):
   """This class is a factory for building bot drivers from
   a port connection. This class will take a connection, query it
@@ -37,13 +42,17 @@ class BotFactory(object):
     profile_regex = self.get_profile_regex(bot_setup_dict)
     matches = makerbot_driver.search_profiles_with_regex(profile_regex, self.profile_dir)
     matches = list(matches)
+    return_object = ReturnObject
+    attrs = ['s3g', 'profile', 'gcodeparser']
+    for a in attrs:
+      setattr(return_object, a, None)
     if len(matches) > 0:
       bestProfile = matches[0]
-      machine_info = ( s3gBot, makerbot_driver.Profile(bestProfile, self.profile_dir))
-    else:
-      machine_info= ( None, None)
-    return machine_info
-
+      setattr(return_object, 's3g', s3gBot)
+      setattr(return_object, 'profile', makerbot_driver.Profile(bestProfile, self.profile_dir))
+      parser = makerbot_driver.Gcode.GcodeParser(firmware_version=bot_setup_dict['fw_version'])
+      setattr(return_object, 'gcodeparser', parser)
+    return return_object
 
   def create_s3g(self, portname):
     """
@@ -52,8 +61,6 @@ class BotFactory(object):
     w/o being permanently attached to a specific port.
     """
     return makerbot_driver.s3g.from_filename(portname)
-
-
 
   def get_profile_regex(self, bot_setup_dict):
     """

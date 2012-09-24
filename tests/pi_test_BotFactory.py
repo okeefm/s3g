@@ -77,9 +77,13 @@ class TestBuildFromPortMockedBotInquisitor(unittest.TestCase):
   def test_build_from_port_low_version_number(self):
     version = 000
     self.s3g_mock.get_version.return_value = version
-    expected_bot_info = None, None
-    got_bot_info = self.factory.build_from_port('/dev/dummy_port')
-    self.assertEqual(expected_bot_info, got_bot_info)
+    expected_s3g = None
+    expected_profile = None
+    expected_parser = None
+    return_obj = self.factory.build_from_port('/dev/dummy_port')
+    self.assertEqual(expected_s3g, getattr(return_obj, 's3g'))
+    self.assertEqual(expected_profile, getattr(return_obj, 'profile'))
+    self.assertEqual(expected_parser, getattr(return_obj, 'gcodeparser'))
 
   def test_build_from_port_version_number_500_tool_count_1_Replicator(self):
     #Time to mock all of s3g's version!
@@ -99,9 +103,11 @@ class TestBuildFromPortMockedBotInquisitor(unittest.TestCase):
     self.factory.create_s3g = mock.Mock()
     self.factory.create_s3g.return_value = expected_mock_s3g_obj
     expected_profile = makerbot_driver.Profile('ReplicatorSingle')
-    s3g_obj, profile = self.factory.build_from_port('/dev/dummy_port')
-    self.assertTrue(s3g_obj != None)
-    self.assertEqual(expected_profile.values, profile.values)
+    expected_parser = makerbot_driver.Gcode.GcodeParser(version)
+    return_obj= self.factory.build_from_port('/dev/dummy_port')
+    self.assertTrue(getattr(return_obj, 's3g') != None)
+    self.assertEqual(expected_profile.values, getattr(return_obj, 'profile').values)
+    self.assertEqual(expected_parser.firmware_version, getattr(return_obj, 'gcodeparser').firmware_version)
 
   def test_build_from_port_version_number_500_tool_count_2_mightyboard(self):
     #Time to mock all of s3g's version!
@@ -121,9 +127,11 @@ class TestBuildFromPortMockedBotInquisitor(unittest.TestCase):
     self.factory.create_s3g = mock.Mock()
     self.factory.create_s3g.return_value = expected_mock_s3g_obj
     expected_profile = makerbot_driver.Profile('ReplicatorDual')
-    s3g_obj, profile = self.factory.build_from_port('/dev/dummy_port')
-    self.assertTrue(s3g_obj != None)
-    self.assertEqual(expected_profile.values, profile.values)
+    expected_parser = makerbot_driver.Gcode.GcodeParser(version)
+    return_obj = self.factory.build_from_port('/dev/dummy_port')
+    self.assertTrue(getattr(return_obj, 's3g') != None)
+    self.assertEqual(expected_profile.values, getattr(return_obj, 'profile').values)
+    self.assertEqual(expected_parser.firmware_version, getattr(return_obj, 'gcodeparser').firmware_version)
 
 
 class TestBotInquisitor(unittest.TestCase):

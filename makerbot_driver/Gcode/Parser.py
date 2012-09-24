@@ -11,12 +11,13 @@ class GcodeParser(object):
   Read in gcode line by line, tracking some state variables and running known
   commands against an s3g machine.
   """
-  def __init__(self):
+  def __init__(self, firmware_version="6.0"):
     self.state = makerbot_driver.Gcode.GcodeStates()
     self.s3g = None
     self.environment = {}
     self.line_number = 1
     self._log = logging.getLogger(self.__class__.__name__)
+    self.firmware_version="6.0"
 
     # Note: The datastructure looks like this:
     # [0] : command name
