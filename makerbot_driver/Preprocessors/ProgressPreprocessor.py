@@ -7,13 +7,14 @@ import sys
 import re
 from Preprocessor import *
 
+
 class ProgressPreprocessor(Preprocessor):
-    
+
     def __init__(self):
         self.command = re.compile('([A-Z]\d+(\.\d+)? )+')
         self.countTotal = 1
         self.countCurrent = 0
-    
+
     def count_commands(self, infh):
         self.countTotal = 1
         self.countCurrent = 0
@@ -23,11 +24,12 @@ class ProgressPreprocessor(Preprocessor):
 
     def print_progress(self, outfh):
         curPercent = int((self.countCurrent * 100) / self.countTotal)
-        lastPercent = int(((self.countCurrent - 1) * 100 ) / self.countTotal)
+        lastPercent = int(((self.countCurrent - 1) * 100) / self.countTotal)
         if lastPercent != curPercent:
-            progressmsg = "M73 P%s (progress (%s%%): %s/%s)\n" % (curPercent, curPercent, self.countCurrent, self.countTotal)
+            progressmsg = "M73 P%s (progress (%s%%): %s/%s)\n" % (
+                curPercent, curPercent, self.countCurrent, self.countTotal)
             outfh.write(progressmsg)
-    
+
     def process_file(self, input_path, output_path):
         self.inputs_are_gcode(input_path, output_path)
         with open(input_path, 'r') as infh:
@@ -40,8 +42,9 @@ class ProgressPreprocessor(Preprocessor):
                         self.print_progress(outfh)
                     outfh.write(line)
 
+
 def main():
     ProgressPreprocessor().process_file(sys.argv[1], sys.argv[2])
 
-if __name__=="__main__":
+if __name__ == "__main__":
     sys.exit(main())
