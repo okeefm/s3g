@@ -51,6 +51,8 @@ class BotFactory(object):
       setattr(return_object, 's3g', s3gBot)
       setattr(return_object, 'profile', makerbot_driver.Profile(bestProfile, self.profile_dir))
       parser = makerbot_driver.Gcode.GcodeParser(firmware_version=bot_setup_dict['fw_version'])
+      parser.s3g = s3gBot
+      parser.state.profile = bestProfile
       setattr(return_object, 'gcodeparser', parser)
     return return_object
 
