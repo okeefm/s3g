@@ -29,4 +29,4 @@ The Processor uses a dictionary named "code_map" that maps regular expressions t
 
 NB: Only the first regex match is found, subsequent ones will not be executed.
 ##BundleProcessor
-This Processor has an internal list of processors to run in serial against a list of gcodes.  When process_gcode is called, each processor's process_gcode function is called on the list initial input.
+Inherits from LineTransformProcessor.  Processors that inherit this are expected to define a list (self.processors).  The super class will then compile those processors into one single processor that will do one pass and transform all lines.  This processor also has the option to insert ProgressUpdates.
