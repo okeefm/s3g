@@ -196,7 +196,12 @@ class Uploader(object):
     #get the programmer
     flags.append('-c'+str(values['programmer']))
     #get the port
-    flags.append('-P'+port)
+    if platform.system() == "Windows":
+      # NOTE: Windows needs the port name in this ridiculous format or ports
+      # above COM4 will not work.
+      flags.append('-P\\\\.\\'+port)
+    else:
+      flags.append('-P'+port)
     #get the operation
     flags.append('-U'+'flash:w:'+filename+':i')
     return [process] + flags

@@ -21,4 +21,4 @@ reader.file = open(options.input_file, 'rb')
 payloads = reader.ReadFile()
 with open(options.output_file, 'w') as f:
   for payload in payloads:
-    f.write(payload)
+    f.write(str(payload) + '\n')

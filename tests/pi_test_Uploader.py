@@ -313,7 +313,7 @@ class TestParseAvrdudeCommand(unittest.TestCase):
     #Mock up the actual path to the hex_file
     wget_mock.return_value = hex_path
     avrdude = "avrdude"
-    if platform.system == "Windows":
+    if platform.system() == "Windows":
       avrdude += ".exe"
     avrdude_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)),
@@ -329,7 +329,10 @@ class TestParseAvrdudeCommand(unittest.TestCase):
         'Firmware',
         'avrdude.conf',
         )
-    expected_call = "%s -C%s -p%s -b%i -c%s -P/dev/tty.usbmodemfa121 -Uflash:w:%s:i" %(avrdude_path, avrdude_conf_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
+    if platform.system() == "Windows":
+      expected_call = "%s -C%s -p%s -b%i -c%s -P\\\\.\\/dev/tty.usbmodemfa121 -Uflash:w:%s:i" %(avrdude_path, avrdude_conf_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
+    else:
+      expected_call = "%s -C%s -p%s -b%i -c%s -P/dev/tty.usbmodemfa121 -Uflash:w:%s:i" %(avrdude_path, avrdude_conf_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
     expected_call = expected_call.split(' ')
     got_call = self.uploader.parse_avrdude_command(port, machine, version)
     #expected_call = expected_call.split(' ')
@@ -410,7 +413,10 @@ class TestParseAvrdudeCommand(unittest.TestCase):
         'Firmware',
         'avrdude.conf',
         )
-    expected_call = "%s -C%s -p%s -b%i -c%s -P/dev/tty.usbmodemfa121 -Uflash:w:%s:i" %(avrdude_path, avrdude_conf_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
+    if platform.system() == "Windows":
+      expected_call = "%s -C%s -p%s -b%i -c%s -P\\\\.\\/dev/tty.usbmodemfa121 -Uflash:w:%s:i" %(avrdude_path, avrdude_conf_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
+    else:
+      expected_call = "%s -C%s -p%s -b%i -c%s -P/dev/tty.usbmodemfa121 -Uflash:w:%s:i" %(avrdude_path, avrdude_conf_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
     expected_call = expected_call.split(' ')
     got_call = self.uploader.parse_avrdude_command(port, machine, version, local_avr=False)
     #expected_call = expected_call.split(' ')
