@@ -286,9 +286,9 @@ class s3g(object):
   def get_motherboard_status(self):
     """
     Retrieve bits of information about the motherboard
-    POWER_ERRPR : An error was detected with the system power.
+    POWER_ERROR : An error was detected with the system power.
     HEAT_SHUTDOWN : The heaters were shutdown because the bot was inactive for over 20 minutes
-    @return: A python dictionary of various flags and whether theywere set or not at reset
+    @return: A python dictionary of various flags and whether they were set or not at reset
     """
     payload = struct.pack(
       '<B',
