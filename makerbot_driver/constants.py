@@ -24,6 +24,7 @@ host_query_command_dict = {
 }
 
 host_action_command_dict = {
+  'QUEUE_POINT_ABSOLUTE'      : 129,
   'FIND_AXES_MINIMUMS'        : 131,
   'FIND_AXES_MAXIMUMS'        : 132,
   'DELAY'                     : 133,
@@ -54,6 +55,7 @@ slave_query_command_dict = {
   'GET_VERSION'                : 0,
   'GET_TOOLHEAD_TEMP'          : 2,
   'GET_MOTOR_1_SPEED_RPM'      : 17,
+  'GET_MOTOR_1_SPEED_PWM'      : 19,
   'IS_TOOL_READY'              : 22,
   'READ_FROM_EEPROM'           : 25,
   'WRITE_TO_EEPROM'            : 26,
@@ -68,13 +70,17 @@ slave_query_command_dict = {
 slave_action_command_dict = {
   'INIT'                       : 1,
   'SET_TOOLHEAD_TARGET_TEMP'   : 3,
+  'SET_MOTOR_1_SPEED_PWM'      : 4,
   'SET_MOTOR_1_SPEED_RPM'      : 6,
+  'SET_MOTOR_1_DIRECTION'      : 8,
   'TOGGLE_MOTOR_1'             : 10,
   'TOGGLE_FAN'                 : 12,
   'TOGGLE_EXTRA_OUTPUT'        : 13,
   'SET_SERVO_1_POSITION'       : 14,
+  'SET_SERVO_2_POSITION'       : 15,
   'PAUSE'                      : 23,
   'ABORT'                      : 24,
+  'TOGGLE_ABP'                 : 27,
   'SET_PLATFORM_TEMP'          : 31,
 }
 

@@ -291,8 +291,9 @@ class GcodeParser(object):
           e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance(current_position[:3], self.state.get_position()[:3])
           if e_distance == 0:
             e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance(current_position[3:], self.state.get_position()[3:])
-          feedrate_mm_min = codes['F']*(1/60) #We want mm/sec instead of mm/min
-          self.s3g.queue_extended_point(stepped_point, dda_speed, e_distance=e_distance, feedrate_mm_min=feedrate_mm_min)
+          feedrate_mm_sec = codes['F']*(1/60) #We want mm/sec instead of mm/min
+          relative_axes = []
+          self.s3g.queue_extended_point_accelerated(stepped_point, dda_speed, relative_axes, e_distance, feedrate_mm_sec)
           
 
       except KeyError as e:

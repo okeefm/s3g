@@ -63,7 +63,6 @@ class s3g(object):
        return self.writer.is_open()
     return False
 
-
   def open(self):
     """ If a writer with data exists in this bot, attempts to open that writer."""
     if self.writer:
@@ -116,7 +115,6 @@ class s3g(object):
     """
     vid_pid = self.get_vid_pid()
     return vid_pid[1] == verified_pid
-
 
   def get_advanced_version(self):
     """
@@ -412,6 +410,33 @@ class s3g(object):
       '<BB',
       makerbot_driver.host_action_command_dict['ENABLE_AXES'], 
       axes_bitfield
+    )
+
+    self.writer.send_action_payload(payload)
+
+  def queue_extended_point_accelerated(self, position, dda_rate, relative_axes, distance, feedrate):
+    """
+    Queue a position with the new style!  Moves to a certain position over a given duration
+    with either relative or absolute positioning.  Relative vs. Absolute positioning
+    is done on an axis to axis basis.
+
+    @param list position: A 5 dimentional position in steps specifying where each axis should move to
+    @param int dda_rate: Steps per second along the master axis
+    @param list relative_axes: Array of axes whose coordinates should be considered relative
+    @param float distance: distance in millimeters moved in (x,y,z) space OR if distance(x,y,z) == 0, then max(distance(A),distance(B))
+    @param float feedrate: the actual feedrate in units of millimeters/second
+    """
+    if len(position) != self.extendedPointLength:
+      raise makerbot_driver.PointLengthError(len(position))
+
+    payload = struct.pack(
+      '<BiiiiiIBfh',
+      makerbot_driver.host_action_command_dict['QUEUE_POINT_NEW_EXT'],
+      position[0], position[1], position[2], position[3], position[4],
+      dda_rate,
+      makerbot_driver.Encoder.encode_axes(relative_axes),
+      float(distance),
+      int(float(feedrate)*64.0)
     )
 
     self.writer.send_action_payload(payload)
@@ -1022,6 +1047,18 @@ class s3g(object):
       '<B',
       theta
     )
+    self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_SERVO_1_POSITION'], payload)
+
+  def set_servo2_position(self, tool_index, theta):
+    """
+    Sets the tool_index's servo as position 2 to a certain angle 
+    @param int tool_index: The tool that will be set
+    @param int theta: angle to set the servo to
+    """
+    payload = struct.pack(
+      '<B',
+      theta
+    )
 
     self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_SERVO_1_POSITION'], payload)
 
@@ -1039,6 +1076,22 @@ class s3g(object):
     @param int tool_index: The tool which is to be paused
     """
     self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['PAUSE'])
+
+  def toggle_ABP(self, tool_index, state):
+    """
+    This sets the on/off state of the ABP's conveyor belt
+    @param boolean : Turns on or off the ABP's conveyor belt
+    """
+    enable = 0;
+    if state:
+      enable = 1
+    payload = struct.pack(
+      '<B',
+      enable
+    )
+
+    self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['TOGGLE_ABP'], payload)
+
 
   def toggle_motor1(self, tool_index, toggle, direction):
     """
@@ -1073,6 +1126,19 @@ class s3g(object):
 
     self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_MOTOR_1_SPEED_RPM'], payload)
 
+  def set_motor1_speed_PWM(self, tool_index, pwm):
+    """
+    This sets the motor speed as a PWM duty cycle
+    @param int pwm : PWM duty cycle as an integer in the range 0 - 255 where 0 = 0% and 255 = 100%
+    """
+    payload = struct.pack(
+      '<B',
+      pwm
+    )
+
+    self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_MOTOR_1_SPEED_PWM'], payload)
+
+
   def get_motor1_speed(self, tool_index):
     """
     Gets the toohead's motor speed in Rotations per Minute (RPM)
@@ -1082,6 +1148,24 @@ class s3g(object):
     response = self.tool_query(tool_index, makerbot_driver.slave_query_command_dict['GET_MOTOR_1_SPEED_RPM'])
     [response_code, speed] = makerbot_driver.Encoder.unpack_response('<BI', response)
     return speed
+
+  def set_motor1_direction(self, tool_index, direction):
+    """
+    This sets the direction of rotation for the motor
+    @param int tool_index: The tool's motor that will be set
+    @param boolean direction: If true, sets the motor to turn clockwise.  If false, sets the motor to turn counter-clockwise
+    """
+
+    clockwise = 0
+    if direction:
+      clockwise = 1
+
+    payload = struct.pack(
+      '<B',
+      clockwise
+    )
+
+    self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_MOTOR_1_DIRECTION'], payload)
 
   def get_toolhead_temperature(self, tool_index):
     """

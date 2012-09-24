@@ -574,9 +574,9 @@ class calculate_homing_DDA_speed(unittest.TestCase):
   def test_calculate_euclidean_distance(self):
     cases = [
       [[0, 0, 0], [0, 0, 0], 0],
-      [[1, 1, 1], [0, 0, 0], 1],
-      [[1, 2, 3], [0, 0, 0], int(math.sqrt(14))],
-      [[-1, -2, -3], [0, 0, 0], int(math.sqrt(14))],
+      [[1, 1, 1], [0, 0, 0], math.sqrt(3)],
+      [[1, 2, 3], [0, 0, 0], math.sqrt(14)],
+      [[-1, -2, -3], [0, 0, 0], math.sqrt(14)],
       [[1, 1, 1], [1, 1, 1], 0],
       ]
     for case in cases:

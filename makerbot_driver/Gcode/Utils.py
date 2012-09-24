@@ -153,11 +153,11 @@ def calculate_euclidean_distance(minuend, subtrahend):
   """
   if not len(minuend) == len(subtrahend):
     raise makerbot_driver.PointLengthError("Expected identical lengths, instead got %i %i" %(len(minuend), len(subtrahend)))
-  distance = 0
+  distance = 0.0
   for m, s in zip(minuend, subtrahend):
     distance += pow(m-s, 2)
   distance = math.sqrt(distance)
-  return int(distance)
+  return distance
 
 def calculate_vector_difference(minuend, subtrahend):
   """ Given two 5d vectors represented as lists, calculates their
