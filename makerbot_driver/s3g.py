@@ -43,11 +43,33 @@ class s3g(object):
     r.writer = makerbot_driver.Writer.StreamWriter(s)
     return r
 
-  def __init__(self):
+  def __init__(self, firmware_version=500):
     self.writer = None
     # TODO: Move these to file.
     self.extendedPointLength = 5
     self.pointLength = 3
+
+    self.accelerated_firmware_version = 601
+    self.set_firmware_version(firmware_version)
+
+  def set_firmware_version(self, firmware_version):
+    self.firmware_version = firmware_version
+    self.send_accelerated_point = self.convert_to_usable_firmware_version(firmware_version) >= self.accelerated_firmware_version
+    
+  def convert_to_usable_firmware_version(self, firmware_version):
+    """
+    Firmware versions come in two flavors: XXX (i.e. 600) or X.X (i.e. 6.0).  Since int
+    comparisons are easier than string comparisons, we request all version
+    numbers are in int form.  Just in case, however, firmware_version passed
+    through the parser will be run through this function.
+    """
+    compatable = firmware_version
+    if isinstance(compatable, float):
+      compatable = str(compatable)
+    if isinstance(compatable, str):
+      compatable = compatable.replace('.', '0')
+      compatable = int(compatable)
+    return compatable
 
   def create_reader(self):
     return makerbot_driver.EEPROM.EepromReader.factory(self)
@@ -786,23 +808,26 @@ class s3g(object):
 
     self.writer.send_action_payload(payload)
 
-  def queue_extended_point(self, position, rate):
+  def queue_extended_point(self, position, rate, e_distance, feedrate_mm_sec, relative_axes=[]):
     """
     Move the toolhead to a new position at the given rate
     @param list position: 5D position to move to. All dimension should be in steps.
     @param double rate: Movement speed, in steps/??
+    @param e_distance: Euclidean distance between previous point and current point
+    @param feedrate_mm_sec: The feedrate used in mm/sec
     """
     if len(position) != self.extendedPointLength:
       raise makerbot_driver.PointLengthError(len(position))
-
-    payload = struct.pack(
-      '<BiiiiiI',
-      makerbot_driver.host_action_command_dict['QUEUE_EXTENDED_POINT'],
-      position[0], position[1], position[2], position[3], position[4],
-      rate
-    )
-
-    self.writer.send_action_payload(payload)
+    if self.send_accelerated_point:
+      self.queue_extended_point_accelerated(position, rate, relative_axes, e_distance, feedrate_mm_sec)
+    else:
+      payload = struct.pack(
+        '<BiiiiiI',
+        makerbot_driver.host_action_command_dict['QUEUE_EXTENDED_POINT'],
+        position[0], position[1], position[2], position[3], position[4],
+        rate
+      )
+      self.writer.send_action_payload(payload)
 
   def set_extended_position(self, position):
     """

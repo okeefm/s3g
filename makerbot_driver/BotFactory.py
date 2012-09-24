@@ -50,7 +50,7 @@ class BotFactory(object):
       bestProfile = matches[0]
       setattr(return_object, 's3g', s3gBot)
       setattr(return_object, 'profile', makerbot_driver.Profile(bestProfile, self.profile_dir))
-      parser = makerbot_driver.Gcode.GcodeParser(firmware_version=bot_setup_dict['fw_version'])
+      parser = makerbot_driver.Gcode.GcodeParser()
       parser.s3g = s3gBot
       parser.state.profile = bestProfile
       setattr(return_object, 'gcodeparser', parser)
@@ -128,5 +128,6 @@ class BotInquisitor(object):
       settings['uuid'] = uuid.uuid4()
     if not leaveOpen:
         s3gDriver.close()
-                
+    
+    s3gDriver.set_firmware_version(settings['fw_version'])            
     return s3gDriver, settings

@@ -11,13 +11,12 @@ class GcodeParser(object):
   Read in gcode line by line, tracking some state variables and running known
   commands against an s3g machine.
   """
-  def __init__(self, firmware_version="5.0"):
+  def __init__(self):
     self.state = makerbot_driver.Gcode.GcodeStates()
     self.s3g = None
     self.environment = {}
     self.line_number = 1
     self._log = logging.getLogger(self.__class__.__name__)
-    self.firmware_version = self.convert_to_usable_firmware_version(firmware_version)
 
     # Note: The datastructure looks like this:
     # [0] : command name
@@ -285,20 +284,16 @@ class GcodeParser(object):
             self.state.get_position(), 
             self.state.get_axes_values('steps_per_mm')
             )
-        if self.firmware_version < 601:
-          self.s3g.queue_extended_point(stepped_point, dda_speed)
-        else:
-          #Get euclidean distance for x,y,z axes
-          e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance(current_position[:3], self.state.get_position()[:3])
-          #If that distance is 0, get e_distance for A axis
-          if e_distance == 0:
-            e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[3]], [self.state.get_position()[3]])
-          #If that distance is 0, get the e_distance for B axis
-          if e_distance == 0:
-            e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[4]], [self.state.get_position()[4]])
-          feedrate_mm_sec = codes['F']*(1/60) #We want mm/sec instead of mm/min
-          relative_axes = []
-          self.s3g.queue_extended_point_accelerated(stepped_point, dda_speed, relative_axes, e_distance, feedrate_mm_sec)
+        #Get euclidean distance for x,y,z axes
+        e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance(current_position[:3], self.state.get_position()[:3])
+        #If that distance is 0, get e_distance for A axis
+        if e_distance == 0:
+          e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[3]], [self.state.get_position()[3]])
+        #If that distance is 0, get the e_distance for B axis
+        if e_distance == 0:
+          e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[4]], [self.state.get_position()[4]])
+        feedrate_mm_sec = self.state.values['feedrate']*(1/60) #We want mm/sec instead of mm/min
+        self.s3g.queue_extended_point(stepped_point, dda_speed, e_distance, feedrate_mm_sec)
           
 
       except KeyError as e:
@@ -308,21 +303,6 @@ class GcodeParser(object):
                              # 'F' instead of 'feedrate'.
           e = KeyError('F')
         raise e
-
-  def convert_to_usable_firmware_version(self, firmware_version):
-    """
-    Firmware versions come in two flavors: XXX (i.e. 600) or X.X (i.e. 6.0).  Since int
-    comparisons are easier than string comparisons, we request all version
-    numbers are in int form.  Just in case, however, firmware_version passed
-    through the parser will be run through this function.
-    """
-    compatable = firmware_version
-    if isinstance(compatable, float):
-      compatable = str(compatable)
-    if isinstance(compatable, str):
-      compatable = compatable.replace('.', '0')
-      compatable = int(compatable)
-    return compatable
 
   def dwell(self, codes, flags, comment):
     """Pauses the machine for a specified amount of miliseconds

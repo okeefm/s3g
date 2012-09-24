@@ -97,81 +97,6 @@ class TestFindAxesMinMax(unittest.TestCase):
     comments = ''
     self.assertRaises(KeyError, self.g.find_axes_maximums, codes, flags, comments)
 
-class test_linear_interpolation_fw_601(unittest.TestCase):
-  def setUp(self):
-    self.mock = mock.Mock(makerbot_driver.s3g())
-    self.g = makerbot_driver.Gcode.GcodeParser(firmware_version="6.1")
-    self.g.s3g = self.mock
-    profile = makerbot_driver.Profile("ReplicatorDual")
-    self.g.state.profile = profile
-    for axis in ['X', 'Y', 'Z', 'A', 'B']:
-      setattr(self.g.state.position, axis, 0)
-    self.initial_position = [0, 0, 0, 0, 0]
-
-  def tearDown(self):
-    self.mock = None
-    self.g = None
-
-  def test_linear_interpolation_xyz_movement(self):
-    codes = {
-        'X' : 10,
-        'Y' : 11,
-        'Z' : 12,
-        'A' : 13,
-        'B' : 14,
-        'F' : 600,
-        }
-    flags = []
-    comments = ""
-    self.g.linear_interpolation(codes, flags, comments)
-    calls = self.g.s3g.mock_calls
-    self.assertEqual(len(calls), 1)
-    the_call = calls[0][1]
-    expected_e_distance = makerbot_driver.Gcode.calculate_euclidean_distance([0, 0, 0], [10, 11, 12])
-    expected_feedrate = 600*(1/60)
-    self.assertEqual(expected_e_distance, the_call[3])
-    self.assertEqual(expected_feedrate, the_call[4])
-
-  def test_linear_interpolation_a_movement(self):
-    codes = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 10,
-        'B' : 11,
-        'F' : 600,
-        }
-    flags = []
-    comments = ""
-    self.g.linear_interpolation(codes, flags, comments)
-    calls = self.g.s3g.mock_calls
-    self.assertEqual(len(calls), 1)
-    the_call = calls[0][1]
-    expected_e_distance = makerbot_driver.Gcode.calculate_euclidean_distance([0], [10])
-    expected_feedrate = 600*(1/60)
-    self.assertEqual(expected_e_distance, the_call[3])
-    self.assertEqual(expected_feedrate, the_call[4])
-    
-  def test_linear_interpolation_b_movement(self):
-    codes = {
-        'X' : 0,
-        'Y' : 0,
-        'Z' : 0,
-        'A' : 0,
-        'B' : 11,
-        'F' : 600,
-        }
-    flags = []
-    comments = ""
-    self.g.linear_interpolation(codes, flags, comments)
-    calls = self.g.s3g.mock_calls
-    self.assertEqual(len(calls), 1)
-    the_call = calls[0][1]
-    expected_e_distance = makerbot_driver.Gcode.calculate_euclidean_distance([0], [11])
-    expected_feedrate = 600*(1/60)
-    self.assertEqual(expected_e_distance, the_call[3])
-    self.assertEqual(expected_feedrate, the_call[4])
-
 class test_linear_interpolation(unittest.TestCase):
 
   def setUp(self):
@@ -249,7 +174,11 @@ class test_linear_interpolation(unittest.TestCase):
         self.g.state.get_axes_values('max_feedrate'),
         self.g.state.get_axes_values('steps_per_mm'),
         )
+    e_distance = 5
+    expected_feedrate_mm_sec = self.g.state.values['feedrate']*(1/60)
     self.assertAlmostEquals(ddaFeedrate, actual_params[1])
+    self.assertEqual(e_distance, actual_params[2])
+    self.assertEqual(expected_feedrate_mm_sec, actual_params[3])
     self.assertEqual(feedrate, self.g.state.values['feedrate']) 
 
   def test_linear_interpolation_f_code_no_feedrate_set(self):
@@ -274,7 +203,11 @@ class test_linear_interpolation(unittest.TestCase):
         self.g.state.get_axes_values('max_feedrate'),
         self.g.state.get_axes_values('steps_per_mm'),
         )
+    expected_feedrate_mm_sec = self.g.state.values['feedrate']*(1/60)
+    e_distance = 10
     self.assertAlmostEquals(ddaFeedrate, actual_params[1])
+    self.assertEqual(e_distance, actual_params[2])
+    self.assertEqual(expected_feedrate_mm_sec, actual_params[3])
     self.assertEqual(feedrate, self.g.state.values['feedrate']) 
 
   def test_linear_interpolation_f_code_set_feedrate(self):
@@ -301,7 +234,11 @@ class test_linear_interpolation(unittest.TestCase):
         self.g.state.get_axes_values('steps_per_mm'),
         )
     actual_params = self.mock.mock_calls[0][1]
+    expected_feedrate_mm_sec = self.g.state.values['feedrate'] * (1/60)
+    e_distance = 10
     self.assertAlmostEquals(ddaFeedrate, actual_params[1])
+    self.assertEqual(e_distance, actual_params[2])
+    self.assertEqual(expected_feedrate_mm_sec, actual_params[3])
     self.assertEqual(self.g.state.values['feedrate'], code_feedrate)
 
   def test_linear_interpolation_a_code_doesnt_throw_conflicting_codes_error(self):
@@ -335,6 +272,7 @@ class test_linear_interpolation(unittest.TestCase):
     flags = []
     comments = ''
     expectedPoint = [10, 20, 30, 40, 0]
+    e_distance = makerbot_driver.Gcode.calculate_euclidean_distance(expectedPoint[:3], self.g.state.get_position()[:3])
     self.g.linear_interpolation(codes, flags, comments)
     # Gcode works in steps, so we need to convert the expected position to steps
     spmList = self.g.state.get_axes_values('steps_per_mm')
@@ -343,6 +281,9 @@ class test_linear_interpolation(unittest.TestCase):
     actual_params = self.mock.mock_calls[0][1]
     for expected, actual in zip(expectedPoint, actual_params[0]):
       self.assertAlmostEqual(expected, actual)
+    expected_feedrate_mm_sec = self.g.state.values['feedrate'] * (1/60)
+    self.assertEqual(e_distance, actual_params[2])
+    self.assertEqual(expected_feedrate_mm_sec, actual_params[3])
 
 class gcodeTests(unittest.TestCase):
   def setUp(self):
@@ -356,18 +297,6 @@ class gcodeTests(unittest.TestCase):
   def tearDown(self):
     self.mock = None
     self.g = None
-
-  def test_convert_to_usable_firmware(self):
-    cases = [
-        [500, 500],
-        ['500', 500],
-        ['5.0', 500],
-        ['5.1', 501],
-        ['6.5', 605],
-        [6.5, 605],
-        ]
-    for case in cases:
-      self.assertEqual(self.g.convert_to_usable_firmware_version(case[0]), case[1])
 
   def test_unrecognized_command_test_g_command(self):
     cmd = 999

@@ -39,12 +39,12 @@ class TestFromFileName(unittest.TestCase):
 	  """ test the from_filename s3g factory."""
 	  self.assertRaises(serial.serialutil.SerialException, s3g.from_filename, "/dev/this_is_hopefully_not_a_real_port")
 
-class S3gTests(unittest.TestCase):
+class S3gTestsFirmware601(unittest.TestCase):
   """
   Emulate a machine
   """
   def setUp(self):
-    self.r = s3g()
+    self.r = s3g(firmware_version=601)
     self.outputstream = io.BytesIO() # Stream that we will send responses on
     self.inputstream = io.BytesIO()  # Stream that we will receive commands on
 
@@ -57,6 +57,63 @@ class S3gTests(unittest.TestCase):
     self.outputstream = None
     self.inputstream = None
     self.file = None
+
+  def test_queue_extended_point(self):
+    point = [1, 2, 3, 4, 5]
+    dda = 50
+    relative_axes = ['X']
+    distance = 123.0
+    feedrate = 100
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.queue_extended_point(point, dda, distance, feedrate, relative_axes=relative_axes)
+    packet = bytearray(self.inputstream.getvalue())
+    payload = Encoder.decode_packet(packet)
+
+    self.assertEqual(payload[0], constants.host_action_command_dict['QUEUE_EXTENDED_POINT_ACCELERATED'])
+    self.assertEqual(payload[1:5], Encoder.encode_int32(point[0]))
+    self.assertEqual(payload[5:9], Encoder.encode_int32(point[1]))
+    self.assertEqual(payload[9:13], Encoder.encode_int32(point[2]))
+    self.assertEqual(payload[13:17], Encoder.encode_int32(point[3]))
+    self.assertEqual(payload[17:21], Encoder.encode_int32(point[4]))
+    self.assertEqual(payload[21:25], Encoder.encode_uint32(dda))
+    self.assertEqual(payload[25], Encoder.encode_axes(relative_axes))
+    self.assertEqual(payload[26:30], struct.pack('<f', float(distance)))
+    self.assertEqual(payload[30:32], Encoder.encode_int16(int(float(feedrate*64.0))))
+
+class S3gTestsFirmware500(unittest.TestCase):
+  """
+  Emulate a machine
+  """
+  def setUp(self):
+    self.r = s3g(firmware_version=500)
+    self.outputstream = io.BytesIO() # Stream that we will send responses on
+    self.inputstream = io.BytesIO()  # Stream that we will receive commands on
+
+    file = io.BufferedRWPair(self.outputstream, self.inputstream)
+    writer = Writer.StreamWriter(file)
+    self.r.writer = writer
+
+  def tearDown(self):
+    self.r = None
+    self.outputstream = None
+    self.inputstream = None
+    self.file = None
+
+  def test_convert_to_usable_firmware(self):
+    cases = [
+        [500, 500],
+        ['500', 500],
+        ['5.0', 500],
+        ['5.1', 501],
+        ['6.5', 605],
+        [6.5, 605],
+        ]
+    for case in cases:
+      self.assertEqual(self.r.convert_to_usable_firmware_version(case[0]), case[1])
 
   def test_queue_extended_point_accelerated(self):
     point = [1, 2, 3, 4, 5]
@@ -839,12 +896,12 @@ class S3gTests(unittest.TestCase):
   def test_queue_extended_point_long_length(self):
     point = [1, 2, 3, 4, 5, 6]
     rate = 500
-    self.assertRaises(errors.PointLengthError, self.r.queue_extended_point, point, rate)
+    self.assertRaises(errors.PointLengthError, self.r.queue_extended_point, point, rate, 0, 0)
 
   def test_queue_extended_point_short_length(self):
     point = [1, 2, 3, 4]
     rate = 500
-    self.assertRaises(errors.PointLengthError, self.r.queue_extended_point, point, rate)
+    self.assertRaises(errors.PointLengthError, self.r.queue_extended_point, point, rate, 0, 0)
 
   def test_queue_extended_point(self):
     target = [1,-2,3,-4,5]
@@ -853,7 +910,7 @@ class S3gTests(unittest.TestCase):
     self.outputstream.write(Encoder.encode_payload([constants.response_code_dict['SUCCESS']]))
     self.outputstream.seek(0)
 
-    self.r.queue_extended_point(target, velocity)
+    self.r.queue_extended_point(target, velocity, 0, 0)
 
     packet = bytearray(self.inputstream.getvalue())
 
