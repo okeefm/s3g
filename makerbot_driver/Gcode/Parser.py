@@ -288,9 +288,14 @@ class GcodeParser(object):
         if self.firmware_version < 601:
           self.s3g.queue_extended_point(stepped_point, dda_speed)
         else:
+          #Get euclidean distance for x,y,z axes
           e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance(current_position[:3], self.state.get_position()[:3])
+          #If that distance is 0, get e_distance for A axis
           if e_distance == 0:
-            e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance(current_position[3:], self.state.get_position()[3:])
+            e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[3]], [self.state.get_position()[3]])
+          #If that distance is 0, get the e_distance for B axis
+          if e_distance == 0:
+            e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[4]], [self.state.get_position()[4]])
           feedrate_mm_sec = codes['F']*(1/60) #We want mm/sec instead of mm/min
           relative_axes = []
           self.s3g.queue_extended_point_accelerated(stepped_point, dda_speed, relative_axes, e_distance, feedrate_mm_sec)

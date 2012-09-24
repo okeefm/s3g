@@ -24,7 +24,6 @@ host_query_command_dict = {
 }
 
 host_action_command_dict = {
-  'QUEUE_POINT_ABSOLUTE'      : 129,
   'FIND_AXES_MINIMUMS'        : 131,
   'FIND_AXES_MAXIMUMS'        : 132,
   'DELAY'                     : 133,
@@ -48,6 +47,7 @@ host_action_command_dict = {
   'RESET_TO_FACTORY'          : 152,
   'BUILD_START_NOTIFICATION'  : 153,
   'BUILD_END_NOTIFICATION'    : 154,
+  'QUEUE_EXTENDED_POINT_ACCELERATED'       : 155,
 }
 
 # TODO: Change name to tool

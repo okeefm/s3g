@@ -431,7 +431,7 @@ class s3g(object):
 
     payload = struct.pack(
       '<BiiiiiIBfh',
-      makerbot_driver.host_action_command_dict['QUEUE_POINT_NEW_EXT'],
+      makerbot_driver.host_action_command_dict['QUEUE_EXTENDED_POINT_ACCELERATED'],
       position[0], position[1], position[2], position[3], position[4],
       dda_rate,
       makerbot_driver.Encoder.encode_axes(relative_axes),
@@ -1060,7 +1060,7 @@ class s3g(object):
       theta
     )
 
-    self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_SERVO_1_POSITION'], payload)
+    self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_SERVO_2_POSITION'], payload)
 
   def toolhead_abort(self, tool_index):
     """

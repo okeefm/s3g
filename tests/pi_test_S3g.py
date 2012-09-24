@@ -6,6 +6,7 @@ sys.path.append(lib_path)
 import uuid
 import unittest
 import io
+import struct
 
 import serial
 from makerbot_driver import Writer, constants, s3g, errors, Encoder
@@ -56,6 +57,103 @@ class S3gTests(unittest.TestCase):
     self.outputstream = None
     self.inputstream = None
     self.file = None
+
+  def test_queue_extended_point_accelerated(self):
+    point = [1, 2, 3, 4, 5]
+    dda = 50
+    relative_axes = ['X']
+    distance = 123.0
+    feedrate = 100
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.queue_extended_point_accelerated(point, dda, relative_axes, distance, feedrate)
+    packet = bytearray(self.inputstream.getvalue())
+    payload = Encoder.decode_packet(packet)
+
+    self.assertEqual(payload[0], constants.host_action_command_dict['QUEUE_EXTENDED_POINT_ACCELERATED'])
+    self.assertEqual(payload[1:5], Encoder.encode_int32(point[0]))
+    self.assertEqual(payload[5:9], Encoder.encode_int32(point[1]))
+    self.assertEqual(payload[9:13], Encoder.encode_int32(point[2]))
+    self.assertEqual(payload[13:17], Encoder.encode_int32(point[3]))
+    self.assertEqual(payload[17:21], Encoder.encode_int32(point[4]))
+    self.assertEqual(payload[21:25], Encoder.encode_uint32(dda))
+    self.assertEqual(payload[25], Encoder.encode_axes(relative_axes))
+    self.assertEqual(payload[26:30], struct.pack('<f', float(distance)))
+    self.assertEqual(payload[30:32], Encoder.encode_int16(int(float(feedrate*64.0))))
+
+  def test_set_servo_2_position(self):
+    tool = 2
+    theta = 50
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+    
+    self.r.set_servo2_position(tool, theta)
+    packet = bytearray(self.inputstream.getvalue())
+    payload = Encoder.decode_packet(packet)
+    self.assertEqual(payload[0], constants.host_action_command_dict['TOOL_ACTION_COMMAND'])
+    self.assertEqual(payload[1], tool)
+    self.assertEqual(payload[2], constants.slave_action_command_dict['SET_SERVO_2_POSITION'])
+    self.assertEqual(payload[3], 1)
+    self.assertEqual(payload[4], theta)
+
+  def test_toggle_abp(self):
+    tool = 2
+    state = True
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.toggle_ABP(tool, state)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = Encoder.decode_packet(packet)
+    self.assertEqual(payload[0], constants.host_action_command_dict['TOOL_ACTION_COMMAND'])
+    self.assertEqual(payload[1], tool)
+    self.assertEqual(payload[2], constants.slave_action_command_dict['TOGGLE_ABP'])
+    self.assertEqual(payload[3], 1)
+    self.assertEqual(payload[4], 1)
+
+  def set_motor1_speed_pwm(self):
+    tool = 2
+    pwm = 128
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+    
+    self.r.set_motor1_speed_pwm(tool, pwm)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = Encoder.decode_packet(packet)
+    self.assertEqual(payload[0], constants.host_action_command_dict['TOOL_ACTION_COMMAND'])
+    self.assertEqual(payload[1], tool)
+    self.assertEqual(payload[2], constants.slave_action_command_dict['SET_MOTOR_1_SPEED_PWM'])
+    self.assertEqual(payload[3], 1)
+    self.assertEqual(payload[4], 128)
+
+  def test_set_motor1_direction(self):
+    tool = 2
+    direction = True
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.set_motor1_direction(tool, direction)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = Encoder.decode_packet(packet)
+    self.assertEqual(payload[0], constants.host_action_command_dict['TOOL_ACTION_COMMAND'])
+    self.assertEqual(payload[1], tool)
+    self.assertEqual(payload[2], constants.slave_action_command_dict['SET_MOTOR_1_DIRECTION'])
+    self.assertEqual(payload[3], 1)
+    self.assertEqual(payload[4], direction)
 
   def test_get_verified_status_unverified(self):
     pid = constants.vid_pid[1]
