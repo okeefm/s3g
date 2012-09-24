@@ -11,13 +11,13 @@ class GcodeParser(object):
   Read in gcode line by line, tracking some state variables and running known
   commands against an s3g machine.
   """
-  def __init__(self, firmware_version="6.0"):
+  def __init__(self, firmware_version="5.0"):
     self.state = makerbot_driver.Gcode.GcodeStates()
     self.s3g = None
     self.environment = {}
     self.line_number = 1
     self._log = logging.getLogger(self.__class__.__name__)
-    self.firmware_version="6.0"
+    self.firmware_version = self.convert_to_usable_firmware_version(firmware_version)
 
     # Note: The datastructure looks like this:
     # [0] : command name
@@ -270,10 +270,6 @@ class GcodeParser(object):
       self.state.values['feedrate'] = codes['F']
       self._log.debug('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', codes['F'])
     if len(makerbot_driver.Gcode.Utils.parse_out_axes(codes)) > 0 or 'E' in codes:
-      #if 'A' in codes and 'B' in codes:
-      #  gcode_error = ConflictingCodesError()
-      #  gcode_error.values['ConflictingCodes'] = ['A', 'B']
-      #  raise gcode_error
       current_position = self.state.get_position()
       self.state.set_position(codes)
       try :
@@ -289,7 +285,15 @@ class GcodeParser(object):
             self.state.get_position(), 
             self.state.get_axes_values('steps_per_mm')
             )
-        self.s3g.queue_extended_point(stepped_point, dda_speed)
+        if self.firmware_version < 601:
+          self.s3g.queue_extended_point(stepped_point, dda_speed)
+        else:
+          e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance(current_position[:3], self.state.get_position()[:3])
+          if e_distance == 0:
+            e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance(current_position[3:], self.state.get_position()[3:])
+          feedrate_mm_min = codes['F']*(1/60) #We want mm/sec instead of mm/min
+          self.s3g.queue_extended_point(stepped_point, dda_speed, e_distance=e_distance, feedrate_mm_min=feedrate_mm_min)
+          
 
       except KeyError as e:
         if e[0] == 'feedrate': # A key error would return 'feedrate' as the missing key,
@@ -298,6 +302,21 @@ class GcodeParser(object):
                              # 'F' instead of 'feedrate'.
           e = KeyError('F')
         raise e
+
+  def convert_to_usable_firmware_version(self, firmware_version):
+    """
+    Firmware versions come in two flavors: XXX (i.e. 600) or X.X (i.e. 6.0).  Since int
+    comparisons are easier than string comparisons, we request all version
+    numbers are in int form.  Just in case, however, firmware_version passed
+    through the parser will be run through this function.
+    """
+    compatable = firmware_version
+    if isinstance(compatable, float):
+      compatable = str(compatable)
+    if isinstance(compatable, str):
+      compatable = compatable.replace('.', '0')
+      compatable = int(compatable)
+    return compatable
 
   def dwell(self, codes, flags, comment):
     """Pauses the machine for a specified amount of miliseconds

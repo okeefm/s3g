@@ -7,6 +7,7 @@ import glob
 import unittest
 import string
 import mock
+import math
 
 import makerbot_driver
 
@@ -569,6 +570,21 @@ class calculate_homing_DDA_speed(unittest.TestCase):
     spm_list = [1, 2, 3, 4, 5]
     expected_dda = makerbot_driver.Gcode.compute_DDA_speed(max_feedrates[0], spm_list[0])
     self.assertEqual(expected_dda, makerbot_driver.Gcode.calculate_homing_DDA_speed(feedrate, max_feedrates, spm_list))
+
+  def test_calculate_euclidean_distance(self):
+    cases = [
+      [[0, 0, 0], [0, 0, 0], 0],
+      [[1, 1, 1], [0, 0, 0], 1],
+      [[1, 2, 3], [0, 0, 0], int(math.sqrt(14))],
+      [[-1, -2, -3], [0, 0, 0], int(math.sqrt(14))],
+      [[1, 1, 1], [1, 1, 1], 0],
+      ]
+    for case in cases:
+      self.assertEqual(case[2], makerbot_driver.Gcode.calculate_euclidean_distance(case[0], case[1]))
+
+  def test_calculate_euclidean_distance_bad_lengths(self):
+    self.assertRaises(makerbot_driver.PointLengthError, makerbot_driver.Gcode.calculate_euclidean_distance, [0], [])
+
 
 if __name__ == "__main__":
   unittest.main()
