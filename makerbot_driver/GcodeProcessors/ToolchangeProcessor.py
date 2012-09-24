@@ -14,11 +14,11 @@ class ToolchangeProcessor(LineTransformProcessor):
         'B' : 'M135 T1\n'
         }
     self.code_map = {
-      re.compile("[^;(]*?[gG]1.*?[aAbB]") : self._transform_into_toolchange,
+      re.compile("[^;(]*?[gG]1.*?[aAbB]") : self._transform_gcode_into_toolchange,
       }
     self.current_extruder = 'A'
 
-  def _transform_into_toolchange(self, input_line):
+  def _transform_gcode_into_toolchange(self, input_line):
     return_lines = [input_line]
     #XOR of A in input_line and B in input_line
     if not ("A" in input_line == "B" in input_line):

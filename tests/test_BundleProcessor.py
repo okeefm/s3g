@@ -30,7 +30,7 @@ class TestBundlePreprocessorCallbacks(unittest.TestCase):
       if runner%1000 == 0:
         self.percents.append(self.the_percent)
       if runner%10000000 == 0:
-        print "Test still running, patience!"
+        print "."
       runner += 1
 
   def test_callbacks_with_do_progress(self):
