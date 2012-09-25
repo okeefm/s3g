@@ -695,8 +695,8 @@ Response
 </tr>
 <tr>
  <td>4</td>
- <td>BORF *Deprecated*</td>
- <td>Brownout reset flag was set at restart</td>
+ <td>WAIT_FOR_BUTTON</td>
+ <td>BotUI is waiting for button push by user</td>
 </tr>
 <tr>
  <td>3</td>
