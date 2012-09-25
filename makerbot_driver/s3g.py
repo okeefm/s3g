@@ -458,9 +458,8 @@ class s3g(object):
       dda_rate,
       makerbot_driver.Encoder.encode_axes(relative_axes),
       float(distance),
-      int(float(feedrate)*64.0)
+      int(feedrate*64.0)
     )
-
     self.writer.send_action_payload(payload)
 
   def queue_extended_point_new(self, position, duration, relative_axes):
@@ -808,24 +807,25 @@ class s3g(object):
 
     self.writer.send_action_payload(payload)
 
-  def queue_extended_point(self, position, rate, e_distance, feedrate_mm_sec, relative_axes=[]):
+  def queue_extended_point(self, position, dda_speed, e_distance, feedrate_mm_sec, relative_axes=[]):
     """
     Move the toolhead to a new position at the given rate
     @param list position: 5D position to move to. All dimension should be in steps.
-    @param double rate: Movement speed, in steps/??
+    @param double dda_speed: Movement speed, in us/steps
     @param e_distance: Euclidean distance between previous point and current point
     @param feedrate_mm_sec: The feedrate used in mm/sec
     """
     if len(position) != self.extendedPointLength:
       raise makerbot_driver.PointLengthError(len(position))
     if self.send_accelerated_point:
-      self.queue_extended_point_accelerated(position, rate, relative_axes, e_distance, feedrate_mm_sec)
+      dda_rate = 1000000.0/float(dda_speed)
+      self.queue_extended_point_accelerated(position, dda_rate, relative_axes, e_distance, feedrate_mm_sec)
     else:
       payload = struct.pack(
         '<BiiiiiI',
         makerbot_driver.host_action_command_dict['QUEUE_EXTENDED_POINT'],
         position[0], position[1], position[2], position[3], position[4],
-        rate
+        dda_speed
       )
       self.writer.send_action_payload(payload)
 

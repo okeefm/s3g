@@ -61,6 +61,7 @@ class S3gTestsFirmware601(unittest.TestCase):
   def test_queue_extended_point(self):
     point = [1, 2, 3, 4, 5]
     dda = 50
+    dda_rate = 1000000/dda
     relative_axes = ['X']
     distance = 123.0
     feedrate = 100
@@ -79,7 +80,7 @@ class S3gTestsFirmware601(unittest.TestCase):
     self.assertEqual(payload[9:13], Encoder.encode_int32(point[2]))
     self.assertEqual(payload[13:17], Encoder.encode_int32(point[3]))
     self.assertEqual(payload[17:21], Encoder.encode_int32(point[4]))
-    self.assertEqual(payload[21:25], Encoder.encode_uint32(dda))
+    self.assertEqual(payload[21:25], Encoder.encode_uint32(dda_rate))
     self.assertEqual(payload[25], Encoder.encode_axes(relative_axes))
     self.assertEqual(payload[26:30], struct.pack('<f', float(distance)))
     self.assertEqual(payload[30:32], Encoder.encode_int16(int(float(feedrate*64.0))))

@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, print_function
 
 import os
 
@@ -52,7 +52,7 @@ class BotFactory(object):
       setattr(return_object, 'profile', makerbot_driver.Profile(bestProfile, self.profile_dir))
       parser = makerbot_driver.Gcode.GcodeParser()
       parser.s3g = s3gBot
-      parser.state.profile = bestProfile
+      parser.state.profile = getattr(return_object, 'profile')
       setattr(return_object, 'gcodeparser', parser)
     return return_object
 

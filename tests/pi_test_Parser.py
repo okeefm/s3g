@@ -175,7 +175,7 @@ class test_linear_interpolation(unittest.TestCase):
         self.g.state.get_axes_values('steps_per_mm'),
         )
     e_distance = 5
-    expected_feedrate_mm_sec = self.g.state.values['feedrate']*(1/60)
+    expected_feedrate_mm_sec = self.g.state.values['feedrate']*(1/60.0)
     self.assertAlmostEquals(ddaFeedrate, actual_params[1])
     self.assertEqual(e_distance, actual_params[2])
     self.assertEqual(expected_feedrate_mm_sec, actual_params[3])
@@ -203,7 +203,7 @@ class test_linear_interpolation(unittest.TestCase):
         self.g.state.get_axes_values('max_feedrate'),
         self.g.state.get_axes_values('steps_per_mm'),
         )
-    expected_feedrate_mm_sec = self.g.state.values['feedrate']*(1/60)
+    expected_feedrate_mm_sec = self.g.state.values['feedrate']*(1/60.0)
     e_distance = 10
     self.assertAlmostEquals(ddaFeedrate, actual_params[1])
     self.assertEqual(e_distance, actual_params[2])
@@ -234,7 +234,7 @@ class test_linear_interpolation(unittest.TestCase):
         self.g.state.get_axes_values('steps_per_mm'),
         )
     actual_params = self.mock.mock_calls[0][1]
-    expected_feedrate_mm_sec = self.g.state.values['feedrate'] * (1/60)
+    expected_feedrate_mm_sec = self.g.state.values['feedrate'] * (1/60.0)
     e_distance = 10
     self.assertAlmostEquals(ddaFeedrate, actual_params[1])
     self.assertEqual(e_distance, actual_params[2])
@@ -281,7 +281,7 @@ class test_linear_interpolation(unittest.TestCase):
     actual_params = self.mock.mock_calls[0][1]
     for expected, actual in zip(expectedPoint, actual_params[0]):
       self.assertAlmostEqual(expected, actual)
-    expected_feedrate_mm_sec = self.g.state.values['feedrate'] * (1/60)
+    expected_feedrate_mm_sec = self.g.state.values['feedrate'] * (1/60.0)
     self.assertEqual(e_distance, actual_params[2])
     self.assertEqual(expected_feedrate_mm_sec, actual_params[3])
 

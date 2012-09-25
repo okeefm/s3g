@@ -288,14 +288,20 @@ class GcodeParser(object):
         e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance(current_position[:3], self.state.get_position()[:3])
         #If that distance is 0, get e_distance for A axis
         if e_distance == 0:
-          e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[3]], [self.state.get_position()[3]])
-        #If that distance is 0, get the e_distance for B axis
-        if e_distance == 0:
-          e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[4]], [self.state.get_position()[4]])
-        feedrate_mm_sec = self.state.values['feedrate']*(1/60) #We want mm/sec instead of mm/min
-        self.s3g.queue_extended_point(stepped_point, dda_speed, e_distance, feedrate_mm_sec)
+          e_distance = max(
+              makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[3]], [self.state.get_position()[3]]),
+              makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[4]], [self.state.get_position()[4]]),
+              )
+        displacement_vector = makerbot_driver.Gcode.calculate_vector_difference(self.state.get_position(), current_position)
+        safe_feedrate_mm_min = makerbot_driver.Gcode.get_safe_feedrate(
+            displacement_vector, 
+            self.state.get_axes_values('max_feedrate'),
+            self.state.values['feedrate'],
+            )
+        move_minutes = e_distance/safe_feedrate_mm_min
+        safe_feedrate_mm_sec = safe_feedrate_mm_min / 60.0
+        self.s3g.queue_extended_point(stepped_point, dda_speed, e_distance, safe_feedrate_mm_sec)
           
-
       except KeyError as e:
         if e[0] == 'feedrate': # A key error would return 'feedrate' as the missing key,
                              # when in respect to the executed command the 'F' command

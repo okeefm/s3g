@@ -239,8 +239,8 @@ def get_safe_feedrate(displacement_vector, max_feedrates, target_feedrate):
 
   @param list displacement_vector: 5d Displacement vector to consider, in mm
   @param list max_feedrates: Maximum feedrates for each axis, in mm
-  @param float target_feedrate: Target feedrate for the move, in mm/s
-  @return float Achievable movement feedrate, in mm/s
+  @param float target_feedrate: Target feedrate for the move, in mm/min
+  @return float Achievable movement feedrate, in mm/min
   """
 
   # Calculate the axis components of each vector

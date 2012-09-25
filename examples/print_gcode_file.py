@@ -31,9 +31,9 @@ if options.port == None:
 else:
   port = options.port
 factory = makerbot_driver.BotFactory()
-r, prof = factory.build_from_port(port)
+obj = factory.build_from_port(port)
 
-assembler = makerbot_driver.GcodeAssembler(prof)
+assembler = makerbot_driver.GcodeAssembler(getattr(obj, 'profile'))
 start, end, variables = assembler.assemble_recipe()
 start_gcode = assembler.assemble_start_sequence(start)
 end_gcode = assembler.assemble_end_sequence(end)
@@ -41,12 +41,9 @@ end_gcode = assembler.assemble_end_sequence(end)
 filename = os.path.basename(options.filename)
 filename = os.path.splitext(filename)[0]
 
-parser = makerbot_driver.Gcode.GcodeParser()
+parser = getattr(obj, 'gcodeparser')
 parser.environment.update(variables)
-#Truncate name due to length restriction
 parser.state.values["build_name"] = filename[:15]
-parser.state.profile = prof
-parser.s3g = r
 
 if options.sequences:
   for line in start_gcode:
