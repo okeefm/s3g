@@ -8,6 +8,7 @@ import logging
 
 import makerbot_driver
 
+
 class GcodeStates(object):
     """
     Object for storing gcoder state variables for use

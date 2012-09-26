@@ -1,6 +1,8 @@
 import threading
 
+
 class AbstractWriter(object):
+
     def __init__(self):
         self.external_stop = False
         self._condition = threading.Condition()

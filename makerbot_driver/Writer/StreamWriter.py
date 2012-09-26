@@ -49,8 +49,10 @@ class StreamWriter(AbstractWriter):
 
     def is_open(self):
         """@returns true if a port is open and active, False otherwise """
-        if self.file == None: return False
-        return self.file.isOpen()
+        return_val = False
+        if self.file is not None:
+            return_val = self.file.isOpen()
+        return return_val
 
     def send_command(self, payload):
         packet = makerbot_driver.Encoder.encode_payload(payload)

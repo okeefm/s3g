@@ -5,8 +5,9 @@ from __future__ import absolute_import
 
 from .Processor import *
 
+
 class ProgressProcessor(Processor):
-    
+
     def __init__(self):
         super(ProgressProcessor, self).__init__()
         self.command = re.compile('([A-Z]\d+(\.\d+)? )+')
@@ -14,7 +15,7 @@ class ProgressProcessor(Processor):
     def create_progress_msg(self, percent):
         progressmsg = "M73 P%s (progress (%s%%))\n" % (percent, percent)
         return progressmsg
-    
+
     def process_gcode(self, gcodes, callback=None):
         output = []
         count_total = len(gcodes)
@@ -35,8 +36,9 @@ class ProgressProcessor(Processor):
                     callback(current_percent)
         return output
 
+
 def main():
     ProgressProcessor().process_gcode(sys.argv[1], sys.argv[2])
 
-if __name__=="__main__":
+if __name__ == "__main__":
     sys.exit(main())

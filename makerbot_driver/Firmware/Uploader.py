@@ -5,7 +5,7 @@ import os
 import subprocess
 import platform
 import urllib2
-import logging    
+import logging
 import urlparse
 import tempfile
 import serial

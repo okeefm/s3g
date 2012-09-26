@@ -9,6 +9,7 @@ import os
 
 import makerbot_driver
 
+
 class EepromWriter(object):
 
     @classmethod

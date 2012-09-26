@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import json
 import makerbot_driver
 
+
 class GcodeAssembler(object):
     """
     An assembler that builds start and end gcodes.

@@ -148,8 +148,7 @@ def unpack_response_with_string(format, data):
     #The +1 is for the null terminator of the string
     if (len(data) < struct.calcsize(format) + 1):
         raise makerbot_driver.errors.ProtocolError("Not enough data received from machine, expected=%i, got=%i" %
-                                   (struct.calcsize(format) + 1, len(data))
-                                   )
+                                   (struct.calcsize(format) + 1, len(data)))
 
     #Check for a null terminator on the string
     elif (data[-1]) != 0:

@@ -55,7 +55,7 @@ class s3g(object):
     def set_firmware_version(self, firmware_version):
         self.firmware_version = firmware_version
         self.send_accelerated_point = self.convert_to_usable_firmware_version(firmware_version) >= self.accelerated_firmware_version
-    
+
     def convert_to_usable_firmware_version(self, firmware_version):
         """
         Firmware versions come in two flavors: XXX (i.e. 600) or X.X (i.e. 6.0).  Since int
@@ -803,8 +803,8 @@ class s3g(object):
             dda_rate,
             makerbot_driver.Encoder.encode_axes(relative_axes),
             float(distance),
-            int(feedrate*64.0)
-            )
+            int(feedrate * 64.0)
+        )
         self.writer.send_action_payload(payload)
 
     def queue_extended_point(self, position, dda_speed, e_distance, feedrate_mm_sec, relative_axes=[]):
@@ -816,7 +816,7 @@ class s3g(object):
         if len(position) != self.extendedPointLength:
             raise makerbot_driver.PointLengthError(len(position))
         if self.send_accelerated_point:
-            dda_rate = 1000000.0/float(dda_speed)
+            dda_rate = 1000000.0 / float(dda_speed)
             self.queue_extended_point_accelerated(position, dda_rate, relative_axes, e_distance, feedrate_mm_sec)
         else:
             payload = struct.pack(
@@ -1138,8 +1138,8 @@ class s3g(object):
         if direction:
             clockwise = 1
         payload = struct.pack(
-        '<B',
-        clockwise
+            '<B',
+            clockwise
         )
         self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_MOTOR_1_DIRECTION'], payload)
 
@@ -1362,23 +1362,23 @@ class s3g(object):
         This sets the on/off state of the ABP's conveyor belt
         @param boolean : Turns on or off the ABP's conveyor belt
         """
-        enable = 0;
+        enable = 0
         if state:
             enable = 1
         payload = struct.pack(
             '<B',
             enable
-            )
+        )
         self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['TOGGLE_ABP'], payload)
 
     def set_servo2_position(self, tool_index, theta):
         """
-        Sets the tool_index's servo as position 2 to a certain angle 
+        Sets the tool_index's servo as position 2 to a certain angle
         @param int tool_index: The tool that will be set
         @param int theta: angle to set the servo to
         """
         payload = struct.pack(
-        '<B',
-        theta
+            '<B',
+            theta
         )
         self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_SERVO_2_POSITION'], payload)

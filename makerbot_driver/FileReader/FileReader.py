@@ -9,6 +9,7 @@ import logging
 
 import makerbot_driver
 
+
 class FileReader(object):
 
     def __init__(self):

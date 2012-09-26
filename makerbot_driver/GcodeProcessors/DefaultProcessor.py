@@ -10,12 +10,13 @@ from .BundleProcessor import BundleProcessor
 from .ToolchangeProcessor import ToolchangeProcessor
 from .CoordinateRemovalProcessor import CoordinateRemovalProcessor
 
+
 class DefaultProcessor(BundleProcessor):
 
-  def __init__(self):
-    super(DefaultProcessor, self).__init__()
-    self.processors = [
-        ToolchangeProcessor(),
-        CoordinateRemovalProcessor(),
+    def __init__(self):
+        super(DefaultProcessor, self).__init__()
+        self.processors = [
+            ToolchangeProcessor(),
+            CoordinateRemovalProcessor(),
         ]
-    self.do_progress = False
+        self.do_progress = False

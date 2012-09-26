@@ -10,10 +10,10 @@ from .ProgressProcessor import ProgressProcessor
 
 class SlicerProcessor(BundleProcessor):
 
-  def __init__(self):
-    super(SlicerProcessor, self).__init__()
-    self.processors = [
-        RpmProcessor(),
-        CoordinateRemovalProcessor(),
-        AbpProcessor(),
+    def __init__(self):
+        super(SlicerProcessor, self).__init__()
+        self.processors = [
+            RpmProcessor(),
+            CoordinateRemovalProcessor(),
+            AbpProcessor(),
         ]

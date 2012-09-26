@@ -114,6 +114,7 @@ def check_for_extraneous_codes(codes, allowed_codes):
         gcode_error.values['InvalidCodes'] = code
         raise gcode_error
 
+
 def parse_out_axes(codes):
     """Given a list of codes, returns a list of all present axes
 
@@ -148,21 +149,22 @@ def variable_substitute(line, environment):
 
 
 def calculate_euclidean_distance(minuend, subtrahend):
-  """
-  Given two points of the same dimension, calculates their 
-  euclidean distance
-  
-  @param list minuend: 5D vector to be subracted from
-  @param list subtrahend: 5D vector to subtract from the minuend
-  @param int distance: Distance between the two points
-  """
-  if not len(minuend) == len(subtrahend):
-    raise makerbot_driver.PointLengthError("Expected identical lengths, instead got %i %i" %(len(minuend), len(subtrahend)))
-  distance = 0.0
-  for m, s in zip(minuend, subtrahend):
-    distance += pow(m-s, 2)
-  distance = math.sqrt(distance)
-  return distance
+    """
+    Given two points of the same dimension, calculates their
+    euclidean distance
+
+    @param list minuend: 5D vector to be subracted from
+    @param list subtrahend: 5D vector to subtract from the minuend
+    @param int distance: Distance between the two points
+    """
+    if not len(minuend) == len(subtrahend):
+        raise makerbot_driver.PointLengthError("Expected identical lengths, instead got %i %i" % (len(minuend), len(subtrahend)))
+    distance = 0.0
+    for m, s in zip(minuend, subtrahend):
+        distance += pow(m - s, 2)
+    distance = math.sqrt(distance)
+    return distance
+
 
 def calculate_vector_difference(minuend, subtrahend):
     """ Given two 5d vectors represented as lists, calculates their

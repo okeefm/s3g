@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import makerbot_driver
 
+
 def encode_payload(payload):
     """
     Encode passed payload into a packet.
@@ -9,7 +10,7 @@ def encode_payload(payload):
     @return bytearray containing the packet
     """
     if len(payload) > makerbot_driver.constants.maximum_payload_length:
-        raise makerbot_driver.errors.PacketLengthError(len(payload), makerbot_driver.constants.maximum_payload_length) 
+        raise makerbot_driver.errors.PacketLengthError(len(payload), makerbot_driver.constants.maximum_payload_length)
 
     packet = bytearray()
     packet.append(makerbot_driver.constants.header)
@@ -19,9 +20,10 @@ def encode_payload(payload):
 
     return packet
 
+
 def decode_packet(packet):
     """
-    Decode a packet from a payload.Non-streaming packet decoder. 
+    Decode a packet from a payload.Non-streaming packet decoder.
     Accepts a byte array containing a single packet, and attempts
     to parse the packet and return the payload.
     @param packet byte array containing the input packet
@@ -38,10 +40,10 @@ def decode_packet(packet):
     if packet[1] != len(packet) - 3:
         raise makerbot_driver.errors.PacketLengthFieldError(packet[1], len(packet) - 3)
 
-    if packet[len(packet)-1] != makerbot_driver.Encoder.CalculateCRC(packet[2:(len(packet)-1)]):
-        raise makerbot_driver.errors.PacketCRCError(packet[len(packet)-1], makerbot_driver.Encoder.CalculateCRC(packet[2:(len(packet)-1)]))
+    if packet[len(packet) - 1] != makerbot_driver.Encoder.CalculateCRC(packet[2:(len(packet) - 1)]):
+        raise makerbot_driver.errors.PacketCRCError(packet[len(packet) - 1], makerbot_driver.Encoder.CalculateCRC(packet[2:(len(packet) - 1)]))
 
-    return packet[2:(len(packet)-1)]
+    return packet[2:(len(packet) - 1)]
 
 
 def check_response_code(response_code):
@@ -80,7 +82,9 @@ def check_response_code(response_code):
 
     raise makerbot_driver.errors.UnknownResponseError(response_code)
 
+
 class PacketStreamDecoder(object):
+
     """
     A state machine that accepts bytes from an s3g packet stream, checks the validity of
     each packet, then extracts and returns the payload.

@@ -1,4 +1,4 @@
-#Gcode parser, 
+#Gcode parser,
 from __future__ import absolute_import
 
 import logging
@@ -193,9 +193,9 @@ class GcodeParser(object):
         """
         self.state.set_position(codes)
         stepped_position = makerbot_driver.Gcode.multiply_vector(
-            self.state.get_position(), 
+            self.state.get_position(),
             self.state.get_axes_values('steps_per_mm')
-            )
+        )
         self.s3g.set_extended_position(stepped_position)
 
     def wait_for_tool_ready(self, codes, flags, comment):
@@ -309,15 +309,15 @@ class GcodeParser(object):
                         makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[4]], [self.state.get_position()[4]]),
                     )
                 displacement_vector = makerbot_driver.Gcode.calculate_vector_difference(
-                    self.state.get_position(), 
+                    self.state.get_position(),
                     current_position
-                    )
-                safe_feedrate_mm_min = makerbot_driver.Gcode.get_safe_feedrate(
-                displacement_vector, 
-                self.state.get_axes_values('max_feedrate'),
-                self.state.values['feedrate'],
                 )
-                move_minutes = e_distance/safe_feedrate_mm_min
+                safe_feedrate_mm_min = makerbot_driver.Gcode.get_safe_feedrate(
+                    displacement_vector,
+                    self.state.get_axes_values('max_feedrate'),
+                    self.state.values['feedrate'],
+                )
+                move_minutes = e_distance / safe_feedrate_mm_min
                 safe_feedrate_mm_sec = safe_feedrate_mm_min / 60.0
                 self.s3g.queue_extended_point(stepped_point, dda_speed, e_distance, safe_feedrate_mm_sec)
 

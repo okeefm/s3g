@@ -10,6 +10,8 @@ import struct
 import os
 
 import makerbot_driver
+
+
 class EepromReader(object):
 
     @classmethod
