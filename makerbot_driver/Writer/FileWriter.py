@@ -10,43 +10,43 @@ import threading
 from . import AbstractWriter
 import makerbot_driver
 
+
 class FileWriter(AbstractWriter):
-  """ A file writer can be used to export an s3g payload stream to a file
-  """
-    
-  def __init__(self, file):
-    """ Initialize a new file writer
-
-    @param string file File object to write to.
+    """ A file writer can be used to export an s3g payload stream to a file
     """
-    self.file = file
-    self.check_binary_mode()
-    self._log = logging.getLogger(self.__class__.__name__)
-    self.external_stop = False
-    self._condition = threading.Condition()
+    def __init__(self, file):
+        """ Initialize a new file writer
 
-  def close(self):
-    with self._condition:
-      if not self.file.closed:
-        self.file.close()
+        @param string file File object to write to.
+        """
+        self.file = file
+        self.check_binary_mode()
+        self._log = logging.getLogger(self.__class__.__name__)
+        self.external_stop = False
+        self._condition = treading.Condition()
 
-  def is_open(self):
-    with self._condition:
-      return not self.file.closed
+    def close(self):
+        with self._condition:
+            if not self.file.closed:
+                self.file.close()
 
-  def check_binary_mode(self):
-    mode = str(self.file.mode)
-    if 'b' not in mode:
-      raise makerbot_driver.Writer.NonBinaryModeFileError
+    def is_open(self):
+        with self._condition:
+            return not self.file.closed
 
-  def set_external_stop(self):
-    with self._condition:
-      self.external_stop = True
+    def check_binary_mode(self):
+        mode = str(self.file.mode)
+        if 'b' not in mode:
+            raise NonBinaryModeFileError
 
-  def send_action_payload(self, payload):
-    if self.external_stop:
-      self._log.error('{"event":"external_stop"}')
-      raise makerbot_driver.ExternalStopError
-    self.check_binary_mode()
-    with self._condition:
-      self.file.write(bytes(payload))
+    def set_external_stop(self):
+        with self._condition:
+            self.external_stop = True
+
+    def send_action_payload(self, payload):
+        if self.external_stop:
+            self._log.error('{"event":"external_stop"}')
+            raise ExternalStopError
+        self.check_binary_mode()
+        with self._condition:
+            self.file.write(bytes(payload))
