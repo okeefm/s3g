@@ -42,7 +42,7 @@ class FileReader(object):
             if b == '':  # We just read in an empty string, so we ran out of data
                 self._log.error('{"event":"insufficient_data"}')
                 raise makerbot_driver.FileReader.InsufficientDataError
-            if len(b) > constants.maximum_payload_length:
+            if len(b) > makerbot_driver.maximum_payload_length:
                 self._log.error('{"event":"string_too_long"}')
                 raise makerbot_driver.FileReader.StringTooLongError
             elif b[-1] == '\x00':
@@ -61,8 +61,8 @@ class FileReader(object):
             raise makerbot_driver.FileReader.EndOfFileError
 
         # TODO: Break the tool action commands out of here
-        if (not cmd in constants.slave_action_command_dict.values()) and \
-           (not cmd in constants.host_action_command_dict.values()):
+        if (not cmd in makerbot_driver.slave_action_command_dict.values()) and \
+           (not cmd in makerbot_driver.host_action_command_dict.values()):
             self._log.error('{"event":"bad_read_command", "command":%s}', cmd)
             raise makerbot_driver.FileReader.BadCommandError(cmd)
 
@@ -101,26 +101,26 @@ class FileReader(object):
 
     def ParseHostAction(self, cmd):
         try:
-            return self.ParseOutParameters(hostFormats[cmd])
+            return self.ParseOutParameters(makerbot_driver.FileReader.hostFormats[cmd])
         except KeyError:
             self._log.error(
                 '{"event":"bad_host_command", "bad_command":%s}', cmd)
             raise makerbot_driver.FileReader.BadHostCommandError(cmd)
 
     def ParseToolAction(self, cmd):
-        if cmd != constants.host_action_command_dict['TOOL_ACTION_COMMAND']:
+        if cmd != makerbot_driver.host_action_command_dict['TOOL_ACTION_COMMAND']:
             self._log.error(
                 '{"event":"cmd_is_not_tool_action_cmd", "bad_cmd":%s}', cmd)
             raise makerbot_driver.FileReader.NotToolActionCmdError
         data = []
-        data.extend(self.ParseOutParameters(hostFormats[cmd]))
+        data.extend(self.ParseOutParameters(makerbot_driver.FileReader.hostFormats[cmd]))
         slaveCmd = data[1]
         try:
-            data.extend(self.ParseOutParameters(slaveFormats[slaveCmd]))
+            data.extend(self.ParseOutParameters(makerbot_driver.FileReader.slaveFormats[slaveCmd]))
         except KeyError:
             self._log.error(
                 '{"event":"bad_slave_cmd", "bad_cmd":%s}', slaveCmd)
-            raise BadSlaveCommandError(slaveCmd)
+            raise makerbot_driver.FileReader.BadSlaveCommandError(slaveCmd)
         return data
 
     def ParseNextPayload(self):
@@ -129,7 +129,7 @@ class FileReader(object):
         @return list: a list of the cmd and  all information associated with that command
         """
         cmd = self.GetNextCommand()
-        if cmd == constants.host_action_command_dict['TOOL_ACTION_COMMAND']:
+        if cmd == makerbot_driver.host_action_command_dict['TOOL_ACTION_COMMAND']:
             params = self.ParseToolAction(cmd)
         else:
             params = self.ParseHostAction(cmd)

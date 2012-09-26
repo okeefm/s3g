@@ -111,7 +111,7 @@ class EepromWriter(object):
     def _flush_out_data(self, offset, data):
         try:
             self.s3g.write_to_EEPROM(offset, data)
-        except makerbot_driver.EEPROM.EEPROMLengthError:
+        except makerbot_driver.EEPROMLengthError:
             a, b = self._bifurcate_data(data)
             self._flush_out_data(offset, a)
             self._flush_out_data(offset + len(a), b)
@@ -172,12 +172,12 @@ class EepromWriter(object):
 
     def process_string(self, data, the_type):
         if not self.good_string_type(the_type):
-            raise IncompatableTypeError(the_type)
+            raise makerbot_driver.EEPROM.IncompatableTypeError(the_type)
         return self.encode_string(data[0])
 
     def process_floating_point(self, data, the_type):
         if not self.good_floating_point_type(the_type):
-            raise IncompatableTypeError(the_type)
+            raise makerbot_driver.EEPROM.IncompatableTypeError(the_type)
         payload = ''
         for point in data:
             bits = self.calculate_floating_point(point)

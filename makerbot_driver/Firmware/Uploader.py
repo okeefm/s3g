@@ -160,7 +160,7 @@ class Uploader(object):
         try:
             hex_file = str(values['versions'][version][0])
         except KeyError:
-            raise UnknownVersionError
+            raise makerbot_driver.Firmware.UnknownVersionError
         hex_file_url = self.pathjoin(self.source_url, hex_file)
         hex_file_path = self.wget(hex_file_url)
         return hex_file_path

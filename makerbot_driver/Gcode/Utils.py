@@ -24,7 +24,7 @@ def extract_comments(line):
 
         elif char == ')':
             if paren_count < 1:
-                raise CommentError
+                raise makerbot_driver.Gcode.CommentError
             paren_count -= 1
 
         elif paren_count > 0:
@@ -51,7 +51,7 @@ def parse_command(command):
 
         # If the code is not a letter, this is an error.
         if not code.isalpha():
-            gcode_error = InvalidCodeError()
+            gcode_error = makerbot_driver.Gcode.InvalidCodeError()
             gcode_error.values['InvalidCode'] = code
             raise gcode_error
 
@@ -60,14 +60,14 @@ def parse_command(command):
 
         # If the code already exists, this is an error.
         if code in codes.keys():
-            gcode_error = RepeatCodeError()
+            gcode_error = makerbot_driver.Gcode.RepeatCodeError()
             gcode_error.values['RepeatedCode'] = code
             raise gcode_error
 
         # Don't allow both G and M codes in the same line
         if (code == 'G' and 'M' in codes.keys()) or \
            (code == 'M' and 'G' in codes.keys()):
-            raise MultipleCommandCodeError()
+            raise makerbot_driver.Gcode.MultipleCommandCodeError()
 
         # If the code doesn't have a value, we consider it a flag, and set it to true.
         if len(pair) == 1:
@@ -110,7 +110,7 @@ def check_for_extraneous_codes(codes, allowed_codes):
         badCodes = ''  # TODO: can this be stringified in a more straightforward manner?
         for code in difference:
             badCodes += code
-        gcode_error = InvalidCodeError()
+        gcode_error = makerbot_driver.Gcode.InvalidCodeError()
         gcode_error.values['InvalidCodes'] = code
         raise gcode_error
 
@@ -143,7 +143,7 @@ def variable_substitute(line, environment):
         variable_value = str(environment[key])
         line = line.replace(variable_key, variable_value)
     if '#' in line:
-        raise UndefinedVariableError
+        raise makerbot_driver.Gcode.UndefinedVariableError
     return line
 
 
@@ -173,10 +173,10 @@ def calculate_vector_difference(minuend, subtrahend):
     @return list difference
     """
     if len(minuend) != 5:
-        raise errors.PointLengthError(
+        raise makerbot_driver.PointLengthError(
             "Expected list of length 5, got length %i" % (len(minuend)))
     if len(subtrahend) != 5:
-        raise errors.PointLengthError(
+        raise makerbot_driver.PointLengthError(
             "Expected list of length 5, got length %i" % (len(subtrahend)))
 
     difference = []
@@ -208,7 +208,7 @@ def calculate_vector_magnitude(vector):
     @return magnitude of the vector
     """
     if len(vector) != 5:
-        raise errors.PointLengthError(
+        raise makerbot_driver.errors.PointLengthError(
             "Expected list of length 5, got length %i" % (len(vector)))
 
     magnitude_squared = 0
@@ -227,7 +227,7 @@ def calculate_unit_vector(vector):
     @return list: The 5D equivalent of the vector
     """
     if len(vector) != 5:
-        raise errors.PointLengthError(
+        raise makerbot_driver.errors.PointLengthError(
             "Expected list of length 5, got length %i" % (len(vector)))
 
     magnitude = calculate_vector_magnitude(vector)
@@ -257,10 +257,10 @@ def get_safe_feedrate(displacement_vector, max_feedrates, target_feedrate):
 
     # TODO: What kind of error to throw here?
     if magnitude == 0:
-        raise VectorLengthZeroError()
+        raise makerbot_driver.Gcode.VectorLengthZeroError()
 
     if target_feedrate <= 0:
-        raise InvalidFeedrateError()
+        raise makerbot_driver.Gcode.InvalidFeedrateError()
 
     actual_feedrate = target_feedrate
 
@@ -284,7 +284,7 @@ def find_longest_axis(vector):
     @return int: The index of the longest vector
     """
     if len(vector) != 5:
-        raise errors.PointLengthError(
+        raise makerbot_driver.errors.PointLengthError(
             "Expected list of length 5, got length %i" % (len(vector)))
 
     max_value_index = 0
@@ -314,7 +314,7 @@ def calculate_DDA_speed(initial_position, target_position, target_feedrate, max_
     # Throw an error if we aren't moving anywhere
     # TODO: Should we do something else here?
     if calculate_vector_magnitude(displacement_vector) == 0:
-        raise VectorLengthZeroError
+        raise makerbot_driver.Gcode.VectorLengthZeroError
 
     # Now, correct the target speedrate to account for the maximum feedrate
     actual_feedrate = get_safe_feedrate(
@@ -361,7 +361,7 @@ def calculate_homing_DDA_speed(feedrate, max_feedrates, spm_list):
     @retun float dda_speed: The speed we will be moving at
     """
     if max_feedrates == [] or spm_list == [] or len(spm_list) != len(max_feedrates):
-        gcode_error = CalculateHomingDDAError()
+        gcode_error = makerbot_driver.Gcode.CalculateHomingDDAError()
         gcode_error.values['MaxFeedrateLength'] = len(max_feedrates)
         gcode_error.values['SPMLength'] = len(spm_list)
         raise gcode_error

@@ -13,7 +13,7 @@ class GcodeParser(object):
     commands against an s3g machine.
     """
     def __init__(self):
-        self.state = GcodeStates()
+        self.state = makerbot_driver.Gcode.GcodeStates()
         self.s3g = None
         self.environment = {}
         self.line_number = 1
@@ -61,40 +61,40 @@ class GcodeParser(object):
             command = command.encode("utf8")
         elif not isinstance(command, str):
             self._log.error('{"event":"gcode_file_in_improper_format"}')
-            raise ImproperGcodeEncodingError
+            raise makerbot_driver.Gcode.ImproperGcodeEncodingError
 
         try:
-            command = variable_substitute(command, self.environment)
+            command = makerbot_driver.Gcode.variable_substitute(command, self.environment)
 
-            codes, flags, comment = parse_line(command)
+            codes, flags, comment = makerbot_driver.Gcode.parse_line(command)
 
             if 'G' in codes:
                 if codes['G'] in self.GCODE_INSTRUCTIONS:
-                    check_for_extraneous_codes(
+                    makerbot_driver.Gcode.check_for_extraneous_codes(
                         codes.keys(), self.GCODE_INSTRUCTIONS[codes['G']][1])
-                    check_for_extraneous_codes(
+                    makerbot_driver.Gcode.check_for_extraneous_codes(
                         flags, self.GCODE_INSTRUCTIONS[codes['G']][2])
                     self.GCODE_INSTRUCTIONS[codes['G']
                                             ][0](codes, flags, comment)
 
                 else:
                     self._log.error('{"event":"unrecognized_command", "command":%s}', codes['G'])
-                    gcode_error = UnrecognizedCommandError()
+                    gcode_error = makerbot_driver.Gcode.UnrecognizedCommandError()
                     gcode_error.values['UnrecognizedCommand'] = codes['G']
                     raise gcode_error
 
             elif 'M' in codes:
                 if codes['M'] in self.MCODE_INSTRUCTIONS:
-                    check_for_extraneous_codes(
+                    makerbot_driver.Gcode.check_for_extraneous_codes(
                         codes.keys(), self.MCODE_INSTRUCTIONS[codes['M']][1])
-                    check_for_extraneous_codes(
+                    makerbot_driver.Gcode.check_for_extraneous_codes(
                         flags, self.MCODE_INSTRUCTIONS[codes['M']][2])
                     self.MCODE_INSTRUCTIONS[codes['M']
                                             ][0](codes, flags, comment)
 
                 else:
                     self._log.error('{"event":"unrecognized_command", "command":%s}', codes['M'])
-                    gcode_error = UnrecognizedCommandError()
+                    gcode_error = makerbot_driver.Gcode.UnrecognizedCommandError()
                     gcode_error.values['UnrecognizedCommand'] = codes['M']
                     gcode_error.values['Suggestion'] = 'This gcode command is not valid for makerbot_driver. makerbot_driver/PreProcessors' \
                         ' can be used for backwards compatiblity with older gcode.'
@@ -104,7 +104,7 @@ class GcodeParser(object):
             else:
                 if len(codes) + len(flags) > 0:
                     self._log.error('{"event":"extraneous_code"}')
-                    gcode_error = ExtraneousCodeError()
+                    gcode_error = makerbot_driver.Gcode.ExtraneousCodeError()
                     raise gcode_error
 
                 else:
@@ -112,16 +112,16 @@ class GcodeParser(object):
         except KeyError as e:
             self._log.error(
                 '{"event":"missing_code_error", "missing_code":%s}\n', e[0])
-            gcode_error = MissingCodeError()
+            gcode_error = makerbot_driver.Gcode.MissingCodeError()
             gcode_error.values['MissingCode'] = e[0]
             gcode_error.values['LineNumber'] = self.line_number
             gcode_error.values['Command'] = command
             gcode_error.values['Suggestion'] = 'Preprocessors are available in makerbot_driver/Preprocessors to correct for non supported commands'
             raise gcode_error
-        except VectorLengthZeroError:
+        except makerbot_driver.Gcode.VectorLengthZeroError:
             self._log.warning('{"event":vector_length_zero_error"}')
             pass
-        except GcodeError as gcode_error:
+        except makerbot_driver.Gcode.GcodeError as gcode_error:
             self._log.error('{"event":"gcode_error"}')
             gcode_error.values['Command'] = command
             gcode_error.values['LineNumber'] = self.line_number
@@ -139,7 +139,7 @@ class GcodeParser(object):
         #Put all values in a hash table
         valTable = {}
         #For each code in codes thats an axis:
-        for a in parse_out_axes(codes):
+        for a in makerbot_driver.Gcode.parse_out_axes(codes):
             #Try to append it to the appropriate list
             try:
                 valTable[codes[a]].append(a)
@@ -154,13 +154,13 @@ class GcodeParser(object):
         or endstop is reached
         This function loses the state machine's position.
         """
-        axes = parse_out_axes(flags)
+        axes = makerbot_driver.Gcode.parse_out_axes(flags)
         if len(axes) == 0:
             return
         self.state.lose_position(flags)
         #We need some axis information to calc the DDA speed
         axes_feedrates, axes_SPM = self.state.get_axes_feedrate_and_SPM(axes)
-        dda_speed = calculate_homing_DDA_speed(
+        dda_speed = makerbot_driver.Gcode.calculate_homing_DDA_speed(
             codes['F'],
             axes_feedrates,
             axes_SPM
@@ -173,13 +173,13 @@ class GcodeParser(object):
         or endstop is reached.
         This function loses the state machine's position.
         """
-        axes = parse_out_axes(flags)
+        axes = makerbot_driver.Gcode.parse_out_axes(flags)
         if len(axes) == 0:
             return
         self.state.lose_position(flags)
         #We need some axis information to calc the DDA speed
         axes_feedrates, axes_SPM = self.state.get_axes_feedrate_and_SPM(axes)
-        dda_speed = calculate_homing_DDA_speed(
+        dda_speed = makerbot_driver.Gcode.calculate_homing_DDA_speed(
             codes['F'],
             axes_feedrates,
             axes_SPM
@@ -192,8 +192,10 @@ class GcodeParser(object):
         to the given point
         """
         self.state.set_position(codes)
-        stepped_position = multiply_vector(self.state.get_position(
-        ), self.state.get_axes_values('steps_per_mm'))
+        stepped_position = makerbot_driver.Gcode.multiply_vector(
+            self.state.get_position(), 
+            self.state.get_axes_values('steps_per_mm')
+            )
         self.s3g.set_extended_position(stepped_position)
 
     def wait_for_tool_ready(self, codes, flags, comment):
@@ -231,7 +233,7 @@ class GcodeParser(object):
     def disable_axes(self, codes, flags, comment):
         """Disables a set of axes on the bot
         """
-        self.s3g.toggle_axes(parse_out_axes(flags), False)
+        self.s3g.toggle_axes(makerbot_driver.Gcode.parse_out_axes(flags), False)
 
     def display_message(self, codes, flags, comment):
         """Given a comment, displays a message on the bot.
@@ -263,7 +265,7 @@ class GcodeParser(object):
         percentage = codes['P']
 
         if percentage > 100 or percentage < 0:
-            raise BadPercentageError
+            raise makerbot_driver.Gcode.BadPercentageError
 
         self.s3g.set_build_percent(percentage)
         self.state.percentage = percentage
@@ -278,7 +280,7 @@ class GcodeParser(object):
         if 'F' in codes:
             self.state.values['feedrate'] = codes['F']
             self._log.debug('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', codes['F'])
-        if len(parse_out_axes(codes)) > 0 or 'E' in codes:
+        if len(makerbot_driver.Gcode.parse_out_axes(codes)) > 0 or 'E' in codes:
             #if 'A' in codes and 'B' in codes:
             #  gcode_error = ConflictingCodesError()
             #  gcode_error.values['ConflictingCodes'] = ['A', 'B']
@@ -287,14 +289,14 @@ class GcodeParser(object):
             self.state.set_position(codes)
             try:
                 feedrate = self.state.values['feedrate']
-                dda_speed = calculate_DDA_speed(
+                dda_speed = makerbot_driver.Gcode.calculate_DDA_speed(
                     current_position,
                     self.state.get_position(),
                     feedrate,
                     self.state.get_axes_values('max_feedrate'),
                     self.state.get_axes_values('steps_per_mm'),
                 )
-                stepped_point = multiply_vector(
+                stepped_point = makerbot_driver.Gcode.multiply_vector(
                     self.state.get_position(),
                     self.state.get_axes_values('steps_per_mm')
                 )
@@ -306,7 +308,10 @@ class GcodeParser(object):
                         makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[3]], [self.state.get_position()[3]]),
                         makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[4]], [self.state.get_position()[4]]),
                     )
-                displacement_vector = makerbot_driver.Gcode.calculate_vector_difference(self.state.get_position(), current_position)
+                displacement_vector = makerbot_driver.Gcode.calculate_vector_difference(
+                    self.state.get_position(), 
+                    current_position
+                    )
                 safe_feedrate_mm_min = makerbot_driver.Gcode.get_safe_feedrate(
                 displacement_vector, 
                 self.state.get_axes_values('max_feedrate'),
@@ -351,7 +356,7 @@ class GcodeParser(object):
     def load_position(self, codes, flags, comment):
         """Loads the home positions for the XYZ axes from the eeprom
         """
-        axes = parse_out_axes(flags)
+        axes = makerbot_driver.Gcode.parse_out_axes(flags)
         self.state.lose_position(axes)
         self.s3g.recall_home_positions(axes)
 
@@ -370,7 +375,7 @@ class GcodeParser(object):
             self.s3g.build_start_notification(self.state.values['build_name'])
         except KeyError:
             self._log.debug('{"event":"no_build_name_defined"}')
-            raise NoBuildNameError
+            raise makerbot_driver.Gcode.NoBuildNameError
 
     def build_end_notification(self, codes, flags, comments):
         """Sends a build end notification command to the machine

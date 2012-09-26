@@ -21,7 +21,7 @@ class EepromReader(object):
        """
         eeprom_map_template = 'eeprom_map_%s.json'
         map_name = eeprom_map_template % (fw_version)
-        eeprom_reader = makerbot_driver.EepromReader(map_name, working_directory)
+        eeprom_reader = makerbot_driver.EEPROM.EepromReader(map_name, working_directory)
         eeprom_reader.s3g = s3gObj
         return eeprom_reader
 
@@ -131,7 +131,7 @@ class EepromReader(object):
         @param int offset: The offset to start reading from
         @return dict: The submap read off the eeprom
         """
-        raise makerbot_driver.SubMapReadError(input_dict)
+        raise makerbot_driver.EEPROM.SubMapReadError(input_dict)
 
     def read_floating_point_from_eeprom(self, input_dict, offset):
         """
@@ -145,7 +145,7 @@ class EepromReader(object):
         unpack_code = input_dict['type']
         for c in unpack_code:
             if not c.upper() == 'H':
-                raise makerbot_driver.PoorlySizedFloatingPointError(unpack_code)
+                raise makerbot_driver.EEPROM.PoorlySizedFloatingPointError(unpack_code)
         fp_vals = []
         for i in range(len(input_dict['type'])):
             size = struct.calcsize(input_dict['type'][i])

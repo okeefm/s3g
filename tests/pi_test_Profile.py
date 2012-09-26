@@ -102,8 +102,8 @@ class ProfileInitTests(unittest.TestCase):
         cases = [
             ['.*Dual.*', ['ReplicatorDual.json']],
             ['.*Single.*', ['ReplicatorSingle.json']],
-            ['.*Replicator.*', ['ReplicatorSingle.json',
-                                'ReplicatorDual.json']],
+            ['.*Replicator.*', ['ReplicatorDual.json',
+                                'ReplicatorSingle.json']],
             ['.*FAIL*', []],
         ]
         for case in cases:

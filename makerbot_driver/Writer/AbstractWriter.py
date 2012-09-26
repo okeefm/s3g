@@ -1,10 +1,20 @@
+import threading
+
 class AbstractWriter(object):
+    def __init__(self):
+        self.external_stop = False
+        self._condition = threading.Condition()
+        self.file = None
+
     def open(self):
         """ Opens the currently set port"""
         raise NotImplementedError()
 
     def is_open(self):
         """ Fluch of file like objects. """
+        raise NotImplementedError()
+
+    def close(self):
         raise NotImplementedError()
 
     def send_action_payload(self, payload):
@@ -21,3 +31,7 @@ class AbstractWriter(object):
         @return The packet returned by send_command
         """
         raise NotImplementedError()
+
+    def set_external_stop(self):
+        with self._condition:
+            self.external_stop = True

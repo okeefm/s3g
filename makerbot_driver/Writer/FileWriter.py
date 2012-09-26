@@ -19,11 +19,10 @@ class FileWriter(AbstractWriter):
 
         @param string file File object to write to.
         """
+        super(FileWriter, self).__init__()
         self.file = file
         self.check_binary_mode()
         self._log = logging.getLogger(self.__class__.__name__)
-        self.external_stop = False
-        self._condition = treading.Condition()
 
     def close(self):
         with self._condition:
@@ -31,22 +30,17 @@ class FileWriter(AbstractWriter):
                 self.file.close()
 
     def is_open(self):
-        with self._condition:
-            return not self.file.closed
+        return not self.file.closed
 
     def check_binary_mode(self):
         mode = str(self.file.mode)
         if 'b' not in mode:
-            raise NonBinaryModeFileError
-
-    def set_external_stop(self):
-        with self._condition:
-            self.external_stop = True
+            raise makerbot_driver.Writer.NonBinaryModeFileError
 
     def send_action_payload(self, payload):
         if self.external_stop:
             self._log.error('{"event":"external_stop"}')
-            raise ExternalStopError
+            raise makerbot_driver.ExternalStopError
         self.check_binary_mode()
         with self._condition:
             self.file.write(bytes(payload))

@@ -127,5 +127,6 @@ class BotInquisitor(object):
             settings['uuid'] = uuid.uuid4()
         if not leaveOpen:
             s3gDriver.close()
+        s3gDriver.set_firmware_version(settings['fw_version'])
 
         return s3gDriver, settings
