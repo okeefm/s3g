@@ -1383,3 +1383,24 @@ class s3g(object):
     )
 
     self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_PLATFORM_TEMP'], payload)
+
+  def s4g_version(self, stream_version, checksum=0x0000):
+    """
+    Send an s4g_version packet to inform the bot what version
+    s4g we are sending and potential checksum for succeeding 
+    commands.
+
+    @param stream_version
+    @param int checksum: Checksum for succeeding commands
+    """
+    payload = struct.pack(
+      '<BBBIBBBB',
+      stream_version,
+      checksum,
+      0,
+      0, 
+      0,
+      0
+      )
+
+    self.writer.send_action_payload(payload)

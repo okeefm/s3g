@@ -1891,5 +1891,13 @@ class S3gTestsFirmware500(unittest.TestCase):
     self.assertEquals(payload[3], 2) #Temp is a byte of len 2
     self.assertEquals(payload[4:6], Encoder.encode_int16(temp))
 
+  def test_s4g_version(self):
+    checksum = 0000
+    stream_version = 601
+    
+    payload = bytearray()
+    payload.append(constants.host_action_command_dict['S4G_VERSION'])
+    payload.append
+
 if __name__ == "__main__":
   unittest.main()
