@@ -132,7 +132,7 @@ class s3g(object):
         data = reader.read_data('VID_PID_INFO')
         return data[0], data[1]
 
-    def get_verified_status(self, verified_pid=vid_pid[1]):
+    def get_verified_status(self, verified_pid=makerbot_driver.vid_pid[1]):
         """
         @returns true if this firmware is marked as verified
         """
