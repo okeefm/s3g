@@ -1390,12 +1390,14 @@ class s3g(object):
     s4g we are sending and potential checksum for succeeding 
     commands.
 
-    @param stream_version
+    @param int stream_version: Version of succeeding commands
     @param int checksum: Checksum for succeeding commands
     """
     payload = struct.pack(
-      '<BBBIBBBB',
+      '<BHBIBBBB',
+      makerbot_driver.host_query_command_dict['S4G_VERSION'],
       stream_version,
+      0,
       checksum,
       0,
       0, 

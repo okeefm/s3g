@@ -1892,12 +1892,28 @@ class S3gTestsFirmware500(unittest.TestCase):
     self.assertEquals(payload[4:6], Encoder.encode_int16(temp))
 
   def test_s4g_version(self):
-    checksum = 0000
+    checksum = 0x0000
     stream_version = 601
-    
-    payload = bytearray()
-    payload.append(constants.host_action_command_dict['S4G_VERSION'])
-    payload.append
+    extra_byte = 0
+
+    response_payload = bytearray()
+    response_payload.append(constants.response_code_dict['SUCCESS'])
+    self.outputstream.write(Encoder.encode_payload(response_payload))
+    self.outputstream.seek(0)
+
+    self.r.s4g_version(stream_version, checksum)
+
+    packet = bytearray(self.inputstream.getvalue())
+    payload = Encoder.decode_packet(packet)
+
+    self.assertEqual(payload[0], constants.host_query_command_dict['S4G_VERSION'])
+    self.assertEqual(payload[1:3], struct.pack('<H', stream_version))
+    self.assertEqual(payload[3], extra_byte)
+    self.assertEqual(payload[4:8], struct.pack('<I', checksum))
+    self.assertEqual(payload[8], extra_byte)
+    self.assertEqual(payload[9], extra_byte)
+    self.assertEqual(payload[10], extra_byte)
+    self.assertEqual(payload[11], extra_byte)
 
 if __name__ == "__main__":
   unittest.main()
