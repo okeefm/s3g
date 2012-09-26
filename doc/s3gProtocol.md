@@ -690,7 +690,7 @@ Response
 </tr>
 <tr>
  <td>5</td>
- <td>WDRF *Deprecated*</td>
+ <td>BUILD_CANCELLING</td>
  <td>Watchdog reset flag was set at restart</td>
 </tr>
 <tr>
