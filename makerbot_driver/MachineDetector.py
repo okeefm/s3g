@@ -39,6 +39,7 @@ def g_botClasses():
 botClasses = {
     'The Replicator': {'vid': 0x23C1, 'pid': 0xD314, 'botProfiles': '.*Replicator'},
     'MightBoard': {'vid': 0x23C1, 'pid': 0xB404, 'botProfiles': '.*Replicator'},
+    'TOM': {'vid': 0403, 'pid': 6001, 'botProfiles': '.*TOM'},
 }
 
 
