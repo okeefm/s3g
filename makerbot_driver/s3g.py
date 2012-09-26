@@ -49,12 +49,13 @@ class s3g(object):
     self.extendedPointLength = 5
     self.pointLength = 3
 
-    self.accelerated_firmware_version = 601
+    self.s4g_fw_version = 601 #The 
+    self.s4g_flag = True
     self.set_firmware_version(firmware_version)
 
   def set_firmware_version(self, firmware_version):
     self.firmware_version = firmware_version
-    self.send_accelerated_point = self.convert_to_usable_firmware_version(firmware_version) >= self.accelerated_firmware_version
+    self.s4g_flag = self.convert_to_usable_firmware_version(firmware_version) >= self.s4g_fw_version
     
   def convert_to_usable_firmware_version(self, firmware_version):
     """
@@ -436,7 +437,7 @@ class s3g(object):
 
     self.writer.send_action_payload(payload)
 
-  def queue_extended_point_accelerated(self, position, dda_rate, relative_axes, distance, feedrate):
+  def queue_extended_point_s4g(self, position, dda_rate, relative_axes, distance, feedrate):
     """
     Queue a position with the new style!  Moves to a certain position over a given duration
     with either relative or absolute positioning.  Relative vs. Absolute positioning
@@ -817,9 +818,9 @@ class s3g(object):
     """
     if len(position) != self.extendedPointLength:
       raise makerbot_driver.PointLengthError(len(position))
-    if self.send_accelerated_point:
+    if self.s4g_flag:
       dda_rate = 1000000.0/float(dda_speed)
-      self.queue_extended_point_accelerated(position, dda_rate, relative_axes, e_distance, feedrate_mm_sec)
+      self.queue_extended_point_s4g(position, dda_rate, relative_axes, e_distance, feedrate_mm_sec)
     else:
       payload = struct.pack(
         '<BiiiiiI',

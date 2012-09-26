@@ -20,7 +20,8 @@ host_query_command_dict = {
   'GET_MOTHERBOARD_STATUS'    : 23,
   'GET_BUILD_STATS'           : 24,
   'GET_COMMUNICATION_STATS'   : 25,
-  'GET_ADVANCED_VERSION'      : 27
+  'GET_ADVANCED_VERSION'      : 27,
+  'S4G_VERSION'               : 28,
 }
 
 host_action_command_dict = {

@@ -7,9 +7,37 @@ import uuid
 import unittest
 import io
 import struct
+import mock
 
 import serial
 from makerbot_driver import Writer, constants, s3g, errors, Encoder
+
+class TestS3gSettingFWVersion(unittest.TestCase):
+  def test_firmware_version_600(self):
+    version = 600
+    r = s3g(version)
+    self.assertFalse(r.s4g_flag)
+    self.assertEqual(version, r.firmware_version)
+    r.writer = mock.Mock()
+    r.queue_extended_point_s4g = mock.Mock()
+    r.queue_extended_point([0, 0, 0, 0, 0], 0, 0, 0)
+    self.assertEqual(0, len(r.queue_extended_point_s4g.mock_calls))
+
+  def test_firmware_version_601(self):
+    version = 601
+    r = s3g(version)
+    self.assertTrue(r.s4g_flag)
+    self.assertEqual(version, r.firmware_version)
+    r.queue_extended_point_s4g = mock.Mock()
+
+    point = [0, 1, 2, 3, 4]
+    dda_speed = 50
+    dda_rate = 1000000.0/float(dda_speed)
+    e_distance = 100
+    feedrate = 200
+    relative_axes = []
+    r.queue_extended_point(point, dda_speed, e_distance, feedrate)
+    r.queue_extended_point_s4g.assert_called_once_with(point, dda_rate, relative_axes, e_distance, feedrate)
 
 class TestFromFileName(unittest.TestCase):
   def setUp(self):
@@ -116,7 +144,7 @@ class S3gTestsFirmware500(unittest.TestCase):
     for case in cases:
       self.assertEqual(self.r.convert_to_usable_firmware_version(case[0]), case[1])
 
-  def test_queue_extended_point_accelerated(self):
+  def test_queue_extended_point_s4g(self):
     point = [1, 2, 3, 4, 5]
     dda = 50
     relative_axes = ['X']
@@ -127,7 +155,7 @@ class S3gTestsFirmware500(unittest.TestCase):
     self.outputstream.write(Encoder.encode_payload(response_payload))
     self.outputstream.seek(0)
 
-    self.r.queue_extended_point_accelerated(point, dda, relative_axes, distance, feedrate)
+    self.r.queue_extended_point_s4g(point, dda, relative_axes, distance, feedrate)
     packet = bytearray(self.inputstream.getvalue())
     payload = Encoder.decode_packet(packet)
 
