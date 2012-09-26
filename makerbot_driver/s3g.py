@@ -1394,7 +1394,7 @@ class s3g(object):
         """
         payload = struct.pack(
             '<BHBIBBBB',
-            makerbot_driver.host_query_command_dict['S4G_VERSION'],
+            makerbot_driver.host_action_command_dict['S4G_VERSION'],
             stream_version,
             0,
             checksum,
