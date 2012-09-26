@@ -1,4 +1,4 @@
-__all__ = ['Parser', 'States', 'Utils', 'Point', 'errors','FileComplete']
+__all__ = ['Parser', 'States', 'Utils', 'Point', 'errors', 'FileComplete']
 
 from Parser import *
 from States import *

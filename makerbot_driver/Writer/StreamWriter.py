@@ -9,129 +9,130 @@ import threading
 from . import AbstractWriter
 import makerbot_driver
 
+
 class StreamWriter(AbstractWriter):
-  """ Represents a writer to a data stream, usually a tty or USB connection
-  to a bot at the end of a wire.
-  """ 
-
-  def __init__(self, file):
-    """ Initialize a new StreamWriter object
-
-    @param string file File object to interact with
+    """ Represents a writer to a data stream, usually a tty or USB connection
+    to a bot at the end of a wire.
     """
-    self._log = logging.getLogger(self.__class__.__name__)
-    self.file = file
-    self._log.info('{"event":"begin_writing_to_stream", "stream":%s}', str(self.file))
-    self.total_retries = 0
-    self.total_overflows = 0
-    self.external_stop = False
-    self._condition = threading.Condition()
 
-  # TODO: test me
-  def send_query_payload(self, payload):
-    return self.send_command(payload)
+    def __init__(self, file):
+        """ Initialize a new StreamWriter object
 
-  # TODO: test me
-  def send_action_payload(self, payload):
-    self.send_command(payload)
+        @param string file File object to interact with
+        """
+        super(StreamWriter, self).__init__()
+        self._log = logging.getLogger(self.__class__.__name__)
+        self.file = file
+        self._log.info('{"event":"begin_writing_to_stream", "stream":%s}',
+                       str(self.file))
+        self.total_retries = 0
+        self.total_overflows = 0
 
-  def close(self):
-    with self._condition:
-      if self.is_open() and self.file != None: 
-        self.file.close() 
- 
-  def open(self):
-    """ Open or re-open an already defined stream connection """
-    with self._condition:
-      if self.file != None:
-        self.file.open() 
+    # TODO: test me
+    def send_query_payload(self, payload):
+        return self.send_command(payload)
 
-  def is_open(self):
-    """@returns true if a port is open and active, False otherwise """
-    with self._condition:
-      if self.file == None: return False
-      return self.file.isOpen()
+    # TODO: test me
+    def send_action_payload(self, payload):
+        self.send_command(payload)
 
-  def set_external_stop(self):
-    with self._condition:
-      self.external_stop = True
+    def close(self):
+        with self._condition:
+            if self.is_open() and self.file is not None:
+                self.file.close()
 
-  def send_command(self, payload):
-    packet = makerbot_driver.Encoder.encode_payload(payload)
-    return self.send_packet(packet)
+    def open(self):
+        """ Open or re-open an already defined stream connection """
+        with self._condition:
+            if self.file is not None:
+                self.file.open()
 
-  def send_packet(self, packet):
-    """
-    Attempt to send a packet to the machine, retrying up to 5 times if an error
-    occurs.
-    @param packet Packet to send to the machine
-    @return Response payload, if successful. 
-    """
-    overflow_count = 0
-    retry_count = 0
-    received_errors = []
-    while True:
-      if self.external_stop:
-        self._log.error('{"event":"external_stop"}')
-        raise makerbot_driver.ExternalStopError
+    def is_open(self):
+        """@returns true if a port is open and active, False otherwise """
+        return_val = False
+        if self.file is not None:
+            return_val = self.file.isOpen()
+        return return_val
 
-      decoder = makerbot_driver.Encoder.PacketStreamDecoder()
+    def send_command(self, payload):
+        packet = makerbot_driver.Encoder.encode_payload(payload)
+        return self.send_packet(packet)
 
-      with self._condition:
-        self.file.write(packet)
-        self.file.flush()
+    def send_packet(self, packet):
+        """
+        Attempt to send a packet to the machine, retrying up to 5 times if an error
+        occurs.
+        @param packet Packet to send to the machine
+        @return Response payload, if successful.
+        """
+        overflow_count = 0
+        retry_count = 0
+        received_errors = []
+        while True:
+            if self.external_stop:
+                self._log.error('{"event":"external_stop"}')
+                raise makerbot_driver.ExternalStopError
+            decoder = makerbot_driver.Encoder.PacketStreamDecoder()
+            with self._condition:
+                self.file.write(packet)
+                self.file.flush()
 
-      # Timeout if a response is not received within 1 second.
-      start_time = time.time()
+            # Timeout if a response is not received within 1 second.
+            start_time = time.time()
 
-      try:
-        while (decoder.state != 'PAYLOAD_READY'):
-          # Try to read a byte
-          data = ''
-          while data == '':
-            if (time.time() > start_time + makerbot_driver.constants.timeout_length):
-              self._log.error('{"event":"machine_timeout"}')
-              raise makerbot_driver.errors.TimeoutError(len(data), decoder.state)
+            try:
+                with self._condition:
+                    if self.external_stop:
+                        self._log.error('{"event":"external_stop"}')
+                        raise makerbot_driver.ExternalStopError
+                    while (decoder.state != 'PAYLOAD_READY'):
+                        # Try to read a byte
+                        data = ''
+                        while data == '':
+                            if (time.time() > start_time + makerbot_driver.timeout_length):
+                                self._log.error('{"event":"machine_timeout"}')
+                                raise makerbot_driver.TimeoutError(len(data), decoder.state)
 
-            # pySerial streams handle blocking read. Be sure to set up a timeout when
-            # initializing them, or this could hang forever
-            data = self.file.read(1)
+                            # pySerial streams handle blocking read. Be sure to set up a timeout when
+                            # initializing them, or this could hang forever
+                            data = self.file.read(1)
 
-          data = ord(data)
-          decoder.parse_byte(data)
-       
-        makerbot_driver.Encoder.check_response_code(decoder.payload[0])        
- 
-        # TODO: Should we chop the response code?
-        return decoder.payload
+                        data = ord(data)
+                        decoder.parse_byte(data)
 
-      except (makerbot_driver.BufferOverflowError) as e:
-        # Buffer overflow error- wait a while for the buffer to clear, then try again.
-        # TODO: This could hang forever if the machine gets stuck; is that what we want?
+                    makerbot_driver.Encoder.check_response_code(decoder.payload[0])
 
-        self._log.debug('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}', overflow_count,retry_count)
+                # TODO: Should we chop the response code?
+                return decoder.payload
 
-        self.total_overflows += 1
-        overflow_count += 1
+            except (makerbot_driver.BufferOverflowError) as e:
+                # Buffer overflow error- wait a while for the buffer to clear, then try again.
+                # TODO: This could hang forever if the machine gets stuck; is that what we want?
 
-        time.sleep(.2)
+                self._log.debug('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}', overflow_count, retry_count)
 
-      except makerbot_driver.RetryableError as e:
-        # Sent a packet to the host, but got a malformed response or timed out waiting
-        # for a reply. Retry immediately.
+                self.total_overflows += 1
+                overflow_count += 1
 
-        self._log.warning('{"event":"transmission_problem", "exception":"%s", "message":"%s", "retry_count"=%i}', type(e),e.__str__(),retry_count)
+                with self._condition:
+                    self._condition.wait(.2)
 
-        self.total_retries += 1
-        retry_count += 1
-        received_errors.append(e.__class__.__name__)
+            except makerbot_driver.RetryableError as e:
+                # Sent a packet to the host, but got a malformed response or timed out waiting
+                # for a reply. Retry immediately.
 
-      except Exception as e:
-        # Other exceptions are propigated upwards.
+                self._log.warning('{"event":"transmission_problem", "exception":"%s", "message":"%s", "retry_count"=%i}', type(e), e.__str__(), retry_count)
 
-        self._log.error('{"event":"unhandled_exception", "exception":"%s", "message":"%s", "retry_count"=%i}', type(e),e.__str__(),retry_count)
-        raise e
+                self.total_retries += 1
+                retry_count += 1
+                received_errors.append(e.__class__.__name__)
 
-      if retry_count >= makerbot_driver.max_retry_count:
-        self._log.error('{"event":"transmission_error"}')
-        raise makerbot_driver.TransmissionError(received_errors)
+            except Exception as e:
+                # Other exceptions are propigated upwards.
+
+                self._log.error('{"event":"unhandled_exception", "exception":"%s", "message":"%s", "retry_count"=%i}', type(e), e.__str__(), retry_count)
+                raise e
+
+            if retry_count >= makerbot_driver.max_retry_count:
+                self._log.error('{"event":"transmission_error"}')
+                raise makerbot_driver.TransmissionError(received_errors)

@@ -1,4 +1,4 @@
-__all__  = ['FileReader', 'constants', 'errors']
+__all__ = ['FileReader', 'constants', 'errors']
 
 from FileReader import *
 from constants import *
