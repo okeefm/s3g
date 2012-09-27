@@ -70,27 +70,28 @@ class GcodeAssembler(object):
             'end_print': end_print
         }
         variables = {}
-        return_values = [start_recipe, end_recipe, variables]
         #Check for dualstrusion
         if tool_0 and tool_1:
-            dual_values = self.get_recipes_and_variables('dualstrusion')
-            for return_val, dual_val in zip(return_values, dual_values):
-                return_val.update(dual_val)
+            dual_start_recipe, dual_end_recipe, dual_variables = self.get_recipes_and_variables('dualstrusion')
+            start_recipe.update(dual_start_recipe)
+            end_recipe.update(dual_end_recipe)
+            variables.update(dual_variables)
         elif tool_0:
             #Update start routine
-            return_values[0].update({'heat_tools': 'heat_0'})
+            start_recipe.update({'heat_tools': 'heat_0'})
             #Update end routine
-            return_values[1].update({'cool_tools': 'cool_0'})
+            end_recipe.update({'cool_tools': 'cool_0'})
         elif tool_1:
             #Update start routine
-            return_values[0].update({'heat_tools': 'heat_1'})
+            start_recipe.update({'heat_tools': 'heat_1'})
             #Update end routine
-            return_values[1].update({'cool_tools': 'cool_1'})
+            end_recipe.update({'cool_tools': 'cool_1'})
         #Add material values to the return template values
-        material_values = self.get_recipes_and_variables(material)
-        for return_val, mat_val in zip(return_values, material_values):
-            return_val.update(mat_val)
-        return return_values
+        mat_start_recipe, mat_end_recipe, mat_variables = self.get_recipes_and_variables(material)
+        start_recipe.update(mat_start_recipe)
+        end_recipe.update(mat_end_recipe)
+        variables.update(mat_variables)
+        return start_recipe, end_recipe, variables
 
     def assemble_start_sequence(self, recipe):
         """
