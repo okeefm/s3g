@@ -62,6 +62,7 @@ class ProfileInitTests(unittest.TestCase):
             'ReplicatorDual',
             'ReplicatorSingle',
             'TOMStepstruder',
+            'Replicator2',
         ]
         self.assertEqual(sorted(
             expected_profiles), sorted(list(makerbot_driver.list_profiles())))
@@ -103,8 +104,10 @@ class ProfileInitTests(unittest.TestCase):
         cases = [
             ['.*Dual.*', ['ReplicatorDual.json']],
             ['.*Single.*', ['ReplicatorSingle.json']],
-            ['.*Replicator.*', ['ReplicatorDual.json',
-                                'ReplicatorSingle.json']],
+            ['.*Replicator.*', ['Replicator2.json',
+                                'ReplicatorDual.json',
+                                'ReplicatorSingle.json'
+                                ]],
             ['.*FAIL*', []],
         ]
         for case in cases:
