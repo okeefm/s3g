@@ -42,10 +42,10 @@
     "PID": 6001,
     "print_start_sequence": {
         "begin_print": {
-            "replicator_begin": []
+            "tom_begin": []
         },
         "homing": {
-            "replicator_homing": [
+            "tom_homing": [
                 "G162 Z F1000(home Z axes maximum)",
                 "G92 X0 Y0 Z-5 A0 B0 (set Z to -5)",
                 "G1 Z0.0 F900(move Z to '0')",
@@ -54,7 +54,7 @@
             ]
         },
         "start_position": {
-            "replicator_start_position": [
+            "tom_start_position": [
                 "G1 X25 Y-60 Z10 F3300.0 (move to waiting position)"
             ]
         },
@@ -73,14 +73,14 @@
             ]
         },
         "anchor": {
-            "replicator_anchor": [
+            "tom_anchor": [
                 "G1 Z0.6      (Position Height)"
             ]
         }
     },
     "print_end_sequence": {
         "end_position": {
-            "replicator_end_position": [
+            "tom_end_position": [
                 "G1 X0 Y55 F3300"
             ]
         },
@@ -96,7 +96,7 @@
             ]
         },
         "end_print": {
-            "replicator_end": []
+            "tom_end": []
         }
     },
     "find_axis_maximum_timeout": 20,

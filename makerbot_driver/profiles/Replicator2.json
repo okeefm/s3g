@@ -36,7 +36,10 @@
   "PID"       : 54036,
   "print_start_sequence" : {
     "begin_print" : {
-      "replicator_begin" : ["M73 P0 (enable build progress)"]
+      "replicator_begin" : [
+        "M136 (enable build)",
+        "M73 P0"
+        ]
       }, 
     "homing" : {
       "replicator_homing" : [
@@ -93,7 +96,8 @@
       "replicator_end" : [
         "M73 P100 (end  build progress )",
         "M70 P5 (We <3 Making Things!)",
-        "M72 P1  ( Play Ta-Da song )"
+        "M72 P1  ( Play Ta-Da song )",
+        "M137 (build end notification)"
         ]
       }
     },

@@ -195,7 +195,17 @@ def process_file_with_pro(the_file, pro):
 
 def execute_file(the_file, parser):
     ga = makerbot_driver.GcodeAssembler(parser.state.profile)
-    start, end, variables = ga.assemble_recipe()
+    if "Thing-O-Matic" in parser.state.profile.values['machinenames']:
+        start, end, variables = ga.assemble_recipe(
+            begin_print='tom_begin',
+            homing='tom_homing',
+            start_position='tom_start_position',
+            anchor='tom_anchor',
+            end_position='tom_end_position',
+            end_print='tom_end',
+        )
+    else:
+        start, end, variables = ga.assemble_recipe()
     start_gcode = ga.assemble_start_sequence(start)
     end_gcode = ga.assemble_end_sequence(end)
     parser.environment.update(variables)
