@@ -16,10 +16,10 @@ import mock
 
 import makerbot_driver
 
-class TestBotFactor(unittest.TestCase):
+class TestMachineFactor(unittest.TestCase):
 
   def setUp(self):
-    self.factory = makerbot_driver.BotFactory()
+    self.factory = makerbot_driver.MachineFactory()
 
   def tearDown(self):
     self.factory = None
@@ -64,13 +64,13 @@ class TestBotFactor(unittest.TestCase):
     match = self.factory.get_profile_regex(bot_dict)
     self.assertEqual(expected_regex, match)
 
-class TestBuildFromPortMockedBotInquisitor(unittest.TestCase):
+class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
   def setUp(self):
     self.s3g_mock = mock.Mock(makerbot_driver.s3g)
-    self.inquisitor = makerbot_driver.BotInquisitor('/dev/dummy_port')
+    self.inquisitor = makerbot_driver.MachineInquisitor('/dev/dummy_port')
     self.inquisitor.create_s3g = mock.Mock()
     self.inquisitor.create_s3g.return_value = self.s3g_mock
-    self.factory = makerbot_driver.BotFactory()
+    self.factory = makerbot_driver.MachineFactory()
     self.factory.create_inquisitor = mock.Mock()
     self.factory.create_inquisitor.return_value = self.inquisitor
 
@@ -135,9 +135,9 @@ class TestBuildFromPortMockedBotInquisitor(unittest.TestCase):
     self.assertTrue(getattr(return_obj, 'gcodeparser') != None)
 
 
-class TestBotInquisitor(unittest.TestCase):
+class TestMachineInquisitor(unittest.TestCase):
   def setUp(self):
-    self.inquisitor = makerbot_driver.BotInquisitor('/dev/dummy_port')
+    self.inquisitor = makerbot_driver.MachineInquisitor('/dev/dummy_port')
     self.s3g_mock = mock.Mock(makerbot_driver.s3g)
     self.inquisitor.create_s3g = mock.Mock(return_value=self.s3g_mock)
 

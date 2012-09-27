@@ -11,7 +11,7 @@ class ReturnObject(object):
         pass
 
 
-class BotFactory(object):
+class MachineFactory(object):
     """This class is a factory for building bot drivers from
     a port connection. This class will take a connection, query it
     to verify it is a geunine 3d printer (or other device we can control)
@@ -30,15 +30,15 @@ class BotFactory(object):
         assign internal objects with <obj>.<internal_obj> = <obj> is a
         pain.
         """
-        return BotInquisitor(portname)
+        return MachineInquisitor(portname)
 
     def build_from_port(self, portname, leaveOpen=True):
         """
         Returns a tuple of an (s3gObj, ProfileObj)
         for a bot at port portname
         """
-        botInquisitor = self.create_inquisitor(portname)
-        s3gBot, bot_setup_dict = botInquisitor.query(leaveOpen)
+        machineInquisitor = self.create_inquisitor(portname)
+        s3gBot, bot_setup_dict = machineInquisitor.query(leaveOpen)
 
         profile_regex = self.get_profile_regex(bot_setup_dict)
         matches = makerbot_driver.search_profiles_with_regex(
@@ -96,9 +96,9 @@ class BotFactory(object):
         return None
 
 
-class BotInquisitor(object):
+class MachineInquisitor(object):
     def __init__(self, portname):
-        """ build a bot Inqusitor for an exact port"""
+        """ build a machine Inqusitor for an exact port"""
         self._portname = portname
 
     def create_s3g(self):
@@ -110,10 +110,13 @@ class BotInquisitor(object):
         return makerbot_driver.s3g.from_filename(self._portname)
 
     def query(self, leaveOpen=True):
-        """ open a connection to a bot and  query a bot for
-            key settings needed to construct a bot from a profile
-            @param leaveOpen IF true, serial connection to the bot is left open.
-            @return a tuple of an (s3gObj, dictOfSettings"""
+        """ 
+        open a connection to a machine and  query a bot for
+        key settings needed to construct a machine from a profile
+
+        @param leaveOpen IF true, serial connection to the bot is left open.
+        @return a tuple of an (s3gObj, dictOfSettings
+        """
         import makerbot_driver.s3g as s3g
         import uuid
         settings = {}
