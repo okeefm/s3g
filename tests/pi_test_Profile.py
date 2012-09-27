@@ -61,6 +61,7 @@ class ProfileInitTests(unittest.TestCase):
         expected_profiles = [
             'ReplicatorDual',
             'ReplicatorSingle',
+            'TOMStepstruder',
         ]
         self.assertEqual(sorted(
             expected_profiles), sorted(list(makerbot_driver.list_profiles())))
