@@ -8,27 +8,21 @@ import unittest
 import makerbot_driver
 
 
-class TestABPProcessor(unittest.TestCase):
+class TestRemoveProgressProcessor(unittest.TestCase):
 
     def setUp(self):
-        self.abp = makerbot_driver.GcodeProcessors.AbpProcessor()
+        self.abp = makerbot_driver.GcodeProcessors.RemoveProgressProcessor()
 
     def tearDown(self):
         self.abp = None
 
     def test_regexs(self):
         cases = [
-            ['M107\n', ['']],
-            ['M107', ['']],
-            ['m107', ['']],
-            ['(M107', ['(M107']],
-            [';M107', [';M107']],
-            ['M106\n', ['']],
-            ['M106', ['']],
-            ['m106', ['']],
-            ['(M106', ['(M106']],
-            [';M106', [';M106']],
-            ['THIS IS A TEST', ['THIS IS A TEST']],
+            ['M73\n', ['']],
+            ['M73', ['']],
+            ['m73', ['']],
+            ['(M73', ['(M73']],
+            [';M73', [';M73']],
             ['G1 X0 Y0', ['G1 X0 Y0']],
             ['G92 X0 Y0', ['G92 X0 Y0']],
         ]

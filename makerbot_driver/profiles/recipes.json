@@ -7,8 +7,8 @@
       "cool_platform" : "no_cool"
       },
     "variables" : {
-      "TOOL_0_TEMP" : 220,
-      "TOOL_1_TEMP" : 220
+      "TOOL_0_TEMP" : 230,
+      "TOOL_1_TEMP" : 230
       }
   },
   "ABS" : {
@@ -19,9 +19,9 @@
       "cool_platform" : "cool_platform"
       },
     "variables" : {
-      "TOOL_0_TEMP" : 220,
-      "TOOL_1_TEMP" : 220,
-      "PLATFORM_TEMP" : 100
+      "TOOL_0_TEMP" : 230,
+      "TOOL_1_TEMP" : 230,
+      "PLATFORM_TEMP" : 110
       }
     },
   "dualstrusion": {
