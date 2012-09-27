@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
 import makerbot_driver
-from .States import State
+from .States import GcodeStates
 
 
-class LegacyState(State):
+class LegacyGcodeStates(GcodeStates):
 
     def lose_position(self, axes):
         self._log.debug(

@@ -82,9 +82,6 @@ class StreamWriter(AbstractWriter):
 
             try:
                 with self._condition:
-                    if self.external_stop:
-                        self._log.error('{"event":"external_stop"}')
-                        raise makerbot_driver.ExternalStopError
                     while (decoder.state != 'PAYLOAD_READY'):
                         # Try to read a byte
                         data = ''
@@ -101,6 +98,9 @@ class StreamWriter(AbstractWriter):
                         decoder.parse_byte(data)
 
                     makerbot_driver.Encoder.check_response_code(decoder.payload[0])
+                    if self.external_stop:
+                        self._log.error('{"event":"external_stop"}')
+                        raise makerbot_driver.ExternalStopError
 
                 # TODO: Should we chop the response code?
                 return decoder.payload
