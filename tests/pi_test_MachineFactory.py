@@ -85,6 +85,7 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
     self.assertEqual(expected_profile, getattr(return_obj, 'profile'))
     self.assertEqual(expected_parser, getattr(return_obj, 'gcodeparser'))
 
+  @unittest.skip("This functionality has been disabled for now")
   def test_build_from_port_version_number_500_tool_count_1_Replicator(self):
     #Time to mock all of s3g's version!
     version = 500
@@ -110,6 +111,7 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
     self.assertEqual(expected_profile.values, getattr(return_obj, 'profile').values)
     self.assertTrue(getattr(return_obj, 'gcodeparser') != None)
 
+  @unittest.skip("This functionality has been disabled for now")
   def test_build_from_port_version_number_500_tool_count_2_mightyboard(self):
     #Time to mock all of s3g's version!
     version = 500

@@ -64,8 +64,8 @@ class ProfileInitTests(unittest.TestCase):
             'TOMStepstruder',
             'Replicator2',
         ]
-        self.assertEqual(sorted(
-            expected_profiles), sorted(list(makerbot_driver.list_profiles())))
+        for profile in expected_profiles:
+            self.assertTrue(profile in makerbot_driver.list_profiles())
 
     def test_list_profiles_profiledir(self):
         profiledir = tempfile.mkdtemp()
@@ -106,13 +106,14 @@ class ProfileInitTests(unittest.TestCase):
             ['.*Single.*', ['ReplicatorSingle.json']],
             ['.*Replicator.*', ['Replicator2.json',
                                 'ReplicatorDual.json',
-                                'ReplicatorSingle.json'
+                                'ReplicatorSingle.json',
+                                'Replicator2X.json', 
                                 ]],
             ['.*FAIL*', []],
         ]
         for case in cases:
             self.assertEqual(
-                case[1], makerbot_driver.search_profiles_with_regex(case[0]))
+                sorted(case[1]), sorted(makerbot_driver.search_profiles_with_regex(case[0])))
 
 if __name__ == '__main__':
     unittest.main()
