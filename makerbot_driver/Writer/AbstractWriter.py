@@ -3,10 +3,10 @@ import threading
 
 class AbstractWriter(object):
 
-    def __init__(self):
+    def __init__(self, file):
         self.external_stop = False
         self._condition = threading.Condition()
-        self.file = None
+        self.file = file
 
     def open(self):
         """ Opens the currently set port"""

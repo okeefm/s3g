@@ -20,33 +20,32 @@ except ImportError:
 
 class TestIsCorrectVariant(unittest.TestCase):
 
-  def test_isMbVariant(self):
-   self.assertTrue (serial.__version__.index('mb2') > 0 )
+    def test_isMbVariant(self):
+        self.assertTrue(serial.__version__.index('mb2') > 0)
 
-  def test_hasScanEndpoints(self):
-    import serial.tools.list_ports as lp    
-    scan = lp.list_ports_by_vid_pid
+    def test_hasScanEndpoints(self):
+        import serial.tools.list_ports as lp
+        scan = lp.list_ports_by_vid_pid
 
-  '''
-  # This test is commented out because it requires an actual serial port.
-  def test_variantDoesBlocking(self):
-    #grab a port
-    #try to grab it again
-    import serial.tools.list_ports as lp    
-    scan = lp.list_ports_by_vid_pid
-    print('autograbbing a port')
-    comports = lp.comports()
-    if( len(list(comports)) < 1):
-        print('no comport availabe')
-        self.assertFalse(True, "no comports, cannot execute test")
-    portname = comports[-1][0] #item 0 in last comport as the port to test 
-    print("Connecting to serial" +  portname)
-    s = serial.Serial(portname)
-    with self.assertRaises(serial.SerialException) as ex:
-        s = serial.Serial(portname)
-   '''
+    '''
+    # This test is commented out because it requires an actual serial port.
+    def test_variantDoesBlocking(self):
+      #grab a port
+      #try to grab it again
+      import serial.tools.list_ports as lp
+      scan = lp.list_ports_by_vid_pid
+      print('autograbbing a port')
+      comports = lp.comports()
+      if( len(list(comports)) < 1):
+          print('no comport availabe')
+          self.assertFalse(True, "no comports, cannot execute test")
+      portname = comports[-1][0] #item 0 in last comport as the port to test
+      print("Connecting to serial" +  portname)
+      s = serial.Serial(portname)
+      with self.assertRaises(serial.SerialException) as ex:
+          s = serial.Serial(portname)
+     '''
 
-   
+
 if __name__ == '__main__':
-    unittest.main() 
-
+    unittest.main()

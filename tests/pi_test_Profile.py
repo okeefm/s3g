@@ -107,7 +107,7 @@ class ProfileInitTests(unittest.TestCase):
             ['.*Replicator.*', ['Replicator2.json',
                                 'ReplicatorDual.json',
                                 'ReplicatorSingle.json',
-                                'Replicator2X.json', 
+                                'Replicator2X.json',
                                 ]],
             ['.*FAIL*', []],
         ]

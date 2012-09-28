@@ -236,7 +236,7 @@ class TestGcodeAssembler(unittest.TestCase):
             'end_print': None,
         }
         expected_sequence = []
-        self.assertEqual(expected_sequence, self.ga.assemble_sequence_from_recipe(recipe, template, the_order)) 
+        self.assertEqual(expected_sequence, self.ga.assemble_sequence_from_recipe(recipe, template, the_order))
 
     def test_assemble_sequence_from_recipe_half_nones(self):
         the_order = [
@@ -256,7 +256,8 @@ class TestGcodeAssembler(unittest.TestCase):
         expected_sequence = []
         for routine in the_order:
             if recipe[routine] is not None:
-                expected_sequence.extend(end_sequence_template[routine][recipe[routine]])
-        self.assertEqual(expected_sequence, self.ga.assemble_sequence_from_recipe(recipe, template, the_order)) 
+                expected_sequence.extend(
+                    end_sequence_template[routine][recipe[routine]])
+        self.assertEqual(expected_sequence, self.ga.assemble_sequence_from_recipe(recipe, template, the_order))
 if __name__ == '__main__':
     unittest.main()
