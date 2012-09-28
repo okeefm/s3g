@@ -57,18 +57,8 @@ class GcodeAssembler(object):
         @return dict variables: The default variables
           used by the gcode parser.
         """
-        start_recipe = {
-            'begin_print': begin_print,
-            'homing': homing,
-            'start_position': start_position,
-            'heat_platform': heat_platform,
-            'anchor': anchor,
-        }
-        end_recipe = {
-            'end_position': end_position,
-            'cool_platform': cool_platform,
-            'end_print': end_print
-        }
+        start_recipe = {}
+        end_recipe = {}
         variables = {}
         #Check for dualstrusion
         if tool_0 and tool_1:
@@ -91,6 +81,16 @@ class GcodeAssembler(object):
         start_recipe.update(mat_start_recipe)
         end_recipe.update(mat_end_recipe)
         variables.update(mat_variables)
+        start_recipe.update({
+            'begin_print': begin_print,
+            'homing': homing,
+            'start_position': start_position,
+            'anchor': anchor,
+        })
+        end_recipe.update({
+            'end_position': end_position,
+            'end_print': end_print
+        })
         return start_recipe, end_recipe, variables
 
     def assemble_start_sequence(self, recipe):
