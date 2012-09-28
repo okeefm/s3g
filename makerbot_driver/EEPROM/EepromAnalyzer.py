@@ -6,6 +6,8 @@ Eeprom.hh file.  Expects blocks of information in the form of:
 const static uint16_t <some name> = <some address>
 """
 
+import re
+
 
 class EndOfNamespaceError(IOError):
     def __init__(self):
@@ -81,7 +83,7 @@ class eeprom_analyzer(object):
         @return str name: The name of the current namespace
         """
         namespace = 'namespace'
-        end_of_eeprom = '#endif'
+        end_of_eeprom = '#endif // EEPROMMAP_HH'
         line = self.input_file.readline()
         while not line.startswith(namespace):
             if end_of_eeprom in line:
@@ -121,6 +123,9 @@ class eeprom_analyzer(object):
             line = line.rstrip(s)
         line = line.replace('\t', '')
         line = line.replace(" ", "")
+        if ';' in line:
+            m = re.search("[^;]*;", line)
+            line = m.group()
         (name, location) = line.split("=")
         return name, location
 
