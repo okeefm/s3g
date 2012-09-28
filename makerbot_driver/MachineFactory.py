@@ -51,7 +51,8 @@ class MachineFactory(object):
         if len(matches) > 0:
             bestProfile = matches[0]
             setattr(return_object, 's3g', s3gBot)
-            setattr(return_object, 'profile', makerbot_driver.Profile(bestProfile, self.profile_dir))
+            setattr(return_object, 'profile',
+                    makerbot_driver.Profile(bestProfile, self.profile_dir))
             parser = makerbot_driver.Gcode.GcodeParser()
             parser.s3g = s3gBot
             parser.state.profile = getattr(return_object, 'profile')
@@ -110,7 +111,7 @@ class MachineInquisitor(object):
         return makerbot_driver.s3g.from_filename(self._portname)
 
     def query(self, leaveOpen=True):
-        """ 
+        """
         open a connection to a machine and  query a bot for
         key settings needed to construct a machine from a profile
 
@@ -131,6 +132,5 @@ class MachineInquisitor(object):
             settings['uuid'] = uuid.uuid4()
         if not leaveOpen:
             s3gDriver.close()
-        s3gDriver.set_firmware_version(settings['fw_version'])
 
         return s3gDriver, settings
