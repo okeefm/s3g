@@ -22,10 +22,10 @@ class RpmProcessor(LineTransformProcessor):
     def __init__(self):
         super(RpmProcessor, self).__init__()
         self.code_map = {
-            re.compile('[^;(]*[mM]101'): self._transform_m101,
-            re.compile('[^;(]*[mM]102'): self._transform_m102,
-            re.compile('[^;(]*[mM]103'): self._transform_m103,
-            re.compile('[^;(]*[mM]108'): self._transform_m108,
+            re.compile('[^(;]*([(][^)]*[)][^;(]*)*[mM]101'): self._transform_m101,
+            re.compile('[^(;]*([(][^)]*[)][^;(]*)*[mM]102'): self._transform_m102,
+            re.compile('[^(;]*([(][^)]*[)][^;(]*)*[mM]103'): self._transform_m103,
+            re.compile('[^(;]*([(][^)]*[)][^;(]*)*[mM]108'): self._transform_m108,
         }
 
     def _transform_m101(self, input_line):

@@ -15,7 +15,7 @@ class ToolchangeProcessor(LineTransformProcessor):
             'B': 'M135 T1\n'
         }
         self.code_map = {
-            re.compile("[^;(]*?[gG]1.*?[aAbB]"): self._transform_gcode_into_toolchange,
+            re.compile("[^;(]*([(][^)]*[)][^(;]*)*[gG]1.*?[aAbB]"): self._transform_gcode_into_toolchange,
         }
         self.current_extruder = 'A'
 

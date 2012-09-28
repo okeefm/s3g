@@ -24,6 +24,7 @@ class TestToolchangeProcessor(unittest.TestCase):
             [[self.p.extruders['B'], "G1 B0"], 'G1 B0'],
             [[self.p.extruders['B'], "G1 b0"], 'G1 b0'],
             [[self.p.extruders['B'], "G1 X0 Y0 Z0 B50"], "G1 X0 Y0 Z0 B50"],
+            [[self.p.extruders['B'], '(comments)    G1 X0 Y0 Z0 B50'], "(comments)    G1 X0 Y0 Z0 B50"],
         ]
         for case in cases:
             self.p.current_extruder = 'A'
