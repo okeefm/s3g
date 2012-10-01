@@ -58,8 +58,8 @@ class TestLineReader(unittest.TestCase):
             'c': 3,
         }
         self.reader.dump_json(test_dic)
-        output_file = self.reader.output_file.name
-        self.reader.output_file.close()
+        output_file = self.reader.output_fh.name
+        self.reader.output_fh.close()
         with open(output_file, 'r') as f:
             written_vals = json.load(f)
         self.assertEqual(test_dic, written_vals)
