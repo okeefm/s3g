@@ -31,9 +31,8 @@ class TestAnchorProcessor(unittest.TestCase):
                 self.ap.calc_euclidean_distance(case[0], case[1]), case[2])
 
     def test_get_start_position(self):
-        prof = makerbot_driver.Profile('ReplicatorDual')
         expected_start_position = 'G1 X-112 Y-73 Z150 F3300.0 (move to waiting position)'
-        got_start_position = self.ap.get_start_position(prof)
+        got_start_position = self.ap.get_start_position()
         self.assertEqual(expected_start_position, got_start_position)
 
     def test_get_extruder(self):
@@ -162,13 +161,12 @@ class TestAnchorProcessor(unittest.TestCase):
         width_over_height = 1.6
         expected_distance = self.ap.feed_cross_section_area(
             layer_height, width_over_height) * distance
-        prof = makerbot_driver.Profile('ReplicatorDual')
         with tempfile.NamedTemporaryFile(suffix='.gcode', delete=False) as f:
             f.write("G1 X0 Y5 Z0.5 F5000\nG1 X50 Y100 Z200")
             input_file = f.name
         with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
             output_file = f.name
-        self.ap.process_file(input_file, output_file, prof)
+        self.ap.process_file(input_file, output_file)
         expected_codes = "G1 X0 Y5 Z0.5 F5000 A" + str(expected_distance) + "\nG92 A0\nG1 X0 Y5 Z0.5 F5000\nG1 X50 Y100 Z200"
         with open(output_file) as f:
             self.assertEqual(expected_codes, f.read())

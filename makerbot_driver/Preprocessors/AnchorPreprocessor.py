@@ -12,7 +12,7 @@ class AnchorPreprocessor(Preprocessor):
         super(AnchorPreprocessor, self).__init__()
         self.g1_regex = re.compile('[^(;]*([(][^)]*[)][^(;]*)*[gG]1 ')
 
-    def process_file(self, input_file, output_file, profile):
+    def process_file(self, input_file, output_file):
         first_movement = None
         looking_for_first_move = True
         with contextlib.nested(open(input_file), open(output_file, 'w')) as (i, o):
@@ -20,7 +20,7 @@ class AnchorPreprocessor(Preprocessor):
                 if re.match(self.g1_regex, line) and looking_for_first_move:
                     looking_for_first_move = False
                     first_movement = line
-                    start_position = self.get_start_position(profile)
+                    start_position = self.get_start_position()
                     anchor_commands = self.create_anchor_command(
                         start_position, line)
                     for com in anchor_commands:
@@ -87,12 +87,5 @@ class AnchorPreprocessor(Preprocessor):
         distance = math.sqrt(distance)
         return distance
 
-    def get_start_position(self, profile):
-        routine = "start_position"
-        template = "replicator_start_position"
-        gcodes = profile.values['print_start_sequence'][routine][template]
-        position = None
-        for line in gcodes:
-            if re.match(self.g1_regex, line):
-                position = line
-        return position
+    def get_start_position(self):
+        return "G1 X-112 Y-73 Z150 F3300.0 (move to waiting position)"
