@@ -22,6 +22,7 @@ class TestTemperatureProcessor(unittest.TestCase):
             ["M104(comments)\n", [""]],
             ["", [""]],
             ["(comments comments)   M104", [""]],
+            ["     M105", [""]],
             ["M105\n", [""]],
             ["M105(comments)\n", [""]],
             ["(comments comments)   M105", [""]],

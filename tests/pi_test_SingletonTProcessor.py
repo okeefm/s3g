@@ -35,6 +35,7 @@ class TestSingletonTProcessor(unittest.TestCase):
             ["G1 X0 Y0", ["G1 X0 Y0"]],
             ["T0;asdf", ["M135 T0\n"]],
             ["T0(asdf", ["M135 T0\n"]],
+            ["        T0", ['M135 T0\n']],
             ["THIS IS NOT GCODE", ["THIS IS NOT GCODE"]],
         ]
         for case in cases:
