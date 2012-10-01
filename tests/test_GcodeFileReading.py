@@ -200,7 +200,7 @@ def execute_file(the_file, parser):
             begin_print='tom_begin',
             homing='tom_homing',
             start_position='tom_start_position',
-            anchor='tom_anchor',
+            end_start_sequence='tom_end_start_sequence',
             end_position='tom_end_position',
             end_print='tom_end',
         )

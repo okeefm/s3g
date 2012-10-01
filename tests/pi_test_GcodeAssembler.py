@@ -37,7 +37,7 @@ class TestGcodeAssembler(unittest.TestCase):
             'start_position': 'replicator_start_position',
             'heat_platform': 'no_heat',
             'heat_tools': 'dualstrusion',
-            'anchor': 'replicator_anchor',
+            'end_start_sequence': 'replicator_end_start_sequence',
         }
         expected_end_template = {
             'end_position': 'replicator_end_position',
@@ -61,7 +61,7 @@ class TestGcodeAssembler(unittest.TestCase):
             'start_position': 'replicator_start_position',
             'heat_platform': 'no_heat',
             'heat_tools': 'heat_0',
-            'anchor': 'replicator_anchor',
+            'end_start_sequence': 'replicator_end_start_sequence',
         }
         expected_end_template = {
             'end_position': 'replicator_end_position',
@@ -85,7 +85,7 @@ class TestGcodeAssembler(unittest.TestCase):
             'start_position': 'replicator_start_position',
             'heat_platform': 'no_heat',
             'heat_tools': 'heat_1',
-            'anchor': 'replicator_anchor',
+            'end_start_sequence': 'replicator_end_start_sequence',
         }
         expected_end_template = {
             'end_position': 'replicator_end_position',
@@ -109,7 +109,7 @@ class TestGcodeAssembler(unittest.TestCase):
             'start_position': 'replicator_start_position',
             'heat_platform': 'heat_platform',
             'heat_tools': 'heat_1',
-            'anchor': 'replicator_anchor',
+            'end_start_sequence': 'replicator_end_start_sequence',
         }
         expected_end_template = {
             'end_position': 'replicator_end_position',
@@ -133,7 +133,7 @@ class TestGcodeAssembler(unittest.TestCase):
             'start_position': 'replicator_start_position',
             'heat_platform': 'heat_platform',
             'heat_tools': 'dualstrusion',
-            'anchor': 'replicator_anchor',
+            'end_start_sequence': 'replicator_end_start_sequence',
         }
         expected_end_template = {
             'end_position': 'replicator_end_position',
@@ -158,7 +158,7 @@ class TestGcodeAssembler(unittest.TestCase):
             'start_position': 'replicator_start_position',
             'heat_platform': None,
             'heat_tools': 'dualstrusion',
-            'anchor': 'replicator_anchor',
+            'end_start_sequence': 'replicator_end_start_sequence',
         }
         expected_end_template = {
             'end_position': 'replicator_end_position',
@@ -183,7 +183,7 @@ class TestGcodeAssembler(unittest.TestCase):
             'start_position',
             'heat_platform',
             'heat_tools',
-            'anchor',
+            'end_start_sequence',
         ]
 
         recipe = {
@@ -192,7 +192,7 @@ class TestGcodeAssembler(unittest.TestCase):
             'start_position': 'replicator_start_position',
             'heat_platform': 'no_heat',
             'heat_tools': 'dualstrusion',
-            'anchor': 'replicator_anchor'
+            'end_start_sequence': 'replicator_end_start_sequence'
         }
         start_sequence = self.profile.values['print_start_sequence']
         expected_gcode = []
