@@ -36,11 +36,12 @@ class AnchorPreprocessor(Preprocessor):
         # none of the following, so we need to generate the next command in this
         # seemingly bad way
         anchor_command = "G1 "
-        for d in ['X', 'Y', 'Z', 'F']:
+        for d in ['X', 'Y', 'Z']:
             if d in end_movement_codes:
                 part = d + str(end_movement_codes[d])
                 anchor_command += part
                 anchor_command += ' '
+        anchor_command += 'F%i ' % (1000)
         extruder = self.get_extruder(end_movement_codes)
         extrusion_distance = self.find_extrusion_distance(
             start_movement_codes, end_movement_codes)

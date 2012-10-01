@@ -92,35 +92,27 @@ class TestAnchorProcessor(unittest.TestCase):
         got_distance = self.ap.find_extrusion_distance(start_codes, end_codes)
         self.assertEqual(expected_distance, got_distance)
 
-    def test_create_anchor_command_no_distance_no_feedrate_no_extruder_axis(self):
+    def test_create_anchor_command_no_distance_no_extruder_axis(self):
         start_position = "G1 X0 Y0 Z1"
         end_position = "G1 X0 Y0 Z1"
-        expected_anchor_commands = ("G1 X0 Y0 Z1 A0.0\n", "G92 A0\n")
+        expected_anchor_commands = ("G1 X0 Y0 Z1 F1000 A0.0\n", "G92 A0\n")
 
         got_anchor_commands = self.ap.create_anchor_command(
             start_position, end_position)
         self.assertEqual(expected_anchor_commands, got_anchor_commands)
 
-    def test_create_anchor_command_no_distance_no_feedrate_e_extruder_axis(self):
+    def test_create_anchor_command_no_distance_e_extruder_axis(self):
         start_position = "G1 X0 Y0 Z1"
         end_position = "G1 X0 Y0 Z1 E10"
-        expected_anchor_commands = ("G1 X0 Y0 Z1 E0.0\n", "G92 E0\n")
+        expected_anchor_commands = ("G1 X0 Y0 Z1 F1000 E0.0\n", "G92 E0\n")
         got_anchor_commands = self.ap.create_anchor_command(
             start_position, end_position)
         self.assertEqual(expected_anchor_commands, got_anchor_commands)
 
-    def test_create_anchor_command_no_distance_no_feedrate_b_extruder_axis(self):
+    def test_create_anchor_command_no_distance_b_extruder_axis(self):
         start_position = "G1 X0 Y0 Z1"
         end_position = "G1 X0 Y0 Z1 B10"
-        expected_anchor_commands = ("G1 X0 Y0 Z1 B0.0\n", "G92 B0\n")
-        got_anchor_commands = self.ap.create_anchor_command(
-            start_position, end_position)
-        self.assertEqual(expected_anchor_commands, got_anchor_commands)
-
-    def test_create_anchor_command_no_distance_has_feedrate(self):
-        start_position = "G1 X0 Y0 Z1"
-        end_position = "G1 X0 Y0 Z1 E10 F5000"
-        expected_anchor_commands = ("G1 X0 Y0 Z1 F5000 E0.0\n", "G92 E0\n")
+        expected_anchor_commands = ("G1 X0 Y0 Z1 F1000 B0.0\n", "G92 B0\n")
         got_anchor_commands = self.ap.create_anchor_command(
             start_position, end_position)
         self.assertEqual(expected_anchor_commands, got_anchor_commands)
@@ -134,7 +126,7 @@ class TestAnchorProcessor(unittest.TestCase):
             layer_height, width_over_height)
         # Do a str concatenation since %i rounds to 6 places
         expected_anchor_commands = (
-            "G1 X0 Y1 Z1 A" + str(expected_distance) + "\n", "G92 A0\n")
+            "G1 X0 Y1 Z1 F1000 A" + str(expected_distance) + "\n", "G92 A0\n")
         got_anchor_commands = self.ap.create_anchor_command(
             start_position, end_position)
         self.assertEqual(expected_anchor_commands, got_anchor_commands)
@@ -149,7 +141,7 @@ class TestAnchorProcessor(unittest.TestCase):
             layer_height, width_over_height) * distance
         # Do a str concatenation since %i rounds to 6 places
         expected_anchor_commands = (
-            "G1 X0 Y2 Z1 A" + str(expected_distance) + "\n", "G92 A0\n")
+            "G1 X0 Y2 Z1 F1000 A" + str(expected_distance) + "\n", "G92 A0\n")
         got_anchor_commands = self.ap.create_anchor_command(
             start_position, end_position)
         self.assertEqual(expected_anchor_commands, got_anchor_commands)
@@ -167,7 +159,7 @@ class TestAnchorProcessor(unittest.TestCase):
         with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
             output_file = f.name
         self.ap.process_file(input_file, output_file)
-        expected_codes = "G1 X0 Y5 Z0.5 F5000 A" + str(expected_distance) + "\nG92 A0\nG1 X0 Y5 Z0.5 F5000\nG1 X50 Y100 Z200"
+        expected_codes = "G1 X0 Y5 Z0.5 F1000 A" + str(expected_distance) + "\nG92 A0\nG1 X0 Y5 Z0.5 F5000\nG1 X50 Y100 Z200"
         with open(output_file) as f:
             self.assertEqual(expected_codes, f.read())
 
