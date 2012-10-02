@@ -6,11 +6,64 @@ sys.path.append(lib_path)
 import unittest
 import threading
 import time
+import mock
 
 import makerbot_driver
 
 
-class TestBundlePreprocessorCallbacks(unittest.TestCase):
+class TestBundleProcessorCallbackAssignment(unittest.TestCase):
+
+    def setUp(self):
+        self.bp = makerbot_driver.GcodeProcessors.BundleProcessor()
+        self.bp._super_process_gcode = mock.Mock(return_value=[])
+        self.bp.progress_processor.process_gcode = mock.Mock()
+
+    def tearDown(self):
+        self.bp = None
+
+    def test_not_do_progress_no_callback(self):
+        self.bp.do_progress = False
+        callback = None
+        gcodes = []
+        self.bp.process_gcode(gcodes, callback)
+        self.bp._super_process_gcode.assert_called_once_with([], None)
+        self.assertEqual(
+            len(self.bp.progress_processor.process_gcode.mock_calls), 0)
+
+    def test_not_do_progress_callback(self):
+        self.bp.do_progress = False
+
+        def callback(percent):
+            pass
+        gcodes = []
+        self.bp.process_gcode(gcodes, callback)
+        self.bp._super_process_gcode.assert_called_once_with([], callback)
+        self.assertEqual(
+            len(self.bp.progress_processor.process_gcode.mock_calls), 0)
+
+    def test_do_progress_no_callback(self):
+        self.bp.do_progress = True
+        callback = None
+        gcodes = []
+        self.bp.process_gcode(gcodes, callback)
+        self.bp._super_process_gcode.assert_called_once_with([], callback)
+        self.bp.progress_processor.process_gcode.assert_called_once_with(
+            [], None)
+
+    def test_do_progress_callback(self):
+        self.bp.do_progress = True
+
+        def callback(percent):
+            pass
+        gcodes = []
+        self.bp.process_gcode(gcodes, callback)
+        self.bp._super_process_gcode.assert_called_once_with(
+            [], self.bp.new_callback)
+        self.bp.progress_processor.process_gcode.assert_called_once_with(
+            [], self.bp.progress_callback)
+
+
+class TestBundleProcessorCallbacks(unittest.TestCase):
 
     def setUp(self):
         self.bp = makerbot_driver.GcodeProcessors.BundleProcessor()
