@@ -6,6 +6,7 @@ sys.path.append(lib_path)
 import unittest
 import makerbot_driver
 import tempfile
+import re
 
 
 class TestSingletonTProcessor(unittest.TestCase):
@@ -16,6 +17,14 @@ class TestSingletonTProcessor(unittest.TestCase):
         self.p = None
 
     def test_transform_singleton(self):
+        class mockMatch:
+
+            def __init__(self, the_match):
+                self.the_match = the_match
+
+            def group(self):
+                return self.the_match
+
         cases = [
             ['T0\n', 'M135 T0\n'],
             ['T1\n', 'M135 T1\n'],
@@ -24,7 +33,8 @@ class TestSingletonTProcessor(unittest.TestCase):
             ['(comments)T0\n', 'M135 T0\n'],
         ]
         for case in cases:
-            self.assertEqual(case[1], self.p._transform_singleton(case[0]))
+            match_obj = re.search("(.*)[tT]([0-9])", case[0])
+            self.assertEqual(case[1], self.p._transform_singleton(match_obj))
 
     def test_regex(self):
         cases = [

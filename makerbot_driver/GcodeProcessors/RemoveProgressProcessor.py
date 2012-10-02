@@ -16,11 +16,11 @@ class RemoveProgressProcessor(LineTransformProcessor):
             re.compile("[^(;]*([(][^)]*[)][^;(]*)*[mM]137"): self._transform_m137,
         }
 
-    def _transform_m73(self, input_line):
+    def _transform_m73(self, match):
         return ""
 
-    def _transform_m137(self, input_line):
+    def _transform_m137(self, match):
         return ""
 
-    def _transform_m136(self, input_line):
+    def _transform_m136(self, match):
         return ""

@@ -14,8 +14,8 @@ class TemperatureProcessor(LineTransformProcessor):
             re.compile("[^;(]*([(][^)]*[)][^(;]*)*[mM]105"): self._transform_m105,
         }
 
-    def _transform_m104(self, input_line):
+    def _transform_m104(self, match):
         return ""
 
-    def _transform_m105(self, input_line):
+    def _transform_m105(self, match):
         return ""

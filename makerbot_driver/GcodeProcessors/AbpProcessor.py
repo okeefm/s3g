@@ -15,8 +15,8 @@ class AbpProcessor(LineTransformProcessor):
             re.compile("[^(;]*([(][^)]*[)][^(;]*)*[mM]107"): self._transform_m107,
         }
 
-    def _transform_m107(self, input_line):
+    def _transform_m107(self, match):
         return ""
 
-    def _transform_m106(self, input_line):
+    def _transform_m106(self, match):
         return ""

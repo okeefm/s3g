@@ -37,11 +37,10 @@ class SkeinforgeVersionChecker(LineTransformProcessor):
         super(SkeinforgeVersionChecker, self).__init__()
         self.version = version
         self.code_map = {
-            re.compile(".*using Skeinforge \("): self._check_version,
+            re.compile(".*using Skeinforge \((.*?)\)"): self._check_version,
         }
 
-    def _check_version(self, input_line):
-        match = re.match(".*using Skeinforge \((.*?)\)", input_line)
+    def _check_version(self, match):
         if int(match.group(1)) is not self.version:
             raise makerbot_driver.GcodeProcessors.VersionError
-        return input_line
+        return match.string

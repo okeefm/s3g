@@ -27,52 +27,52 @@ class CoordinateRemovalProcessor(LineTransformProcessor):
             re.compile('[^(;]*([(][^)]*[)][^;(]*)*[gG]90'): self._transform_g90,
         }
 
-    def _transform_g10(self, input_line):
+    def _transform_g10(self, match):
         """
         Given a line that has an "G10" command, transforms it into
         the proper output.
 
-        @param str input_line: The line to be transformed
+        @param str match: The line to be transformed
         @return str: The transformed line
         """
         return ""
 
-    def _transform_g54(self, input_line):
+    def _transform_g54(self, match):
         """
         Given a line that has an "G54" command, transforms it into
         the proper output.
 
-        @param str input_line: The line to be transformed
+        @param str match: The line to be transformed
         @return str: The transformed line
         """
         return ""
 
-    def _transform_g55(self, input_line):
+    def _transform_g55(self, match):
         """
         Given a line that has an "G55" command, transforms it into
         the proper output.
 
-        @param str input_line: The line to be transformed
+        @param str match: The line to be transformed
         @return str: The transformed line
         """
         return ""
 
-    def _transform_g21(self, input_line):
+    def _transform_g21(self, match):
         """
         given a line with a G21 command, transforms it into the
         proper output.
 
-        @param str input_line: The line to be transformed
+        @param str match: The line to be transformed
         @return str: The transformed line
         """
         return ""
 
-    def _transform_g90(self, input_line):
+    def _transform_g90(self, match):
         """
         given a line with a G90 command, transforms it into the
         proper output.
 
-        @param str input_line: The line to be transformed
+        @param str match: The line to be transformed
         @return str: The transformed line
         """
         return ""

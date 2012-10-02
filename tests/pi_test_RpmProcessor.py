@@ -5,6 +5,7 @@ sys.path.append(lib_path)
 
 import unittest
 import tempfile
+import re
 
 import makerbot_driver
 
@@ -62,8 +63,10 @@ class RpmProcessor(unittest.TestCase):
             'M108 (heres a comment) T0;heres another comment\n': 'M135 T0; heres another commentheres a comment\n',
         }
         for key in input_output_dict:
+            match_obj = re.search('.*', key)
             self.assertEqual(
-                input_output_dict[key], self.rp._transform_m108(key))
+                input_output_dict[key], self.rp._transform_m108(match_obj)
+            )
 
     def test_process_file_can_proces_parsable_file(self):
         #Make input temp file

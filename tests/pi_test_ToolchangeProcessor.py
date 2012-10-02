@@ -24,7 +24,8 @@ class TestToolchangeProcessor(unittest.TestCase):
             [[self.p.extruders['B'], "G1 B0"], 'G1 B0'],
             [[self.p.extruders['B'], "G1 b0"], 'G1 b0'],
             [[self.p.extruders['B'], "G1 X0 Y0 Z0 B50"], "G1 X0 Y0 Z0 B50"],
-            [[self.p.extruders['B'], '(comments)    G1 X0 Y0 Z0 B50'], "(comments)    G1 X0 Y0 Z0 B50"],
+            [[self.p.extruders['B'], '(comments)    G1 X0 Y0 Z0 B50'],
+             "(comments)    G1 X0 Y0 Z0 B50"],
             [[self.p.extruders['B'], '(comments) (comments) (comments)     G1 X0 Y0 Z0 B50'], "(comments) (comments) (comments)     G1 X0 Y0 Z0 B50"],
             [[self.p.extruders['B'], '     G1 X0 B50'], '     G1 X0 B50'],
         ]
@@ -48,8 +49,27 @@ class TestToolchangeProcessor(unittest.TestCase):
             self.assertEqual(case[0], self.p._transform_code(case[1]))
 
     def test_process_file(self):
-        gcodes = ["G1 X50 Y50\n", "G1 X0 Y0 A50\n", "G1 X0 Y0 B50\n", "G1 X0 Y0 B50\n", "G1 X0 Y0 B50\n", "G1 X0 Y0 A50\n", "G1 X0 Y0 B50\n"]
-        expected_output = ["G1 X50 Y50\n", "G1 X0 Y0 A50\n", "M135 T1\n", "G1 X0 Y0 B50\n", "G1 X0 Y0 B50\n", "G1 X0 Y0 B50\n", "M135 T0\n", "G1 X0 Y0 A50\n", "M135 T1\n", "G1 X0 Y0 B50\n"]
+        gcodes = [
+            "G1 X50 Y50\n",
+            "G1 X0 Y0 A50\n",
+            "G1 X0 Y0 B50\n",
+            "G1 X0 Y0 B50\n",
+            "G1 X0 Y0 B50\n",
+            "G1 X0 Y0 A50\n",
+            "G1 X0 Y0 B50\n"
+        ]
+        expected_output = [
+            "G1 X50 Y50\n",
+            "G1 X0 Y0 A50\n",
+            "M135 T1\n",
+            "G1 X0 Y0 B50\n",
+            "G1 X0 Y0 B50\n",
+            "G1 X0 Y0 B50\n",
+            "M135 T0\n",
+            "G1 X0 Y0 A50\n",
+            "M135 T1\n",
+            "G1 X0 Y0 B50\n"
+        ]
         got_output = self.p.process_gcode(gcodes)
         self.assertEqual(expected_output, got_output)
 
