@@ -1,6 +1,6 @@
 __all__ = ['GcodeProcessors', 'Encoder', 'EEPROM', 'FileReader', 'Gcode', 'Writer', 'MachineFactory', 'MachineDetector', 's3g', 'profile', 'constants', 'errors', 'GcodeAssembler', 'Factory']
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 from constants import *
 from errors import *
