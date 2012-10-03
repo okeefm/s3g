@@ -14,6 +14,7 @@ class AnchorProcessor(LineTransformProcessor):
             re.compile('[^(;]*([(][^)]*[)][^(;]*)*[gG]1 '): self._transform_anchor,
         }
         self.looking_for_first_move = True
+        self.speed = 1000
 
     def _transform_anchor(self, match):
         return_lines = [match.string]
@@ -24,6 +25,15 @@ class AnchorProcessor(LineTransformProcessor):
             return_lines.append(match.string)
             self.looking_for_first_move = False
         return return_lines
+
+    def create_z_move_if_necessary(self, start_movement_codes, end_movement_codes):
+        return_codes = []
+        if 'Z' in start_movement_codes and 'Z' in end_movement_codes:
+            start_z = start_movement_codes['Z']
+            end_z = end_movement_codes['Z']
+            if start_z - end_z is not 0:
+                return_codes.append('G1 Z%f F%i\n' % (end_z, self.speed))
+        return return_codes
 
     def create_anchor_command(self, start_position, end_position):
         assert start_position is not None and end_position is not None
@@ -39,13 +49,15 @@ class AnchorProcessor(LineTransformProcessor):
                 part = d + str(end_movement_codes[d])
                 anchor_command += part
                 anchor_command += ' '
-        anchor_command += 'F%i ' % (1000)
+        anchor_command += 'F%i ' % (self.speed)
         extruder = self.get_extruder(end_movement_codes)
         extrusion_distance = self.find_extrusion_distance(
             start_movement_codes, end_movement_codes)
         anchor_command += extruder + str(extrusion_distance) + "\n"
         reset_command = "G92 %s0" % (extruder) + "\n"
-        return anchor_command, reset_command
+        return_codes = self.create_z_move_if_necessary(start_movement_codes, end_movement_codes)
+        return_codes.extend([anchor_command, reset_command])
+        return return_codes
 
     def get_extruder(self, codes):
         extruder = 'A'
@@ -56,14 +68,14 @@ class AnchorProcessor(LineTransformProcessor):
         return extruder
 
     def find_extrusion_distance(self, start_position_codes, end_position_codes):
+        layer_height = end_position_codes.get('Z', 0)
         start_position_point = []
         end_position_point = []
-        for d in ['X', 'Y', 'Z']:
+        for d in ['X', 'Y']:
             start_position_point.append(start_position_codes.get(d, 0))
             end_position_point.append(end_position_codes.get(d, 0))
         distance = self.calc_euclidean_distance(
             start_position_point, end_position_point)
-        layer_height = end_position_point[2]
         width_over_height = 1.6
         cross_section = self.feed_cross_section_area(
             float(layer_height), width_over_height)
