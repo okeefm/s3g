@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import re
+import warnings
 
 from .BundleProcessor import BundleProcessor
 from .LineTransformProcessor import LineTransformProcessor
@@ -35,5 +36,5 @@ class SlicerVersionChecker(LineTransformProcessor):
 
     def _check_version(self, match):
         if not match.group(1) == self.version:
-            raise makerbot_driver.GcodeProcessors.VersionError
+            warnings.warn("Processing incompatible version of Slicer, resulting file may not be compatible with Makerbot_Driver", UserWarning)
         return match.string

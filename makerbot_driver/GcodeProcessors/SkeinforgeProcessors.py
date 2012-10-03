@@ -4,6 +4,7 @@ A set of preprocessors for the skeinforge engine
 from __future__ import absolute_import
 
 import re
+import warnings
 
 from .BundleProcessor import BundleProcessor
 from .LineTransformProcessor import LineTransformProcessor
@@ -46,5 +47,5 @@ class SkeinforgeVersionChecker(LineTransformProcessor):
         version_numbers = match.group(1).split('.')
         compatible_numbers = self.version.split('.')
         if not version_numbers[0] == compatible_numbers[0]:
-            raise makerbot_driver.GcodeProcessors.VersionError
+            warnings.warn("Processing incompatible version of Skeinforge, resulting file may not be compatible with Makerbot_Driver", UserWarning)
         return match.string
