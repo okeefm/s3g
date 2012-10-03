@@ -38,12 +38,12 @@ class Skeinforge50ProcessorTests(unittest.TestCase):
             "M101\n",
             "M102\n",
             "M108\n",
-            "G1 X0 Y0 Z0 A0 B0\n"
+            "G92 X0 Y0 Z0 A0 B0\n"
         ]
         expected_output = [
             '(*  using Skeinforge (50)  *)\n',
             'M73 P50 (progress (50%))\n',
-            'G1 X0 Y0 Z0 A0 B0\n',
+            'G92 X0 Y0 Z0 A0 B0\n',
             'M73 P100 (progress (100%))\n',
         ]
         got_output = self.sp.process_gcode(gcodes)
@@ -52,24 +52,24 @@ class Skeinforge50ProcessorTests(unittest.TestCase):
     def test_process_file_stress_test(self):
         gcodes = [
             "G90\n",
-            "G1 A0\n",
-            "G1 B0\n",
+            "G92 A0\n",
+            "G92 B0\n",
             "M101\n",
             "G21\n",
-            "G1 A0\n",
+            "G92 A0\n",
             "M104\n",
             "M108\n",
-            "G1 B0\n",
+            "G92 B0\n",
             "M105\n",
         ]
         expected_output = [
-            "G1 A0\n",
+            "G92 A0\n",
             "M73 P25 (progress (25%))\n",
-            "G1 B0\n",
+            "G92 B0\n",
             "M73 P50 (progress (50%))\n",
-            "G1 A0\n",
+            "G92 A0\n",
             "M73 P75 (progress (75%))\n",
-            "G1 B0\n",
+            "G92 B0\n",
             "M73 P100 (progress (100%))\n",
         ]
         got_output = self.sp.process_gcode(gcodes)
