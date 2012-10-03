@@ -24,13 +24,16 @@ class Skeinforge50ProcessorTests(unittest.TestCase):
         self.assertEqual(expected_output, got_output)
 
     def test_process_file_bad_version(self):
-        gcodes = ["G21\n", "(*  using Skeinforge (49)  *)"]
+        gcodes = [
+            "G21\n",
+            "(<version> 11.03.13 </version>)\n",
+        ]
         self.assertRaises(makerbot_driver.GcodeProcessors.VersionError,
                           self.sp.process_gcode, gcodes)
 
     def test_process_file_progress_updates(self):
         gcodes = [
-            "(*  using Skeinforge (50)  *)\n",
+            "(<version> 12.03.14 </version)\n",
             "G90\n",
             "G21\n",
             "M104 S500\n",
@@ -41,7 +44,7 @@ class Skeinforge50ProcessorTests(unittest.TestCase):
             "G92 X0 Y0 Z0 A0 B0\n"
         ]
         expected_output = [
-            '(*  using Skeinforge (50)  *)\n',
+            '(<version> 12.03.14 </version)\n',
             'M73 P50 (progress (50%))\n',
             'G92 X0 Y0 Z0 A0 B0\n',
             'M73 P100 (progress (100%))\n',
@@ -79,7 +82,7 @@ class Skeinforge50ProcessorTests(unittest.TestCase):
 class TestSkeinforgeVersioner(unittest.TestCase):
 
     def setUp(self):
-        self.version = 50
+        self.version = "12.03.14"
         self.vp = makerbot_driver.GcodeProcessors.SkeinforgeVersionChecker(
             self.version)
 
@@ -87,12 +90,12 @@ class TestSkeinforgeVersioner(unittest.TestCase):
         self.vp = None
 
     def test_version_check_good_version(self):
-        line = "(*  using Skeinforge (50)  *)"
+        line = "(<version> 12.03.14 </version>)"
         output = self.vp._transform_code(line)
         self.assertEqual([line], output)
 
     def test_version_check_bad_version(self):
-        line = "(*  using Skeinforge (49)  *)"
+        line = "(<version> 11.03.13 </version>)"
         self.assertRaises(makerbot_driver.GcodeProcessors.VersionError,
                           self.vp._transform_code, line)
 

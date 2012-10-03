@@ -22,7 +22,7 @@ class Skeinforge50Processor(BundleProcessor):
     """
     def __init__(self):
         super(Skeinforge50Processor, self).__init__()
-        self.version = 50
+        self.version = '12.03.14'
         self.processors = [
             CoordinateRemovalProcessor(),
             TemperatureProcessor(),
@@ -39,10 +39,12 @@ class SkeinforgeVersionChecker(LineTransformProcessor):
         super(SkeinforgeVersionChecker, self).__init__()
         self.version = version
         self.code_map = {
-            re.compile(".*using Skeinforge \((.*?)\)"): self._check_version,
+            re.compile("\(<version> (.*?) </version>\)$"): self._check_version,
         }
 
     def _check_version(self, match):
-        if int(match.group(1)) is not self.version:
+        version_numbers = match.group(1).split('.')
+        compatible_numbers = self.version.split('.')
+        if not version_numbers[0] == compatible_numbers[0]:
             raise makerbot_driver.GcodeProcessors.VersionError
         return match.string
