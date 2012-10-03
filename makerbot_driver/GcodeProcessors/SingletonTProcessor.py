@@ -11,12 +11,9 @@ class SingletonTProcessor(LineTransformProcessor):
     def __init__(self):
         super(SingletonTProcessor, self).__init__()
         self.code_map = {
-            re.compile(" *[tT][0-9] *[;(.*]*"): self._transform_singleton
+            re.compile("[^(;]*([(][^)]*[)][^(;]*)*[tT]([0-9])"): self._transform_singleton
         }
-        self.singleton_search = re.compile(" *[tT][0-9]")
 
-    def _transform_singleton(self, input_line):
-        m = re.match(self.singleton_search, input_line)
-        the_match = m.group()
-        return_line = 'M135 T%s\n' % (the_match[-1])
+    def _transform_singleton(self, match):
+        return_line = 'M135 T%s\n' % (match.group(2))
         return return_line

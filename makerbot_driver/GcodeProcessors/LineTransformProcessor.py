@@ -47,7 +47,7 @@ class LineTransformProcessor(Processor):
         for key in self.code_map:
             match = re.match(key, code)
             if match is not None:
-                tcode = self.code_map[key](code)
+                tcode = self.code_map[key](match)
                 break
         #Always use lists so we can extend
         if not isinstance(tcode, list):

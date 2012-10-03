@@ -15,17 +15,15 @@ class ToolchangeProcessor(LineTransformProcessor):
             'B': 'M135 T1\n'
         }
         self.code_map = {
-            re.compile("[^;(]*?[gG]1.*?[aAbB]"): self._transform_gcode_into_toolchange,
+            re.compile("[^;(]*([(][^)]*[)][^(;]*)*[gG]1.*?([aAbB])[.]*"): self._transform_gcode_into_toolchange,
         }
         self.current_extruder = 'A'
 
-    def _transform_gcode_into_toolchange(self, input_line):
-        return_lines = [input_line]
-        #XOR of A in input_line and B in input_line
-        if not ("A" in input_line == "B" in input_line):
-            extruder_regex = "[aAbB]"
-            extruder_match = re.search(extruder_regex, input_line)
-            new_extruder = extruder_match.group().upper()
+    def _transform_gcode_into_toolchange(self, match):
+        return_lines = [match.string]
+        #XOR of A in match and B in match
+        if not ("A" in match.group() == "B" in match.group()):
+            new_extruder = match.group(2).upper()
             if not new_extruder == self.current_extruder:
                 self.current_extruder = new_extruder
                 return_lines.insert(0, self.extruders[self.current_extruder])

@@ -19,8 +19,7 @@ class FileWriter(AbstractWriter):
 
         @param string file File object to write to.
         """
-        super(FileWriter, self).__init__()
-        self.file = file
+        super(FileWriter, self).__init__(file)
         self.check_binary_mode()
         self._log = logging.getLogger(self.__class__.__name__)
 

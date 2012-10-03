@@ -20,9 +20,8 @@ class StreamWriter(AbstractWriter):
 
         @param string file File object to interact with
         """
-        super(StreamWriter, self).__init__()
+        super(StreamWriter, self).__init__(file)
         self._log = logging.getLogger(self.__class__.__name__)
-        self.file = file
         self._log.info('{"event":"begin_writing_to_stream", "stream":%s}',
                        str(self.file))
         self.total_retries = 0

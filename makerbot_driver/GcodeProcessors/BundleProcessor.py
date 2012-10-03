@@ -12,6 +12,8 @@ class BundleProcessor(LineTransformProcessor):
         self.code_map = {}
         self.progress_processor = ProgressProcessor()
         self.do_progress = True
+        # Held here for testing purposes
+        self._super_process_gcode = super(BundleProcessor, self).process_gcode
 
     def collate_codemaps(self):
         transform_code = "_transform_[gm]"
@@ -28,21 +30,30 @@ class BundleProcessor(LineTransformProcessor):
         if self.do_progress is False:
             new_callback = callback
         elif callback is not None:
-            def new_callback(percent):
-                #Since we do two passes with percent, we only want the
-                #first percent to go up to 50
-                callback(percent / 2)
-
-            def progress_callback(percent):
-                #Since we do two passes with percent, we want the
-                #second percent to go up to 100
-                callback(50 + percent / 2)
-        output = super(BundleProcessor, self).process_gcode(gcodes, new_callback)
+            self.callback = callback
+            new_callback = self.new_callback
+            progress_callback = self.progress_callback
+        output = self._super_process_gcode(gcodes, new_callback)
         if self.do_progress:
-            output = self.progress_processor.process_gcode(output, progress_callback)
+            output = self.progress_processor.process_gcode(
+                output, progress_callback)
         return output
 
     def set_external_stop(self):
         super(BundleProcessor, self).set_external_stop()
         with self._condition:
             self.progress_processor.set_external_stop()
+
+    def new_callback(self, percent):
+        """
+        Since we do two passes with percent, we only want the
+        first percent to go up to 50.
+        """
+        self.callback(percent / 2)
+
+    def progress_callback(self, percent):
+        """
+        Since we do two passes with percent, we want the
+        second percent to go up to 100
+        """
+        self.callback(50 + percent / 2)

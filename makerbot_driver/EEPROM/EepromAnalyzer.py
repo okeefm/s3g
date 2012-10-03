@@ -6,6 +6,8 @@ Eeprom.hh file.  Expects blocks of information in the form of:
 const static uint16_t <some name> = <some address>
 """
 
+import re
+
 
 class EndOfNamespaceError(IOError):
     def __init__(self):
@@ -22,9 +24,9 @@ import optparse
 
 class eeprom_analyzer(object):
 
-    def __init__(self, input_file, output_file):
-        self.output_file = output_file
-        self.input_file = input_file
+    def __init__(self, input_fh, output_fh):
+        self.output_fh = output_fh
+        self.input_fh = input_fh
         self.eeprom_map = {}  # Contains entries and offsets
         self.eeprom_data = {}  # Contains data about the eeprom (i.e. length)
 
@@ -39,10 +41,10 @@ class eeprom_analyzer(object):
                         self.find_next_entry()
                         #At this point we are on a line thats supposed to have variables
                         variables = self.parse_out_variables(
-                            self.input_file.readline())
+                            self.input_fh.readline())
                         #AT this point we are at the variable declaration in the .hh file
                         (name, location) = self.parse_out_name_and_location(
-                            self.input_file.readline())
+                            self.input_fh.readline())
                         #Begin creating the dict for this entry
                         v = {
                             'offset': location,
@@ -65,11 +67,11 @@ class eeprom_analyzer(object):
     def find_next_entry(self):
         namespace_end = '}'
         entry_line = '//$BEGIN_ENTRY'
-        line = self.input_file.readline()
+        line = self.input_fh.readline()
         while entry_line not in line:
             if namespace_end in line:
                 raise EndOfNamespaceError
-            line = self.input_file.readline()
+            line = self.input_fh.readline()
         return line
 
     def find_next_namespace(self):
@@ -81,12 +83,12 @@ class eeprom_analyzer(object):
         @return str name: The name of the current namespace
         """
         namespace = 'namespace'
-        end_of_eeprom = '#endif'
-        line = self.input_file.readline()
+        end_of_eeprom = '#endif // EEPROMMAP_HH'
+        line = self.input_fh.readline()
         while not line.startswith(namespace):
             if end_of_eeprom in line:
                 raise EndOfEepromError
-            line = self.input_file.readline()
+            line = self.input_fh.readline()
         return self.parse_out_namespace_name(line)
 
     def parse_out_namespace_name(self, line):
@@ -121,6 +123,9 @@ class eeprom_analyzer(object):
             line = line.rstrip(s)
         line = line.replace('\t', '')
         line = line.replace(" ", "")
+        if ';' in line:
+            m = re.search("[^;]*;", line)
+            line = m.group()
         (name, location) = line.split("=")
         return name, location
 
@@ -136,7 +141,7 @@ class eeprom_analyzer(object):
 
     def dump_json(self, eeprom_map):
         output = json.dumps(eeprom_map, sort_keys=True, indent=2)
-        self.output_file.write(output)
+        self.output_fh.write(output)
 
     def collate_maps(self, the_map):
         collated_map = the_map
@@ -149,13 +154,13 @@ class eeprom_analyzer(object):
 
 if __name__ == '__main__':
     parser = optparse.OptionParser()
-    parser.add_option('-i', '--input_file', dest='input_file',
+    parser.add_option('-i', '--input_fh', dest='input_fh',
                       help='The file you would like to parse',
                       default='EepromMap_5.6.hh')
-    parser.add_option('-o', '--output_file', dest='output_file',
+    parser.add_option('-o', '--output_fh', dest='output_fh',
                       help='where you would like to save the map to',
                       )
     (options, args) = parser.parse_args()
     ea = eeprom_analyzer(
-        open(options.input_file), open(options.output_file, 'w'))
+        open(options.input_fh), open(options.output_fh, 'w'))
     ea.parse_file()

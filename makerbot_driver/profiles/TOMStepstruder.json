@@ -72,10 +72,8 @@
                 "M133 T0"
             ]
         },
-        "anchor": {
-            "tom_anchor": [
-                "G1 Z0.6      (Position Height)"
-            ]
+        "end_start_sequence": {
+            "tom_end_start_sequence": []
         }
     },
     "print_end_sequence": {

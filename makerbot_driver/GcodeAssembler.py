@@ -20,7 +20,7 @@ class GcodeAssembler(object):
             'start_position',
             'heat_platform',
             'heat_tools',
-            'anchor',
+            'end_start_sequence',
         ]
         self.end_order = [
             'end_position',
@@ -37,11 +37,11 @@ class GcodeAssembler(object):
                         begin_print='replicator_begin',
                         homing='replicator_homing',
                         start_position='replicator_start_position',
-                        heat_platform='heat_platform',
-                        anchor='replicator_anchor',
+                        end_start_sequence='replicator_end_start_sequence',
                         end_position='replicator_end_position',
-                        cool_platform='cool_platform',
                         end_print='replicator_end',
+                        heat_platform_override=False,
+                        no_heat_platform_override=False,
                         ):
         """
         The recipe assembler.  Has several built in
@@ -85,12 +85,18 @@ class GcodeAssembler(object):
             'begin_print': begin_print,
             'homing': homing,
             'start_position': start_position,
-            'anchor': anchor,
+            'end_start_sequence': end_start_sequence,
         })
         end_recipe.update({
             'end_position': end_position,
             'end_print': end_print
         })
+        if heat_platform_override:
+            start_recipe.update({'heat_platform': 'heat_platform'})
+            end_recipe.update({'cool_platform': 'cool_platform'})
+        if no_heat_platform_override:
+            start_recipe.update({'heat_platform': None})
+            end_recipe.update({'cool_platform': None})
         return start_recipe, end_recipe, variables
 
     def assemble_start_sequence(self, recipe):
@@ -133,7 +139,8 @@ class GcodeAssembler(object):
         gcodes = []
         template = self.machine_profile.values[template_name]
         for routine in order:
-            gcodes.extend(template[routine][recipe[routine]])
+            if recipe[routine] is not None:
+                gcodes.extend(template[routine][recipe[routine]])
         return gcodes
 
     def get_recipes_and_variables(self, key):
