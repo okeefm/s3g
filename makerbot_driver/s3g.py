@@ -1383,15 +1383,17 @@ class s3g(object):
         )
         self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_SERVO_2_POSITION'], payload)
 
-    def s4g_version(self, stream_version, checksum=0x0000):
+    def s4g_version(self, high_bite, low_bite, checksum=0x0000):
         """
         Send an s4g_version packet to inform the bot what version
         s4g we are sending and potential checksum for succeeding
         commands.
 
-        @param int stream_version: Version of succeeding commands
+        @param int high_bite: High bite for version (i.e. 1 for 1.0)
+        @param int low_bite: Low bite for version (i.e. 0 for 1.0)
         @param int checksum: Checksum for succeeding commands
         """
+        stream_version = high_bite * 100 + low_bite
         payload = struct.pack(
             '<BHBIBBBB',
             makerbot_driver.host_action_command_dict['S4G_VERSION'],

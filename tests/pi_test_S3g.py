@@ -2060,6 +2060,8 @@ class S3gTestsFirmware500(unittest.TestCase):
     def test_s4g_version(self):
         checksum = 0x0000
         stream_version = 601
+        high_bite = 6
+        low_bite = 1
         extra_byte = 0
 
         response_payload = bytearray()
@@ -2067,7 +2069,7 @@ class S3gTestsFirmware500(unittest.TestCase):
         self.outputstream.write(Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
-        self.r.s4g_version(stream_version, checksum)
+        self.r.s4g_version(high_bite, low_bite, checksum)
 
         packet = bytearray(self.inputstream.getvalue())
         payload = Encoder.decode_packet(packet)
