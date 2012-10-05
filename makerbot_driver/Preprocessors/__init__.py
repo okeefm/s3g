@@ -1,4 +1,4 @@
-all = ['PreprocessorFactory', 'Preprocessor', 'ProgressPreprocessor', 'Skeinforge50Preprocessor', 'ToolchangePreprocessor', 'SingletonTPreprocessor', 'DefaultPreprocessor', 'RpmPreprocessor', 'SlicerPreprocessor', 'CoordinateRemovalPreprocessor', 'RemoveRepGStartEndGcode', 'AnchorPreprocessor', 'errors']
+all = ['PreprocessorFactory', 'Preprocessor', 'ProgressPreprocessor', 'Skeinforge50Preprocessor', 'ToolchangePreprocessor', 'SingletonTPreprocessor', 'DefaultPreprocessor', 'RpmPreprocessor', 'SlicerPreprocessor', 'CoordinateRemovalPreprocessor', 'RemoveRepGStartEndGcode', 'AnchorPreprocessor', 'ToolSwapPreprocessor', 'errors']
 
 from PreprocessorFactory import *
 from Preprocessor import *
@@ -12,4 +12,5 @@ from SlicerPreprocessor import *
 from CoordinateRemovalPreprocessor import *
 from RemoveRepGStartEndGcode import *
 from AnchorPreprocessor import *
+from ToolSwapPreprocessor import *
 from errors import *

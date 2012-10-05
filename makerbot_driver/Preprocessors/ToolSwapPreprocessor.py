@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import re
+import contextlib
 
 from .Preprocessor import Preprocessor
 import makerbot_driver
@@ -14,8 +15,13 @@ class ToolSwapPreprocessor(Preprocessor):
 
     def __init__(self):
         self.code_map = {
-            re.compile(".?* ([aAbB])*|.?* [tT]([0-9])"): self._transform_tool_swap,
+            re.compile("[^(;]*([(][^)]*[)][^(;]*)*([aAbB])|[^(;]*([(][^)]*[)][^(;]*)*[tT]([0-9])"): self._transform_tool_swap,
         }
+
+    def process_file(self, input_file, output_file):
+        with contextlib.nested(open(input_file), open(output_file, 'w')) as (i, o):
+            for line in i:
+                o.write(self._transform_line(line))
 
     def _transform_line(self, line):
         """Given a line, transforms that line into its correct output
@@ -24,13 +30,13 @@ class ToolSwapPreprocessor(Preprocessor):
         @return str: Transformed line
         """
         for key in self.code_map:
-            if key in line:
+            if re.match(key, line):
                 #transform the line
                 line = self.code_map[key](line)
                 break
         return line
 
-    def self._transform_tool_swap(self, input_line):
+    def _transform_tool_swap(self, input_line):
         input_line = input_line.upper()
         holder = '%'
         input_line = input_line.replace('A', holder)
