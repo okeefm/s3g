@@ -54,7 +54,8 @@ class s3g(object):
 
     def set_firmware_version(self, firmware_version):
         self.firmware_version = firmware_version
-        self.s4g_flag = self.convert_to_usable_firmware_version(firmware_version) >= self.s4g_fw_version
+        self.s4g_flag = self.convert_to_usable_firmware_version(
+            firmware_version) >= self.s4g_fw_version
 
     def convert_to_usable_firmware_version(self, firmware_version):
         """
@@ -367,7 +368,8 @@ class s3g(object):
         """
         payload = struct.pack(
             '<BBHH',
-            makerbot_driver.host_action_command_dict['WAIT_FOR_PLATFORM_READY'],
+            makerbot_driver.host_action_command_dict[
+                'WAIT_FOR_PLATFORM_READY'],
             tool_index,
             delay,
             timeout
@@ -454,7 +456,8 @@ class s3g(object):
 
         payload = struct.pack(
             '<BiiiiiIB',
-            makerbot_driver.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'],
+            makerbot_driver.host_action_command_dict[
+                'QUEUE_EXTENDED_POINT_NEW'],
             position[0], position[1], position[2], position[3], position[4],
             duration,
             makerbot_driver.Encoder.encode_axes(relative_axes)
@@ -630,7 +633,8 @@ class s3g(object):
         """
         payload = struct.pack(
             '<B',
-            makerbot_driver.host_query_command_dict['GET_AVAILABLE_BUFFER_SIZE'],
+            makerbot_driver.host_query_command_dict[
+                'GET_AVAILABLE_BUFFER_SIZE'],
         )
 
         response = self.writer.send_query_payload(payload)
@@ -798,7 +802,8 @@ class s3g(object):
 
         payload = struct.pack(
             '<BiiiiiIBfh',
-            makerbot_driver.makerbot_driver.host_action_command_dict['QUEUE_EXTENDED_POINT_ACCELERATED'],
+            makerbot_driver.makerbot_driver.host_action_command_dict[
+                'QUEUE_EXTENDED_POINT_ACCELERATED'],
             position[0], position[1], position[2], position[3], position[4],
             dda_rate,
             makerbot_driver.Encoder.encode_axes(relative_axes),
@@ -817,11 +822,13 @@ class s3g(object):
             raise makerbot_driver.PointLengthError(len(position))
         if self.s4g_flag:
             dda_rate = 1000000.0 / float(dda_speed)
-            self.queue_extended_point_s4g(position, dda_rate, relative_axes, e_distance, feedrate_mm_sec)
+            self.queue_extended_point_s4g(position, dda_rate, relative_axes,
+                                          e_distance, feedrate_mm_sec)
         else:
             payload = struct.pack(
                 '<BiiiiiI',
-                makerbot_driver.host_action_command_dict['QUEUE_EXTENDED_POINT'],
+                makerbot_driver.host_action_command_dict[
+                    'QUEUE_EXTENDED_POINT'],
                 position[0], position[1], position[2],
                 position[3], position[4], dda_speed
             )
@@ -969,7 +976,8 @@ class s3g(object):
                                     other_info_in_packet]
         payload = struct.pack(
             '<BI',
-            makerbot_driver.host_action_command_dict['BUILD_START_NOTIFICATION'], 0
+            makerbot_driver.host_action_command_dict[
+                'BUILD_START_NOTIFICATION'], 0
         )
 
         payload += build_name
@@ -1383,7 +1391,7 @@ class s3g(object):
         )
         self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_SERVO_2_POSITION'], payload)
 
-    def s4g_version(self, high_bite, low_bite, checksum=0x0000):
+    def s4g_version(self, high_bite, low_bite, checksum=0x0000, pid=0xB015):
         """
         Send an s4g_version packet to inform the bot what version
         s4g we are sending and potential checksum for succeeding
@@ -1391,19 +1399,27 @@ class s3g(object):
 
         @param int high_bite: High bite for version (i.e. 1 for 1.0)
         @param int low_bite: Low bite for version (i.e. 0 for 1.0)
+        @param int pid: PID for the bot you want to print to
         @param int checksum: Checksum for succeeding commands
         """
-        stream_version = high_bite * 100 + low_bite
         payload = struct.pack(
-            '<BHBIBBBB',
+            '<BBBBIHBBBBBBBBBBB',
             makerbot_driver.host_action_command_dict['S4G_VERSION'],
-            stream_version,
+            high_bite,
+            low_bite,
             0,
             checksum,
+            pid,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
             0,
             0,
             0,
             0,
         )
-
         self.writer.send_action_payload(payload)
