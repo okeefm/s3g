@@ -4,12 +4,19 @@ import re
 
 import makerbot_driver
 from .LineTransformProcessor import LineTransformProcessor
+"""
+Adds in ToolChange commands for G1 commands that switch extruders.
+
+Currently this Processor is not Bundleable, but can be made so if necessary (which
+might be necessary.
+"""
 
 
 class ToolchangeProcessor(LineTransformProcessor):
 
     def __init__(self):
         super(ToolchangeProcessor, self).__init__()
+        self.is_bundleable = True
         self.extruders = {
             'A': 'M135 T0\n',
             'B': 'M135 T1\n'

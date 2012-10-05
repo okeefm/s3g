@@ -10,6 +10,7 @@ class SingletonTProcessor(LineTransformProcessor):
 
     def __init__(self):
         super(SingletonTProcessor, self).__init__()
+        self.is_bundleable = True
         self.code_map = {
             re.compile("[^(;]*([(][^)]*[)][^(;]*)*[tT]([0-9])"): self._transform_singleton
         }

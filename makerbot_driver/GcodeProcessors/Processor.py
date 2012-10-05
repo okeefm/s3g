@@ -10,6 +10,7 @@ class Processor(object):
     def __init__(self):
         self._external_stop = False
         self._condition = threading.Condition()
+        self.is_bundleable = False
 
     def process_gcode(self, gcodes, callback=None):
         pass

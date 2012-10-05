@@ -14,6 +14,7 @@ class ToolSwapProcessor(LineTransformProcessor):
 
     def __init__(self):
         super(ToolSwapProcessor, self).__init__()
+        self.is_bundleable = True
         self.code_map = {
             re.compile("[^(;]*([(][^)]*[)][^(;]*)*([aAbB])|[^(;]*([(][^)]*[)][^(;]*)*[tT]([0-9])"): self._transform_tool_swap,
         }

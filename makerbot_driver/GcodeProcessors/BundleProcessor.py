@@ -1,4 +1,5 @@
 import re
+import inspect
 
 from .LineTransformProcessor import LineTransformProcessor
 from .ProgressProcessor import ProgressProcessor
@@ -16,12 +17,14 @@ class BundleProcessor(LineTransformProcessor):
         self._super_process_gcode = super(BundleProcessor, self).process_gcode
 
     def collate_codemaps(self):
-        transform_code = "_transform_[gm]"
+        transform_code = "_transform_"
         for processor in self.processors:
-            self.code_map.update(processor.code_map)
-            for func in dir(processor):
-                if re.match(transform_code, func):
-                    setattr(self, func, getattr(processor, func))
+            if processor.is_bundleable:
+                self.code_map.update(processor.code_map)
+                for func in dir(processor):
+                    new_function = getattr(processor, func)
+                    if inspect.isfunction(new_function) and re.match(transform_code, func):
+                        setattr(self, func, new_function)
 
     def process_gcode(self, gcodes, callback=None):
         self.collate_codemaps()

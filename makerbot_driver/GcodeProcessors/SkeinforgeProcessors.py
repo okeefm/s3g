@@ -38,12 +38,13 @@ class SkeinforgeVersionChecker(LineTransformProcessor):
 
     def __init__(self, version):
         super(SkeinforgeVersionChecker, self).__init__()
+        self.is_bundleable = True
         self.version = version
         self.code_map = {
-            re.compile("\(<version> (.*?) </version>\)$"): self._check_version,
+            re.compile("\(<version> (.*?) </version>\)$"): self._transform_check_version,
         }
 
-    def _check_version(self, match):
+    def _transform_check_version(self, match):
         version_numbers = match.group(1).split('.')
         compatible_numbers = self.version.split('.')
         if not version_numbers[0] == compatible_numbers[0]:

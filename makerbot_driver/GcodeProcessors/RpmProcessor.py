@@ -21,6 +21,7 @@ class RpmProcessor(LineTransformProcessor):
 
     def __init__(self):
         super(RpmProcessor, self).__init__()
+        self.is_bundleable = True
         self.code_map = {
             re.compile('[^(;]*([(][^)]*[)][^;(]*)*[mM]101'): self._transform_m101,
             re.compile('[^(;]*([(][^)]*[)][^;(]*)*[mM]102'): self._transform_m102,
