@@ -4,16 +4,10 @@ lib_path = os.path.abspath('./')
 sys.path.insert(0, lib_path)
 
 import unittest
-import makerbot_driver
+import makerbot_driver.GcodeProcessors.Processor as Processor
 
 
 class TestProcessor(unittest.TestCase):
-
-    def setUp(self):
-        self.p = makerbot_driver.GcodeProcessors.Processor()
-
-    def tearDown(self):
-        self.p = None
 
     def test_remove_variables(self):
         cases = [
@@ -21,7 +15,8 @@ class TestProcessor(unittest.TestCase):
             ['M104 T#TOOL_0 S#TOOL_TEMP\n', 'M104 T0 S0\n'],
         ]
         for case in cases:
-            self.assertEqual(case[1], self.p._remove_variables(case[0]))
+            result = Processor.remove_variables(case[0])
+            self.assertEqual(case[1], result)
 
 if __name__ == "__main__":
     unittest.main()

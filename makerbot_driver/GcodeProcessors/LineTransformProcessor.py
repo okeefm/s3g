@@ -25,9 +25,8 @@ class LineTransformProcessor(Processor):
             count_total += len(tcode)  # We can add codes, so we need to adjust for those
             pruned_tcode = self.prune_empty_strings(tcode)
             count_total -= len(pruned_tcode)  # We can remove codes, so we need to adjust for those
+            self.test_for_external_stop()
             with self._condition:
-                if self._external_stop:
-                    raise makerbot_driver.ExternalStopError
                 output.extend(pruned_tcode)
             count_current += 1
             percent = self.get_percent(count_current, count_total)

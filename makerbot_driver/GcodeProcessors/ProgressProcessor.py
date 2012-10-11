@@ -27,9 +27,8 @@ class ProgressProcessor(Processor):
             new_percent = self.get_percent(count_current, count_total)
             if new_percent > current_percent:
                 progressmsg = self.create_progress_msg(new_percent)
+                self.test_for_external_stop()
                 with self._condition:
-                    if self._external_stop:
-                        raise makerbot_driver.ExternalStopError
                     output.append(progressmsg)
                 current_percent = new_percent
                 if callback is not None:
