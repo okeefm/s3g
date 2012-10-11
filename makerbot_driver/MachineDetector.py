@@ -85,6 +85,13 @@ class MachineDetector(object):
         except KeyError:
             continue #The bot doesnt have a VID/PID, so we cant scan for it
 
+  def vid_pid_from_portname(self,portname):
+    """ return pid/vid based on a passed portname."""
+    if portname in self.machines_recently_seen.keys():
+       return (self.machines_recently_seen[portname]['vid'],
+           self.machines_recently_seen[portname]['pid'])
+    return (None,None) 
+
   def union(self, m, n):
     """
     Given two lists of dictionries, returns the union
