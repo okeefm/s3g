@@ -9,7 +9,7 @@ import io
 import mock
 
 import serial
-from makerbot_driver import Writer, constants, s3g, errors, Encoder
+from makerbot_driver import Writer, constants, s3g, errors, Encoder, MachineDetector, get_gMachineDetector
 
 
 class TestFromFileName(unittest.TestCase):
@@ -63,6 +63,23 @@ class S3gTests(unittest.TestCase):
         self.inputstream = None
         self.file = None
 
+    def test_get_vid_pid_iface(self):
+        vid = 0x0000
+        pid = 0xFFFF
+        port = '/dev/tty.ACM0'
+        gMachineDetector = get_gMachineDetector()
+        gMachineDetector.get_available_machines = mock.Mock(return_value={
+            port: {
+                'VID': vid,
+                'PID': pid,
+            }
+        })
+        some_port = mock.Mock()
+        some_port.port = port
+        self.r.writer = Writer.StreamWriter(some_port)
+        got_vid_pid = self.r.get_vid_pid_iface()
+        self.assertEqual(got_vid_pid, (vid, pid))
+
     def test_get_verified_status_unverified(self):
         vid = 0x0000
         pid = 0xFFFF
@@ -74,82 +91,6 @@ class S3gTests(unittest.TestCase):
         pid = constants.vid_pid[1]
         self.r.get_vid_pid = mock.Mock(return_value=(vid, pid))
         self.assertTrue(self.r.get_verified_status())
-
-    def test_get_vid_pid_tty_port_tty_reported(self):
-        expected_port = '/dev/tty.ACM0'
-        expected_vid = 0x0000
-        expected_pid = 0xFFFF
-        reported_port = expected_port
-        file_mock = mock.Mock()
-        file_mock.port = expected_port
-        self.r.writer = Writer.StreamWriter(file_mock)
-        mock_port_dict = [{
-            'port': reported_port,
-            'VID': expected_vid,
-            'PID': expected_pid,
-        }]
-        self.r.list_ports_by_vid_pid = mock.Mock(return_value=mock_port_dict)
-        vid, pid = self.r.get_vid_pid()
-
-        self.assertEqual(vid, expected_vid)
-        self.assertEqual(pid, expected_pid)
-
-    def test_get_vid_pid_cu_port_cu_reported(self):
-        expected_port = '/dev/cu.ACM0'
-        expected_vid = 0x0000
-        expected_pid = 0xFFFF
-        reported_port = expected_port
-        file_mock = mock.Mock()
-        file_mock.port = expected_port
-        self.r.writer = Writer.StreamWriter(file_mock)
-        mock_port_dict = [{
-            'port': reported_port,
-            'VID': expected_vid,
-            'PID': expected_pid,
-        }]
-        self.r.list_ports_by_vid_pid = mock.Mock(return_value=mock_port_dict)
-        vid, pid = self.r.get_vid_pid()
-
-        self.assertEqual(vid, expected_vid)
-        self.assertEqual(pid, expected_pid)
-
-    def test_get_vid_pid_cu_port_tty_reported(self):
-        expected_port = '/dev/cu.ACM0'
-        expected_vid = 0x0000
-        expected_pid = 0xFFFF
-        reported_port = expected_port.replace('cu', 'tty')
-        file_mock = mock.Mock()
-        file_mock.port = expected_port
-        self.r.writer = Writer.StreamWriter(file_mock)
-        mock_port_dict = [{
-            'port': reported_port,
-            'VID': expected_vid,
-            'PID': expected_pid,
-        }]
-        self.r.list_ports_by_vid_pid = mock.Mock(return_value=mock_port_dict)
-        vid, pid = self.r.get_vid_pid()
-
-        self.assertEqual(vid, expected_vid)
-        self.assertEqual(pid, expected_pid)
-
-    def test_get_vid_pid_tty_port_cu_reported(self):
-        expected_port = '/dev/tty.ACM0'
-        expected_vid = 0x0000
-        expected_pid = 0xFFFF
-        reported_port = expected_port.replace('tty', 'cu')
-        file_mock = mock.Mock()
-        file_mock.port = expected_port
-        self.r.writer = Writer.StreamWriter(file_mock)
-        mock_port_dict = [{
-            'port': reported_port,
-            'VID': expected_vid,
-            'PID': expected_pid,
-        }]
-        self.r.list_ports_by_vid_pid = mock.Mock(return_value=mock_port_dict)
-        vid, pid = self.r.get_vid_pid()
-
-        self.assertEqual(vid, expected_vid)
-        self.assertEqual(pid, expected_pid)
 
     def test_get_toolcount(self):
         toolcount = 3

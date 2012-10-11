@@ -9,8 +9,6 @@ from constants import *
 from errors import *
 import uuid
 
-import serial.tools.list_ports as serial_lp
-
 
 class s3g(object):
     """ Represents an interface to a s3g driven bot. Contains methods and functions to
@@ -50,7 +48,6 @@ class s3g(object):
         # TODO: Move these to constants file.
         self.extendedPointLength = 5
         self.pointLength = 3
-        self.list_ports_by_vid_pid = serial_lp.list_ports_by_vid_pid
 
     def create_reader(self):
         return makerbot_driver.EEPROM.EepromReader.factory(self)
@@ -108,24 +105,23 @@ class s3g(object):
     def get_vid_pid(self):
         """
         Due to a production issue with a vendor, we do not
-        trust the VID/PID in all EEPROMS, and the generic 
-        get_vid_pid most used should return the interface VID/PID, 
+        trust the VID/PID in all EEPROMS, and the generic
+        get_vid_pid most used should return the interface VID/PID,
         not the eeprom vid_pid. """
         return self.get_vid_pid_iface()
 
     def get_vid_pid_eeprom(self):
-        """  
+        """
         @returns tuple of vid,pid. tuple from EEPROM (None,None) on error
         """
         reader = self.create_reader()
         data = reader.read_data('VID_PID_INFO')
         return data[0], data[1]
 
-
     def get_vid_pid_iface(self):
         """
         Reads VID/PID values from the serial port object associated
-        with this device. 
+        with this device.
         @return USB vid/pid tuple from the usb chip on the machine,
         """
         vid = None
@@ -134,10 +130,7 @@ class s3g(object):
             if isinstance(self.writer, makerbot_driver.Writer.StreamWriter):
                 portname = self.writer.file.port
                 detector = makerbot_driver.get_gMachineDetector()
-                import pdb
-                pdb.set_trace()
-                
-                vid,pid = detector.vid_pid_from_portname(portname)
+                vid, pid = detector.vid_pid_from_portname(portname)
         return vid, pid
 
     def get_verified_status(self, verified_pid=vid_pid[1]):
