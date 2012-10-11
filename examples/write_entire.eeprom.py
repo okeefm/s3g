@@ -21,21 +21,23 @@ parser.add_option("-i", "--input_file", dest="input_file",
                   help="The file you want to write from")
 (options, args) = parser.parse_args()
 
-if options.port == None:
-  md = makerbot_driver.MachineDetector()
-  md.scan(options.machine)
-  port = md.get_first_machine()
-  if port is None:
-    print "Cant Find %s" %(options.machine)
-    sys.exit()
+if options.port is None:
+    md = makerbot_driver.MachineDetector()
+    md.scan(options.machine)
+    port = md.get_first_machine()
+    if port is None:
+        print "Cant Find %s" % (options.machine)
+        sys.exit()
 else:
-  port = options.port
-factory = makerbot_driver.BotFactory()
-r, prof = factory.build_from_port(port)
+    port = options.port
+factory = makerbot_driver.MachineFactory()
+returnobj = factory.build_from_port(port)
+r = getattr(returnobj, 's3g')
 
-writer = makerbot_driver.EEPROM.EepromWriter.factory(r, fw_version=options.version)
+writer = makerbot_driver.EEPROM.EepromWriter.factory(
+    r, firmware_version=options.version)
 
 with open(options.input_file) as f:
-  eeprom_map = json.load(f)
+    eeprom_map = json.load(f)
 
 writer.write_entire_map(eeprom_map)
