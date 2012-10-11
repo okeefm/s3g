@@ -101,11 +101,11 @@ class Uploader(object):
         if os.path.isfile(url):
             if not url == local_path:
                 self._logger.info(
-                    '{"event":"copying_local_file", "file":%s}' % (url))
+                    '{"event":"copying_local_file", "file":%s}' % url)
                 import shutil
                 shutil.copy(url, local_path)
         else:
-            self._logger.info('{"event":"downloading_url", "url":%s}' % (url))
+            self._logger.info('{"event":"downloading_url", "url":%s}' % url)
             #Download the file
             dl_file = self.urlopen(url)
             #Write out the file
@@ -224,7 +224,7 @@ class Uploader(object):
         @param str machine: The machine we are uploading to
         @param str filename: The firmware we want to upload
         """
-        self._logger.info('{"event":"uploading_firmware", "port":%s, "machine":%s, "filename":%s}' % (port, machine, filename))
+        self._logger.info('{"event":"uploading_firmware", "port":%s, "machine":%s, "filename":%s}', port, machine, filename)
         call = self.parse_avrdude_command(port, machine, filename)
         self.toggle_machine(port)
         try:
