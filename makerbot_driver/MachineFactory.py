@@ -12,10 +12,10 @@ class ReturnObject(object):
 
 
 class MachineFactory(object):
-    """This class is a factory for building bot drivers from
+    """This class is a factory for building machine drivers from
     a port connection. This class will take a connection, query it
     to verify it is a geunine 3d printer (or other device we can control)
-    and build the appropritae bot type/version/etc from that.
+    and build the appropritae machine type/version/etc from that.
     """
     def __init__(self, profile_dir=None):
         if profile_dir:
@@ -35,12 +35,12 @@ class MachineFactory(object):
     def build_from_port(self, portname, leaveOpen=True):
         """
         Returns a tuple of an (s3gObj, ProfileObj)
-        for a bot at port portname
+        for a machine at port portname
         """
         machineInquisitor = self.create_inquisitor(portname)
-        s3gBot, bot_setup_dict = machineInquisitor.query(leaveOpen)
+        s3gBot, machine_setup_dict = machineInquisitor.query(leaveOpen)
 
-        profile_regex = self.get_profile_regex(bot_setup_dict)
+        profile_regex = self.get_profile_regex(machine_setup_dict)
         matches = makerbot_driver.search_profiles_with_regex(
             profile_regex, self.profile_dir)
         matches = list(matches)
@@ -67,33 +67,33 @@ class MachineFactory(object):
         """
         return makerbot_driver.s3g.from_filename(portname)
 
-    def get_profile_regex(self, bot_setup_dict):
+    def get_profile_regex(self, machine_setup_dict):
         """
-        Decision tree for bot machine decisions.
+        Decision tree for machine decisions.
 
-        @param dict bot_setup_dict: A dictionary containing
-          information about the connected bot
+        @param dict machine_setup_dict: A dictionary containing
+          information about the connected machine
         @return str
         """
         regex = None
         #First check for VID/PID matches
-        if 'vid' in bot_setup_dict and 'pid' in bot_setup_dict:
-            regex = self.get_profile_regex_has_vid_pid(bot_setup_dict)
-        if regex and bot_setup_dict.get('tool_count', 0) == 1:
+        if 'vid' in machine_setup_dict and 'pid' in machine_setup_dict:
+            regex = self.get_profile_regex_has_vid_pid(machine_setup_dict)
+        if regex and machine_setup_dict.get('tool_count', 0) == 1:
             regex = regex + 'Single'
-        elif regex and bot_setup_dict.get('tool_count', 0) == 2:
+        elif regex and machine_setup_dict.get('tool_count', 0) == 2:
             regex = regex + 'Dual'
         return regex
 
-    def get_profile_regex_has_vid_pid(self, bot_setup_dict):
+    def get_profile_regex_has_vid_pid(self, machine_setup_dict):
         """If the machine has a VID and PID, we can assume it is part of
         the generation of machines that also have a tool_count.  We use the
         tool_count at the final criterion to narrow our search.
         """
         vid_pid_matches = []
-        for bot in makerbot_driver.g_botClasses().values():
-            if bot['vid'] == bot_setup_dict['vid'] and bot['pid'] == bot_setup_dict['pid']:
-                return bot['botProfiles']
+        for machine in makerbot_driver.g_MachineClasses().values():
+            if machine['vid'] == machine_setup_dict['vid'] and machine['pid'] == machine_setup_dict['pid']:
+                return machine['machineProfiles']
         return None
 
 
@@ -112,10 +112,10 @@ class MachineInquisitor(object):
 
     def query(self, leaveOpen=True):
         """
-        open a connection to a machine and  query a bot for
+        open a connection to a machine and  query a machine for
         key settings needed to construct a machine from a profile
 
-        @param leaveOpen IF true, serial connection to the bot is left open.
+        @param leaveOpen IF true, serial connection to the machine is left open.
         @return a tuple of an (s3gObj, dictOfSettings
         """
         import makerbot_driver.s3g as s3g

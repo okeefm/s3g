@@ -31,16 +31,16 @@ def get_gMachineDetector():
     return gMachineDetector
 
 
-def g_botClasses():
-    """ get our global list of bot classes"""
-    return botClasses
+def g_MachineClasses():
+    """ get our global list of machine classes"""
+    return MachineClasses
 
-# bot USB classes IE what VID/PID can map to what bot profiles
-botClasses = {
-    'The Replicator 2': {'vid': 0x23C1, 'pid': 0xB015, 'botProfiles': '.*Replicator2'},
-    'The Replicator': {'vid': 0x23C1, 'pid': 0xD314, 'botProfiles': '.*Replicator'},
-    'MightBoard': {'vid': 0x23C1, 'pid': 0xB404, 'botProfiles': '.*Replicator'},
-    'TOM': {'vid': 0403, 'pid': 6001, 'botProfiles': '.*TOM'},
+# machine USB classes IE what VID/PID can map to what machine profiles
+MachineClasses = {
+    'The Replicator 2': {'vid': 0x23C1, 'pid': 0xB015, 'machineProfiles': '.*Replicator2'},
+    'The Replicator': {'vid': 0x23C1, 'pid': 0xD314, 'machineProfiles': '.*Replicator'},
+    'MightBoard': {'vid': 0x23C1, 'pid': 0xB404, 'machineProfiles': '.*Replicator'},
+    'TOM': {'vid': 0403, 'pid': 6001, 'machineProfiles': '.*TOM'},
 }
 
 
@@ -59,36 +59,36 @@ class MachineDetector(object):
         #libraries during testing, etc
         self.list_ports_by_vid_pid = list_ports_generator
 
-    def scan(self, botTypes=None):
+    def scan(self, machineTypes=None):
         """ scans for connected machines, updates internal list of machines
         based on scan results
-        @param botTypes. This can be an individual botClass name, or a list
-        of bot class names
+        @param machineTypes. This can be an individual MachineClass name, or a list
+        of machine class names
         """
-        # scan for all bot types
+        # scan for all machine types
         scanNameList = []
-        if botTypes is None:
-            scanNameList.extend(botClasses.keys())
-        elif isinstance(botTypes, str) or isinstance(botTypes, unicode):
-            scanNameList.append(botTypes)
+        if machineTypes is None:
+            scanNameList.extend(MachineClasses.keys())
+        elif isinstance(machineTypes, str) or isinstance(machineTypes, unicode):
+            scanNameList.append(machineTypes)
         else:
-            scanNameList.extend(botTypes)
-        # Empty the machines just seen list. We are rescanning all bots connected to
+            scanNameList.extend(machineTypes)
+        # Empty the machines just seen list. We are rescanning all machines connected to
         # the system.
         self.machines_just_seen = {}
-        for botClass in scanNameList:
-            self._log.debug("scanning for BotClass " + str(botClass))
-            #Not all bot classes have a defined VID/PID
+        for machineClass in scanNameList:
+            self._log.debug("scanning for MachineClass %s", str(machineClass))
+            #Not all machine classes have a defined VID/PID
             try:
-                vid = botClasses[botClass]['vid']
-                pid = botClasses[botClass]['pid']
-                new_bots = self.list_ports_by_vid_pid(vid, pid)
+                vid = MachineClasses[machineClass]['vid']
+                pid = MachineClasses[machineClass]['pid']
+                new_machines = self.list_ports_by_vid_pid(vid, pid)
 
-                for bot in list(new_bots):
-                    self.machines_just_seen[bot['port']] = bot
+                for machine in list(new_machines):
+                    self.machines_just_seen[machine['port']] = machine
                 self.machines_recently_seen.update(self.machines_just_seen)
             except KeyError:
-                continue  # The bot doesnt have a VID/PID, so we cant scan for it
+                continue  # The machine doesnt have a VID/PID, so we cant scan for it
 
     def union(self, m, n):
         """
@@ -104,7 +104,7 @@ class MachineDetector(object):
                 u.append(item)
         return u
 
-    def get_first_machine(self, botType=None):
+    def get_first_machine(self, machineType=None):
         """ returns a list of machines sorted by currently connected ports
         @return a port data dict of {'vid':vid, 'pid':pid 'port':port [...]}
         """
@@ -112,10 +112,10 @@ class MachineDetector(object):
             return b
         return None
 
-    def get_available_machines(self, botTypes=None):
+    def get_available_machines(self, machineTypes=None):
         """ returns a list of machines sorted by currently connected ports
         port_data_dict includes {'vid':vid, 'pid':pid 'port':port [...]}
         @return dict of {'portname',port_data_dict"""
 
-        self.scan(botTypes)
+        self.scan(machineTypes)
         return self.machines_just_seen
