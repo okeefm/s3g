@@ -12,13 +12,14 @@ python dict named "ports".
 """
 
 import logging
+
 try:
     import serial.tools.list_ports as lp
     list_ports_generator = lp.list_ports_by_vid_pid
 except ImportError:
     import warnings
     warnings.warn("No VID/PID detection in this version of PySerial; Automatic machine detection disabled.")
-    # We're using legacy pyserial. For now, return an empty iterator.
+    # We're using legacy pyserial. list_port_generator is an empty iterator.
 
     def list_ports_generator():
         return
@@ -28,6 +29,7 @@ except ImportError:
 gMachineDetector = None
 
 def get_gMachineDetector():
+    """ use a global singleton MachineDetector """
     global gMachineDetector
     if(gMachineDetector is None):
         gMachineDetector = MachineDetector()
@@ -36,13 +38,18 @@ def get_gMachineDetector():
 
 # machine USB classes IE what VID/PID can map to what machine profiles
 gMachineClasses = {
-    'The Replicator 2': {'vid': 0x23C1, 'pid': 0xB015, 'machineProfiles': '.*Replicator2'},
-    'The Replicator': {'vid': 0x23C1, 'pid': 0xD314, 'machineProfiles': '.*Replicator'},
-    'MightyBoard': {'vid': 0x23C1, 'pid': 0xB404, 'machineProfiles': '.*Replicator'},
-    'TOM': {'vid': 0403, 'pid': 6001, 'machineProfiles': '.*TOM'},
-}
+    'The Replicator 2':
+        {'vid': 0x23C1, 'pid': 0xB015, 'machineProfiles': '.*Replicator2'},
+    'The Replicator':
+        {'vid': 0x23C1, 'pid': 0xD314, 'machineProfiles': '.*Replicator'},
+    'MightyBoard':
+        {'vid': 0x23C1, 'pid': 0xB404, 'machineProfiles': '.*Replicator'},
+    'TOM':
+        {'vid': 0x103, 'pid': 0x1771, 'machineProfiles': '.*TOM'},
+    }
 
-def get_VidPidByName(name):
+
+def get_vid_pid_by_name(name):
     """
     @name name of a 'class' of machines 'TOM', 'The Replicator 2'
     @return a tuple of vid/pid, or a tuple of (None,None) if there
@@ -61,19 +68,18 @@ class MachineDetector(object):
 
     def __init__(self):
         self._log = logging.getLogger(self.__class__.__name__)
-        #Bots seen since the inception of this object
         self.machines_recently_seen = {}
-        #Bots seen in the last scan,
+        # ^ Bots seen since the inception of this object
         self.machines_just_seen = {}
-        #We save this func as a variable for testing purposes,
-        #otherwise we would have to do hacky things, like reload
-        #libraries during testing, etc
+        # ^ Bots seen in the last scan,
         self.list_ports_by_vid_pid = list_ports_generator
+        # ^ Save func as a variable for testing purposes. hacky
+        self._condition = threading.Condition()
 
     def scan(self, machineTypes=None):
         """ scans for connected machines, updates internal list of machines
         based on scan results
-        @param machineTypes. This can be an individual MachineClass name, or a list
+        @param machineTypes. An individual MachineClass name, or a list
         of machine class names
         """
         # scan for all machine types
@@ -84,8 +90,8 @@ class MachineDetector(object):
             scanNameList.append(machineTypes)
         else:
             scanNameList.extend(machineTypes)
-        # Empty the machines just seen list. We are rescanning all machines connected to
-        # the system.
+        # Empty the machines just seen list. We are rescanning 
+        # all machines connected to the system.
         self.machines_just_seen = {}
         for machineClass in scanNameList:
             self._log.debug("scanning for MachineClass %s", str(machineClass))
@@ -101,19 +107,6 @@ class MachineDetector(object):
             except KeyError:
                 continue  # The machine doesnt have a VID/PID, so we cant scan for it
 
-    def union(self, m, n):
-        """
-        Given two lists of dictionries, returns the union
-        of them.  list_ports_vid_pid returns lists of
-        dictionaries.
-        """
-        u = []
-        for item in m:
-            u.append(item.copy())
-        for item in n:
-            if item not in m:
-                u.append(item)
-        return u
 
     def get_first_machine(self, machineType=None):
         """ returns a list of machines sorted by currently connected ports
