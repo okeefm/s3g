@@ -1,7 +1,7 @@
 import os
 import sys
-lib_path = os.path.abspath('../')
-sys.path.append(lib_path)
+lib_path = os.path.abspath('./')
+sys.path.insert(0, lib_path)
 
 import uuid
 import unittest
@@ -21,7 +21,8 @@ class TestFromFileName(unittest.TestCase):
 
     def test_from_filename_gets_correct_objects(self):
         self.assertTrue(isinstance(self.obj, makerbot_driver.s3g))
-        self.assertTrue(isinstance(self.obj.writer, makerbot_driver.Writer.StreamWriter))
+        self.assertTrue(
+            isinstance(self.obj.writer, makerbot_driver.Writer.StreamWriter))
         self.assertTrue(isinstance(self.obj.writer.file, serial.Serial))
 
     def test_from_filename_minimal_constructor(self):
@@ -32,14 +33,16 @@ class TestFromFileName(unittest.TestCase):
     def test_from_filename_use_all_parameters(self):
         baudrate = 9800
         timeout = 5
-        self.obj = makerbot_driver.s3g.from_filename(None, baudrate=9800, timeout=5)
+        self.obj = makerbot_driver.s3g.from_filename(
+            None, baudrate=9800, timeout=5)
         self.assertEqual(self.obj.writer.file.baudrate, baudrate)
         self.assertEqual(self.obj.writer.file.timeout, timeout)
 
     def test_from_filename_none_case(self):
         """ test the from_filename makerbot_driver.s3g factory."""
-        self.assertRaises(serial.serialutil.SerialException, makerbot_driver.s3g.from_filename,
-                          "/dev/this_is_hopefully_not_a_real_port")
+        self.assertRaises(
+            serial.serialutil.SerialException, makerbot_driver.s3g.from_filename,
+            "/dev/this_is_hopefully_not_a_real_port")
 
 
 class S3gTestsFirmware601(unittest.TestCase):
@@ -72,7 +75,8 @@ class S3gTestsFirmware601(unittest.TestCase):
         feedrate = 100
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.queue_extended_point(
@@ -82,13 +86,20 @@ class S3gTestsFirmware601(unittest.TestCase):
 
         self.assertEqual(payload[0], makerbot_driver.host_action_command_dict[
                          'QUEUE_EXTENDED_POINT_ACCELERATED'])
-        self.assertEqual(payload[1:5], makerbot_driver.Encoder.encode_int32(point[0]))
-        self.assertEqual(payload[5:9], makerbot_driver.Encoder.encode_int32(point[1]))
-        self.assertEqual(payload[9:13], makerbot_driver.Encoder.encode_int32(point[2]))
-        self.assertEqual(payload[13:17], makerbot_driver.Encoder.encode_int32(point[3]))
-        self.assertEqual(payload[17:21], makerbot_driver.Encoder.encode_int32(point[4]))
-        self.assertEqual(payload[21:25], makerbot_driver.Encoder.encode_uint32(dda_rate))
-        self.assertEqual(payload[25], makerbot_driver.Encoder.encode_axes(relative_axes))
+        self.assertEqual(
+            payload[1:5], makerbot_driver.Encoder.encode_int32(point[0]))
+        self.assertEqual(
+            payload[5:9], makerbot_driver.Encoder.encode_int32(point[1]))
+        self.assertEqual(
+            payload[9:13], makerbot_driver.Encoder.encode_int32(point[2]))
+        self.assertEqual(
+            payload[13:17], makerbot_driver.Encoder.encode_int32(point[3]))
+        self.assertEqual(
+            payload[17:21], makerbot_driver.Encoder.encode_int32(point[4]))
+        self.assertEqual(
+            payload[21:25], makerbot_driver.Encoder.encode_uint32(dda_rate))
+        self.assertEqual(
+            payload[25], makerbot_driver.Encoder.encode_axes(relative_axes))
         self.assertEqual(payload[26:30], struct.pack('<f', float(distance)))
         self.assertEqual(
             payload[30:32], makerbot_driver.Encoder.encode_int16(int(float(feedrate * 64.0))))
@@ -136,7 +147,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         feedrate = 100
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.queue_extended_point_accelerated(
@@ -146,13 +158,20 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         self.assertEqual(payload[0], makerbot_driver.host_action_command_dict[
                          'QUEUE_EXTENDED_POINT_ACCELERATED'])
-        self.assertEqual(payload[1:5], makerbot_driver.Encoder.encode_int32(point[0]))
-        self.assertEqual(payload[5:9], makerbot_driver.Encoder.encode_int32(point[1]))
-        self.assertEqual(payload[9:13], makerbot_driver.Encoder.encode_int32(point[2]))
-        self.assertEqual(payload[13:17], makerbot_driver.Encoder.encode_int32(point[3]))
-        self.assertEqual(payload[17:21], makerbot_driver.Encoder.encode_int32(point[4]))
-        self.assertEqual(payload[21:25], makerbot_driver.Encoder.encode_uint32(dda))
-        self.assertEqual(payload[25], makerbot_driver.Encoder.encode_axes(relative_axes))
+        self.assertEqual(
+            payload[1:5], makerbot_driver.Encoder.encode_int32(point[0]))
+        self.assertEqual(
+            payload[5:9], makerbot_driver.Encoder.encode_int32(point[1]))
+        self.assertEqual(
+            payload[9:13], makerbot_driver.Encoder.encode_int32(point[2]))
+        self.assertEqual(
+            payload[13:17], makerbot_driver.Encoder.encode_int32(point[3]))
+        self.assertEqual(
+            payload[17:21], makerbot_driver.Encoder.encode_int32(point[4]))
+        self.assertEqual(
+            payload[21:25], makerbot_driver.Encoder.encode_uint32(dda))
+        self.assertEqual(
+            payload[25], makerbot_driver.Encoder.encode_axes(relative_axes))
         self.assertEqual(payload[26:30], struct.pack('<f', float(distance)))
         self.assertEqual(
             payload[30:32], makerbot_driver.Encoder.encode_int16(int(float(feedrate * 64.0))))
@@ -162,7 +181,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         theta = 50
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.set_servo2_position(tool, theta)
@@ -181,7 +201,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         state = True
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.toggle_ABP(tool, state)
@@ -201,7 +222,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         pwm = 128
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.set_motor1_speed_pwm(tool, pwm)
@@ -221,7 +243,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         direction = True
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.set_motor1_direction(tool, direction)
@@ -243,11 +266,13 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(makerbot_driver.Encoder.encode_uint16(vid))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(makerbot_driver.Encoder.encode_uint16(pid))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEqual(self.r.get_verified_status(), expected_value)
@@ -259,11 +284,13 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(makerbot_driver.Encoder.encode_uint16(vid))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(makerbot_driver.Encoder.encode_uint16(pid))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEqual(self.r.get_verified_status(), expected_value)
@@ -276,11 +303,13 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(makerbot_driver.Encoder.encode_uint16(vid))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(makerbot_driver.Encoder.encode_uint16(pid))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         got_vid, got_pid = self.r.get_vid_pid()
@@ -295,7 +324,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(toolcount)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEqual(self.r.get_toolhead_count(), toolcount)
@@ -314,7 +344,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(makerbot_driver.Encoder.encode_uint16(version))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEqual(self.r.get_version(), version)
@@ -336,11 +367,16 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(info['Version']))
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(info['InternalVersion']))
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(info['ReservedA']))
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(info['ReservedB']))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint16(info['Version']))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint16(info['InternalVersion']))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint16(info['ReservedA']))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint16(info['ReservedB']))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         version_info = self.r.get_advanced_version()
@@ -363,7 +399,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(n)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         version_info = self.r.get_name()
@@ -378,7 +415,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
 
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.reset()
@@ -393,7 +431,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(0)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEqual(self.r.is_finished(), 0)
@@ -407,7 +446,8 @@ class S3gTestsFirmware500(unittest.TestCase):
     def test_clear_buffer(self):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.clear_buffer()
@@ -421,7 +461,8 @@ class S3gTestsFirmware500(unittest.TestCase):
     def test_pause(self):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.pause()
@@ -456,7 +497,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(response)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(
@@ -478,7 +520,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(response)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(self.r.tool_query(
@@ -509,7 +552,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(data)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(self.r.read_from_EEPROM(offset, length), data)
@@ -518,7 +562,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         payload = makerbot_driver.Encoder.decode_packet(packet)
         self.assertEquals(
             payload[0], makerbot_driver.host_query_command_dict['READ_FROM_EEPROM'])
-        self.assertEquals(payload[1:3], makerbot_driver.Encoder.encode_uint16(offset))
+        self.assertEquals(
+            payload[1:3], makerbot_driver.Encoder.encode_uint16(offset))
         self.assertEquals(payload[3], length)
 
     def test_write_to_eeprom_too_much_data(self):
@@ -541,7 +586,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(length + 1)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertRaises(
@@ -557,7 +603,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(length)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.write_to_EEPROM(offset, data)
@@ -566,7 +613,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         payload = makerbot_driver.Encoder.decode_packet(packet)
         self.assertEquals(
             payload[0], makerbot_driver.host_query_command_dict['WRITE_TO_EEPROM'])
-        self.assertEquals(payload[1:3], makerbot_driver.Encoder.encode_uint16(offset))
+        self.assertEquals(
+            payload[1:3], makerbot_driver.Encoder.encode_uint16(offset))
         self.assertEquals(payload[3], length)
         self.assertEquals(payload[4:], data)
 
@@ -575,8 +623,10 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint32(buffer_size))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint32(buffer_size))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(self.r.get_available_buffer_size(), buffer_size)
@@ -589,7 +639,8 @@ class S3gTestsFirmware500(unittest.TestCase):
     def test_abort_immediately(self):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.abort_immediately()
@@ -610,7 +661,8 @@ class S3gTestsFirmware500(unittest.TestCase):
                 response_payload = bytearray()
                 response_payload.append(
                     makerbot_driver.response_code_dict['SUCCESS'])
-                response_payload.append(makerbot_driver.sd_error_dict[error_code])
+                response_payload.append(
+                    makerbot_driver.sd_error_dict[error_code])
                 self.outputstream.write(
                     makerbot_driver.Encoder.encode_payload(response_payload))
                 self.outputstream.seek(0)
@@ -624,7 +676,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(makerbot_driver.sd_error_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.playback_capture(filename)
@@ -645,7 +698,8 @@ class S3gTestsFirmware500(unittest.TestCase):
                 response_payload = bytearray()
                 response_payload.append(
                     makerbot_driver.response_code_dict['SUCCESS'])
-                response_payload.append(makerbot_driver.sd_error_dict[error_code])
+                response_payload.append(
+                    makerbot_driver.sd_error_dict[error_code])
                 response_payload.append('\x00')
                 self.outputstream.write(
                     makerbot_driver.Encoder.encode_payload(response_payload))
@@ -661,7 +715,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(makerbot_driver.sd_error_dict['SUCCESS'])
         response_payload.extend(filename)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(self.r.get_next_filename(True), filename)
@@ -679,7 +734,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(makerbot_driver.sd_error_dict['SUCCESS'])
         response_payload.extend(filename)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(self.r.get_next_filename(False), filename)
@@ -696,7 +752,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(build_name)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(self.r.get_build_name(), build_name)
@@ -712,13 +769,20 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_int32(position[0]))
-        response_payload.extend(makerbot_driver.Encoder.encode_int32(position[1]))
-        response_payload.extend(makerbot_driver.Encoder.encode_int32(position[2]))
-        response_payload.extend(makerbot_driver.Encoder.encode_int32(position[3]))
-        response_payload.extend(makerbot_driver.Encoder.encode_int32(position[4]))
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(endstop_states))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_int32(position[0]))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_int32(position[1]))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_int32(position[2]))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_int32(position[3]))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_int32(position[4]))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint16(endstop_states))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         [returned_position,
@@ -743,7 +807,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.wait_for_button('up', timeout, False, True, True)
@@ -753,7 +818,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         self.assertEqual(
             payload[0], makerbot_driver.host_action_command_dict['WAIT_FOR_BUTTON'])
         self.assertEqual(payload[1], button)
-        self.assertEqual(payload[2:4], makerbot_driver.Encoder.encode_uint16(timeout))
+        self.assertEqual(
+            payload[2:4], makerbot_driver.Encoder.encode_uint16(timeout))
         self.assertEqual(payload[4], options)
 
     def test_queue_song(self):
@@ -761,7 +827,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.queue_song(song_id)
@@ -776,7 +843,8 @@ class S3gTestsFirmware500(unittest.TestCase):
     def test_reset_to_factory(self):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.reset_to_factory()
@@ -793,7 +861,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.set_build_percent(percent)
@@ -817,7 +886,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.display_message(row, col, message, timeout,
@@ -844,7 +914,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.build_start_notification(build_name)
@@ -863,7 +934,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.build_start_notification(build_name)
@@ -880,7 +952,8 @@ class S3gTestsFirmware500(unittest.TestCase):
     def test_build_end_notification(self):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.build_end_notification()
@@ -907,9 +980,12 @@ class S3gTestsFirmware500(unittest.TestCase):
         payload = makerbot_driver.Encoder.decode_packet(packet)
         self.assertEquals(payload[0], makerbot_driver.host_action_command_dict[
                           'FIND_AXES_MINIMUMS'])
-        self.assertEquals(payload[1], makerbot_driver.Encoder.encode_axes(axes))
-        self.assertEquals(payload[2:6], makerbot_driver.Encoder.encode_uint32(rate))
-        self.assertEquals(payload[6:8], makerbot_driver.Encoder.encode_uint16(timeout))
+        self.assertEquals(
+            payload[1], makerbot_driver.Encoder.encode_axes(axes))
+        self.assertEquals(
+            payload[2:6], makerbot_driver.Encoder.encode_uint32(rate))
+        self.assertEquals(
+            payload[6:8], makerbot_driver.Encoder.encode_uint16(timeout))
 
     def test_find_axes_maximums(self):
         axes = ['x', 'y', 'z', 'b']
@@ -927,9 +1003,12 @@ class S3gTestsFirmware500(unittest.TestCase):
         payload = makerbot_driver.Encoder.decode_packet(packet)
         self.assertEquals(payload[0], makerbot_driver.host_action_command_dict[
                           'FIND_AXES_MAXIMUMS'])
-        self.assertEquals(payload[1], makerbot_driver.Encoder.encode_axes(axes))
-        self.assertEquals(payload[2:6], makerbot_driver.Encoder.encode_uint32(rate))
-        self.assertEquals(payload[6:8], makerbot_driver.Encoder.encode_uint16(timeout))
+        self.assertEquals(
+            payload[1], makerbot_driver.Encoder.encode_axes(axes))
+        self.assertEquals(
+            payload[2:6], makerbot_driver.Encoder.encode_uint32(rate))
+        self.assertEquals(
+            payload[6:8], makerbot_driver.Encoder.encode_uint16(timeout))
 
     def test_tool_action_command_negative_tool_index(self):
         self.assertRaises(
@@ -998,7 +1077,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         for i in range(0, 5):
             self.assertEquals(payload[(
                 i * 4 + 1):(i * 4 + 5)], makerbot_driver.Encoder.encode_int32(target[i]))
-        self.assertEquals(payload[21:25], makerbot_driver.Encoder.encode_int32(velocity))
+        self.assertEquals(
+            payload[21:25], makerbot_driver.Encoder.encode_int32(velocity))
 
     def test_set_extended_position_short_length(self):
         self.assertRaises(makerbot_driver.PointLengthError,
@@ -1033,7 +1113,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(makerbot_driver.Encoder.encode_uint16(version))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(self.r.get_toolhead_version(tool_index), version)
@@ -1054,7 +1135,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(makerbot_driver.sd_error_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.capture_to_file(filename)
@@ -1075,7 +1157,8 @@ class S3gTestsFirmware500(unittest.TestCase):
                 response_payload = bytearray()
                 response_payload.append(
                     makerbot_driver.response_code_dict['SUCCESS'])
-                response_payload.append(makerbot_driver.sd_error_dict[error_code])
+                response_payload.append(
+                    makerbot_driver.sd_error_dict[error_code])
                 self.outputstream.write(
                     makerbot_driver.Encoder.encode_payload(response_payload))
                 self.outputstream.seek(0)
@@ -1087,7 +1170,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(makerbot_driver.Encoder.encode_uint32(0))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         sdResponse = self.r.end_capture_to_file()
@@ -1103,7 +1187,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.store_home_positions(axes)
@@ -1121,7 +1206,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.set_beep(frequency, duration)
@@ -1131,8 +1217,10 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         self.assertEqual(
             payload[0], makerbot_driver.host_action_command_dict['SET_BEEP'])
-        self.assertEqual(payload[1:3], makerbot_driver.Encoder.encode_uint16(frequency))
-        self.assertEqual(payload[3:5], makerbot_driver.Encoder.encode_uint16(duration))
+        self.assertEqual(
+            payload[1:3], makerbot_driver.Encoder.encode_uint16(frequency))
+        self.assertEqual(
+            payload[3:5], makerbot_driver.Encoder.encode_uint16(duration))
         self.assertEqual(payload[5], 0x00)  # reserved byte
 
     def test_set_rgb_led(self):
@@ -1143,7 +1231,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.set_RGB_LED(r, g, b, blink)
@@ -1165,7 +1254,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.set_potentiometer_value(axes, value)
@@ -1183,7 +1273,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.recall_home_positions(axes)
@@ -1216,7 +1307,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.queue_extended_point_new(point, duration, relative_axes)
@@ -1226,13 +1318,20 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         self.assertEqual(payload[0], makerbot_driver.host_action_command_dict[
                          'QUEUE_EXTENDED_POINT_NEW'])
-        self.assertEqual(payload[1:5], makerbot_driver.Encoder.encode_int32(point[0]))
-        self.assertEqual(payload[5:9], makerbot_driver.Encoder.encode_int32(point[1]))
-        self.assertEqual(payload[9:13], makerbot_driver.Encoder.encode_int32(point[2]))
-        self.assertEqual(payload[13:17], makerbot_driver.Encoder.encode_int32(point[3]))
-        self.assertEqual(payload[17:21], makerbot_driver.Encoder.encode_int32(point[4]))
-        self.assertEqual(payload[21:25], makerbot_driver.Encoder.encode_uint32(duration))
-        self.assertEqual(payload[25], makerbot_driver.Encoder.encode_axes(relative_axes))
+        self.assertEqual(
+            payload[1:5], makerbot_driver.Encoder.encode_int32(point[0]))
+        self.assertEqual(
+            payload[5:9], makerbot_driver.Encoder.encode_int32(point[1]))
+        self.assertEqual(
+            payload[9:13], makerbot_driver.Encoder.encode_int32(point[2]))
+        self.assertEqual(
+            payload[13:17], makerbot_driver.Encoder.encode_int32(point[3]))
+        self.assertEqual(
+            payload[17:21], makerbot_driver.Encoder.encode_int32(point[4]))
+        self.assertEqual(
+            payload[21:25], makerbot_driver.Encoder.encode_uint32(duration))
+        self.assertEqual(
+            payload[25], makerbot_driver.Encoder.encode_axes(relative_axes))
 
     def test_wait_for_platform_ready(self):
         toolhead = 0
@@ -1241,7 +1340,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.wait_for_platform_ready(toolhead, delay, timeout)
@@ -1252,8 +1352,10 @@ class S3gTestsFirmware500(unittest.TestCase):
         self.assertEqual(payload[0], makerbot_driver.host_action_command_dict[
                          'WAIT_FOR_PLATFORM_READY'])
         self.assertEqual(payload[1], toolhead)
-        self.assertEqual(payload[2:4], makerbot_driver.Encoder.encode_uint16(delay))
-        self.assertEqual(payload[4:], makerbot_driver.Encoder.encode_uint16(timeout))
+        self.assertEqual(
+            payload[2:4], makerbot_driver.Encoder.encode_uint16(delay))
+        self.assertEqual(
+            payload[4:], makerbot_driver.Encoder.encode_uint16(timeout))
 
     def test_wait_for_tool_ready(self):
         toolhead = 0
@@ -1262,7 +1364,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.wait_for_tool_ready(toolhead, delay, timeout)
@@ -1272,8 +1375,10 @@ class S3gTestsFirmware500(unittest.TestCase):
         self.assertEqual(payload[0], makerbot_driver.host_action_command_dict[
                          'WAIT_FOR_TOOL_READY'])
         self.assertEqual(payload[1], toolhead)
-        self.assertEqual(payload[2:4], makerbot_driver.Encoder.encode_uint16(delay))
-        self.assertEqual(payload[4:], makerbot_driver.Encoder.encode_uint16(timeout))
+        self.assertEqual(
+            payload[2:4], makerbot_driver.Encoder.encode_uint16(delay))
+        self.assertEqual(
+            payload[4:], makerbot_driver.Encoder.encode_uint16(timeout))
 
     def test_toggle_axes(self):
         axes = ['x', 'y', 'b']
@@ -1281,7 +1386,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.toggle_axes(axes, enable_flag)
@@ -1301,7 +1407,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.delay(delay)
@@ -1310,14 +1417,16 @@ class S3gTestsFirmware500(unittest.TestCase):
         payload = makerbot_driver.Encoder.decode_packet(packet)
         self.assertEqual(
             payload[0], makerbot_driver.host_action_command_dict['DELAY'])
-        self.assertEqual(payload[1:], makerbot_driver.Encoder.encode_uint32(delay))
+        self.assertEqual(
+            payload[1:], makerbot_driver.Encoder.encode_uint32(delay))
 
     def test_change_tool(self):
         tool_index = 2
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.change_tool(tool_index)
@@ -1342,10 +1451,13 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload.append(stats['BuildState'])
         response_payload.append(stats['BuildHours'])
         response_payload.append(stats['BuildMinutes'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint32(stats['LineNumber']))
-        response_payload.extend(makerbot_driver.Encoder.encode_uint32(stats['Reserved']))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint32(stats['LineNumber']))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint32(stats['Reserved']))
 
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         info = self.r.get_build_stats()
@@ -1369,13 +1481,17 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(
             makerbot_driver.Encoder.encode_uint32(stats['PacketsReceived']))
-        response_payload.extend(makerbot_driver.Encoder.encode_uint32(stats['PacketsSent']))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint32(stats['PacketsSent']))
         response_payload.extend(
             makerbot_driver.Encoder.encode_uint32(stats['NonResponsivePacketsSent']))
-        response_payload.extend(makerbot_driver.Encoder.encode_uint32(stats['PacketRetries']))
-        response_payload.extend(makerbot_driver.Encoder.encode_uint32(stats['NoiseBytes']))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint32(stats['PacketRetries']))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint32(stats['NoiseBytes']))
 
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         info = self.r.get_communication_stats()
@@ -1400,7 +1516,8 @@ class S3gTestsFirmware500(unittest.TestCase):
             if flagValues[i]:
                 bitfield += 1 << i
         response_payload.append(bitfield)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         responseFlags = self.r.get_motherboard_status()
@@ -1416,7 +1533,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(1)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertRaises(
@@ -1432,9 +1550,11 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         for expected_state in expected_states:
             response_payload = bytearray()
-            response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
+            response_payload.append(
+                makerbot_driver.response_code_dict['SUCCESS'])
             response_payload.append(0)
-            self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+            self.outputstream.write(
+                makerbot_driver.Encoder.encode_payload(response_payload))
             self.outputstream.seek(0)
             self.inputstream.seek(0)
 
@@ -1461,8 +1581,10 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         for i in range(6):
-            response_payload.extend(makerbot_driver.Encoder.encode_uint16(i + 1))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+            response_payload.extend(
+                makerbot_driver.Encoder.encode_uint16(i + 1))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(expectedDict, self.r.get_PID_state(toolIndex))
@@ -1481,7 +1603,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.toolhead_init(toolIndex)
@@ -1501,7 +1624,8 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.toolhead_abort(toolIndex)
@@ -1521,7 +1645,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         toolIndex = 0
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.toolhead_pause(toolIndex)
@@ -1542,7 +1667,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         theta = 90
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
         self.r.set_servo1_position(toolIndex, theta)
 
@@ -1564,7 +1690,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         toolIndex = 0
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.toggle_motor1(toolIndex, True, True)
@@ -1590,7 +1717,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         duration = 50
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.set_motor1_speed_RPM(toolIndex, duration)
@@ -1625,7 +1753,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         returnBitfield = 0xFF
 
         response_payload.append(returnBitfield)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEqual(expectedDict, self.r.get_tool_status(toolIndex))
@@ -1646,7 +1775,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(makerbot_driver.Encoder.encode_uint32(speed))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEqual(speed, self.r.get_motor1_speed(toolIndex))
@@ -1663,7 +1793,8 @@ class S3gTestsFirmware500(unittest.TestCase):
     def test_init(self):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.init()
@@ -1679,8 +1810,10 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(temperature))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint16(temperature))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(
@@ -1702,7 +1835,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(ready_state)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertRaises(
@@ -1718,9 +1852,11 @@ class S3gTestsFirmware500(unittest.TestCase):
             self.outputstream.truncate(0)
 
             response_payload = bytearray()
-            response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
+            response_payload.append(
+                makerbot_driver.response_code_dict['SUCCESS'])
             response_payload.append(ready_state[1])
-            self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+            self.outputstream.write(
+                makerbot_driver.Encoder.encode_payload(response_payload))
             self.outputstream.seek(0)
             self.inputstream.seek(0)
 
@@ -1752,7 +1888,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend(data)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(self.r.read_from_toolhead_EEPROM(
@@ -1765,7 +1902,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         self.assertEquals(payload[1], tool_index)
         self.assertEquals(payload[2], makerbot_driver.slave_query_command_dict[
                           'READ_FROM_EEPROM'])
-        self.assertEquals(payload[3:5], makerbot_driver.Encoder.encode_uint16(offset))
+        self.assertEquals(
+            payload[3:5], makerbot_driver.Encoder.encode_uint16(offset))
         self.assertEquals(payload[5], length)
 
     def test_write_to_toolhead_eeprom_too_much_data(self):
@@ -1789,7 +1927,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(length + 1)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertRaises(makerbot_driver.EEPROMMismatchError, self.r.write_to_toolhead_EEPROM, tool_index, offset, data)
@@ -1805,7 +1944,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(length)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.r.write_to_toolhead_EEPROM(tool_index, offset, data)
@@ -1817,7 +1957,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         self.assertEquals(payload[1], tool_index)
         self.assertEquals(
             payload[2], makerbot_driver.slave_query_command_dict['WRITE_TO_EEPROM'])
-        self.assertEquals(payload[3:5], makerbot_driver.Encoder.encode_uint16(offset))
+        self.assertEquals(
+            payload[3:5], makerbot_driver.Encoder.encode_uint16(offset))
         self.assertEquals(payload[6:], data)
 
     def test_get_platform_temperature(self):
@@ -1826,8 +1967,10 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(temperature))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint16(temperature))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(
@@ -1847,8 +1990,10 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(temperature))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint16(temperature))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(
@@ -1868,8 +2013,10 @@ class S3gTestsFirmware500(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(temperature))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint16(temperature))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(
@@ -1890,7 +2037,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(ready_state)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertRaises(makerbot_driver.HeatElementReadyError,
@@ -1906,9 +2054,11 @@ class S3gTestsFirmware500(unittest.TestCase):
             self.outputstream.truncate(0)
 
             response_payload = bytearray()
-            response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
+            response_payload.append(
+                makerbot_driver.response_code_dict['SUCCESS'])
             response_payload.append(ready_state[1])
-            self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+            self.outputstream.write(
+                makerbot_driver.Encoder.encode_payload(response_payload))
             self.outputstream.seek(0)
             self.inputstream.seek(0)
 
@@ -1997,7 +2147,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         self.assertEquals(payload[2], makerbot_driver.slave_action_command_dict[
                           'SET_TOOLHEAD_TARGET_TEMP'])
         self.assertEquals(payload[3], 2)  # Temp is a byte of len 2
-        self.assertEquals(payload[4:6], makerbot_driver.Encoder.encode_int16(temp))
+        self.assertEquals(
+            payload[4:6], makerbot_driver.Encoder.encode_int16(temp))
 
     def test_set_platform_temp(self):
         tool_index = 2
@@ -2021,7 +2172,8 @@ class S3gTestsFirmware500(unittest.TestCase):
         self.assertEquals(payload[2], makerbot_driver.slave_action_command_dict[
                           'SET_PLATFORM_TEMP'])
         self.assertEquals(payload[3], 2)  # Temp is a byte of len 2
-        self.assertEquals(payload[4:6], makerbot_driver.Encoder.encode_int16(temp))
+        self.assertEquals(
+            payload[4:6], makerbot_driver.Encoder.encode_int16(temp))
 
 if __name__ == "__main__":
     unittest.main()

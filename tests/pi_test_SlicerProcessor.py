@@ -1,7 +1,7 @@
 import os
 import sys
-lib_path = os.path.abspath('../')
-sys.path.append(lib_path)
+lib_path = os.path.abspath('./')
+sys.path.insert(0, lib_path)
 
 import unittest
 import tempfile
@@ -46,7 +46,8 @@ class SlicerProcessor(unittest.TestCase):
                 'G90\n',
             ]
             output = self.sp.process_gcode(gcodes)
-            self.assertEqual(output, [gcodes[0], "M73 P100 (progress (100%))\n"])
+            self.assertEqual(
+                output, [gcodes[0], "M73 P100 (progress (100%))\n"])
             self.assertEqual(1, len(w))
             self.assertTrue(issubclass(w[0].category, UserWarning))
             self.assertEqual(str(w[0].message), "Processing incompatible version of Slicer, resulting file may not be compatible with Makerbot_Driver")

@@ -3,8 +3,8 @@ from __future__ import (absolute_import, print_function, unicode_literals)
 import os
 import sys
 import uuid
-lib_path = os.path.abspath('../')
-sys.path.append(lib_path)
+lib_path = os.path.abspath('./')
+sys.path.insert(0, lib_path)
 
 
 try:

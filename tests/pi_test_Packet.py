@@ -1,7 +1,7 @@
 import os
 import sys
-lib_path = os.path.abspath('../')
-sys.path.append(lib_path)
+lib_path = os.path.abspath('./')
+sys.path.insert(0, lib_path)
 
 import unittest
 import makerbot_driver
@@ -62,7 +62,8 @@ class PacketDecodeTests(unittest.TestCase):
         packet.append(1)
         packet.extend('a')
         packet.append(makerbot_driver.Encoder.CalculateCRC('a') + 1)
-        self.assertRaises(makerbot_driver.PacketCRCError, makerbot_driver.Encoder.decode_packet, packet)
+        self.assertRaises(makerbot_driver.PacketCRCError,
+                          makerbot_driver.Encoder.decode_packet, packet)
 
     def test_got_payload(self):
         expected_payload = bytearray('abcde')
@@ -90,7 +91,8 @@ class PacketStreamDecoderTests(unittest.TestCase):
         assert self.s.expected_length == 0
 
     def test_reject_bad_header(self):
-        self.assertRaises(makerbot_driver.PacketHeaderError, self.s.parse_byte, 0x00)
+        self.assertRaises(
+            makerbot_driver.PacketHeaderError, self.s.parse_byte, 0x00)
         assert self.s.state == 'WAIT_FOR_HEADER'
 
     def test_accept_header(self):
@@ -99,14 +101,16 @@ class PacketStreamDecoderTests(unittest.TestCase):
 
     def test_reject_bad_size(self):
         self.s.parse_byte(makerbot_driver.header)
-        self.assertRaises(makerbot_driver.PacketLengthFieldError, self.s.parse_byte,
-                          makerbot_driver.maximum_payload_length + 1)
+        self.assertRaises(
+            makerbot_driver.PacketLengthFieldError, self.s.parse_byte,
+            makerbot_driver.maximum_payload_length + 1)
 
     def test_accept_size(self):
         self.s.parse_byte(makerbot_driver.header)
         self.s.parse_byte(makerbot_driver.maximum_payload_length)
         assert(self.s.state == 'WAIT_FOR_DATA')
-        assert(self.s.expected_length == makerbot_driver.maximum_payload_length)
+        assert(
+            self.s.expected_length == makerbot_driver.maximum_payload_length)
 
     def test_accepts_data(self):
         self.s.parse_byte(makerbot_driver.header)
@@ -114,7 +118,8 @@ class PacketStreamDecoderTests(unittest.TestCase):
         for i in range(0, makerbot_driver.maximum_payload_length):
             self.s.parse_byte(i)
 
-        assert(self.s.expected_length == makerbot_driver.maximum_payload_length)
+        assert(
+            self.s.expected_length == makerbot_driver.maximum_payload_length)
         for i in range(0, makerbot_driver.maximum_payload_length):
             assert(self.s.payload[i] == i)
 
@@ -132,7 +137,8 @@ class PacketStreamDecoderTests(unittest.TestCase):
             ['GENERIC_PACKET_ERROR', makerbot_driver.GenericError],
             ['ACTION_BUFFER_OVERFLOW', makerbot_driver.BufferOverflowError],
             ['CRC_MISMATCH', makerbot_driver.CRCMismatchError],
-            ['COMMAND_NOT_SUPPORTED', makerbot_driver.CommandNotSupportedError],
+            ['COMMAND_NOT_SUPPORTED',
+                makerbot_driver.CommandNotSupportedError],
             ['DOWNSTREAM_TIMEOUT', makerbot_driver.DownstreamTimeoutError],
             ['TOOL_LOCK_TIMEOUT', makerbot_driver.ToolLockError],
             ['CANCEL_BUILD', makerbot_driver.BuildCancelledError],

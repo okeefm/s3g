@@ -1,7 +1,7 @@
 import os
 import sys
-lib_path = os.path.abspath('../')
-sys.path.append(lib_path)
+lib_path = os.path.abspath('./')
+sys.path.insert(0, lib_path)
 
 import io
 import struct
@@ -76,14 +76,17 @@ class StreamWriterTests(unittest.TestCase):
             'GenericError',
         ]
         response_payload = bytearray()
-        response_payload.append(makerbot_driver.response_code_dict['CRC_MISMATCH'])
+        response_payload.append(
+            makerbot_driver.response_code_dict['CRC_MISMATCH'])
         for i in range(3):
-            self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+            self.outputstream.write(
+                makerbot_driver.Encoder.encode_payload(response_payload))
         response_payload = bytearray()
         response_payload.append(
             makerbot_driver.response_code_dict['GENERIC_PACKET_ERROR'])
         for i in range(2):
-            self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+            self.outputstream.write(
+                makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
         payload = 'asdf'
         try:
@@ -100,7 +103,8 @@ class StreamWriterTests(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend('12345')
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEqual(response_payload, self.w.send_command(payload))
@@ -116,7 +120,8 @@ class StreamWriterTests(unittest.TestCase):
         packet = makerbot_driver.Encoder.encode_payload(payload)
         expected_packet = makerbot_driver.Encoder.encode_payload(payload)
 
-        self.assertRaises(makerbot_driver.TransmissionError, self.w.send_packet, packet)
+        self.assertRaises(
+            makerbot_driver.TransmissionError, self.w.send_packet, packet)
 
         self.inputstream.seek(0)
         for i in range(0, makerbot_driver.max_retry_count):
@@ -138,7 +143,8 @@ class StreamWriterTests(unittest.TestCase):
 
         for i in range(0, makerbot_driver.max_retry_count - 1):
             self.outputstream.write('a')
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(response_payload, self.w.send_packet(packet))
@@ -158,7 +164,8 @@ class StreamWriterTests(unittest.TestCase):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.extend('12345')
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         self.assertEquals(response_payload, self.w.send_packet(packet))
@@ -183,7 +190,8 @@ class StreamWriterTests(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         payload = struct.pack(
@@ -211,7 +219,8 @@ class StreamWriterTests(unittest.TestCase):
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
         response_payload.append(makerbot_driver.sd_error_dict['SUCCESS'])
         response_payload.extend(filename)
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         payload = struct.pack(
@@ -221,7 +230,8 @@ class StreamWriterTests(unittest.TestCase):
         )
         self.assertEqual(response_payload, self.w.send_query_payload(payload))
         self.assertEqual(
-            makerbot_driver.Encoder.encode_payload(payload), self.inputstream.getvalue())
+            makerbot_driver.Encoder.encode_payload(payload),
+            self.inputstream.getvalue())
 
     def test_build_and_send_query_payload(self):
         cmd = makerbot_driver.host_query_command_dict['GET_VERSION']
@@ -235,8 +245,10 @@ class StreamWriterTests(unittest.TestCase):
 
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(botVersion))
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        response_payload.extend(
+            makerbot_driver.Encoder.encode_uint16(botVersion))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
         payload = struct.pack(
@@ -256,7 +268,8 @@ class StreamWriterTests(unittest.TestCase):
     def test_external_stop_works_precondition(self):
         response_payload = bytearray()
         response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        self.outputstream.write(makerbot_driver.Encoder.encode_payload(response_payload))
+        self.outputstream.write(
+            makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
         self.w.set_external_stop()
         self.assertRaises(

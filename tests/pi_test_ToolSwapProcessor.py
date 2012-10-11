@@ -1,7 +1,7 @@
 import os
 import sys
-lib_path = os.path.abspath('../')
-sys.path.append(lib_path)
+lib_path = os.path.abspath('./')
+sys.path.insert(0, lib_path)
 
 import unittest
 import tempfile
@@ -41,7 +41,8 @@ class TestToolSwapProcessor(unittest.TestCase):
         ]
         regex = re.compile("[^(;]*([(][^)]*[)][^(;]*)*([aAbB])|[^(;]*([(][^)]*[)][^(;]*)*[tT]([0-9])")
         for case in cases:
-            self.assertEqual(case[1], self.tsp._transform_tool_swap(re.match(regex, case[0])))
+            self.assertEqual(case[1], self.tsp._transform_tool_swap(
+                re.match(regex, case[0])))
 
     def test_process_file(self):
         gcodes = [
