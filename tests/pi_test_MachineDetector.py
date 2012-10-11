@@ -26,6 +26,23 @@ class TestMachineDetector(unittest.TestCase):
         for case in cases:
             self.assertEqual(case[2], self.md.union(case[0], case[1]))
 
+
+    def test_get_vidpid_by_machine(self):
+        expectedRep2 = (0x23C1, 0xB015)
+        expectedRep = (0x23C1, 0xD314)
+        expectedMighty = (0x23C1, 0xB404)
+        expectedFTDI = (0x103, 0x1771)
+        rep = makerbot_driver.get_VidPidByName('The Replicator')
+        rep2 = makerbot_driver.get_VidPidByName('The Replicator 2')
+        mighty = makerbot_driver.get_VidPidByName('MightyBoard')
+        ftdi = makerbot_driver.get_VidPidByName('TOM')
+        self.assertEqual(expectedRep2, rep2)
+        self.assertEqual(expectedRep, rep)
+        self.assertEqual(expectedFTDI, ftdi)
+        self.assertEqual(expectedMighty, mighty)
+
+
+
 #  def test_identify_replicator_one_toolhead(self):
 #    s3g_mock = mock.Mock()
 #    s3g_mock.get_toolhead_count.return_value = 1

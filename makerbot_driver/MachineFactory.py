@@ -91,7 +91,7 @@ class MachineFactory(object):
         tool_count at the final criterion to narrow our search.
         """
         vid_pid_matches = []
-        for machine in makerbot_driver.g_MachineClasses().values():
+        for machine in makerbot_driver.gMachineClasses.values():
             if machine['vid'] == machine_setup_dict['vid'] and machine['pid'] == machine_setup_dict['pid']:
                 return machine['machineProfiles']
         return None

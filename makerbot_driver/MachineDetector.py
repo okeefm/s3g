@@ -1,11 +1,14 @@
 """
-A Machine Detector that can detect machines we would like
-to connect to.  Can detect multiple machines by passing
-in a list of machine names.  We search through their machine
-profiles for their VID/PID information, use makerbot's pyserial
-library to find any/all ports with those values, and compare iSerial
-values to find all current, added and removed ports.  All ports
-are kept track of in a python dict named "ports".
+A MachineDetector is used to find 'probable' machines that are connected 
+to a computer, primarly by USB connection. It can detect multiple machines
+by passing multiple machine names.  
+
+Currently machines are detected by VID/PID (vendorID/productID) of 
+connected USB devices, although this can be extended in the future.  
+
+This may require MakerBot's version of pyserial to use features to tie a 
+serial device to it's USB VID/PID pair.  All ports are kept track of in a 
+python dict named "ports".
 """
 
 import logging
@@ -21,8 +24,8 @@ except ImportError:
         return
         yield
 
+## Tools for using the global singleton MachineDetector
 gMachineDetector = None
-
 
 def get_gMachineDetector():
     global gMachineDetector
@@ -31,18 +34,26 @@ def get_gMachineDetector():
     return gMachineDetector
 
 
-def g_MachineClasses():
-    """ get our global list of machine classes"""
-    return MachineClasses
-
 # machine USB classes IE what VID/PID can map to what machine profiles
-MachineClasses = {
+gMachineClasses = {
     'The Replicator 2': {'vid': 0x23C1, 'pid': 0xB015, 'machineProfiles': '.*Replicator2'},
     'The Replicator': {'vid': 0x23C1, 'pid': 0xD314, 'machineProfiles': '.*Replicator'},
-    'MightBoard': {'vid': 0x23C1, 'pid': 0xB404, 'machineProfiles': '.*Replicator'},
+    'MightyBoard': {'vid': 0x23C1, 'pid': 0xB404, 'machineProfiles': '.*Replicator'},
     'TOM': {'vid': 0403, 'pid': 6001, 'machineProfiles': '.*TOM'},
 }
 
+def get_VidPidByName(name):
+    """
+    @name name of a 'class' of machines 'TOM', 'The Replicator 2'
+    @return a tuple of vid/pid, or a tuple of (None,None) if there
+    is an error. 
+    NOTE: at this low level, 'MightyBoard's are treated separate from
+    final 'The Replicator's
+    """
+    if name in gMachineClasses.keys():
+        return (gMachineClasses[name]['vid'],
+            gMachineClasses[name]['pid'])
+    return (None, None)
 
 class MachineDetector(object):
     """ Class used to detect machines, and query basic information from
@@ -68,7 +79,7 @@ class MachineDetector(object):
         # scan for all machine types
         scanNameList = []
         if machineTypes is None:
-            scanNameList.extend(MachineClasses.keys())
+            scanNameList.extend(gMachineClasses.keys())
         elif isinstance(machineTypes, str) or isinstance(machineTypes, unicode):
             scanNameList.append(machineTypes)
         else:
@@ -80,8 +91,8 @@ class MachineDetector(object):
             self._log.debug("scanning for MachineClass %s", str(machineClass))
             #Not all machine classes have a defined VID/PID
             try:
-                vid = MachineClasses[machineClass]['vid']
-                pid = MachineClasses[machineClass]['pid']
+                vid = gMachineClasses[machineClass]['vid']
+                pid = gMachineClasses[machineClass]['pid']
                 new_machines = self.list_ports_by_vid_pid(vid, pid)
 
                 for machine in list(new_machines):
