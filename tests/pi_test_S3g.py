@@ -64,22 +64,6 @@ class S3gTests(unittest.TestCase):
         self.file = None
 
     def test_get_verified_status_unverified(self):
-        pid = constants.vid_pid[1]
-        vid = constants.vid_pid[0]
-        expected_value = True
-        response_payload = bytearray()
-        response_payload.append(constants.response_code_dict['SUCCESS'])
-        response_payload.extend(Encoder.encode_uint16(vid))
-        self.outputstream.write(Encoder.encode_payload(response_payload))
-        response_payload = bytearray()
-        response_payload.append(constants.response_code_dict['SUCCESS'])
-        response_payload.extend(Encoder.encode_uint16(pid))
-        self.outputstream.write(Encoder.encode_payload(response_payload))
-        self.outputstream.seek(0)
-
-        self.assertEqual(self.r.get_verified_status(), expected_value)
-
-    def test_get_verified_status_unverified(self):
         vid = 0x0000
         pid = 0xFFFF
         self.r.get_vid_pid = mock.Mock(return_value=(vid, pid))
@@ -91,15 +75,73 @@ class S3gTests(unittest.TestCase):
         self.r.get_vid_pid = mock.Mock(return_value=(vid, pid))
         self.assertTrue(self.r.get_verified_status())
 
-    def test_get_vid_pid(self):
-        expected_port = '/dev/ttyACM0'
+    def test_get_vid_pid_tty_port_tty_reported(self):
+        expected_port = '/dev/tty.ACM0'
         expected_vid = 0x0000
         expected_pid = 0xFFFF
+        reported_port = expected_port
         file_mock = mock.Mock()
         file_mock.port = expected_port
         self.r.writer = Writer.StreamWriter(file_mock)
         mock_port_dict = [{
-            'port': expected_port,
+            'port': reported_port,
+            'VID': expected_vid,
+            'PID': expected_pid,
+        }]
+        self.r.list_ports_by_vid_pid = mock.Mock(return_value=mock_port_dict)
+        vid, pid = self.r.get_vid_pid()
+
+        self.assertEqual(vid, expected_vid)
+        self.assertEqual(pid, expected_pid)
+
+    def test_get_vid_pid_cu_port_cu_reported(self):
+        expected_port = '/dev/cu.ACM0'
+        expected_vid = 0x0000
+        expected_pid = 0xFFFF
+        reported_port = expected_port
+        file_mock = mock.Mock()
+        file_mock.port = expected_port
+        self.r.writer = Writer.StreamWriter(file_mock)
+        mock_port_dict = [{
+            'port': reported_port,
+            'VID': expected_vid,
+            'PID': expected_pid,
+        }]
+        self.r.list_ports_by_vid_pid = mock.Mock(return_value=mock_port_dict)
+        vid, pid = self.r.get_vid_pid()
+
+        self.assertEqual(vid, expected_vid)
+        self.assertEqual(pid, expected_pid)
+
+    def test_get_vid_pid_cu_port_tty_reported(self):
+        expected_port = '/dev/cu.ACM0'
+        expected_vid = 0x0000
+        expected_pid = 0xFFFF
+        reported_port = expected_port.replace('cu', 'tty')
+        file_mock = mock.Mock()
+        file_mock.port = expected_port
+        self.r.writer = Writer.StreamWriter(file_mock)
+        mock_port_dict = [{
+            'port': reported_port,
+            'VID': expected_vid,
+            'PID': expected_pid,
+        }]
+        self.r.list_ports_by_vid_pid = mock.Mock(return_value=mock_port_dict)
+        vid, pid = self.r.get_vid_pid()
+
+        self.assertEqual(vid, expected_vid)
+        self.assertEqual(pid, expected_pid)
+
+    def test_get_vid_pid_tty_port_cu_reported(self):
+        expected_port = '/dev/tty.ACM0'
+        expected_vid = 0x0000
+        expected_pid = 0xFFFF
+        reported_port = expected_port.replace('tty', 'cu')
+        file_mock = mock.Mock()
+        file_mock.port = expected_port
+        self.r.writer = Writer.StreamWriter(file_mock)
+        mock_port_dict = [{
+            'port': reported_port,
             'VID': expected_vid,
             'PID': expected_pid,
         }]

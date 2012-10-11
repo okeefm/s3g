@@ -117,9 +117,17 @@ class s3g(object):
         if self.writer is not None:
             if isinstance(self.writer, makerbot_driver.Writer.StreamWriter):
                 port = self.writer.file.port
+                # Ports can be reported as either TTY or CU, so we need
+                # to check for both
+                if 'tty' in port:
+                    tty_port = port
+                    cu_port = port.replace('/dev/tty.', '/dev/cu.')
+                elif 'cu' in port:
+                    tty_port = port.replace('/dev/cu.', '/dev/tty.')
+                    cu_port = port
                 port_listing = self.list_ports_by_vid_pid()
                 for entry in port_listing:
-                    if port == entry.get('port', '-1'):
+                    if tty_port == entry.get('port', '-1') or cu_port == entry.get('port', '-1'):
                         vid = entry['VID']
                         pid = entry['PID']
                         break
