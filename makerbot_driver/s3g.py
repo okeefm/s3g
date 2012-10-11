@@ -15,7 +15,11 @@ class s3g(object):
     read and write data to the bot.  No data is cached by this driver, all data is requested
     over the USB bus when queried.
     """
-
+    
+    POINT_LENGTH = 3
+    EXTENDED_POINT_LENGTH = 5
+    ACCELERATED_FIRMWARE_VERSION = 601
+    
     @classmethod
     def from_filename(cls, port, baudrate=115200, timeout=.2):
         """Constructs and returns an s3g object connected to the
@@ -26,7 +30,6 @@ class s3g(object):
         @param timeout, time allowance before timeout error. 0.2 assummed
         @return s3g object, equipped with a StreamWrtier directed at port.
         """
-        r = s3g()
         s = serial.Serial(port, baudrate=baudrate, timeout=timeout)
 
         # begin baud rate hack
@@ -40,21 +43,18 @@ class s3g(object):
         s.baudrate = baudrate
         # end baud rate hack
 
-        r.writer = makerbot_driver.Writer.StreamWriter(s)
-        return r
+        mb_streamWriter = makerbot_driver.Writer.StreamWriter(s)
+        return s3g(500,mb_streamWriter)
 
-    def __init__(self, firmware_version=500):
-        self.writer = None
-        # TODO: Move these to constants file.
-        self.extendedPointLength = 5
-        self.pointLength = 3
-
-        self.accelerated_firmware_version = 601
+    def __init__(self, firmware_version=500,mb_stream_writer=None):
+        self.writer = mb_stream_writer
         self.set_firmware_version(firmware_version)
+        self._eeprom_reader = None
 
     def set_firmware_version(self, firmware_version):
         self.firmware_version = firmware_version
-        self.send_accelerated_point = self.convert_to_usable_firmware_version(firmware_version) >= self.accelerated_firmware_version
+        self.send_accelerated_point = self.convert_to_usable_firmware_version(
+            firmware_version) >= s3g.ACCELERATED_FIRMWARE_VERSION
 
     def convert_to_usable_firmware_version(self, firmware_version):
         """
@@ -70,9 +70,16 @@ class s3g(object):
             compatable = compatable.replace('.', '0')
             compatable = int(compatable)
         return compatable
+    
+    @property
+    def eeprom_reader(self):
+        if self._eeprom_reader is None:
+            self._eeprom_reader =  makerbot_driver.EEPROM.EepromReader.factory(self)
+        return self._eeprom_reader
+        
 
-    def create_reader(self):
-        return makerbot_driver.EEPROM.EepromReader.factory(self)
+#    def create_reader(self):
+#        return makerbot_driver.EEPROM.EepromReader.factory(self)
 
     def close(self):
         """ If any ports are open for this s3g bot, it closes those ports """
@@ -104,6 +111,7 @@ class s3g(object):
         response = self.writer.send_query_payload(payload)
         [response_code, version] = makerbot_driver.Encoder.unpack_response(
             '<BH', response)
+        # TODO: check response_code
         return version
 
     def get_name(self):
@@ -112,24 +120,21 @@ class s3g(object):
         @return a string for the name
         TODO: merge this function with future eeprom read/write module
         """
-        reader = self.create_reader()
-        name = reader.read_data('MACHINE_NAME')
+        name = self.eeprom_reader.read_data('MACHINE_NAME')
         return name[0]
 
     def get_toolhead_count(self):
         """
         @return the toolhead count of this bot. -1 on error
         """
-        reader = self.create_reader()
-        data = reader.read_data('TOOL_COUNT')
+        data = self.eeprom_reader.read_data('TOOL_COUNT')
         return data[0]
 
     def get_vid_pid(self):
         """
         Returns vid and pid as an int
         """
-        reader = self.create_reader()
-        data = reader.read_data('VID_PID_INFO')
+        data = self.eeprom_reader.read_data('VID_PID_INFO')
         return data[0], data[1]
 
     def get_verified_status(self, verified_pid=makerbot_driver.vid_pid[1]):
@@ -156,6 +161,7 @@ class s3g(object):
          internal_version,
          reserved_a,
          reserved_b] = makerbot_driver.Encoder.unpack_response('<BHHHH', response)
+        # TODO: check response_code
 
         version_info = {
             'Version': version,
@@ -181,6 +187,7 @@ class s3g(object):
         response = self.writer.send_query_payload(payload)
 
         [response_code, sd_response_code] = makerbot_driver.Encoder.unpack_response('<BB', response)
+        # TODO: check response_code
         if sd_response_code != makerbot_driver.sd_error_dict['SUCCESS']:
             raise makerbot_driver.SDCardError(sd_response_code)
 
@@ -198,6 +205,7 @@ class s3g(object):
 
         [response_code, sdResponse] = makerbot_driver.Encoder.unpack_response(
             '<BI', response)
+        # TODO: check response_code
         return sdResponse
 
     def reset(self):
@@ -225,6 +233,7 @@ class s3g(object):
 
         [response_code, isFinished] = makerbot_driver.Encoder.unpack_response(
             '<B?', response)
+        # TODO: check response_code
         return isFinished
 
     def clear_buffer(self):
@@ -268,6 +277,7 @@ class s3g(object):
          build_minutes,
          line_number,
          reserved] = makerbot_driver.Encoder.unpack_response('<BBBBLL', response)
+        # TODO: check response_code
 
         info = {
             'BuildState': build_state,
@@ -296,6 +306,7 @@ class s3g(object):
          nonResponsivePacketsSent,
          packetRetries,
          noiseBytes] = makerbot_driver.Encoder.unpack_response('<BLLLLL', response)
+        # TODO: check response_code
 
         info = {
             'PacketsReceived': packetsReceived,
@@ -322,6 +333,7 @@ class s3g(object):
 
         [response_code, bitfield] = makerbot_driver.Encoder.unpack_response(
             '<BB', response)
+        # TODO: check response_code
 
         bitfield = makerbot_driver.Encoder.decode_bitfield(bitfield)
         flags = {
@@ -352,6 +364,7 @@ class s3g(object):
         response = self.writer.send_query_payload(payload)
 
         [response_code, extended_stop_response] = makerbot_driver.Encoder.unpack_response('<BB', response)
+        # TODO: check response_code
 
         if extended_stop_response != 0:
             raise makerbot_driver.ExtendedStopError
@@ -367,7 +380,8 @@ class s3g(object):
         """
         payload = struct.pack(
             '<BBHH',
-            makerbot_driver.host_action_command_dict['WAIT_FOR_PLATFORM_READY'],
+            makerbot_driver.host_action_command_dict[
+                'WAIT_FOR_PLATFORM_READY'],
             tool_index,
             delay,
             timeout
@@ -449,12 +463,13 @@ class s3g(object):
         @param int duration: The total duration of the move in miliseconds
         @param list relative_axes: Array of axes whose coordinates should be considered relative
         """
-        if len(position) != self.extendedPointLength:
+        if len(position) != s3g.EXTENDED_POINT_LENGTH:
             raise makerbot_driver.PointLengthError(len(position))
 
         payload = struct.pack(
             '<BiiiiiIB',
-            makerbot_driver.host_action_command_dict['QUEUE_EXTENDED_POINT_NEW'],
+            makerbot_driver.host_action_command_dict[
+                'QUEUE_EXTENDED_POINT_NEW'],
             position[0], position[1], position[2], position[3], position[4],
             duration,
             makerbot_driver.Encoder.encode_axes(relative_axes)
@@ -575,9 +590,7 @@ class s3g(object):
         return self.writer.send_query_payload(payload)
 
     def read_named_value_from_EEPROM(self, name=None, context=None):
-        import EEPROM
-        eReader = EEPROM.EepromReader.factory(self)
-        return eReader.read_data(name, context)
+        return self.eeprom_reader.read_data(name, context)
 
     def read_from_EEPROM(self, offset, length):
         """
@@ -630,12 +643,14 @@ class s3g(object):
         """
         payload = struct.pack(
             '<B',
-            makerbot_driver.host_query_command_dict['GET_AVAILABLE_BUFFER_SIZE'],
+            makerbot_driver.host_query_command_dict[
+                'GET_AVAILABLE_BUFFER_SIZE'],
         )
 
         response = self.writer.send_query_payload(payload)
         [response_code, buffer_size] = makerbot_driver.Encoder.unpack_response(
             '<BI', response)
+        # TODO: check response_code
 
         return buffer_size
 
@@ -667,6 +682,7 @@ class s3g(object):
         response = self.writer.send_query_payload(payload)
 
         [response_code, sd_response_code] = makerbot_driver.Encoder.unpack_response('<BB', response)
+        # TODO: check response_code
 
         if sd_response_code != makerbot_driver.sd_error_dict['SUCCESS']:
             raise makerbot_driver.SDCardError(sd_response_code)
@@ -686,6 +702,7 @@ class s3g(object):
         )
         response = self.writer.send_query_payload(payload)
         [response_code, sd_response_code, filename] = makerbot_driver.Encoder.unpack_response_with_string('<BB', response)
+        # TODO: check response_code
 
         if sd_response_code != makerbot_driver.sd_error_dict['SUCCESS']:
             raise makerbot_driver.SDCardError(sd_response_code)
@@ -704,6 +721,7 @@ class s3g(object):
 
         response = self.writer.send_query_payload(payload)
         [response_code, filename] = makerbot_driver.Encoder.unpack_response_with_string('<B', response)
+        # TODO: check response_code
 
         return filename
 
@@ -722,6 +740,7 @@ class s3g(object):
         [response_code,
          x, y, z, a, b,
          endstop_states] = makerbot_driver.Encoder.unpack_response('<BiiiiiH', response)
+        # TODO: check response_code
 
         return [x, y, z, a, b], endstop_states
 
@@ -793,12 +812,13 @@ class s3g(object):
         @param float distance: distance in millimeters moved in (x,y,z) space OR if distance(x,y,z) == 0, then max(distance(A),distance(B))
         @param float feedrate: the actual feedrate in units of millimeters/second
         """
-        if len(position) != self.extendedPointLength:
+        if len(position) != s3g.EXTENDED_POINT_LENGTH:
             raise makerbot_driver.PointLengthError(len(position))
 
         payload = struct.pack(
             '<BiiiiiIBfh',
-            makerbot_driver.makerbot_driver.host_action_command_dict['QUEUE_EXTENDED_POINT_ACCELERATED'],
+            makerbot_driver.makerbot_driver.host_action_command_dict[
+                'QUEUE_EXTENDED_POINT_ACCELERATED'],
             position[0], position[1], position[2], position[3], position[4],
             dda_rate,
             makerbot_driver.Encoder.encode_axes(relative_axes),
@@ -813,7 +833,7 @@ class s3g(object):
         @param list position: 5D position to move to. All dimension should be in steps.
         @param double rate: Movement speed, in steps/??
         """
-        if len(position) != self.extendedPointLength:
+        if len(position) != s3g.EXTENDED_POINT_LENGTH:
             raise makerbot_driver.PointLengthError(len(position))
         if self.send_accelerated_point:
             dda_rate = 1000000.0 / float(dda_speed)
@@ -821,7 +841,8 @@ class s3g(object):
         else:
             payload = struct.pack(
                 '<BiiiiiI',
-                makerbot_driver.host_action_command_dict['QUEUE_EXTENDED_POINT'],
+                makerbot_driver.host_action_command_dict[
+                    'QUEUE_EXTENDED_POINT'],
                 position[0], position[1], position[2],
                 position[3], position[4], dda_speed
             )
@@ -833,7 +854,7 @@ class s3g(object):
         Inform the machine that it should consider this point its current point
         @param list position: 5D position to set the machine to, in steps.
         """
-        if len(position) != self.extendedPointLength:
+        if len(position) != s3g.EXTENDED_POINT_LENGTH:
             raise makerbot_driver.PointLengthError(len(position))
 
         payload = struct.pack(
@@ -969,7 +990,8 @@ class s3g(object):
                                     other_info_in_packet]
         payload = struct.pack(
             '<BI',
-            makerbot_driver.host_action_command_dict['BUILD_START_NOTIFICATION'], 0
+            makerbot_driver.host_action_command_dict[
+                'BUILD_START_NOTIFICATION'], 0
         )
 
         payload += build_name
@@ -1001,6 +1023,7 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['GET_VERSION'], payload)
         [response_code, version] = makerbot_driver.Encoder.unpack_response(
             '<BH', response)
+        # TODO: check response_code
 
         return version
 
@@ -1014,6 +1037,7 @@ class s3g(object):
         response = self.tool_query(
             tool_index, makerbot_driver.slave_query_command_dict['GET_PID_STATE'])
         [response_code, exError, exDelta, exLast, plError, plDelta, plLast] = makerbot_driver.Encoder.unpack_response('<Bhhhhhh', response)
+        # TODO: check response_code
         PIDVals = {
             "ExtruderError": exError,
             "ExtruderDelta": exDelta,
@@ -1048,6 +1072,7 @@ class s3g(object):
 
         [resonse_code, bitfield] = makerbot_driver.Encoder.unpack_response(
             '<BB', response)
+        # TODO: check response_code
 
         bitfield = makerbot_driver.Encoder.decode_bitfield(bitfield)
 
@@ -1153,6 +1178,7 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['GET_MOTOR_1_SPEED_RPM'])
         [response_code,
             speed] = makerbot_driver.Encoder.unpack_response('<BI', response)
+        # TODO: check response_code
         return speed
 
     def get_toolhead_temperature(self, tool_index):
@@ -1165,6 +1191,7 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['GET_TOOLHEAD_TEMP'])
         [response_code, temperature] = makerbot_driver.Encoder.unpack_response(
             '<BH', response)
+        # TODO: check response_code
 
         return temperature
 
@@ -1178,6 +1205,7 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['IS_TOOL_READY'])
         [response_code,
             ready] = makerbot_driver.Encoder.unpack_response('<BB', response)
+        # TODO: check response_code
 
         isReady = False
         if ready == 1:
@@ -1245,6 +1273,7 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['GET_PLATFORM_TEMP'])
         [response_code, temperature] = makerbot_driver.Encoder.unpack_response(
             '<BH', response)
+        # TODO: check response_code
 
         return temperature
 
@@ -1258,6 +1287,7 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['GET_TOOLHEAD_TARGET_TEMP'])
         [response_code, temperature] = makerbot_driver.Encoder.unpack_response(
             '<BH', response)
+        # TODO: check response_code
 
         return temperature
 
@@ -1271,6 +1301,7 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['GET_PLATFORM_TARGET_TEMP'])
         [response_code, temperature] = makerbot_driver.Encoder.unpack_response(
             '<BH', response)
+        # TODO: check response_code
 
         return temperature
 
@@ -1285,6 +1316,7 @@ class s3g(object):
         [response_code,
             ready] = makerbot_driver.Encoder.unpack_response('<BB', response)
 
+        # TODO: check response_code
         isReady = False
         if ready == 1:
             isReady = True
