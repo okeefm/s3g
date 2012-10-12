@@ -117,16 +117,14 @@ class eeprom_analyzer(object):
         @param str line: the line we want information from
         @return tuple: Information in the form of (name, location)
         """
+        before_semi_regex = "(.*?);"
+        match = re.search(before_semi_regex, line)
+        substring = match.group(1)
         for w in ['const', 'static', 'uint16_t']:
-            line = line.replace(w, '')
-        for s in ["\r", "\n", ";"]:
-            line = line.rstrip(s)
-        line = line.replace('\t', '')
-        line = line.replace(" ", "")
-        if ';' in line:
-            m = re.search("[^;]*;", line)
-            line = m.group()
-        (name, location) = line.split("=")
+            substring = substring.replace(w, '')
+        substring = substring.replace('\t', '')
+        substring = substring.replace(" ", "")
+        (name, location) = substring.split("=")
         return name, location
 
     def parse_out_variables(self, line):
