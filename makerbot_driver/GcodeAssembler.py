@@ -3,6 +3,51 @@ from __future__ import absolute_import
 import json
 import makerbot_driver
 
+"""
+A machine profile object that holds all values for a specific profile.
+"""
+
+import json
+import os
+import re
+import logging
+
+GcodeRecipes =  {
+  "PLA" : {
+    "print_start_sequence" : {
+      "heat_platform" : "no_heat"
+      },
+    "print_end_sequence" : {
+      "cool_platform" : "no_cool"
+      },
+    "variables" : {
+      "TOOL_0_TEMP" : 230,
+      "TOOL_1_TEMP" : 230
+      }
+  },
+  "ABS" : {
+    "print_start_sequence" : {
+      "heat_platform" : "heat_platform"
+      },
+    "print_end_sequence" : {
+      "cool_platform" : "cool_platform"
+      },
+    "variables" : {
+      "TOOL_0_TEMP" : 230,
+      "TOOL_1_TEMP" : 230,
+      "PLATFORM_TEMP" : 110
+      }
+    },
+  "dualstrusion": {
+    "print_start_sequence" : {
+      "heat_tools" : "dualstrusion"
+      },
+    "print_end_sequence" : {
+      "cool_tools" : "dualstrusion"
+      },
+    "variables" : {}
+    }
+}
 
 class GcodeAssembler(object):
     """
@@ -28,7 +73,7 @@ class GcodeAssembler(object):
             'cool_tools',
             'end_print',
         ]
-        self.recipes = makerbot_driver.Profile('recipes', profiledir)
+        self.recipes = GcodeRecipes
 
     def assemble_recipe(self,
                         material='PLA',
@@ -154,10 +199,11 @@ class GcodeAssembler(object):
         @return dict variables: The variables associated with this key
         """
 
-        if not key in self.recipes.values:
+        if not key in self.recipes:
             raise makerbot_driver.RecipeNotFoundError
-        values = self.recipes.values[key]
+        values = self.recipes[key]
         start_routines = values['print_start_sequence']
         end_routines = values['print_end_sequence']
         variables = values['variables']
         return start_routines, end_routines, variables
+

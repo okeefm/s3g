@@ -5,13 +5,13 @@ sys.path.insert(0, lib_path)
 
 import unittest
 import makerbot_driver
-
+from makerbot_driver.GcodeAssembler import GcodeRecipes
 
 class TestGcodeAssembler(unittest.TestCase):
     def setUp(self):
         self.profile = makerbot_driver.Profile('ReplicatorDual')
         self.ga = makerbot_driver.GcodeAssembler(self.profile)
-        self.recipes = makerbot_driver.Profile('recipes')
+        self.recipes = GcodeRecipes
 
     def tearDown(self):
         self.ga = None
@@ -19,7 +19,7 @@ class TestGcodeAssembler(unittest.TestCase):
     def test_get_recipes_and_variables(self):
         cases = ['ABS', 'PLA', 'dualstrusion']
         for case in cases:
-            values = self.recipes.values[case]
+            values = self.recipes[case]
             start_sequence = values['print_start_sequence']
             end_sequence = values['print_end_sequence']
             variables = values['variables']
@@ -28,7 +28,8 @@ class TestGcodeAssembler(unittest.TestCase):
             self.assertEqual(expected_values, got_values)
 
     def test_recipe_not_found(self):
-        self.assertRaises(makerbot_driver.RecipeNotFoundError, self.ga.get_recipes_and_variables, 'this_isnt_a_recipe')
+        with self.assertRaises(makerbot_driver.RecipeNotFoundError):
+            self.ga.get_recipes_and_variables('this_isnt_a_recipe')
 
     def test_assemble_gcode_dualstrusion_pla(self):
         expected_start_template = {
