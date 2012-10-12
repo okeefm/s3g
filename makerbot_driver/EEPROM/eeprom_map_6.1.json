@@ -36,7 +36,7 @@
           "type": "B"
         }, 
         "DEFAULTS_FLAG": {
-          "offset": "0x1A;", 
+          "offset": "0x1A",
           "type": "B"
         }, 
         "MAX_ACCELERATION_AXIS": {
