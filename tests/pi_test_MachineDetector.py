@@ -101,14 +101,14 @@ class TestMachineDetectorScanTests(unittest.TestCase):
         self.assertEqual(expected_pair, got_pair)
 
     def test_vid_pid_from_portname_unix_not_seen(self):
-        portname = '/dev/tty.ACM0'
+        portname = '/dev/ttyACM0'
         self.md.get_available_machines = mock.Mock(return_value={})
         expected_pair = (None, None)
         got_pair = self.md.vid_pid_from_portname(portname)
         self.assertEqual(expected_pair, got_pair)
 
-    def test_vid_pid_from_portname_unix_tty_has_seen_tty(self):
-        portname = '/dev/tty.ACM0'
+    def test_vid_pid_from_portname_unix_tty_has_seen(self):
+        portname = '/dev/ttyACM0'
         expected_pair = (0x0000, 0xFFFF)
         self.md.get_available_machines = mock.Mock(return_value={
             portname: {
@@ -119,8 +119,8 @@ class TestMachineDetectorScanTests(unittest.TestCase):
         got_pair = self.md.vid_pid_from_portname(portname)
         self.assertEqual(expected_pair, got_pair)
 
-    def test_vid_pid_from_portname_unix_tty_has_seen_cu(self):
-        portname = '/dev/tty.ACM0'
+    def test_vid_pid_from_portname_mac_tty_has_seen_cu(self):
+        portname = '/dev/tty.usbmodemfa131'
         expected_pair = (0x0000, 0xFFFF)
         self.md.get_available_machines = mock.Mock(return_value={
             portname.replace('tty', 'cu'): {
@@ -131,8 +131,20 @@ class TestMachineDetectorScanTests(unittest.TestCase):
         got_pair = self.md.vid_pid_from_portname(portname)
         self.assertEqual(expected_pair, got_pair)
 
-    def test_vid_pid_from_portname_unix_cu_has_seen_tty(self):
-        portname = '/dev/cu.ACM0'
+    def test_vid_pid_from_portname_mac_tty_has_seen_tty(self):
+        portname = '/dev/tty.usbmodemfa131'
+        expected_pair = (0x0000, 0xFFFF)
+        self.md.get_available_machines = mock.Mock(return_value={
+            portname: {
+                'VID': expected_pair[0],
+                'PID': expected_pair[1],
+            }
+        })
+        got_pair = self.md.vid_pid_from_portname(portname)
+        self.assertEqual(expected_pair, got_pair)
+
+    def test_vid_pid_from_portname_mac_cu_has_seen_tty(self):
+        portname = '/dev/cu.usbmodemfa131'
         expected_pair = (0x0000, 0xFFFF)
         self.md.get_available_machines = mock.Mock(return_value={
             portname.replace('cu', 'tty'): {
@@ -143,8 +155,8 @@ class TestMachineDetectorScanTests(unittest.TestCase):
         got_pair = self.md.vid_pid_from_portname(portname)
         self.assertEqual(expected_pair, got_pair)
 
-    def test_vid_pid_from_portname_unix_cu_has_seen_cu(self):
-        portname = '/dev/cu.ACM0'
+    def test_vid_pid_from_portname_mac_cu_has_seen_cu(self):
+        portname = '/dev/cu.usbmodemfa131'
         expected_pair = (0x0000, 0xFFFF)
         self.md.get_available_machines = mock.Mock(return_value={
             portname: {
