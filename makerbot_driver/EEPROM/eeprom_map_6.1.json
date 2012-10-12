@@ -10,19 +10,19 @@
       "offset": "0x01D8", 
       "sub_map": {
         "EXTRUDER_DEPRIME_STEPS": {
-          "offset": "0x08;", 
+          "offset": "0x08", 
           "type": "HH"
         }, 
         "JKN_ADVANCE_K": {
-          "offset": "0x00;", 
+          "offset": "0x00", 
           "type": "I"
         }, 
         "JKN_ADVANCE_K2": {
-          "offset": "0x04;", 
+          "offset": "0x04", 
           "type": "I"
         }, 
         "SLOWDOWN_FLAG": {
-          "offset": "0x0C;", 
+          "offset": "0x0C", 
           "type": "B"
         }
       }
@@ -40,19 +40,19 @@
           "type": "B"
         }, 
         "MAX_ACCELERATION_AXIS": {
-          "offset": "0x04;", 
+          "offset": "0x04", 
           "type": "HHHHH"
         }, 
         "MAX_ACCELERATION_EXTRUDER_MOVE": {
-          "offset": "0x18;", 
+          "offset": "0x18", 
           "type": "H"
         }, 
         "MAX_ACCELERATION_NORMAL_MOVE": {
-          "offset": "0x02;", 
+          "offset": "0x02", 
           "type": "H"
         }, 
         "MAX_SPEED_CHANGE": {
-          "offset": "0x0E;", 
+          "offset": "0x0E", 
           "type": "HHHHH"
         }
       }
