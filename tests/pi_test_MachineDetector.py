@@ -17,15 +17,6 @@ class TestMachineDetector(unittest.TestCase):
     def tearDown(self):
         self.md = None
 
-    def test_union(self):
-        cases = [
-            [[{'a':1}], [{'b':2}], [{'a':1}, {'b':2}]],
-            [[{'a':1}, {'b':2}], [{'a':1}], [{'a':1}, {'b':2}]],
-            [[{'a':1, 'b':2}], [{'c':3}], [{'a':1, 'b':2}, {'c':3}]]
-        ]
-        for case in cases:
-            self.assertEqual(case[2], self.md.union(case[0], case[1]))
-
 
     def test_get_vidpid_by_machine(self):
         expectedRep2 = (0x23C1, 0xB015)

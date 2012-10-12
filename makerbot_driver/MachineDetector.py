@@ -74,7 +74,6 @@ class MachineDetector(object):
         # ^ Bots seen in the last scan,
         self.list_ports_by_vid_pid = list_ports_generator
         # ^ Save func as a variable for testing purposes. hacky
-        self._condition = threading.Condition()
 
     def scan(self, machineTypes=None):
         """ scans for connected machines, updates internal list of machines
