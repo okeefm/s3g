@@ -1,3 +1,12 @@
+makerbot-driver (1.0.1) precise; urgency=low
+
+  * Bugfixes for makerware release 1.0.1
+  * Added EEPROM map for firmware 6.1
+  * Fixed VID/PID detection to work from USB device
+  * Fixed skeinforge anchor
+
+ -- MakerBot Industries dev team <dev@makerbot.com> Fri, 12 Oct 2012 10:27:20  -0400
+
 makerbot-driver (0.1-1) precise; urgency=low
 
   * Initial release
