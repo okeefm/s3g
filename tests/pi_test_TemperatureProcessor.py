@@ -18,14 +18,14 @@ class TestTemperatureProcessor(unittest.TestCase):
 
     def test_regex(self):
         cases = [
-            ["M104\n", [""]],
-            ["M104(comments)\n", [""]],
-            ["", [""]],
-            ["(comments comments)   M104", [""]],
-            ["     M105", [""]],
-            ["M105\n", [""]],
-            ["M105(comments)\n", [""]],
-            ["(comments comments)   M105", [""]],
+            ["M104\n", []],
+            ["M104(comments)\n", []],
+            ["", []],
+            ["(comments comments)   M104", []],
+            ["     M105", []],
+            ["M105\n", []],
+            ["M105(comments)\n", []],
+            ["(comments comments)   M105", []],
             ["G1 X0 Y0", ["G1 X0 Y0"]],
             ["G92 X0 Y0", ["G92 X0 Y0"]],
             ["THIS IS A TEST", ["THIS IS A TEST"]],

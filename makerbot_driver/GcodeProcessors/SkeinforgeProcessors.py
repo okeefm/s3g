@@ -45,6 +45,9 @@ class SkeinforgeVersionChecker(LineTransformProcessor):
         }
 
     def _transform_check_version(self, match):
+        """Scans for an expected skeinforge version number.
+        @param match: a re.match (or similar) object
+        """
         version_numbers = match.group(1).split('.')
         compatible_numbers = self.version.split('.')
         if not version_numbers[0] == compatible_numbers[0]:

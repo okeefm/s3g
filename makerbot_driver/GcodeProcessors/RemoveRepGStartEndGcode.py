@@ -31,8 +31,8 @@ class RemoveRepGStartEndGcode(Processor):
                                     raise makerbot_driver.ExternalStopError
                             output.append(code)
                 count_current += 1
-                percent = self.get_percent(count_current, count_total)
                 if callback is not None:
+                    percent = int(100.0 * count_current / count_total)
                     callback(percent)
         return output
 

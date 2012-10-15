@@ -11,44 +11,52 @@ from . import Processor
 
 
 class LineTransformProcessor(Processor):
+    """ Base implementation of a system for doing line by line
+    transformations of Gcode to convert it from a non-makerbot form into
+    a makerbot form of Gcode. This is used so we can simplify our
+    Gcode -> s3g engine, by doing Gcode -> Gcode transforms first
+    """
 
     def __init__(self):
         super(LineTransformProcessor, self).__init__()
-        self.code_map = {}
+        self.code_map = {}  # map {compiled_regex:replace-funcion, }
 
     def process_gcode(self, gcodes, callback=None):
+        """ main line by line processing, inherited from Processor
+        runs all code_map regex's on passed code, and saves
+        replace results to return
+        @param gcodes A gcode file
+        @param callback for progress, expects 0-100 as percent 'done'
+        @return A new gcode list post application of code_map transforms
+        """
         output = []
-        count_total = len(gcodes)
-        count_current = 0
+        expected_len = len(gcodes)
+        output_len = len(output)
         for code in gcodes:
             tcode = self._transform_code(code)
-            count_total += len(tcode)  # We can add codes, so we need to adjust for those
-            pruned_tcode = self.prune_empty_strings(tcode)
-            count_total -= len(pruned_tcode)  # We can remove codes, so we need to adjust for those
-            self.test_for_external_stop()
+            expected_len += len(tcode) - 1
             with self._condition:
-                output.extend(pruned_tcode)
-            count_current += 1
-            percent = self.get_percent(count_current, count_total)
+                self.test_for_external_stop(prelocked=True)
+                output.extend(tcode)
+                output_len += len(tcode)
             if callback is not None:
+                percent = int(100.0 * output_len / expected_len)
                 callback(percent)
         return output
 
-    def prune_empty_strings(self, gcodes):
-        outcodes = []
-        for code in gcodes:
-            if not code == "":
-                outcodes.append(code)
-        return outcodes
-
     def _transform_code(self, code):
+        """ takes a single gcode, runs all transforms in code_map
+        to convert it to a different style gcode. May return more (or
+        fewer) lines of gcode
+        @param code: a single gcode line
+        @return a list of output tcodes. """
         tcode = code
         for key in self.code_map:
             match = re.match(key, code)
             if match is not None:
                 tcode = self.code_map[key](match)
                 break
-        #Always use lists so we can extend
-        if not isinstance(tcode, list):
-            tcode = [tcode]
+        #Always return a list, remove '' strings
+        tcode = [tcode] if not isinstance(tcode, list) else tcode
+        tcode = [code for code in tcode if code is not ""]
         return tcode

@@ -33,7 +33,8 @@ class TestLineTransformProcessor(unittest.TestCase):
             ["G3 X0 Y0", ["G3 X0 Y0"]],
         ]
         for case in cases:
-            self.assertEqual(self.p._transform_code(case[0]), case[1])
+            result = self.p._transform_code(case[0])
+            self.assertEqual(result, case[1])
 
     def test_process_file_no_code_map(self):
         lines = [
@@ -70,15 +71,6 @@ class TestLineTransformProcessor(unittest.TestCase):
         got_output = self.p.process_gcode(lines)
         self.assertEqual(got_output, expected_output)
 
-    def test_prune_empty_strings(self):
-        cases = [
-            [["", "", ""], []],
-            [["", 1, ""], [1]],
-            [[1, 2, 3], [1, 2, 3]],
-            [[1, "", 2, "", 3, ""], [1, 2, 3]],
-        ]
-        for case in cases:
-            self.assertEqual(case[1], self.p.prune_empty_strings(case[0]))
 
 if __name__ == "__main__":
     unittest.main()

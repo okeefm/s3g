@@ -43,26 +43,27 @@ class Processor(object):
             m = re.search(variable_regex, gcode)
         return gcode
 
-    @classmethod
-    def get_percent(cls, count_current, count_total=100):
-        decimal = 1.0 * count_current / count_total
-        percent = int(decimal * 100)
-        return percent
-
     def set_external_stop(self, value=True):
-        """ set True when you want to  interrupt a processor
-        during the next iteration of process_gcode to throw
-        an ExternalStopError. Used to cancel/break processing
+        """ Set 'external stop' flag. If external stop is true,
+        test_for_external_stop will throw anExternalStopError.
+        Used to cancel/break processing loop of process_gcode.
+        @param value state to set external top to,defaults to True
         """
         with self._condition:
             self._external_stop = value
 
-    def test_for_external_stop(self):
+    def test_for_external_stop(self, prelocked=False):
         """ If an external stop is set, this function will throw an
         ExternalStopError. This is used so a processing thread can be
         interrupted from another context if needed. Inherited implementions
         of process_gcode MUST call this function.
+        @param prelocked set to True will skip locking self._condition
         """
-        with self._condition:
+        if not prelocked:
+            with self._condition:
+                if self._external_stop:
+                    raise makerbot_driver.ExternalStopError
+        else:  # self._condition is already locked
             if self._external_stop:
                 raise makerbot_driver.ExternalStopError
+        pass
