@@ -7,6 +7,7 @@ import uuid
 import unittest
 import io
 import struct
+import mock
 
 import serial
 import makerbot_driver
@@ -259,63 +260,34 @@ class S3gTestsFirmware500(unittest.TestCase):
         self.assertEqual(payload[3], 1)
         self.assertEqual(payload[4], direction)
 
+    def test_get_vid_pid_iface(self):
+        vid = 0x0000
+        pid = 0xFFFF
+        port = '/dev/tty.ACM0'
+        gMachineDetector = makerbot_driver.get_gMachineDetector()
+        gMachineDetector.get_available_machines = mock.Mock(return_value={
+            port: {
+                'VID': vid,
+                'PID': pid,
+            }
+        })
+        some_port = mock.Mock()
+        some_port.port = port
+        self.r.writer = makerbot_driver.Writer.StreamWriter(some_port)
+        got_vid_pid = self.r.get_vid_pid_iface()
+        self.assertEqual(got_vid_pid, (vid, pid))
+
     def test_get_verified_status_unverified(self):
-        pid = makerbot_driver.vid_pid[1]
+        vid = 0x0000
+        pid = 0xFFFF
+        self.r.get_vid_pid = mock.Mock(return_value=(vid, pid))
+        self.assertFalse(self.r.get_verified_status())
+
+    def test_get_verified_status_verified(self):
         vid = makerbot_driver.vid_pid[0]
-        expected_value = True
-        response_payload = bytearray()
-        response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(vid))
-        self.outputstream.write(
-            makerbot_driver.Encoder.encode_payload(response_payload))
-        response_payload = bytearray()
-        response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(pid))
-        self.outputstream.write(
-            makerbot_driver.Encoder.encode_payload(response_payload))
-        self.outputstream.seek(0)
-
-        self.assertEqual(self.r.get_verified_status(), expected_value)
-
-    def test_get_verified_status_unverified(self):
-        vid = 0xc304
-        pid = 0xb404
-        expected_value = False
-        response_payload = bytearray()
-        response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(vid))
-        self.outputstream.write(
-            makerbot_driver.Encoder.encode_payload(response_payload))
-        response_payload = bytearray()
-        response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(pid))
-        self.outputstream.write(
-            makerbot_driver.Encoder.encode_payload(response_payload))
-        self.outputstream.seek(0)
-
-        self.assertEqual(self.r.get_verified_status(), expected_value)
-
-    def test_get_vid_pid(self):
-        offset = 0x0044
-        length = 4
-        vid = 0xc304
-        pid = 0xb404
-        response_payload = bytearray()
-        response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(vid))
-        self.outputstream.write(
-            makerbot_driver.Encoder.encode_payload(response_payload))
-        response_payload = bytearray()
-        response_payload.append(makerbot_driver.response_code_dict['SUCCESS'])
-        response_payload.extend(makerbot_driver.Encoder.encode_uint16(pid))
-        self.outputstream.write(
-            makerbot_driver.Encoder.encode_payload(response_payload))
-        self.outputstream.seek(0)
-
-        got_vid, got_pid = self.r.get_vid_pid()
-
-        self.assertEqual(vid, got_vid)
-        self.assertEqual(pid, got_pid)
+        pid = makerbot_driver.vid_pid[1]
+        self.r.get_vid_pid = mock.Mock(return_value=(vid, pid))
+        self.assertTrue(self.r.get_verified_status())
 
     def test_get_toolcount(self):
         toolcount = 3

@@ -15,11 +15,11 @@ class s3g(object):
     read and write data to the bot.  No data is cached by this driver, all data is requested
     over the USB bus when queried.
     """
-    
+
     POINT_LENGTH = 3
     EXTENDED_POINT_LENGTH = 5
     ACCELERATED_FIRMWARE_VERSION = 601
-    
+
     @classmethod
     def from_filename(cls, port, baudrate=115200, timeout=.2):
         """Constructs and returns an s3g object connected to the
@@ -44,9 +44,9 @@ class s3g(object):
         # end baud rate hack
 
         mb_streamWriter = makerbot_driver.Writer.StreamWriter(s)
-        return s3g(500,mb_streamWriter)
+        return s3g(500, mb_streamWriter)
 
-    def __init__(self, firmware_version=500,mb_stream_writer=None):
+    def __init__(self, firmware_version=500, mb_stream_writer=None):
         self.writer = mb_stream_writer
         self.set_firmware_version(firmware_version)
         self._eeprom_reader = None
@@ -70,17 +70,16 @@ class s3g(object):
             compatable = compatable.replace('.', '0')
             compatable = int(compatable)
         return compatable
-    
+
     @property
     def eeprom_reader(self):
         if self._eeprom_reader is None:
-            self._eeprom_reader =  makerbot_driver.EEPROM.EepromReader.factory(self)
+            self._eeprom_reader = makerbot_driver.EEPROM.EepromReader.factory(
+                self)
         return self._eeprom_reader
-        
 
 #    def create_reader(self):
 #        return makerbot_driver.EEPROM.EepromReader.factory(self)
-
     def close(self):
         """ If any ports are open for this s3g bot, it closes those ports """
         if self.writer:
@@ -132,10 +131,34 @@ class s3g(object):
 
     def get_vid_pid(self):
         """
-        Returns vid and pid as an int
+        Due to a production issue with a vendor, we do not
+        trust the VID/PID in all EEPROMS, and the generic
+        get_vid_pid most used should return the interface VID/PID,
+        not the eeprom vid_pid. """
+        return self.get_vid_pid_iface()
+
+    def get_vid_pid_eeprom(self):
         """
-        data = self.eeprom_reader.read_data('VID_PID_INFO')
+        @returns tuple of vid,pid. tuple from EEPROM (None,None) on error
+        """
+        reader = self.create_reader()
+        data = reader.read_data('VID_PID_INFO')
         return data[0], data[1]
+
+    def get_vid_pid_iface(self):
+        """
+        Reads VID/PID values from the serial port object associated
+        with this device.
+        @return USB vid/pid tuple from the usb chip on the machine,
+        """
+        vid = None
+        pid = None
+        if self.writer is not None:
+            if isinstance(self.writer, makerbot_driver.Writer.StreamWriter):
+                portname = self.writer.file.port
+                detector = makerbot_driver.get_gMachineDetector()
+                vid, pid = detector.vid_pid_from_portname(portname)
+        return vid, pid
 
     def get_verified_status(self, verified_pid=makerbot_driver.vid_pid[1]):
         """

@@ -17,7 +17,6 @@ class TestMachineDetector(unittest.TestCase):
     def tearDown(self):
         self.md = None
 
-
     def test_get_vidpid_by_machine(self):
         expectedRep2 = (0x23C1, 0xB015)
         expectedRep = (0x23C1, 0xD314)
@@ -33,21 +32,18 @@ class TestMachineDetector(unittest.TestCase):
         self.assertEqual(expectedMighty, mighty)
 
 
-
 #  def test_identify_replicator_one_toolhead(self):
 #    s3g_mock = mock.Mock()
 #    s3g_mock.get_toolhead_count.return_value = 1
 #    expected_profile = makerbot_driver.Profile('ReplicatorSingle')
 #    got_profile = self.md.identify_replicator(s3g_mock)
 #    self.assertEqual(expected_profile.values, got_profile.values)
-
 #  def test_identify_replicator_two_toolheads(self):
 #    s3g_mock = mock.Mock()
 #    s3g_mock.get_toolhead_count.return_value = 2
 #    expected_profile = makerbot_driver.Profile('ReplicatorDual')
 #    got_profile = self.md.identify_replicator(s3g_mock)
 #    self.assertEqual(expected_profile.values, got_profile.values)
-
 #  def test_identify_machine_is_replicator(self):
 #    iSerial = '1234567890'
 #    blob = {
@@ -64,7 +60,6 @@ class TestMachineDetector(unittest.TestCase):
 #    got_profile, got_s3g = self.md.identify_machine(blob)
 #    self.assertEqual(s3g_mock, got_s3g)
 #    self.assertEqual(expected_profile.values, got_profile.values)
-
 #  def test_identify_machine_is_not_replicator(self):
 #    blob = {
 #        'port'  : '/dev/dummy_port',
@@ -77,8 +72,6 @@ class TestMachineDetector(unittest.TestCase):
 #    got_profile, got_s3g = self.md.identify_machine(blob)
 #    self.assertEqual(expected_profile, got_profile)
 #    self.assertEqual(s3g_mock, got_s3g)
-
-
 class TestMachineDetectorScanTests(unittest.TestCase):
     def setUp(self):
         self.md = makerbot_driver.MachineDetector()
@@ -88,6 +81,92 @@ class TestMachineDetectorScanTests(unittest.TestCase):
     def tearDown(self):
         self.list_ports_mock = None
         self.md = None
+
+    def test_vid_pid_from_portname_windows_not_seen(self):
+        portname = 'COM99'
+        self.md.get_available_machines = mock.Mock(return_value={})
+        expected_pair = (None, None)
+        got_pair = self.md.vid_pid_from_portname(portname)
+        self.assertEqual(expected_pair, got_pair)
+
+    def test_vid_pid_from_portname_windows_has_seen(self):
+        portname = 'COM99'
+        expected_pair = (0x0000, 0xFFFF)
+        self.md.get_available_machines = mock.Mock(return_value={
+            portname: {
+                'VID': expected_pair[0],
+                'PID': expected_pair[1],
+            }
+        })
+        got_pair = self.md.vid_pid_from_portname(portname)
+        self.assertEqual(expected_pair, got_pair)
+
+    def test_vid_pid_from_portname_unix_not_seen(self):
+        portname = '/dev/ttyACM0'
+        self.md.get_available_machines = mock.Mock(return_value={})
+        expected_pair = (None, None)
+        got_pair = self.md.vid_pid_from_portname(portname)
+        self.assertEqual(expected_pair, got_pair)
+
+    def test_vid_pid_from_portname_unix_tty_has_seen(self):
+        portname = '/dev/ttyACM0'
+        expected_pair = (0x0000, 0xFFFF)
+        self.md.get_available_machines = mock.Mock(return_value={
+            portname: {
+                'VID': expected_pair[0],
+                'PID': expected_pair[1],
+            }
+        })
+        got_pair = self.md.vid_pid_from_portname(portname)
+        self.assertEqual(expected_pair, got_pair)
+
+    def test_vid_pid_from_portname_mac_tty_has_seen_cu(self):
+        portname = '/dev/tty.usbmodemfa131'
+        expected_pair = (0x0000, 0xFFFF)
+        self.md.get_available_machines = mock.Mock(return_value={
+            portname.replace('tty', 'cu'): {
+                'VID': expected_pair[0],
+                'PID': expected_pair[1],
+            }
+        })
+        got_pair = self.md.vid_pid_from_portname(portname)
+        self.assertEqual(expected_pair, got_pair)
+
+    def test_vid_pid_from_portname_mac_tty_has_seen_tty(self):
+        portname = '/dev/tty.usbmodemfa131'
+        expected_pair = (0x0000, 0xFFFF)
+        self.md.get_available_machines = mock.Mock(return_value={
+            portname: {
+                'VID': expected_pair[0],
+                'PID': expected_pair[1],
+            }
+        })
+        got_pair = self.md.vid_pid_from_portname(portname)
+        self.assertEqual(expected_pair, got_pair)
+
+    def test_vid_pid_from_portname_mac_cu_has_seen_tty(self):
+        portname = '/dev/cu.usbmodemfa131'
+        expected_pair = (0x0000, 0xFFFF)
+        self.md.get_available_machines = mock.Mock(return_value={
+            portname.replace('cu', 'tty'): {
+                'VID': expected_pair[0],
+                'PID': expected_pair[1],
+            }
+        })
+        got_pair = self.md.vid_pid_from_portname(portname)
+        self.assertEqual(expected_pair, got_pair)
+
+    def test_vid_pid_from_portname_mac_cu_has_seen_cu(self):
+        portname = '/dev/cu.usbmodemfa131'
+        expected_pair = (0x0000, 0xFFFF)
+        self.md.get_available_machines = mock.Mock(return_value={
+            portname: {
+                'VID': expected_pair[0],
+                'PID': expected_pair[1],
+            }
+        })
+        got_pair = self.md.vid_pid_from_portname(portname)
+        self.assertEqual(expected_pair, got_pair)
 
     def test_scan_no_new_bots(self):
         self.list_ports_mock.return_value = []

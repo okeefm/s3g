@@ -1,13 +1,13 @@
 """
-A MachineDetector is used to find 'probable' machines that are connected 
+A MachineDetector is used to find 'probable' machines that are connected
 to a computer, primarly by USB connection. It can detect multiple machines
-by passing multiple machine names.  
+by passing multiple machine names.
 
-Currently machines are detected by VID/PID (vendorID/productID) of 
-connected USB devices, although this can be extended in the future.  
+Currently machines are detected by VID/PID (vendorID/productID) of
+connected USB devices, although this can be extended in the future.
 
-This may require MakerBot's version of pyserial to use features to tie a 
-serial device to it's USB VID/PID pair.  All ports are kept track of in a 
+This may require MakerBot's version of pyserial to use features to tie a
+serial device to it's USB VID/PID pair.  All ports are kept track of in a
 python dict named "ports".
 """
 
@@ -28,6 +28,7 @@ except ImportError:
 ## Tools for using the global singleton MachineDetector
 gMachineDetector = None
 
+
 def get_gMachineDetector():
     """ use a global singleton MachineDetector """
     global gMachineDetector
@@ -39,28 +40,29 @@ def get_gMachineDetector():
 # machine USB classes IE what VID/PID can map to what machine profiles
 gMachineClasses = {
     'The Replicator 2':
-        {'vid': 0x23C1, 'pid': 0xB015, 'machineProfiles': '.*Replicator2'},
+    {'vid': 0x23C1, 'pid': 0xB015, 'machineProfiles': '.*Replicator2'},
     'The Replicator':
-        {'vid': 0x23C1, 'pid': 0xD314, 'machineProfiles': '.*Replicator'},
+    {'vid': 0x23C1, 'pid': 0xD314, 'machineProfiles': '.*Replicator'},
     'MightyBoard':
-        {'vid': 0x23C1, 'pid': 0xB404, 'machineProfiles': '.*Replicator'},
+    {'vid': 0x23C1, 'pid': 0xB404, 'machineProfiles': '.*Replicator'},
     'TOM':
-        {'vid': 0x103, 'pid': 0x1771, 'machineProfiles': '.*TOM'},
-    }
+    {'vid': 0x103, 'pid': 0x1771, 'machineProfiles': '.*TOM'},
+}
 
 
 def get_vid_pid_by_name(name):
     """
     @name name of a 'class' of machines 'TOM', 'The Replicator 2'
     @return a tuple of vid/pid, or a tuple of (None,None) if there
-    is an error. 
+    is an error.
     NOTE: at this low level, 'MightyBoard's are treated separate from
     final 'The Replicator's
     """
     if name in gMachineClasses.keys():
         return (gMachineClasses[name]['vid'],
-            gMachineClasses[name]['pid'])
+                gMachineClasses[name]['pid'])
     return (None, None)
+
 
 class MachineDetector(object):
     """ Class used to detect machines, and query basic information from
@@ -89,7 +91,7 @@ class MachineDetector(object):
             scanNameList.append(machineTypes)
         else:
             scanNameList.extend(machineTypes)
-        # Empty the machines just seen list. We are rescanning 
+        # Empty the machines just seen list. We are rescanning
         # all machines connected to the system.
         self.machines_just_seen = {}
         for machineClass in scanNameList:
@@ -106,6 +108,23 @@ class MachineDetector(object):
             except KeyError:
                 continue  # The machine doesnt have a VID/PID, so we cant scan for it
 
+    def vid_pid_from_portname(self, portname):
+        """ return pid/vid based on a passed portname."""
+        vid = None
+        pid = None
+        ports_to_check = set([portname])
+        if '/dev/tty.' in portname:
+            ports_to_check.update([portname.replace('/dev/tty.', '/dev/cu.')])
+        elif '/dev/cu.' in portname:
+            ports_to_check.update([portname.replace('/dev/cu.', '/dev/tty.')])
+        available_machines = self.get_available_machines()
+        set_available = set(available_machines)
+        intersection = ports_to_check.intersection(set_available)
+        if len(intersection) > 0:
+            usable_port = list(intersection)[0]
+            vid = available_machines[usable_port]['VID']
+            pid = available_machines[usable_port]['PID']
+        return vid, pid
 
     def get_first_machine(self, machineType=None):
         """ returns a list of machines sorted by currently connected ports
