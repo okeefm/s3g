@@ -65,14 +65,12 @@ class TestBundleProcessorCallbackAssignment(unittest.TestCase):
 class TestBundleProcessorCallbacks(unittest.TestCase):
 
     def setUp(self):
-        self.condition = threading.Condition()
         self.bp = makerbot_driver.GcodeProcessors.BundleProcessor()
         self.the_percent = 0
         self.percents = []
         self.done_process = False
 
     def tearDown(self):
-        # TRICKY: removed/disabled due to threading failure
         self.bp = None
         self.the_percent = None
         self.percents = None
@@ -83,8 +81,7 @@ class TestBundleProcessorCallbacks(unittest.TestCase):
         runner = 0
         while not self.done_process:
             if runner % 1000 == 0:
-                if self.percents is not None:
-                    self.percents.append(self.the_percent)
+                self.percents.append(self.the_percent)
             if runner % 10000000 == 0:
                 print "."
             runner += 1
