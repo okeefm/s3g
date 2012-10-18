@@ -17,19 +17,19 @@ class TestS3gSettingFWVersion(unittest.TestCase):
     def test_firmware_version_600(self):
         version = 600
         r = s3g(version)
-        self.assertFalse(r.s4g_flag)
+        self.assertFalse(r.x3g_flag)
         self.assertEqual(version, r.firmware_version)
         r.writer = mock.Mock()
-        r.queue_extended_point_s4g = mock.Mock()
+        r.queue_extended_point_x3g = mock.Mock()
         r.queue_extended_point([0, 0, 0, 0, 0], 0, 0, 0)
-        self.assertEqual(0, len(r.queue_extended_point_s4g.mock_calls))
+        self.assertEqual(0, len(r.queue_extended_point_x3g.mock_calls))
 
     def test_firmware_version_601(self):
         version = 601
         r = s3g(version)
-        self.assertTrue(r.s4g_flag)
+        self.assertTrue(r.x3g_flag)
         self.assertEqual(version, r.firmware_version)
-        r.queue_extended_point_s4g = mock.Mock()
+        r.queue_extended_point_x3g = mock.Mock()
 
         point = [0, 1, 2, 3, 4]
         dda_speed = 50
@@ -38,7 +38,7 @@ class TestS3gSettingFWVersion(unittest.TestCase):
         feedrate = 200
         relative_axes = []
         r.queue_extended_point(point, dda_speed, e_distance, feedrate)
-        r.queue_extended_point_s4g.assert_called_once_with(
+        r.queue_extended_point_x3g.assert_called_once_with(
             point, dda_rate, relative_axes, e_distance, feedrate)
 
 
@@ -158,7 +158,7 @@ class S3gTestsFirmware500(unittest.TestCase):
             self.assertEqual(
                 self.r.convert_to_usable_firmware_version(case[0]), case[1])
 
-    def test_queue_extended_point_s4g(self):
+    def test_queue_extended_point_x3g(self):
         point = [1, 2, 3, 4, 5]
         dda = 50
         relative_axes = ['X']
@@ -169,7 +169,7 @@ class S3gTestsFirmware500(unittest.TestCase):
         self.outputstream.write(Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
-        self.r.queue_extended_point_s4g(
+        self.r.queue_extended_point_x3g(
             point, dda, relative_axes, distance, feedrate)
         packet = bytearray(self.inputstream.getvalue())
         payload = Encoder.decode_packet(packet)
@@ -2057,7 +2057,7 @@ class S3gTestsFirmware500(unittest.TestCase):
         self.assertEquals(payload[3], 2)  # Temp is a byte of len 2
         self.assertEquals(payload[4:6], Encoder.encode_int16(temp))
 
-    def test_s4g_version(self):
+    def test_x3g_version(self):
         checksum = 0x0000
         high_bite = 6
         low_bite = 1
@@ -2069,7 +2069,7 @@ class S3gTestsFirmware500(unittest.TestCase):
         self.outputstream.write(Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
 
-        self.r.s4g_version(high_bite, low_bite, checksum, pid=the_pid)
+        self.r.x3g_version(high_bite, low_bite, checksum, pid=the_pid)
 
         packet = bytearray(self.inputstream.getvalue())
         payload = Encoder.decode_packet(packet)

@@ -49,13 +49,13 @@ class s3g(object):
         self.extendedPointLength = 5
         self.pointLength = 3
 
-        self.s4g_fw_version = 601
+        self.x3g_fw_version = 602
         self.set_firmware_version(firmware_version)
 
     def set_firmware_version(self, firmware_version):
         self.firmware_version = firmware_version
-        self.s4g_flag = self.convert_to_usable_firmware_version(
-            firmware_version) >= self.s4g_fw_version
+        self.x3g_flag = self.convert_to_usable_firmware_version(
+            firmware_version) >= self.x3g_fw_version
 
     def convert_to_usable_firmware_version(self, firmware_version):
         """
@@ -786,7 +786,7 @@ class s3g(object):
 
         self.writer.send_action_payload(payload)
 
-    def queue_extended_point_s4g(self, position, dda_rate, relative_axes, distance, feedrate):
+    def queue_extended_point_x3g(self, position, dda_rate, relative_axes, distance, feedrate):
         """
         Queue a position with the new style!  Moves to a certain position over a given duration
         with either relative or absolute positioning.  Relative vs. Absolute positioning
@@ -820,9 +820,9 @@ class s3g(object):
         """
         if len(position) != self.extendedPointLength:
             raise makerbot_driver.PointLengthError(len(position))
-        if self.s4g_flag:
+        if self.x3g_flag:
             dda_rate = 1000000.0 / float(dda_speed)
-            self.queue_extended_point_s4g(position, dda_rate, relative_axes,
+            self.queue_extended_point_x3g(position, dda_rate, relative_axes,
                                           e_distance, feedrate_mm_sec)
         else:
             payload = struct.pack(
@@ -1391,10 +1391,10 @@ class s3g(object):
         )
         self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_SERVO_2_POSITION'], payload)
 
-    def s4g_version(self, high_bite, low_bite, checksum=0x0000, pid=0xB015):
+    def x3g_version(self, high_bite, low_bite, checksum=0x0000, pid=0xB015):
         """
-        Send an s4g_version packet to inform the bot what version
-        s4g we are sending and potential checksum for succeeding
+        Send an x3g_version packet to inform the bot what version
+        x3g we are sending and potential checksum for succeeding
         commands.
 
         @param int high_bite: High bite for version (i.e. 1 for 1.0)
