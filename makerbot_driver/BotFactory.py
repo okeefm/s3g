@@ -126,8 +126,9 @@ class BotInquisitor(object):
             settings['proper_name'] = s3gDriver.get_name()
             #Generate random UUID
             settings['uuid'] = uuid.uuid4()
+        if settings['fw_version'] >= makerbot_driver.x3g_minimum_version:
+            s3gDriver.set_print_to_file_type('x3g')
         if not leaveOpen:
             s3gDriver.close()
-        s3gDriver.set_firmware_version(settings['fw_version'])
 
         return s3gDriver, settings

@@ -43,19 +43,14 @@ class s3g(object):
         r.writer = makerbot_driver.Writer.StreamWriter(s)
         return r
 
-    def __init__(self, firmware_version=500):
+    def __init__(self):
         self.writer = None
         # TODO: Move these to constants file.
         self.extendedPointLength = 5
         self.pointLength = 3
 
-        self.x3g_fw_version = 602
-        self.set_firmware_version(firmware_version)
-
-    def set_firmware_version(self, firmware_version):
-        self.firmware_version = firmware_version
-        self.x3g_flag = self.convert_to_usable_firmware_version(
-            firmware_version) >= self.x3g_fw_version
+    def set_print_to_file_type(self, print_to_file_type):
+        self.print_to_file_type = print_to_file_type 
 
     def convert_to_usable_firmware_version(self, firmware_version):
         """
