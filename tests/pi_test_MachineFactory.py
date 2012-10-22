@@ -43,7 +43,17 @@ class TestMachineFactor(unittest.TestCase):
 #    expected_regex = '.*ReplicatorSingle.*'
 #    self.assertEqual(expected_regex, self.factory.get_profile_regex(bot_dict))
 
-    def test_get_profile_regex_hax_vid_pid_tool_count_1(self):
+    def test_get_profile_regex_has_vid_pid_tom(self):
+        bot_dict = {
+            'fw_version': 300,
+            'vid': 0x0103,
+            'pid': 0x1771,
+        }
+        expected_regex = '.*TOM'
+        result = self.factory.get_profile_regex(bot_dict)
+        self.assertEqual(expected_regex, result)
+
+    def test_get_profile_regex_has_vid_pid_tool_count_1(self):
         bot_dict = {
             'fw_version': 506,
             'vid': 0x23c1,
@@ -54,7 +64,7 @@ class TestMachineFactor(unittest.TestCase):
         result = self.factory.get_profile_regex(bot_dict)
         self.assertEqual(expected_regex, result)
 
-    def test_get_profile_regex_hax_vid_pid_tool_count_2(self):
+    def test_get_profile_regex_has_vid_pid_tool_count_2(self):
         bot_dict = {
             'fw_version': 506,
             'vid': 0x23c1,

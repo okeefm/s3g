@@ -123,7 +123,9 @@ class MachineInquisitor(object):
         settings = {}
         s3gDriver = self.create_s3g()
         settings['fw_version'] = s3gDriver.get_version()
-        if settings['fw_version'] >= 500:
+        if settings['fw_version'] < 500 and settings['fw_version'] >= 300:
+            settings['vid'], settings['pid'] = s3gDriver.get_vid_pid()
+        elif settings['fw_version'] >= 500:
             settings['tool_count'] = s3gDriver.get_toolhead_count()
             settings['vid'], settings['pid'] = s3gDriver.get_vid_pid()
             settings['verified_status'] = s3gDriver.get_verified_status()
