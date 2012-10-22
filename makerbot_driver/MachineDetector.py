@@ -45,8 +45,10 @@ gMachineClasses = {
     {'vid': 0x23C1, 'pid': 0xD314, 'machineProfiles': '.*Replicator'},
     'MightyBoard':
     {'vid': 0x23C1, 'pid': 0xB404, 'machineProfiles': '.*Replicator'},
-    'TOM':
-    {'vid': 0x103, 'pid': 0x1771, 'machineProfiles': '.*TOM'},
+    'TOM FTDI':
+    {'vid': 0x0403, 'pid': 0x6001, 'machineProfiles': '.*TOM'},
+    'TOM 8U2':
+    {'vid': 0x2341, 'pid': 0x0010, 'machineProfiles': '.*TOM'},
 }
 
 
