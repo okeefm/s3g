@@ -17,6 +17,29 @@ class TestMachineDetector(unittest.TestCase):
     def tearDown(self):
         self.md = None
 
+    def test_get_tty_and_cu_not_tty_or_cu(self):
+        cases = [
+            'COM04',
+            'ACM0',
+            '/dev/lolnotttyorcu.usbmodemfa131'
+        ]
+        for case in cases:
+            expected_ports = set([case])
+            got_ports = self.md.get_tty_and_cu(case)
+            self.assertEqual(expected_ports, got_ports)
+
+    def test_get_tty_and_cu_is_cu(self):
+        the_port = '/dev/cu.acm0'
+        expected_ports = set([the_port, the_port.replace('cu', 'tty')])
+        got_ports = self.md.get_tty_and_cu(the_port)
+        self.assertEqual(expected_ports, got_ports)
+
+    def test_get_tty_and_cu_is_tty(self):
+        the_port = '/dev/tty.acm0'
+        expected_ports = set([the_port, the_port.replace('tty', 'cu')])
+        got_ports = self.md.get_tty_and_cu(the_port)
+        self.assertEqual(expected_ports, got_ports)
+
     def test_get_vidpid_by_machine(self):
         expectedRep2 = (0x23C1, 0xB015)
         expectedRep = (0x23C1, 0xD314)

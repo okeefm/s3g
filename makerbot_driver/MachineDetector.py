@@ -46,9 +46,9 @@ gMachineClasses = {
     'MightyBoard':
     {'vid': 0x23C1, 'pid': 0xB404, 'machineProfiles': '.*Replicator'},
     'TOM FTDI':
-    {'vid': 0x0403, 'pid': 0x6001, 'machineProfiles': '.*TOM'},
+    {'vid': 0x0403, 'pid': 0x6001, 'machineProfiles': '.*TOM.*'},
     'TOM 8U2':
-    {'vid': 0x2341, 'pid': 0x0010, 'machineProfiles': '.*TOM'},
+    {'vid': 0x2341, 'pid': 0x0010, 'machineProfiles': '.*TOM.*'},
 }
 
 
@@ -122,11 +122,7 @@ class MachineDetector(object):
         """ return pid/vid based on a passed portname."""
         vid = None
         pid = None
-        ports_to_check = set([portname])
-        if '/dev/tty.' in portname:
-            ports_to_check.update([portname.replace('/dev/tty.', '/dev/cu.')])
-        elif '/dev/cu.' in portname:
-            ports_to_check.update([portname.replace('/dev/cu.', '/dev/tty.')])
+        ports_to_check = self.get_tty_and_cu(portname)
         available_machines = self.get_available_machines()
         set_available = set(available_machines)
         intersection = ports_to_check.intersection(set_available)
@@ -135,6 +131,14 @@ class MachineDetector(object):
             vid = available_machines[usable_port]['VID']
             pid = available_machines[usable_port]['PID']
         return vid, pid
+
+    def get_tty_and_cu(self, portname):
+        ports_to_check = set([portname])
+        if '/dev/tty.' in portname:
+            ports_to_check.update([portname.replace('/dev/tty.', '/dev/cu.')])
+        elif '/dev/cu.' in portname:
+            ports_to_check.update([portname.replace('/dev/cu.', '/dev/tty.')])
+        return ports_to_check
 
     def get_first_machine(self, machineType=None):
         """ returns a list of machines sorted by currently connected ports
