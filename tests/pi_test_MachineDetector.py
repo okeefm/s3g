@@ -21,16 +21,25 @@ class TestMachineDetector(unittest.TestCase):
         expectedRep2 = (0x23C1, 0xB015)
         expectedRep = (0x23C1, 0xD314)
         expectedMighty = (0x23C1, 0xB404)
-        expectedFTDI = (0x103, 0x1771)
         rep = makerbot_driver.get_vid_pid_by_name('The Replicator')
         rep2 = makerbot_driver.get_vid_pid_by_name('The Replicator 2')
         mighty = makerbot_driver.get_vid_pid_by_name('MightyBoard')
-        ftdi = makerbot_driver.get_vid_pid_by_name('TOM')
         self.assertEqual(expectedRep2, rep2)
         self.assertEqual(expectedRep, rep)
-        self.assertEqual(expectedFTDI, ftdi)
         self.assertEqual(expectedMighty, mighty)
 
+    def test_get_machine_name_from_vid_pid(self):
+        cases = [
+            [0x23C1, 0xB015, "The Replicator 2"],
+            [0x23C1, 0xD314, "The Replicator"],
+            [0x23C1, 0xB404, "MightyBoard"],
+            [0x0403, 0x6001, "TOM FTDI"],
+            [0x2341, 0x0010, "TOM 8U2"],
+            [0x0000, 0xFFFF, None],
+        ]
+        for case in cases:
+            self.assertEqual(case[2], self.md.get_machine_name_from_vid_pid(
+                case[0], case[1]))
 
 #  def test_identify_replicator_one_toolhead(self):
 #    s3g_mock = mock.Mock()
@@ -72,6 +81,8 @@ class TestMachineDetector(unittest.TestCase):
 #    got_profile, got_s3g = self.md.identify_machine(blob)
 #    self.assertEqual(expected_profile, got_profile)
 #    self.assertEqual(s3g_mock, got_s3g)
+
+
 class TestMachineDetectorScanTests(unittest.TestCase):
     def setUp(self):
         self.md = makerbot_driver.MachineDetector()

@@ -79,6 +79,14 @@ class MachineDetector(object):
         self.list_ports_by_vid_pid = list_ports_generator
         # ^ Save func as a variable for testing purposes. hacky
 
+    def get_machine_name_from_vid_pid(self, vid, pid):
+        machine_name = None
+        for key in gMachineClasses:
+            if gMachineClasses[key]['vid'] == vid and gMachineClasses[key]['pid'] == pid:
+                machine_name = key
+                break
+        return machine_name
+
     def scan(self, machineTypes=None):
         """ scans for connected machines, updates internal list of machines
         based on scan results
