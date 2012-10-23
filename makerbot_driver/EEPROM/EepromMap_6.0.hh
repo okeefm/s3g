@@ -49,10 +49,10 @@ const static uint16_t D_TERM = 4;
  * EEPROM default home axis positions in steps
  */
 namespace replicator_axis_offsets{
-	const static uint32_t DUAL_X_STEPS = 152*XSTEPS_PER_MM;
-	const static uint32_t SINGLE_X_STEPS = 152*XSTEPS_PER_MM;
-	const static uint32_t DUAL_Y_STEPS = 75*YSTEPS_PER_MM;
-	const static uint32_t SINGLE_Y_STEPS = 72*YSTEPS_PER_MM;
+	const static uint32_t DUAL_X_OFFSET_STEPS = 152*XSTEPS_PER_MM;
+	const static uint32_t SINGLE_X_OFFSET_STEPS = 152*XSTEPS_PER_MM;
+	const static uint32_t DUAL_Y_OFFSET_STEPS = 75*YSTEPS_PER_MM;
+	const static uint32_t SINGLE_Y_OFFSET_STEPS = 72*YSTEPS_PER_MM;
 	/// Footnote:
 	/// mm offsets
 	/// XDUAL: 152mm,
@@ -186,7 +186,7 @@ const static uint16_t AXIS_HOME_POSITIONS_STEPS	= 0x000E;
 //$type:s  $length:16
 const static uint16_t MACHINE_NAME				= 0x0022;
 /// Tool count : 2 bytes
-//$BEGIN_ENTRY
+//$:BEGIN_ENTRY
 //$type:B 
 const static uint16_t TOOL_COUNT 				= 0x0042;
 /// Hardware ID. Must exactly match the USB VendorId/ProductId pair: 4 bytes
@@ -260,8 +260,7 @@ const static uint16_t AXIS_LENGTHS				= 0x018C;
 //$BEGIN_ENTRY
 //$eeprom_map: build_time_offsets
 const static uint16_t TOTAL_BUILD_TIME			= 0x01A0;
-/// 2 bytes bot Hardware configuration settings
-
+/// Hardware configuration settings 
 const static uint16_t BOTSTEP_TYPE      = 0x01A4;
 
 /// start of free space
@@ -289,7 +288,7 @@ const static uint16_t FREE_EEPROM_STARTS        = 0x01A6;
 namespace acceleration_eeprom_offsets{
 //$BEGIN_ENTRY
 //$type:B 
-const static uint16_t ACCELERATION_ACTIVE= 0x00;
+const static uint16_t ACCELERATION_ACTIVE	= 0x00;
 //$BEGIN_ENTRY
 //$type:H 
 const static uint16_t MAX_ACCELERATION = 0x02;
@@ -320,7 +319,7 @@ namespace build_time_offsets{
 namespace buzz_eeprom_offsets{
 //$BEGIN_ENTRY
 //$type:HH 
-const static uint16_t SOUND_ON = 0x00;
+const static uint16_t SOUND_ON		= 0x00;
 //$BEGIN_ENTRY
 //$type:HH 
 const static uint16_t ERROR_BUZZ 	= 0x04;
@@ -365,13 +364,13 @@ const static uint16_t THERM_DATA                 = 0x10;
 namespace preheat_eeprom_offsets{
 //$BEGIN_ENTRY
 //$type:H  
-const static uint16_t PREHEAT_RIGHT_TEMP                = 0x00;
+const static uint16_t PREHEAT_RIGHT_TEMP         = 0x00;
 //$BEGIN_ENTRY
 //$type:H  
-const static uint16_t PREHEAT_LEFT_TEMP                = 0x02;
+const static uint16_t PREHEAT_LEFT_TEMP          = 0x02;
 //$BEGIN_ENTRY
 //$type:H  
-const static uint16_t PREHEAT_PLATFORM_TEMP           = 0x04;
+const static uint16_t PREHEAT_PLATFORM_TEMP     = 0x04;
 //$BEGIN_ENTRY
 //$type:B  
 const static uint16_t PREHEAT_ON_OFF             = 0x06;
@@ -389,8 +388,6 @@ enum HeatMask{
 
 namespace eeprom_info {
 
-//$BEGIN_ENTRY
-//
 const static uint16_t EEPROM_SIZE = 0x1000;
 const int MAX_MACHINE_NAME_LEN = 16;
 
