@@ -1,32 +1,6 @@
 {
-  "eeprom_data": {
-    "EEPROM_SIZE": {
-      "offset": "0x1000"
-    }
-  }, 
+  "eeprom_data": {}, 
   "eeprom_map": {
-    "ACCELERATION2_SETTINGS": {
-      "eeprom_map": "acceleration2_eeprom_offsets", 
-      "offset": "0x01D8", 
-      "sub_map": {
-        "EXTRUDER_DEPRIME_STEPS": {
-          "offset": "0x08", 
-          "type": "HH"
-        }, 
-        "JKN_ADVANCE_K": {
-          "offset": "0x00", 
-          "type": "I"
-        }, 
-        "JKN_ADVANCE_K2": {
-          "offset": "0x04", 
-          "type": "I"
-        }, 
-        "SLOWDOWN_FLAG": {
-          "offset": "0x0C", 
-          "type": "B"
-        }
-      }
-    }, 
     "ACCELERATION_SETTINGS": {
       "eeprom_map": "acceleration_eeprom_offsets", 
       "offset": "0x016E", 
@@ -39,21 +13,22 @@
           "offset": "0x1A", 
           "type": "B"
         }, 
+        "MAX_ACCELERATION": {
+          "offset": "0x02", 
+          "type": "H"
+        }, 
         "MAX_ACCELERATION_AXIS": {
           "offset": "0x04", 
           "type": "HHHHH"
         }, 
-        "MAX_ACCELERATION_EXTRUDER_MOVE": {
-          "offset": "0x18", 
-          "type": "H"
-        }, 
-        "MAX_ACCELERATION_NORMAL_MOVE": {
-          "offset": "0x02", 
-          "type": "H"
-        }, 
         "MAX_SPEED_CHANGE": {
+          "floating_point": "True", 
           "offset": "0x0E", 
           "type": "HHHHH"
+        }, 
+        "MINIMUM_SPEED": {
+          "offset": "0x18", 
+          "type": "H"
         }
       }
     }, 
@@ -61,7 +36,7 @@
       "offset": "0x000C", 
       "type": "B"
     }, 
-    "AXIS_HOME_POSITIONS_MM": {
+    "AXIS_HOME_POSITIONS_STEPS": {
       "offset": "0x000E", 
       "type": "iiiii"
     }, 
@@ -73,18 +48,6 @@
       "offset": "0x018C", 
       "type": "IIIII"
     }, 
-    "AXIS_MAX_FEEDRATES": {
-      "offset": "0x01F4", 
-      "type": "HHHHH"
-    }, 
-    "AXIS_STEPS_PER_MM": {
-      "offset": "0x01A4", 
-      "type": "IIIII"
-    }, 
-    "BOTSTEP_TYPE": {
-      "offset": "0x0208", 
-      "type": "B"
-    }, 
     "BOT_STATUS_BYTES": {
       "offset": "0x018A", 
       "type": "BB"
@@ -93,9 +56,17 @@
       "eeprom_map": "buzz_eeprom_offsets", 
       "offset": "0x014A", 
       "sub_map": {
+        "DONE_BUZZ": {
+          "offset": "0x08", 
+          "type": "HH"
+        }, 
+        "ERROR_BUZZ": {
+          "offset": "0x04", 
+          "type": "HH"
+        }, 
         "SOUND_ON": {
           "offset": "0x00", 
-          "type": "B"
+          "type": "HH"
         }
       }
     }, 
@@ -118,10 +89,6 @@
     "HBP_PRESENT": {
       "offset": "0x004C", 
       "type": "B"
-    }, 
-    "HEATER_CALIBRATION": {
-      "offset": "0x020A", 
-      "type": "BBB"
     }, 
     "INTERNAL_VERSION": {
       "offset": "0x0048", 
@@ -158,6 +125,10 @@
           "offset": "0x02", 
           "type": "H"
         }, 
+        "PREHEAT_ON_OFF": {
+          "offset": "0x06", 
+          "type": "B"
+        }, 
         "PREHEAT_PLATFORM_TEMP": {
           "offset": "0x04", 
           "type": "H"
@@ -172,6 +143,22 @@
       "eeprom_map": "toolhead_eeprom_offsets", 
       "offset": "0x0100", 
       "sub_map": {
+        "BACKOFF_FORWARD_TIME": {
+          "offset": "0x0006", 
+          "type": "H"
+        }, 
+        "BACKOFF_REVERSE_TIME": {
+          "offset": "0x0004", 
+          "type": "H"
+        }, 
+        "BACKOFF_STOP_TIME": {
+          "offset": "0x0002", 
+          "type": "H"
+        }, 
+        "BACKOFF_TRIGGER_TIME": {
+          "offset": "0x0008", 
+          "type": "H"
+        }, 
         "COOLING_FAN_SETTINGS": {
           "eeprom_map": "cooler_eeprom_offsets", 
           "offset": "0x001A", 
@@ -185,6 +172,10 @@
               "type": "B"
             }
           }
+        }, 
+        "EXTRA_FEATURES": {
+          "offset": "0x0016", 
+          "type": "H"
         }, 
         "EXTRUDER_PID_BASE": {
           "eeprom_map": "pid_eeprom_offsets", 
@@ -231,6 +222,10 @@
               "type": "H"
             }
           }
+        }, 
+        "SLAVE_ID": {
+          "offset": "0x0018", 
+          "type": "B"
         }
       }, 
       "tool_index": "0"
@@ -239,6 +234,22 @@
       "eeprom_map": "toolhead_eeprom_offsets", 
       "offset": "0x011C", 
       "sub_map": {
+        "BACKOFF_FORWARD_TIME": {
+          "offset": "0x0006", 
+          "type": "H"
+        }, 
+        "BACKOFF_REVERSE_TIME": {
+          "offset": "0x0004", 
+          "type": "H"
+        }, 
+        "BACKOFF_STOP_TIME": {
+          "offset": "0x0002", 
+          "type": "H"
+        }, 
+        "BACKOFF_TRIGGER_TIME": {
+          "offset": "0x0008", 
+          "type": "H"
+        }, 
         "COOLING_FAN_SETTINGS": {
           "eeprom_map": "cooler_eeprom_offsets", 
           "offset": "0x001A", 
@@ -252,6 +263,10 @@
               "type": "B"
             }
           }
+        }, 
+        "EXTRA_FEATURES": {
+          "offset": "0x0016", 
+          "type": "H"
         }, 
         "EXTRUDER_PID_BASE": {
           "eeprom_map": "pid_eeprom_offsets", 
@@ -298,6 +313,10 @@
               "type": "H"
             }
           }
+        }, 
+        "SLAVE_ID": {
+          "offset": "0x0018", 
+          "type": "B"
         }
       }, 
       "tool_index": "1"
@@ -309,6 +328,11 @@
         "THERM_BETA": {
           "offset": "0x08", 
           "type": "i"
+        }, 
+        "THERM_DATA": {
+          "mult": "40", 
+          "offset": "0x10", 
+          "type": "H"
         }, 
         "THERM_R0": {
           "offset": "0x00", 
@@ -323,10 +347,6 @@
     "TOOLHEAD_OFFSET_SETTINGS": {
       "offset": "0x0162", 
       "type": "iii"
-    }, 
-    "TOOL_COUNT": {
-      "offset": "0x0042", 
-      "type": "B"
     }, 
     "TOTAL_BUILD_TIME": {
       "eeprom_map": "build_time_offsets", 
@@ -349,6 +369,10 @@
     "VERSION_LOW": {
       "offset": "0x0000", 
       "type": "B"
+    }, 
+    "VID_PID_INFO": {
+      "offset": "0x0044", 
+      "type": "HH"
     }
   }
 }

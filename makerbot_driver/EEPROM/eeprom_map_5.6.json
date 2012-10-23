@@ -9,26 +9,26 @@
       "eeprom_map": "acceleration_eeprom_offsets", 
       "offset": "0x016E", 
       "sub_map": {
-        "ACCELERATION_RATE_OFFSET": {
-          "offset": "0x02", 
-          "type": "H"
-        }, 
-        "ACTIVE_OFFSET": {
+        "ACCELERATION_ACTIVE": {
           "offset": "0x00", 
           "type": "B"
-        }, 
-        "AXIS_JERK_OFFSET": {
-          "floating_point": "True", 
-          "offset": "0x0E", 
-          "type": "HHHHH"
-        }, 
-        "AXIS_RATES_OFFSET": {
-          "offset": "0x04", 
-          "type": "HHHHH"
         }, 
         "DEFAULTS_FLAG": {
           "offset": "0x1A", 
           "type": "B"
+        }, 
+        "MAX_ACCELERATION": {
+          "offset": "0x02", 
+          "type": "H"
+        }, 
+        "MAX_ACCELERATION_AXIS": {
+          "offset": "0x04", 
+          "type": "HHHHH"
+        }, 
+        "MAX_SPEED_CHANGE": {
+          "floating_point": "True", 
+          "offset": "0x0E", 
+          "type": "HHHHH"
         }, 
         "MINIMUM_SPEED": {
           "offset": "0x18", 
@@ -60,16 +60,16 @@
       "eeprom_map": "buzz_eeprom_offsets", 
       "offset": "0x014A", 
       "sub_map": {
-        "BASIC_BUZZ_OFFSET": {
-          "offset": "0x00", 
-          "type": "HH"
-        }, 
-        "DONE_BUZZ_OFFSET": {
+        "DONE_BUZZ": {
           "offset": "0x08", 
           "type": "HH"
         }, 
-        "ERROR_BUZZ_OFFSET": {
+        "ERROR_BUZZ": {
           "offset": "0x04", 
+          "type": "HH"
+        }, 
+        "SOUND_ON": {
+          "offset": "0x00", 
           "type": "HH"
         }
       }
@@ -86,12 +86,8 @@
       "offset": "0x0004", 
       "type": "B"
     }, 
-    "FILAMENT_HELP_SETTINGS": {
+    "FILAMENT_HELP_TEXT_ON": {
       "offset": "0x0160", 
-      "type": "B"
-    }, 
-    "FIRST_BOOT_FLAG": {
-      "offset": "0x0156", 
       "type": "B"
     }, 
     "INTERNAL_VERSION": {
@@ -102,15 +98,15 @@
       "eeprom_map": "blink_eeprom_offsets", 
       "offset": "0x0140", 
       "sub_map": {
-        "BASIC_COLOR_OFFSET": {
+        "BASIC_COLOR": {
           "offset": "0x00", 
           "type": "B"
         }, 
-        "CUSTOM_COLOR_OFFSET": {
+        "CUSTOM_COLOR": {
           "offset": "0x04", 
           "type": "BBB"
         }, 
-        "LED_HEAT_OFFSET": {
+        "LED_HEAT_ON": {
           "offset": "0x02", 
           "type": "B"
         }
@@ -125,19 +121,19 @@
       "eeprom_map": "preheat_eeprom_offsets", 
       "offset": "0x0158", 
       "sub_map": {
-        "PREHEAT_LEFT_OFFSET": {
+        "PREHEAT_LEFT_TEMP": {
           "offset": "0x02", 
           "type": "H"
         }, 
-        "PREHEAT_ON_OFF_OFFSET": {
+        "PREHEAT_ON_OFF": {
           "offset": "0x06", 
           "type": "B"
         }, 
-        "PREHEAT_PLATFORM_OFFSET": {
+        "PREHEAT_PLATFORM_TEMP": {
           "offset": "0x04", 
           "type": "H"
         }, 
-        "PREHEAT_RIGHT_OFFSET": {
+        "PREHEAT_RIGHT_TEMP": {
           "offset": "0x00", 
           "type": "H"
         }
@@ -167,11 +163,11 @@
           "eeprom_map": "cooler_eeprom_offsets", 
           "offset": "0x001A", 
           "sub_map": {
-            "ENABLE_OFFSET": {
+            "ENABLE": {
               "offset": "0", 
               "type": "B"
             }, 
-            "SETPOINT_C_OFFSET": {
+            "SETPOINT_C": {
               "offset": "1", 
               "type": "B"
             }
@@ -185,17 +181,17 @@
           "eeprom_map": "pid_eeprom_offsets", 
           "offset": "0x000A", 
           "sub_map": {
-            "D_TERM_OFFSET": {
+            "D_TERM": {
               "floating_point": "True", 
               "offset": "4", 
               "type": "H"
             }, 
-            "I_TERM_OFFSET": {
+            "I_TERM": {
               "floating_point": "True", 
               "offset": "2", 
               "type": "H"
             }, 
-            "P_TERM_OFFSET": {
+            "P_TERM": {
               "floating_point": "True", 
               "offset": "0", 
               "type": "H"
@@ -210,17 +206,17 @@
           "eeprom_map": "pid_eeprom_offsets", 
           "offset": "0x0010", 
           "sub_map": {
-            "D_TERM_OFFSET": {
+            "D_TERM": {
               "floating_point": "True", 
               "offset": "4", 
               "type": "H"
             }, 
-            "I_TERM_OFFSET": {
+            "I_TERM": {
               "floating_point": "True", 
               "offset": "2", 
               "type": "H"
             }, 
-            "P_TERM_OFFSET": {
+            "P_TERM": {
               "floating_point": "True", 
               "offset": "0", 
               "type": "H"
@@ -258,11 +254,11 @@
           "eeprom_map": "cooler_eeprom_offsets", 
           "offset": "0x001A", 
           "sub_map": {
-            "ENABLE_OFFSET": {
+            "ENABLE": {
               "offset": "0", 
               "type": "B"
             }, 
-            "SETPOINT_C_OFFSET": {
+            "SETPOINT_C": {
               "offset": "1", 
               "type": "B"
             }
@@ -276,17 +272,17 @@
           "eeprom_map": "pid_eeprom_offsets", 
           "offset": "0x000A", 
           "sub_map": {
-            "D_TERM_OFFSET": {
+            "D_TERM": {
               "floating_point": "True", 
               "offset": "4", 
               "type": "H"
             }, 
-            "I_TERM_OFFSET": {
+            "I_TERM": {
               "floating_point": "True", 
               "offset": "2", 
               "type": "H"
             }, 
-            "P_TERM_OFFSET": {
+            "P_TERM": {
               "floating_point": "True", 
               "offset": "0", 
               "type": "H"
@@ -301,17 +297,17 @@
           "eeprom_map": "pid_eeprom_offsets", 
           "offset": "0x0010", 
           "sub_map": {
-            "D_TERM_OFFSET": {
+            "D_TERM": {
               "floating_point": "True", 
               "offset": "4", 
               "type": "H"
             }, 
-            "I_TERM_OFFSET": {
+            "I_TERM": {
               "floating_point": "True", 
               "offset": "2", 
               "type": "H"
             }, 
-            "P_TERM_OFFSET": {
+            "P_TERM": {
               "floating_point": "True", 
               "offset": "0", 
               "type": "H"
@@ -329,20 +325,20 @@
       "eeprom_map": "therm_eeprom_offsets", 
       "offset": "0x0074", 
       "sub_map": {
-        "THERM_BETA_OFFSET": {
+        "THERM_BETA": {
           "offset": "0x08", 
           "type": "i"
         }, 
-        "THERM_DATA_OFFSET": {
+        "THERM_DATA": {
           "mult": "40", 
           "offset": "0x10", 
           "type": "H"
         }, 
-        "THERM_R0_OFFSET": {
+        "THERM_R0": {
           "offset": "0x00", 
           "type": "i"
         }, 
-        "THERM_T0_OFFSET": {
+        "THERM_T0": {
           "offset": "0x04", 
           "type": "i"
         }
@@ -360,11 +356,11 @@
       "eeprom_map": "build_time_offsets", 
       "offset": "0x01A0", 
       "sub_map": {
-        "HOURS_OFFSET": {
+        "HOURS": {
           "offset": "0x00", 
           "type": "H"
         }, 
-        "MINUTES_OFFSET": {
+        "MINUTES": {
           "offset": "0x02", 
           "type": "B"
         }
