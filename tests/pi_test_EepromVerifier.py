@@ -197,7 +197,9 @@ class testEepromVerifier(unittest.TestCase):
             8: False,
             9: False,
         }
-        self.assertTrue(self.ev.check_unread_values())
+        status, val = self.ev.check_unread_values()
+        self.assertTrue(status)
+        self.assertTrue(len(val) == 0)
 
     def test_check_unread_values_one_bad(self):
         self.ev.hex_map = {
@@ -224,7 +226,9 @@ class testEepromVerifier(unittest.TestCase):
             8: False,
             9: False,
         }
-        self.assertFalse(self.ev.check_unread_values())
+        status, val = self.ev.check_unread_values()
+        self.assertFalse(status)
+        self.assertEqual([0], val)
 
     def test_check_unread_values_bad_one_was_read(self):
         self.ev.hex_map = {
@@ -251,7 +255,9 @@ class testEepromVerifier(unittest.TestCase):
             8: False,
             9: False,
         }
-        self.assertTrue(self.ev.check_unread_values())
+        status, val = self.ev.check_unread_values()
+        self.assertTrue(status)
+        self.assertTrue(len(val) == 0)
 
     def test_check_unread_values_all_read(self):
         self.ev.hex_map = {
@@ -278,7 +284,9 @@ class testEepromVerifier(unittest.TestCase):
             8: True,
             9: True,
         }
-        self.assertTrue(self.ev.check_unread_values())
+        status, val = self.ev.check_unread_values()
+        self.assertTrue(status)
+        self.assertTrue(len(val) == 0)
 
     def test_check_value_validity_list(self):
         constraint = "l,0,1,2,3"

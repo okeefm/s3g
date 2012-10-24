@@ -34,7 +34,7 @@ class EepromVerifier(object):
         @return bad_entry: Tuple describing the entry that caused the failure.
         """
         good_eeprom = True 
-        bad_entry = None
+        bad_entries = []
         contexts = self.get_eeprom_map_contexts(self.eeprom_map)
         for context in contexts:
             sub_dct = self.get_dict_by_context(self.eeprom_map, context)
@@ -52,12 +52,11 @@ class EepromVerifier(object):
             constraints = sub_dct['constraints']
             if not self.check_value_validity(value, constraints):
                 good_eeprom = False
-                bad_entry = (context, sub_dct)
-                break
-        if not self.check_unread_values():
-            good_eeprom = False
-            bad_entry = "Unmapped EEPROM"
-        return good_eeprom, bad_entry
+                bad_entry.append((context, sub_dct))
+        unmapped_validity, unmapped_errors = self.check_unread_values()
+        bad_entries.extend(unmapped_errors)
+            
+        return unmapped_validity and good_eeprom, bad_entry
 
     def get_eeprom_map_contexts(self, eeprom_map, context=[]):
         """
@@ -238,9 +237,10 @@ class EepromVerifier(object):
         """
         all_good = True
         unmapped_value = "FF"
+        bad_values = []
         for key in self.hex_flags:
             if not self.hex_flags[key]:
                 if not self.hex_map[key].upper() == unmapped_value:
                     all_good = False
-                    break
-        return all_good
+                    bad_values.append(key)
+        return all_good, bad_values
