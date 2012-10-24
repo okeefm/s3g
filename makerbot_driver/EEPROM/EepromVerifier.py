@@ -100,7 +100,20 @@ class EepromVerifier(object):
                     runner += 1
         return hex_map, flags
 
+    def parse_out_constraints(self, constraints):
+        the_constraints = constraints.split(',')
+        parsed = the_constraints[:1]
+        for value in the_constraints[1:]:
+            if '0x' in value:
+                parsed.append(int(value, 16))
+            elif re.search('[0-9]', value):
+                parsed.append(int(value))
+            else:
+                parsed.append(value)
+        return parsed
+
     def check_value_validity(self, value, constraints):
+        constraints = self.parse_out_constraints(constraints)
         if constraints[0] == 'l':
             return self.check_value_validity_list(value, constraints)
         elif constraints[0] == 'm':

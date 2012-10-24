@@ -281,21 +281,21 @@ class testEepromVerifier(unittest.TestCase):
         self.assertTrue(self.ev.check_unread_values())
 
     def test_check_value_validity_list(self):
-        constraint = ['l', 0, 1, 2, 3]
+        constraint = "l,0,1,2,3"
         value = 0
         self.ev.check_value_validity_list = mock.Mock()
         self.ev.check_value_validity(value, constraint)
         self.ev.check_value_validity_list.assert_called_once_with(value, constraint)
 
     def test_check_value_validity_min_max(self):
-        constraint = ['m', 0, 100]
+        constraint = 'm,0,100'
         value = 50
         self.ev.check_value_validity_min_max = mock.Mock()
         self.ev.check_value_validity(value, constraint)
         self.ev.check_value_validity_min_max.assert_called_once_with(value, constraint)
 
     def test_check_value_validity_any(self):
-        constraint = ['a']
+        constraint = 'a'
         value = 'who cares'
         self.assertTrue(self.ev.check_value_validity(value, constraint))
 
@@ -415,6 +415,16 @@ class testEepromVerifier(unittest.TestCase):
         for case in cases:
             self.assertEqual(self.ev.get_offset_by_context(dct, case[0]), case[1])
 
+    def test_parse_out_constraints(self):
+        cases = [
+            ['l,a,b,1,2', ['l', 'a', 'b', 1, 2]],
+            ['l,1,2,3,0xFF', ['l', 1, 2, 3, 255]],
+            ['m,0x00,0xFF', ['m', 0, 255]],
+            ['m,50,0xA0', ['m', 50, 160]],
+            ['a', ['a']],
+        ]
+        for case in cases:
+            self.assertEqual(self.ev.parse_out_constraints(case[0]), case[1])
 
 if __name__ == "__main__":
     unittest.main()
