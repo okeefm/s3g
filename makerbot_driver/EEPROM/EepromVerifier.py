@@ -19,8 +19,20 @@ class EepromVerifier(object):
             self.eeprom_map = json.load(f)
         self.hex_map, self.hex_flags = self.parse_hex_file(self.hex_path)
 
-
     def validate_eeprom(self):
+        """
+        Main validator loop. Checks EEPROM in two steps.
+        Step 1:Gets a list of contexts, gets that context's offset
+        and constraints.  Grabs the correct value from the hex_map, and ensures the value
+        falls within those constraints.  If a value is encountered that does not, return False.
+
+        Step 2: Check the unmapped regions of the EEPROM.  Any values that are flagged as False
+        in the hex_map, they are assumed to be unmapped and checked for 0xFF.  Return False if any
+        values arent 0xFF
+
+        @return bool: True if the eeprom is acceptable, false otherwise
+        @return bad_entry: Tuple describing the entry that caused the failure.
+        """
         good_eeprom = True 
         bad_entry = None
         contexts = self.get_eeprom_map_contexts(self.eeprom_map)
@@ -48,6 +60,13 @@ class EepromVerifier(object):
         return good_eeprom, bad_entry
 
     def get_eeprom_map_contexts(self, eeprom_map, context=[]):
+        """
+        Given an eeprom_map, returns a sorted context for each value
+
+        @param dict eeprom_map: Map of the eeprom
+        @param list context: Context we start at
+        @return list: List of contexts
+        """
         return_contexts = []
         for key in eeprom_map:
             this_context = context+[key]
@@ -59,6 +78,13 @@ class EepromVerifier(object):
         return return_contexts
 
     def get_offset_by_context(self, dct, context):
+        """
+        Given a dict, gets the offset to a subdict given a context
+
+        @param dict dct: Dict to traverse
+        @param list context: Context used to derive offset
+        @return int: Offset to a certain subdict
+        """ 
         offset = 0
         the_context = context[:]
         sub_dct = dct
@@ -73,6 +99,13 @@ class EepromVerifier(object):
         return offset
 
     def get_dict_by_context(self, dct, context):
+        """
+        Given a dict, gets a subdict depending on the context
+
+        @param dict dct: Dictionary to traverse
+        @param list context: Context used to retrieve the subdict
+        @return dict: Subdict targeted by context
+        """
         the_context = context[:]
         sub_dct = dct
         while len(the_context) > 1:
@@ -81,6 +114,16 @@ class EepromVerifier(object):
         return sub_dct[the_context[0]]
 
     def parse_hex_file(self, hex_filepath):
+        """
+        Takes a .hex file of intel flavor of an AVR EEPROM read by AVRDUDE
+        and turns it into a dict, where each byte has its own key depending on its
+        offset from 0.
+
+        @param str hex_filepath: Path to the hexfile
+        @return dict hex_map: Map of the hex file
+        @return dict flags: A flag for each entry.  Initialized as true, and flipped to True
+            when read
+        """
         hex_map = {}
         flags = {}
         regex = ":[0-9A-Fa-f]{2}([0-9A-Fa-f]{4})[0-9A-Fa-f]{2}([0-9A-Fa-f]*?)[0-9A-Fa-f]{2}$"
@@ -101,6 +144,12 @@ class EepromVerifier(object):
         return hex_map, flags
 
     def parse_out_constraints(self, constraints):
+        """
+        Parses constraints out of the string (decods, ints, hex, etc)
+
+        @param str constaints: Constraints for a certain value
+        @return list: List of constraints
+        """
         the_constraints = constraints.split(',')
         parsed = the_constraints[:1]
         for value in the_constraints[1:]:
@@ -113,6 +162,13 @@ class EepromVerifier(object):
         return parsed
 
     def check_value_validity(self, value, constraints):
+        """
+        Parses the constraints out of the string passed in, and checks the values validity
+        based on those constraints
+
+        @param value: Value to check.  Can be of varied type
+        @retrun bool: True if value is valid, false otherwise
+        """
         constraints = self.parse_out_constraints(constraints)
         if constraints[0] == 'l':
             return self.check_value_validity_list(value, constraints)
@@ -128,6 +184,13 @@ class EepromVerifier(object):
         return value <= constraint[2] and value >= constraint[1]
 
     def get_number(self, offset, length):
+        """
+        Given a lenth and an offset, retrieves a nummber
+
+        @param int offset: Offset to start at
+        @param int length: Length to read
+        @return int: Int read
+        """
         hex_val = '0x'
         for i in range(offset, offset+length):
             self.hex_flags[i] = True
@@ -135,6 +198,13 @@ class EepromVerifier(object):
         return int(hex_val, 16)
 
     def get_float(self, offset, length=2):
+        """
+        Given a length and an offset, retrieves a floating point value
+
+        @param int offset: Offset to start at
+        @param int length: Length to read
+        @return float: Float read
+        """
         vals = []
         for i in range(offset, offset+length):
             self.hex_flags[i] = True
@@ -143,6 +213,14 @@ class EepromVerifier(object):
         return special_float 
 
     def get_string(self, offset, length):
+        """
+        Given a length and an offset, retrieves a string from a the hex map
+
+        @param int offset: Offset to start at
+        @param int lenght: Lengt of the variable
+
+        @return str: Read string
+        """
         string = ""
         for i in range(offset, offset+length):
             self.hex_flags[i] = True
@@ -151,6 +229,13 @@ class EepromVerifier(object):
         return string
 
     def check_unread_values(self):
+        """
+        Iterates through all flags and, if one if False, checks to make
+        sure its 0xFF.  Unmapped regions should stay as 0xFF, and if we 
+        havent read it we can assume its supposed to be unmapped.
+
+        @return bool: If all unmapped values were 0xFF or not
+        """
         all_good = True
         unmapped_value = "FF"
         for key in self.hex_flags:
