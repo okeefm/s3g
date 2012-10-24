@@ -106,7 +106,6 @@ class TestBuildFromPortMockedBotInquisitor(unittest.TestCase):
     expected_parser = makerbot_driver.Gcode.GcodeParser()
     return_obj= self.factory.build_from_port('/dev/dummy_port')
     self.assertTrue(getattr(return_obj, 's3g') != None)
-    self.s3g_mock.set_firmware_version.assert_called_once_with(version)
     self.assertEqual(expected_profile.values, getattr(return_obj, 'profile').values)
     self.assertTrue(getattr(return_obj, 'gcodeparser') != None)
 
@@ -130,7 +129,6 @@ class TestBuildFromPortMockedBotInquisitor(unittest.TestCase):
     expected_profile = makerbot_driver.Profile('ReplicatorDual')
     return_obj = self.factory.build_from_port('/dev/dummy_port')
     self.assertTrue(getattr(return_obj, 's3g') != None)
-    self.s3g_mock.set_firmware_version.assert_called_once_with(version)
     self.assertEqual(expected_profile.values, getattr(return_obj, 'profile').values)
     self.assertTrue(getattr(return_obj, 'gcodeparser') != None)
 
