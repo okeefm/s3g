@@ -23,6 +23,7 @@ hostFormats = {
     153: ['I', 's'],  # "BUILD START NOTIFICATION",
     154: ['B'],  # "BUILD END NOTIFICATION"
     155: ['i', 'i', 'i', 'i', 'i', 'I', 'B', 'f', 'h'],
+    157: ['B', 'B', 'B', 'I', 'H', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B'],
 }
 slaveFormats = {
     1: [],  # "INIT"

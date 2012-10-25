@@ -46,10 +46,10 @@ class TestMachineFactor(unittest.TestCase):
     def test_get_profile_regex_has_vid_pid_tom(self):
         bot_dict = {
             'fw_version': 300,
-            'vid': 0x0103,
-            'pid': 0x1771,
+            'vid': 0x0403,
+            'pid': 0x6001,
         }
-        expected_regex = '.*TOM'
+        expected_regex = '.*TOM.*'
         result = self.factory.get_profile_regex(bot_dict)
         self.assertEqual(expected_regex, result)
 

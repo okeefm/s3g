@@ -44,32 +44,15 @@ class s3g(object):
         # end baud rate hack
 
         mb_streamWriter = makerbot_driver.Writer.StreamWriter(s)
-        return s3g(500, mb_streamWriter)
+        return s3g(mb_streamWriter)
 
-    def __init__(self, firmware_version=500, mb_stream_writer=None):
+    def __init__(self, mb_stream_writer=None):
         self.writer = mb_stream_writer
-        self.set_firmware_version(firmware_version)
         self._eeprom_reader = None
+        self.print_to_file_type = 's3g'
 
-    def set_firmware_version(self, firmware_version):
-        self.firmware_version = firmware_version
-        self.send_accelerated_point = self.convert_to_usable_firmware_version(
-            firmware_version) >= s3g.ACCELERATED_FIRMWARE_VERSION
-
-    def convert_to_usable_firmware_version(self, firmware_version):
-        """
-        Firmware versions come in two flavors: XXX (i.e. 600) or X.X (i.e. 6.0).  Since int
-        comparisons are easier than string comparisons, we request all version
-        numbers are in int form.  Just in case, however, firmware_version passed
-        through the parser will be run through this function.
-        """
-        compatable = firmware_version
-        if isinstance(compatable, float):
-            compatable = str(compatable)
-        if isinstance(compatable, str):
-            compatable = compatable.replace('.', '0')
-            compatable = int(compatable)
-        return compatable
+    def set_print_to_file_type(self, print_to_file_type):
+        self.print_to_file_type = print_to_file_type
 
     @property
     def eeprom_reader(self):
@@ -78,8 +61,6 @@ class s3g(object):
                 self)
         return self._eeprom_reader
 
-#    def create_reader(self):
-#        return makerbot_driver.EEPROM.EepromReader.factory(self)
     def close(self):
         """ If any ports are open for this s3g bot, it closes those ports """
         if self.writer:
@@ -824,9 +805,9 @@ class s3g(object):
 
         self.writer.send_action_payload(payload)
 
-    def queue_extended_point_accelerated(self, position, dda_rate, relative_axes, distance, feedrate):
+    def queue_extended_point_x3g(self, position, dda_rate, relative_axes, distance, feedrate):
         """
-        Queue a position with the new style!  Moves to a certain position over a given duration
+        Queue a position with the x3g style!  Moves to a certain position over a given duration
         with either relative or absolute positioning.  Relative vs. Absolute positioning
         is done on an axis to axis basis.
         @param list position: A 5 dimentional position in steps specifying where each axis should move to
@@ -840,37 +821,58 @@ class s3g(object):
 
         payload = struct.pack(
             '<BiiiiiIBfh',
-            makerbot_driver.makerbot_driver.host_action_command_dict[
-                'QUEUE_EXTENDED_POINT_ACCELERATED'],
-            position[0], position[1], position[2], position[3], position[4],
-            dda_rate,
-            makerbot_driver.Encoder.encode_axes(relative_axes),
-            float(distance),
-            int(feedrate * 64.0)
+        makerbot_driver.makerbot_driver.host_action_command_dict[
+            'QUEUE_EXTENDED_POINT_ACCELERATED'],
+        position[0], position[1], position[2], position[3], position[4],
+        dda_rate,
+        makerbot_driver.Encoder.encode_axes(relative_axes),
+        float(distance),
+        int(feedrate * 64.0)
         )
         self.writer.send_action_payload(payload)
 
     def queue_extended_point(self, position, dda_speed, e_distance, feedrate_mm_sec, relative_axes=[]):
         """
-        Move the toolhead to a new position at the given rate
-        @param list position: 5D position to move to. All dimension should be in steps.
-        @param double rate: Movement speed, in steps/??
+        Queue a position: this function chooses the correct movement command based on the print_to_file_type
+        Moves to a certain position over a given duration with either relative or absolute positioning. 
+        Relative vs. Absolute positioning is done on an axis to axis basis.
+        @param list position: A 5 dimentional position in steps specifying where each axis should move to
+        @param int dda_speed: microseconds per step
+        @param float e_distance: distance in millimeters moved in (x,y,z) space OR if distance(x,y,z) == 0, then max(distance(A),distance(B))
+        @param float feedrate_mm_sec: the actual feedrate in units of millimeters/second
+        @param list relative_axes: Array of axes whose coordinates should be considered relative
+        """
+    
+        if len(position) != s3g.EXTENDED_POINT_LENGTH:
+            raise makerbot_driver.PointLengthError(len(position))
+
+        if self.print_to_file_type == 'x3g' : 
+            dda_rate = 1000000.0 / float(dda_speed)
+            self.queue_extended_point_x3g(position, dda_rate, relative_axes,
+                      e_distance, feedrate_mm_sec)
+        else:
+            self.queue_extended_point_classic(position, dda_speed)
+
+    def queue_extended_point_classic(self, position, dda_speed):
+        """
+        Queue a position with the classic style!  Moves to a certain position over a given duration
+        with either relative or absolute positioning.  Relative vs. Absolute positioning
+        is done on an axis to axis basis.
+        @param list position: A 5 dimentional position in steps specifying where each axis should move to
+        @param int dda_speed: microseconds per step
         """
         if len(position) != s3g.EXTENDED_POINT_LENGTH:
             raise makerbot_driver.PointLengthError(len(position))
-        if self.send_accelerated_point:
-            dda_rate = 1000000.0 / float(dda_speed)
-            self.queue_extended_point_accelerated(position, dda_rate, relative_axes, e_distance, feedrate_mm_sec)
-        else:
-            payload = struct.pack(
-                '<BiiiiiI',
-                makerbot_driver.host_action_command_dict[
-                    'QUEUE_EXTENDED_POINT'],
-                position[0], position[1], position[2],
-                position[3], position[4], dda_speed
-            )
 
-            self.writer.send_action_payload(payload)
+        payload = struct.pack(
+            '<BiiiiiI',
+        makerbot_driver.host_action_command_dict[
+            'QUEUE_EXTENDED_POINT'],
+        position[0], position[1], position[2],
+        position[3], position[4], dda_speed
+        )
+
+        self.writer.send_action_payload(payload)
 
     def set_extended_position(self, position):
         """
@@ -1437,3 +1439,37 @@ class s3g(object):
             theta
         )
         self.tool_action_command(tool_index, makerbot_driver.slave_action_command_dict['SET_SERVO_2_POSITION'], payload)
+
+    def x3g_version(self, high_bite, low_bite, checksum=0x0000, pid=0xB015):
+        """
+        Send an x3g_version packet to inform the bot what version
+        x3g we are sending and potential checksum for succeeding
+        commands.
+
+        @param int high_bite: High bite for version (i.e. 1 for 1.0)
+        @param int low_bite: Low bite for version (i.e. 0 for 1.0)
+        @param int pid: PID for the bot you want to print to
+        @param int checksum: Checksum for succeeding commands
+        """
+        payload = struct.pack(
+        '<BBBBIHBBBBBBBBBBB',
+        makerbot_driver.host_action_command_dict['S4G_VERSION'],
+        high_bite,
+        low_bite,
+        0,
+        checksum,
+        pid,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        )
+        self.writer.send_action_payload(payload)
+
