@@ -1248,11 +1248,11 @@ The bot can use this information to provide feedback on compatibility to the use
 
 Payload
 
-  uint8: x3g version high byte
-  uint8: x3g version low byte
-  uint8: not implemented
-  uint32: not implemented
-  uint16: bot type: PID for the intended bot is sent 
+    uint8: x3g version high byte
+    uint8: x3g version low byte
+    uint8: not implemented
+    uint32: not implemented
+    uint16: bot type: PID for the intended bot is sent 
 <table>
 <tr>
  <th>Bot Type</th>
@@ -1267,10 +1267,10 @@ Payload
  <td>0xB015</td>
 </tr>
 </table>
-  uint16: not implemented
-  uint32: not implemented
-  uint32: not implemented
-  uint8: not implemented
+    uint16: not implemented
+    uint32: not implemented
+    uint32: not implemented
+    uint8: not implemented
 
 Response (0 bytes)
 
