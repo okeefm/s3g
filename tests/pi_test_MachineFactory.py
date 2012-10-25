@@ -43,6 +43,16 @@ class TestMachineFactor(unittest.TestCase):
 #    expected_regex = '.*ReplicatorSingle.*'
 #    self.assertEqual(expected_regex, self.factory.get_profile_regex(bot_dict))
 
+    def test_get_profile_regex_had_vid_pid_rep2(self):
+        bot_dict = {
+            'fw_version': 600,
+            'vid': 0x23C1,
+            'pid': 0xB015,
+        }
+        expected_regex = '.*Replicator2'
+        result = self.factory.get_profile_regex(bot_dict)
+        self.assertEqual(expected_regex, result)
+
     def test_get_profile_regex_has_vid_pid_tom(self):
         bot_dict = {
             'fw_version': 300,
@@ -97,7 +107,7 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
         self.assertEqual(expected_profile, getattr(return_obj, 'profile'))
         self.assertEqual(expected_parser, getattr(return_obj, 'gcodeparser'))
 
-    @unittest.skip("This functionality has been disabled for now")
+#    @unittest.skip("This functionality has been disabled for now")
     def test_build_from_port_version_number_500_tool_count_1_Replicator(self):
         #Time to mock all of s3g's version!
         version = 500
@@ -120,12 +130,12 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
         expected_parser = makerbot_driver.Gcode.GcodeParser()
         return_obj = self.factory.build_from_port('/dev/dummy_port')
         self.assertTrue(getattr(return_obj, 's3g') is not None)
-        self.s3g_mock.set_firmware_version.assert_called_once_with(version)
+        self.assertTrue(
+            len(self.s3g_mock.set_print_to_file_type.mock_calls) == 0)
         self.assertEqual(
             expected_profile.values, getattr(return_obj, 'profile').values)
         self.assertTrue(getattr(return_obj, 'gcodeparser') is not None)
 
-    @unittest.skip("This functionality has been disabled for now")
     def test_build_from_port_version_number_500_tool_count_2_mightyboard(self):
         #Time to mock all of s3g's version!
         version = 500
@@ -147,7 +157,34 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
         expected_profile = makerbot_driver.Profile('ReplicatorDual')
         return_obj = self.factory.build_from_port('/dev/dummy_port')
         self.assertTrue(getattr(return_obj, 's3g') is not None)
-        self.s3g_mock.set_firmware_version.assert_called_once_with(version)
+        self.assertTrue(
+            len(self.s3g_mock.set_print_to_file_type.mock_calls) == 0)
+        self.assertEqual(
+            expected_profile.values, getattr(return_obj, 'profile').values)
+        self.assertTrue(getattr(return_obj, 'gcodeparser') is not None)
+
+    def test_build_from_port_x3g_version(self):
+        #Time to mock all of s3g's version!
+        version = makerbot_driver.x3g_minimum_version
+        tool_count = 2
+        vid, pid = 0x23C1, 0xB404
+        verified_status = True
+        proper_name = 'test_bot'
+        self.s3g_mock.get_version = mock.Mock(return_value=version)
+        self.s3g_mock.get_toolhead_count = mock.Mock(return_value=tool_count)
+        self.s3g_mock.get_verified_status = mock.Mock(
+            return_value=verified_status)
+        self.s3g_mock.get_name = mock.Mock(return_value=proper_name)
+        self.s3g_mock.get_vid_pid = mock.Mock()
+        self.s3g_mock.get_vid_pid.return_value = vid, pid
+        #Mock the returned s3g obj
+        expected_mock_s3g_obj = 'SUCCESS%i' % (version)
+        self.factory.create_s3g = mock.Mock()
+        self.factory.create_s3g.return_value = expected_mock_s3g_obj
+        expected_profile = makerbot_driver.Profile('ReplicatorDual')
+        return_obj = self.factory.build_from_port('/dev/dummy_port')
+        self.assertTrue(getattr(return_obj, 's3g') is not None)
+        self.s3g_mock.set_print_to_file_type.assert_called_once_with('x3g')
         self.assertEqual(
             expected_profile.values, getattr(return_obj, 'profile').values)
         self.assertTrue(getattr(return_obj, 'gcodeparser') is not None)
@@ -162,13 +199,14 @@ class TestMachineInquisitor(unittest.TestCase):
     def tearDown(self):
         self.inquisitor = None
 
-    #def test_low_version(self):
-        #version = 000
-        #self.s3g_mock.get_version.return_value = version
-        #expected_settings = {'fw_version' : version}
-        #got_settings = self.inquisitor.query()
-        #self.assertEqual(expected_settings, got_settings)
-    @unittest.skip("skipping until UUID / iSerial conflict is straightened out.  Firmware no longer has a UUID value")
+    def test_low_version(self):
+        version = 000
+        self.s3g_mock.get_version.return_value = version
+        expected_settings = {'fw_version': version}
+        s3g, got_settings = self.inquisitor.query()
+        self.assertEqual(s3g, self.s3g_mock)
+        self.assertEqual(expected_settings, got_settings)
+
     def test_version_500_has_random_uuid(self):
         #Time to mock all of s3g's version!
         version = 500
@@ -191,34 +229,6 @@ class TestMachineInquisitor(unittest.TestCase):
         self.assertEqual(str_uuid[14], '4')
         self.assertTrue(
             int(str_uuid[19], 16) >= 0x8 and int(str_uuid[19], 16) <= 0xb)
-
-#  def test_version_506(self):
-#    #Time to mock all of s3g's version!
-#    version = 506
-#    tool_count = 2
-#    vid, pid = 0x23C1, 0xB404
-#    verified_status = True
-#    proper_name = 'test_bot'
-#    rand_uuid = uuid.uuid4()
-#    self.s3g_mock.get_version = mock.Mock(return_value=version)
-#    self.s3g_mock.get_toolhead_count = mock.Mock(return_value=tool_count)
-#    self.s3g_mock.get_verified_status = mock.Mock(return_value=verified_status)
-#    self.s3g_mock.get_name = mock.Mock(return_value=proper_name)
-#    self.s3g_mock.get_vid_pid = mock.Mock()
-#    self.s3g_mock.get_vid_pid.return_value =  vid, pid
-#    self.s3g_mock.get_advanced_name = mock.Mock()
-#    self.s3g_mock.get_advanced_name.return_value = proper_name, rand_uuid
-#    expected_values = {
-#        'fw_version'  : version,
-#        'tool_count'  : tool_count,
-#        'vid'         : vid,
-#        'pid'         : pid,
-#        'verified_status' : verified_status,
-#        'proper_name' : proper_name,
-#        'uuid'        : rand_uuid,
-#        }
-#    got_values = self.inquisitor.query()
-#    self.assertEqual(expected_values, got_values)
 
 if __name__ == '__main__':
     unittest.main()
