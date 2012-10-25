@@ -130,10 +130,15 @@ class EepromVerifier(object):
         with open(hex_filepath) as f:
             for line in f:
                 match = re.match(regex, line)
+                # A second group of 0 means theres no more info to read, so we need to break
+                if len(match.group(2)) == 0:
+                    break
+                # The hex file should have byte offsets in the beginning of the line we can check against
                 expected_offset = int('0x%s' % (match.group(1)), 16)
                 values = match.group(2)
                 assert(expected_offset == runner)
                 assert(len(values) % 2 == 0)
+                # Take all the bytes in this line and put them in a map
                 while len(values) > 0:
                     byte = values[:2]
                     hex_map[runner] = byte.upper()
