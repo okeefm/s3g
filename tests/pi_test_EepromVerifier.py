@@ -15,7 +15,6 @@ class testEepromVerifier(unittest.TestCase):
             f.write(self.mock_hex)
             self.hex_path = f.name
         self.ev = makerbot_driver.EEPROM.EepromVerifier(self.hex_path, "6.0")
-        
 
     def tearDown(self):
         self.ev = None
@@ -199,7 +198,7 @@ class testEepromVerifier(unittest.TestCase):
         }
         status, val = self.ev.check_unread_values()
         self.assertTrue(status)
-        self.assertTrue(len(val) == 0)
+        self.assertTrue(len(val['unmapped_entries']) == 0)
 
     def test_check_unread_values_one_bad(self):
         self.ev.hex_map = {
@@ -228,7 +227,7 @@ class testEepromVerifier(unittest.TestCase):
         }
         status, val = self.ev.check_unread_values()
         self.assertFalse(status)
-        self.assertEqual([0], val)
+        self.assertEqual([0], val['unmapped_entries'])
 
     def test_check_unread_values_bad_one_was_read(self):
         self.ev.hex_map = {
@@ -257,7 +256,7 @@ class testEepromVerifier(unittest.TestCase):
         }
         status, val = self.ev.check_unread_values()
         self.assertTrue(status)
-        self.assertTrue(len(val) == 0)
+        self.assertTrue(len(val['unmapped_entries']) == 0)
 
     def test_check_unread_values_all_read(self):
         self.ev.hex_map = {
@@ -286,7 +285,7 @@ class testEepromVerifier(unittest.TestCase):
         }
         status, val = self.ev.check_unread_values()
         self.assertTrue(status)
-        self.assertTrue(len(val) == 0)
+        self.assertTrue(len(val['unmapped_entries']) == 0)
 
     def test_check_value_validity_list(self):
         constraint = "l,0,1,2,3"
