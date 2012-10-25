@@ -39,17 +39,18 @@ class EepromVerifier(object):
         for context in contexts:
             sub_dct = self.get_dict_by_context(self.eeprom_map, context)
             offset = self.get_offset_by_context(self.eeprom_map, context)
-            if 's' == sub_dct['type']:
-                type_length = sub_dct['length']
-                value = self.get_string(offset, type_length)
-            else:
-                the_type = sub_dct['type']
-                type_lenght = struct.calcsize(the_type)
-                if 'floating_point' in sub_dct:
-                    value = self.get_float(offset, type_length)
+            for char in sub_dct['type']:
+                if 's' == char:
+                    type_length = sub_dct['length']
+                    value = self.get_string(offset, type_length)
                 else:
-                    value = self.get_float(offset, type_length)
-            constraints = sub_dct['constraints']
+                    the_type = char
+                    type_length = struct.calcsize(char)
+                    if 'floating_point' in sub_dct:
+                        value = self.get_float(offset, char)
+                    else:
+                        value = self.get_float(offset, char)
+                constraints = sub_dct['constraints']
             if not self.check_value_validity(value, constraints):
                 good_eeprom = False
                 bad_entries['mapped_entries'].append((context, sub_dct))
