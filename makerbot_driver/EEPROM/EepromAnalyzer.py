@@ -43,21 +43,21 @@ class eeprom_analyzer(object):
                         self.find_next_entry()
                         #At this point we are on a line thats supposed to have variables
                         variables = self.parse_out_variables(
+                        self.input_fh.readline())
+                        #AT this point we are at the variable declaration in the .hh file
+                        (name, location) = self.parse_out_name_and_location(
                             self.input_fh.readline())
-                        if self.ignore_flag in variables and not self.include_ignore:
+                        #Begin creating the dict for this entry
+                        v = {
+                            'offset': location,
+                        }
+                        #Parse all variables and add them to the dict
+                        for variable in variables:
+                            variable = variable.split(':')
+                            v[variable[0]] = variable[1]
+                        if self.ignore_flag in v and not self.include_ignore:
                             pass
                         else:
-                            #AT this point we are at the variable declaration in the .hh file
-                            (name, location) = self.parse_out_name_and_location(
-                                self.input_fh.readline())
-                            #Begin creating the dict for this entry
-                            v = {
-                                'offset': location,
-                            }
-                            #Parse all variables and add them to the dict
-                            for variable in variables:
-                                variable = variable.split(':')
-                                v[variable[0]] = variable[1]
                             namespace[name] = v
                 except EndOfNamespaceError:
                     if namespace_name == "eeprom_info":
