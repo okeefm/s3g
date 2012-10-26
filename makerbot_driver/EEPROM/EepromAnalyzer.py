@@ -24,7 +24,9 @@ import optparse
 
 class eeprom_analyzer(object):
 
-    def __init__(self, input_fh, output_fh):
+    def __init__(self, input_fh, output_fh, include_ignore=False):
+        self.include_ignore = include_ignore
+        self.ignore_flag = 'ignore'
         self.output_fh = output_fh
         self.input_fh = input_fh
         self.eeprom_map = {}  # Contains entries and offsets
@@ -42,18 +44,21 @@ class eeprom_analyzer(object):
                         #At this point we are on a line thats supposed to have variables
                         variables = self.parse_out_variables(
                             self.input_fh.readline())
-                        #AT this point we are at the variable declaration in the .hh file
-                        (name, location) = self.parse_out_name_and_location(
-                            self.input_fh.readline())
-                        #Begin creating the dict for this entry
-                        v = {
-                            'offset': location,
-                        }
-                        #Parse all variables and add them to the dict
-                        for variable in variables:
-                            variable = variable.split(':')
-                            v[variable[0]] = variable[1]
-                        namespace[name] = v
+                        if self.ignore_flag in variables and not self.include_ignore:
+                            pass
+                        else:
+                            #AT this point we are at the variable declaration in the .hh file
+                            (name, location) = self.parse_out_name_and_location(
+                                self.input_fh.readline())
+                            #Begin creating the dict for this entry
+                            v = {
+                                'offset': location,
+                            }
+                            #Parse all variables and add them to the dict
+                            for variable in variables:
+                                variable = variable.split(':')
+                                v[variable[0]] = variable[1]
+                            namespace[name] = v
                 except EndOfNamespaceError:
                     if namespace_name == "eeprom_info":
                         self.eeprom_data = namespace
@@ -158,7 +163,11 @@ if __name__ == '__main__':
     parser.add_option('-o', '--output_fh', dest='output_fh',
                       help='where you would like to save the map to',
                       )
+    parser.add_option('--include-ignore', dest='include_ignore',
+                        action='store_true', help='include values intended to be ignored',
+                        default=False
+    )
     (options, args) = parser.parse_args()
     ea = eeprom_analyzer(
-        open(options.input_fh), open(options.output_fh, 'w'))
+        open(options.input_fh), open(options.output_fh, 'w'), include_ignore=options.include_ignore)
     ea.parse_file()
