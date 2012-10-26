@@ -341,8 +341,14 @@ class s3g(object):
 
         bitfield = makerbot_driver.Encoder.decode_bitfield(bitfield)
         flags = {
-            'POWER_ERROR': bitfield[7],
-            'HEAT_SHUTDOWN': bitfield[6],
+            'preheat': bitfield[0],
+            'manual_mode': bitfield[1],
+            'onboard_script': bitfield[2],
+            'onboard_process': bitfield[3],
+            'wait_for_button': bitfield[4],
+            'build_cancelling': bitfield[5],
+            'heat_shutdown': bitfield[6],
+            'power_error': bitfield[7],
         }
         return flags
 

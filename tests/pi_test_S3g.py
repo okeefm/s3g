@@ -1410,13 +1410,18 @@ class S3gTestsFirmwareClassic(unittest.TestCase):
 
     def test_get_motherboard_status(self):
         flags = {
-          'POWER_ERROR': 1,
-          'HEAT_SHUTDOWN': 1
+            'preheat': True,
+            'manual_mode': False,
+            'onboard_script': True,
+            'onboard_process': False,
+            'wait_for_button': True,
+            'build_cancelling': False,
+            'heat_shutdown': True,
+            'power_error': False,
         }
-
         response_payload = bytearray()
         response_payload.append(constants.response_code_dict['SUCCESS'])
-        flagValues = [0x01 for i in range(8)]
+        flagValues = [0 == i % 2 for i in range(8)]
         bitfield = 0
         for i in range(len(flagValues)):
             if flagValues[i]:
