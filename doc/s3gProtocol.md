@@ -1225,6 +1225,54 @@ Payload (1 byte)
 
 Response (0 bytes)
 
+## 155 - Queue extended point x3g
+This queues an absolute point to move to.
+
+Payload
+
+    int32: X coordinate, in steps
+    int32: Y coordinate, in steps
+    int32: Z coordinate, in steps
+    int32: A coordinate, in steps
+    int32: B coordinate, in steps
+    uint32: DDA Feedrate, in steps/s
+    uint8: Axes bitfield to specify which axes are relative. Any axis with a bit set should make a relative movement.
+    int32: mm distance for this move.  normal of XYZ if any of these axes are active, and AB for extruder only moves
+    uint16: feedrate in mm/s, multiplied by 64 to assist fixed point calculation on the bot   
+
+Response (0 bytes)
+
+## 157 - Stream Version
+Used at the start of a build to tell the bot the active x3g version.
+The bot can use this information to provide feedback on compatibility to the user. 
+
+Payload
+
+    uint8: x3g version high byte
+    uint8: x3g version low byte
+    uint8: not implemented
+    uint32: not implemented
+    uint16: bot type: PID for the intended bot is sent 
+<table>
+<tr>
+ <th>Bot Type</th>
+ <th>PID</th>
+</tr>
+<tr>
+ <td>Replicator</td>
+ <td>0xD314</td>
+</tr>
+<tr>
+ <td>Repliator 2</td>
+ <td>0xB015</td>
+</tr>
+</table>
+    uint16: not implemented
+    uint32: not implemented
+    uint32: not implemented
+    uint8: not implemented
+
+Response (0 bytes)
 
 # Tool Query Commands
 
