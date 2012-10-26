@@ -94,25 +94,40 @@ class testEepromVerifier(unittest.TestCase):
             self.assertFalse(value)
         self.assertEqual(len(got_bytes), len(flags))
 
-    def test_get_number_byte(self):
-        expected_value = 0x00
-        length = 1
+    def test_get_number_byte_unsigned(self):
+        expected_value = 0x7F
+        the_type = 'B'
         self.ev.hex_map = {
-            0: "00"
+            0: "7F"
         }
         self.ev.hex_flags = {
             0: False,
             1: False,
         }
         offset = 0
-        self.assertEqual(self.ev.get_number(offset, length), expected_value)
+        self.assertEqual(self.ev.get_number(offset, the_type), expected_value)
         self.assertTrue(self.ev.hex_flags[offset])
         self.assertFalse(self.ev.hex_flags[1])
 
-    def test_get_number_short(self):
+    def test_get_number_byte_signed(self):
+        expected_value = -128
+        the_type = 'b'
+        self.ev.hex_map = {
+            0: "80"
+        }
+        self.ev.hex_flags = {
+            0: False,
+            1: False,
+        }
+        offset = 0
+        self.assertEqual(self.ev.get_number(offset, the_type), expected_value)
+        self.assertTrue(self.ev.hex_flags[offset])
+        self.assertFalse(self.ev.hex_flags[1])
+
+    def test_get_number_short_unsigned(self):
         expected_value = 0xA00A
         offset = 0
-        length = 2
+        the_type = 'H'
         self.ev.hex_map = {
             0: "A0",
             1: "0A",
@@ -125,11 +140,38 @@ class testEepromVerifier(unittest.TestCase):
             2: False,
             3: False,
         }
-        self.assertEqual(self.ev.get_number(offset, length), expected_value)
+        self.assertEqual(self.ev.get_number(offset, the_type), expected_value)
         for i in [0, 1]:
             self.assertTrue(self.ev.hex_flags[i])
         for i in [2, 3]:
             self.assertFalse(self.ev.hex_flags[i])
+
+    def test_get_number_short_signed(self):
+        expected_value = -32768
+        offset = 0
+        the_type = 'h'
+        self.ev.hex_map = {
+            0: "80",
+            1: "00",
+            2: "FF",
+            3: "FF",
+        }
+        self.ev.hex_flags = {
+            0: False,
+            1: False,
+            2: False,
+            3: False,
+        }
+        self.assertEqual(self.ev.get_number(offset, the_type), expected_value)
+        for i in [0, 1]:
+            self.assertTrue(self.ev.hex_flags[i])
+        for i in [2, 3]:
+            self.assertFalse(self.ev.hex_flags[i])
+
+    def test_get_number_multiple_types(self):
+        the_type = 'BB'
+        with self.assertRaises(AssertionError):
+            self.ev.get_number(0, the_type)
 
     def test_get_float(self):
         offset = 0
@@ -151,6 +193,11 @@ class testEepromVerifier(unittest.TestCase):
             self.assertTrue(self.ev.hex_flags[i])
         for i in [2, 3]:
             self.assertFalse(self.ev.hex_flags[i])
+
+    def test_get_float_multiple_floats(self):
+        the_type = 'HH'
+        with self.assertRaises(AssertionError):
+            self.ev.get_number(0, the_type)
 
     def test_get_string(self):
         offset = 0

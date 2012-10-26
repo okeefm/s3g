@@ -41,15 +41,14 @@ class EepromVerifier(object):
             offset = self.get_offset_by_context(self.eeprom_map, context)
             for char in sub_dct['type']:
                 if 's' == char:
+                    # The String needs an explicit length
                     type_length = sub_dct['length']
                     value = self.get_string(offset, type_length)
                 else:
-                    the_type = char
-                    type_length = struct.calcsize(char)
                     if 'floating_point' in sub_dct:
-                        value = self.get_float(offset, char)
+                        value = self.get_float(offset, the_type)
                     else:
-                        value = self.get_float(offset, char)
+                        value = self.get_number(offset, the_type)
                 constraints = sub_dct['constraints']
             if not self.check_value_validity(value, constraints):
                 good_eeprom = False
@@ -188,29 +187,36 @@ class EepromVerifier(object):
     def check_value_validity_min_max(self, value, constraint):
         return value <= constraint[2] and value >= constraint[1]
 
-    def get_number(self, offset, length):
+    def get_number(self, offset, the_type):
         """
-        Given a lenth and an offset, retrieves a nummber
+        Given a lenth and an offset, retrieves a nummber.  Expects to only
+        unpack one value (i.e. One signed int)
 
         @param int offset: Offset to start at
         @param int length: Length to read
         @return int: Int read
         """
-        hex_val = '0x'
+        assert len(the_type) == 1
+        length = struct.calcsize(the_type)
+        hex_val = ''
         for i in range(offset, offset+length):
             self.hex_flags[i] = True
             hex_val += self.hex_map[i]
-        return int(hex_val, 16)
+        hex_val = struct.unpack('>%s' % (the_type), hex_val.decode('hex'))[0]
+        return hex_val
 
-    def get_float(self, offset, length=2):
+    def get_float(self, offset, the_type='H'):
         """
-        Given a length and an offset, retrieves a floating point value
+        Given a length and an offset, retrieves a floating point value.  Expects 
+        to only unpack one float value
 
         @param int offset: Offset to start at
         @param int length: Length to read
         @return float: Float read
         """
+        assert len(the_type) == 1
         vals = []
+        length = struct.calcsize(the_type)
         for i in range(offset, offset+length):
             self.hex_flags[i] = True
             vals.append(int(self.hex_map[i], 16))
