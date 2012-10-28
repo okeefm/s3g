@@ -17,6 +17,7 @@ class EepromVerifier(object):
             )
         with open(self.map_name) as f:
             self.eeprom_map = json.load(f)
+        self.eeprom_map = self.eeprom_map['eeprom_map']
         self.hex_map, self.hex_flags = self.parse_hex_file(self.hex_path)
 
     def validate_eeprom(self):
@@ -38,24 +39,29 @@ class EepromVerifier(object):
         contexts = self.get_eeprom_map_contexts(self.eeprom_map)
         for context in contexts:
             sub_dct = self.get_dict_by_context(self.eeprom_map, context)
-            offset = self.get_offset_by_context(self.eeprom_map, context)
-            all_types = sub_dct['type']
-            if 'mult' in sub_dct:
-                all_types *= sub_dct['mult']
-            for char in all_types:
-                if 's' == char:
-                    # The String needs an explicit length
-                    type_length = sub_dct['length']
-                    value = self.get_string(offset, type_length)
-                else:
-                    if 'floating_point' in sub_dct:
-                        value = self.get_float(offset, the_type)
+            if 'constraints' not in sub_dct:
+                print "constraints"
+            else:
+                print "else"
+                offset = int(self.get_offset_by_context(self.eeprom_map, context))
+                all_types = sub_dct['type']
+                if 'mult' in sub_dct:
+                    all_types *= sub_dct['mult']
+                for char in all_types:
+                    char = str(char)
+                    if 's' == char:
+                        # The String needs an explicit length
+                        type_length = int(sub_dct['length'])
+                        value = self.get_string(offset, type_length)
                     else:
-                        value = self.get_number(offset, the_type)
-                constraints = sub_dct['constraints']
-            if not self.check_value_validity(value, constraints):
-                good_eeprom = False
-                bad_entries['mapped_entries'].append((context, sub_dct))
+                        if 'floating_point' in sub_dct:
+                            value = self.get_float(offset, char)
+                        else:
+                            value = self.get_number(offset, char)
+                    constraints = sub_dct['constraints']
+                if not self.check_value_validity(value, constraints):
+                    good_eeprom = False
+                    bad_entries['mapped_entries'].append((context, sub_dct))
         unmapped_validity, unmapped_errors = self.check_unread_values()
         bad_entries.update(unmapped_errors)
             
@@ -199,6 +205,7 @@ class EepromVerifier(object):
         @param int length: Length to read
         @return int: Int read
         """
+        print "getting int"
         assert len(the_type) == 1
         length = struct.calcsize(the_type)
         hex_val = ''
@@ -217,6 +224,7 @@ class EepromVerifier(object):
         @param int length: Length to read
         @return float: Float read
         """
+        print "getting float"
         assert len(the_type) == 1
         vals = []
         length = struct.calcsize(the_type)
@@ -235,6 +243,7 @@ class EepromVerifier(object):
 
         @return str: Read string
         """
+        print "getting string"
         string = ""
         for i in range(offset, offset+length):
             self.hex_flags[i] = True
