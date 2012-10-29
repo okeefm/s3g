@@ -98,7 +98,8 @@ class testEepromVerifier(unittest.TestCase):
         expected_value = 0x7F
         the_type = 'B'
         self.ev.hex_map = {
-            0: "7F"
+            0: "7F",
+            1: "FF"
         }
         self.ev.hex_flags = {
             0: False,
@@ -113,7 +114,8 @@ class testEepromVerifier(unittest.TestCase):
         expected_value = -128
         the_type = 'b'
         self.ev.hex_map = {
-            0: "80"
+            0: "80",
+            1: "FF"
         }
         self.ev.hex_flags = {
             0: False,
@@ -374,23 +376,23 @@ class testEepromVerifier(unittest.TestCase):
         for case in cases:
             self.assertEqual(case[2], self.ev.check_value_validity_min_max(case[0], case[1]))
 
-    def test_get_eeprom_map_allowed_values(self):
+    def test_get_eeprom_map_constraints(self):
         eeprom_map = {
             'a': {
-                'allowed_values': ['l', 1, 2],
+                'constraints': ['l', 1, 2],
             },
             'b': {
-                'allowed_values': ['m', 0, 100],
+                'constraints': ['m', 0, 100],
             },
             'c': {
                 'sub_map': {
                     'd': {
-                        'allowed_values': ['l', 'a', 'b'],
+                        'constraints': ['l', 'a', 'b'],
                     },
                     'e': {
                         'sub_map': {
                             'f': {
-                                'allowed_values': ['m', -10, 10],
+                                'constraints': ['m', -10, 10],
                             }
                         }
                     }
