@@ -40,25 +40,27 @@ class EepromVerifier(object):
         for context in contexts:
             sub_dct = self.get_dict_by_context(self.eeprom_map, context)
             if 'constraints' not in sub_dct:
-                print "constraints"
+                pass
             else:
-                print "else"
-                offset = int(self.get_offset_by_context(self.eeprom_map, context))
+                offset = self.get_offset_by_context(self.eeprom_map, context)
                 all_types = sub_dct['type']
                 if 'mult' in sub_dct:
-                    all_types *= sub_dct['mult']
+                    all_types *= int(sub_dct['mult'])
                 for char in all_types:
-                    char = str(char)
+                    char = str(char) # Convert from unicode
                     if 's' == char:
                         # The String needs an explicit length
                         type_length = int(sub_dct['length'])
                         value = self.get_string(offset, type_length)
+                        char_offset = type_length
                     else:
                         if 'floating_point' in sub_dct:
                             value = self.get_float(offset, char)
                         else:
                             value = self.get_number(offset, char)
+                        char_offset = struct.calcsize(char)
                     constraints = sub_dct['constraints']
+                    offset += char_offset
                 if not self.check_value_validity(value, constraints):
                     good_eeprom = False
                     bad_entries['mapped_entries'].append((context, sub_dct))
@@ -205,7 +207,6 @@ class EepromVerifier(object):
         @param int length: Length to read
         @return int: Int read
         """
-        print "getting int"
         assert len(the_type) == 1
         length = struct.calcsize(the_type)
         hex_val = ''
@@ -224,7 +225,6 @@ class EepromVerifier(object):
         @param int length: Length to read
         @return float: Float read
         """
-        print "getting float"
         assert len(the_type) == 1
         vals = []
         length = struct.calcsize(the_type)
@@ -243,7 +243,6 @@ class EepromVerifier(object):
 
         @return str: Read string
         """
-        print "getting string"
         string = ""
         for i in range(offset, offset+length):
             self.hex_flags[i] = True
