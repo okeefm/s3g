@@ -1237,7 +1237,7 @@ Payload
     int32: B coordinate, in steps
     uint32: DDA Feedrate, in steps/s
     uint8: Axes bitfield to specify which axes are relative. Any axis with a bit set should make a relative movement.
-    int32: mm distance for this move.  normal of XYZ if any of these axes are active, and AB for extruder only moves
+    float (single precision, 32 bit): mm distance for this move.  normal of XYZ if any of these axes are active, and AB for extruder only moves
     uint16: feedrate in mm/s, multiplied by 64 to assist fixed point calculation on the bot   
 
 Response (0 bytes)
