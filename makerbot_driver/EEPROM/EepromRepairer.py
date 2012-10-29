@@ -22,6 +22,15 @@ class EepromRepairer(object):
         for i in range(length):
             packed_data += struct.pack('<B', 0xFF)
         return packed_data
+
+    def repair_mapped_region(self, offset, sub_dict):
+        constraints = sub_dict['constraints']
+        if 'l' == constraints[0]:
+            self.repair_mapped_region_list(offset, sub_dict) 
+        elif 'm' == constraints[0]:
+            self.repair_mapped_region_min_max(offset, sub_dict)
+        else:
+            self.repair_mapped_region_any(offset, sub_dict)
         
     def repair_unmapped_region(self, bad_offsets):
         sequences = self.build_sequences(bad_offsets)

@@ -17,6 +17,27 @@ class TestEepromRepairer(unittest.TestCase):
     def tearDown(self):
         self.er = None
 
+    def test_repair_mapped_region_list(self):
+        sub_dict = {'constraints': 'l,0,1,2,3'}
+        offset = 0xff
+        self.er.repair_mapped_region_list = mock.Mock()
+        self.er.repair_mapped_region(offset, sub_dict)
+        self.er.repair_mapped_region_list.assert_called_once_with(offset, sub_dict)
+
+    def test_repair_mapped_region_min_max(self):
+        sub_dict = {'constraints': 'm,-50,50'}
+        offset = 0xff
+        self.er.repair_mapped_region_min_max = mock.Mock()
+        self.er.repair_mapped_region(offset, sub_dict)
+        self.er.repair_mapped_region_min_max.assert_called_once_with(offset, sub_dict)
+
+    def test_repair_mapped_region_any(self):
+        sub_dict = {'constraints': 'a'}
+        offset = 0xff
+        self.er.repair_mapped_region_any = mock.Mock()
+        self.er.repair_mapped_region(offset, sub_dict)
+        self.er.repair_mapped_region_any.assert_called_once_with(offset, sub_dict)
+
     def test_build_packed_data(self):
         length = 10
         expected_data = struct.pack('<%s' % ('B'*length), 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff)

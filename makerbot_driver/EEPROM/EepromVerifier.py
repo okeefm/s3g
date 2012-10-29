@@ -6,6 +6,8 @@ import os
 import re
 import struct
 
+import makerbot_driver
+
 class EepromVerifier(object):
 
     def __init__(self, hex_path, firmware_version='6.0'):
@@ -36,13 +38,13 @@ class EepromVerifier(object):
         """
         good_eeprom = True 
         bad_entries = {'mapped_entries': []}
-        contexts = self.get_eeprom_map_contexts(self.eeprom_map)
+        contexts = makerbot_driver.EEPROM.get_eeprom_map_contexts(self.eeprom_map)
         for context in contexts:
-            sub_dct = self.get_dict_by_context(self.eeprom_map, context)
+            sub_dct = makerbot_driver.EEPROM.get_dict_by_context(self.eeprom_map, context)
             if 'constraints' not in sub_dct:
                 pass
             else:
-                offset = self.get_offset_by_context(self.eeprom_map, context)
+                offset = makerbot_driver.EEPROM.get_offset_by_context(self.eeprom_map, context)
                 all_types = sub_dct['type']
                 if 'mult' in sub_dct:
                     all_types *= int(sub_dct['mult'])
@@ -60,68 +62,20 @@ class EepromVerifier(object):
                             value = self.get_number(offset, char)
                         char_offset = struct.calcsize(char)
                     constraints = sub_dct['constraints']
+                    if not self.check_value_validity(value, constraints):
+                        good_eeprom = False
+                        bad_entries['mapped_entries'].append({
+                            'offset': offset,
+                            'type': char,
+                            'constraints': sub_dct['constraints'],
+                            'value': value,
+                            'context': context,
+                        })
                     offset += char_offset
-                if not self.check_value_validity(value, constraints):
-                    good_eeprom = False
-                    bad_entries['mapped_entries'].append((context, sub_dct))
         unmapped_validity, unmapped_errors = self.check_unread_values()
         bad_entries.update(unmapped_errors)
-            
         return unmapped_validity and good_eeprom, bad_entries
 
-    def get_eeprom_map_contexts(self, eeprom_map, context=[]):
-        """
-        Given an eeprom_map, returns a sorted context for each value
-
-        @param dict eeprom_map: Map of the eeprom
-        @param list context: Context we start at
-        @return list: List of contexts
-        """
-        return_contexts = []
-        for key in eeprom_map:
-            this_context = context+[key]
-            if 'sub_map' in eeprom_map[key]:
-                return_contexts.extend(self.get_eeprom_map_contexts(eeprom_map[key]['sub_map'], this_context+['sub_map']))
-            else:
-                return_contexts.append(this_context)
-        return_contexts.sort()
-        return return_contexts
-
-    def get_offset_by_context(self, dct, context):
-        """
-        Given a dict, gets the offset to a subdict given a context
-
-        @param dict dct: Dict to traverse
-        @param list context: Context used to derive offset
-        @return int: Offset to a certain subdict
-        """ 
-        offset = 0
-        the_context = context[:]
-        sub_dct = dct
-        while len(the_context) > 1:
-            if the_context[0] != 'sub_map':
-                hex_val = sub_dct[the_context[0]]['offset']
-                offset += int(hex_val, 16)
-            sub_dct = sub_dct[the_context[0]]
-            the_context = the_context[1:]
-        hex_val = sub_dct[the_context[0]]['offset']
-        offset += int(hex_val, 16)
-        return offset
-
-    def get_dict_by_context(self, dct, context):
-        """
-        Given a dict, gets a subdict depending on the context
-
-        @param dict dct: Dictionary to traverse
-        @param list context: Context used to retrieve the subdict
-        @return dict: Subdict targeted by context
-        """
-        the_context = context[:]
-        sub_dct = dct
-        while len(the_context) > 1:
-            sub_dct = sub_dct[the_context[0]]
-            the_context = the_context[1:]
-        return sub_dct[the_context[0]]
 
     def parse_hex_file(self, hex_filepath):
         """
@@ -158,24 +112,6 @@ class EepromVerifier(object):
                     runner += 1
         return hex_map, flags
 
-    def parse_out_constraints(self, constraints):
-        """
-        Parses constraints out of the string (decods, ints, hex, etc)
-
-        @param str constaints: Constraints for a certain value
-        @return list: List of constraints
-        """
-        the_constraints = constraints.split(',')
-        parsed = the_constraints[:1]
-        for value in the_constraints[1:]:
-            if '0x' in value:
-                parsed.append(int(value, 16))
-            elif re.search('[0-9]', value):
-                parsed.append(int(value))
-            else:
-                parsed.append(value)
-        return parsed
-
     def check_value_validity(self, value, constraints):
         """
         Parses the constraints out of the string passed in, and checks the values validity
@@ -184,7 +120,7 @@ class EepromVerifier(object):
         @param value: Value to check.  Can be of varied type
         @retrun bool: True if value is valid, false otherwise
         """
-        constraints = self.parse_out_constraints(constraints)
+        constraints = makerbot_driver.EEPROM.parse_out_constraints(constraints)
         if constraints[0] == 'l':
             return self.check_value_validity_list(value, constraints)
         elif constraints[0] == 'm':
