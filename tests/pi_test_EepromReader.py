@@ -11,7 +11,6 @@ import mock
 import struct
 import array
 
-
 import makerbot_driver
 
 
@@ -169,6 +168,25 @@ class TestEepromReader(unittest.TestCase):
 
     def tearDown(self):
         self.reader = None
+
+    def test_get_high_low_bits(self):
+        high_bit = 128
+        low_bit = 128
+        values = [low_bit, high_bit]
+        offset = 0
+        def s3g_side_effect(*args, **kwargs):
+            return struct.pack('>B', values.pop())
+        self.reader.s3g.read_from_EEPROM = mock.Mock(side_effect=s3g_side_effect)
+        got_bits = self.reader.get_high_low_bits(offset)
+        self.assertEqual(got_bits[0], high_bit)
+        self.assertEqual(got_bits[1], low_bit)
+        calls = self.reader.s3g.read_from_EEPROM.mock_calls
+        param_one = calls[0][1]
+        param_two = calls[1][1]
+        self.assertEqual(param_one[0], offset)
+        self.assertEqual(param_two[0], offset + 1)
+        self.assertEqual(param_one[1], 1)
+        self.assertEqual(param_two[1], 1)
 
     def test_get_floating_point_number(self):
         cases = [

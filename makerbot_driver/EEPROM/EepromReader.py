@@ -59,6 +59,13 @@ class EepromReader(object):
                     input_map[value]['sub_map'], context=context + [value])
             else:
                 input_map[value]['value'] = self.read_data(value, context)
+                if 'floating_point' in input_map[value]:
+                    the_dict, offset = self.get_dict_by_context(value, context)
+                    input_map[value]['bits'] = []
+                    for t in the_dict['type']:
+                        bits = self.get_high_low_bits(offset)
+                        input_map[value]['bits'].append(bits)
+                        offset += struct.calcsize(t)
 
     def read_data(self, name, context=None):
         the_dict, offset = self.get_dict_by_context(name, context)
@@ -155,6 +162,21 @@ class EepromReader(object):
             fp_vals.append(fp)
         return fp_vals
 
+    def get_high_low_bits(self, offset):
+        """
+        Returns the high bit and low bit that makes up a 
+        floating point value.
+
+        @param int offset: Offset to read at the eeprom
+        @return int high_bit: The high_bit read from the eeprom
+        @return int low_bit: The low_bit read from the eeprom
+        """
+        high_bit = self.s3g.read_from_EEPROM(offset, 1)
+        high_bit = self.unpack_value(high_bit, 'B')[0]
+        low_bit = self.s3g.read_from_EEPROM(offset + 1, 1)
+        low_bit = self.unpack_value(low_bit, 'B')[0]
+        return high_bit, low_bit
+
     def read_and_unpack_floating_point(self, offset):
         """
         Given an offset, reads a floating point value
@@ -163,10 +185,7 @@ class EepromReader(object):
         @param int offset: The offset to read from
         @return int: The floating point number.
         """
-        high_bit = self.s3g.read_from_EEPROM(offset, 1)
-        high_bit = self.unpack_value(high_bit, 'B')[0]
-        low_bit = self.s3g.read_from_EEPROM(offset + 1, 1)
-        low_bit = self.unpack_value(low_bit, 'B')[0]
+        high_bit, low_bit = self.get_high_low_bits(offset)
         return self.decode_floating_point(high_bit, low_bit)
 
     def read_value_from_eeprom(self, input_dict, offset):
