@@ -61,10 +61,10 @@ class EepromReader(object):
                 input_map[value]['value'] = self.read_data(value, context)
                 if 'floating_point' in input_map[value]:
                     the_dict, offset = self.get_dict_by_context(value, context)
-                    input_map[value]['bits'] = []
+                    input_map[value]['bytes'] = []
                     for t in the_dict['type']:
                         bits = self.get_high_low_bits(offset)
-                        input_map[value]['bits'].append(bits)
+                        input_map[value]['bytes'].append(bits)
                         offset += struct.calcsize(t)
 
     def read_data(self, name, context=None):
