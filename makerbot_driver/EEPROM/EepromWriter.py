@@ -158,7 +158,7 @@ class EepromWriter(object):
         if len(pack_code) is not len(data):
             raise makerbot_driver.EEPROM.MismatchedTypeAndValueError([len(pack_code), len(data)])
         if 'floating_point' in input_dict:
-            payload = self.process_floating_point(data, pack_code)
+            payload = self.pack_floating_point_bytes(input_dict)
         elif 's' in pack_code:
             payload = self.process_string(data, pack_code)
         else:
@@ -175,6 +175,12 @@ class EepromWriter(object):
         if not self.good_string_type(the_type):
             raise makerbot_driver.EEPROM.IncompatableTypeError(the_type)
         return self.encode_string(data[0])
+
+    def pack_floating_point_bytes(self, input_dict):
+        payload = ''
+        for the_bytes in input_dict['bytes']:
+            payload += struct.pack('<BB', the_bytes[0], the_bytes[1])
+        return payload
 
     def process_floating_point(self, data, the_type):
         if not self.good_floating_point_type(the_type):

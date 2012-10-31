@@ -133,6 +133,20 @@ class TestEepromWriter(unittest.TestCase):
     def tearDown(self):
         self.writer = None
 
+    def test_pack_floating_point_bytes(self):
+        input_dict = {
+            'floating_point': True,
+            'bytes': [
+                [0, 0],
+                [1, 0],
+                [128, 128],
+                [255, 255],
+            ]
+        }
+        expected_value = struct.pack('<8B', 0, 0, 1, 0, 128, 128, 255, 255)
+        got_value = self.writer.pack_floating_point_bytes(input_dict)
+        self.assertEqual(expected_value, got_value)
+
     def test_encode_data_mult(self):
         mult = 10
         t = 'H'
