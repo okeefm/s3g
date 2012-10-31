@@ -66,7 +66,10 @@ class EepromWriter(object):
                 self._write_map(
                     input_map[value]['sub_map'], context=context + [value])
             else:
-                data = input_map[value]['value']
+                if 'floating_point' in input_map[value]:
+                    data = input_map[value]['bytes']
+                else:
+                    data = input_map[value]['value']
                 #Strings are stored as unicode, so we must convert them to utf8
                 for i in range(len(data)):
                     if isinstance(data[i], unicode):
@@ -151,18 +154,24 @@ class EepromWriter(object):
         @param dict input_dict: The input dict for this particular eeprom entry
         @return str: The values packed into a byte string
         """
+        # Determine the "pack code"
         if 'mult' in input_dict:
             pack_code = str(input_dict['type'] * int(input_dict['mult']))
         else:
             pack_code = str(input_dict['type'])
+
+        # Check to make sure there are enough codes for the amount of data we have
         if len(pack_code) is not len(data):
             raise makerbot_driver.EEPROM.MismatchedTypeAndValueError([len(pack_code), len(data)])
+
+        # Determine how to pack the data
         if 'floating_point' in input_dict:
-            payload = self.pack_floating_point_bytes(input_dict)
+            payload = self.pack_floating_point_bytes(data, pack_code)
         elif 's' in pack_code:
             payload = self.process_string(data, pack_code)
         else:
             payload = self.process_value(data, pack_code)
+
         return payload
 
     def process_value(self, data, the_type):
@@ -176,9 +185,11 @@ class EepromWriter(object):
             raise makerbot_driver.EEPROM.IncompatableTypeError(the_type)
         return self.encode_string(data[0])
 
-    def pack_floating_point_bytes(self, input_dict):
+    def pack_floating_point_bytes(self, data, the_type):
+        if not self.good_floating_point_type(the_type):
+            raise makerbot_driver.EEPROM.IncompatableTypeError(the_type)
         payload = ''
-        for the_bytes in input_dict['bytes']:
+        for the_bytes in data: 
             payload += struct.pack('<BB', the_bytes[0], the_bytes[1])
         return payload
 

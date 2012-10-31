@@ -90,13 +90,15 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
         self.writer.write_data(name, value)
         #add second value
         name = 'unus'
-        values = [128.5, 256]
+        values = [
+            [128, 128],
+            [255, 255],
+        ]
         context = ['barfoo']
         offset = 0xaabb + 0x0004
         data = ''
         for value in values:
-            bits = self.writer.calculate_floating_point(value)
-            data += struct.pack('<BB', bits[0], bits[1])
+            data += struct.pack('<BB', value[0], value[1])
         expected_packed_data.append([offset, data])
         self.writer.write_data(name, values, context, flush=True)
         self.assertEqual(expected_packed_data, self.writer.data_buffer)
@@ -113,13 +115,15 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
         self.writer.write_data(name, value)
         #add second value
         name = 'unus'
-        values = [128.5, 256]
+        values = [
+            [128, 128],
+            [255, 255],
+        ]
         offset = 0x0004 + 0xaabb
         context = ['barfoo']
         data = ''
         for value in values:
-            bits = self.writer.calculate_floating_point(value)
-            data += struct.pack('<BB', bits[0], bits[1])
+            data += struct.pack('<BB', value[0], value[1])
         expected_packed_data.append([offset, data])
         self.writer.write_data(name, values, context)
         self.assertEqual(expected_packed_data, self.writer.data_buffer)
@@ -135,6 +139,7 @@ class TestEepromWriter(unittest.TestCase):
 
     def test_pack_floating_point_bytes(self):
         input_dict = {
+            'type': 'HHHH',
             'floating_point': True,
             'bytes': [
                 [0, 0],
@@ -144,7 +149,7 @@ class TestEepromWriter(unittest.TestCase):
             ]
         }
         expected_value = struct.pack('<8B', 0, 0, 1, 0, 128, 128, 255, 255)
-        got_value = self.writer.pack_floating_point_bytes(input_dict)
+        got_value = self.writer.pack_floating_point_bytes(input_dict['bytes'], input_dict['type'])
         self.assertEqual(expected_value, got_value)
 
     def test_encode_data_mult(self):
@@ -213,8 +218,8 @@ class TestEepromWriter(unittest.TestCase):
             'type': 'HHI',
             'floating_point': True
         }
-        self.assertRaises(makerbot_driver.EEPROM.IncompatableTypeError,
-                          self.writer.encode_data, value, input_dict)
+        with self.assertRaises(makerbot_driver.EEPROM.IncompatableTypeError):
+            self.writer.encode_data(value, input_dict)
 
     def test_encode_data_string(self):
         input_dict = {
@@ -232,9 +237,8 @@ class TestEepromWriter(unittest.TestCase):
             'floating_point': True,
             'type': 'H',
         }
-        value = [128.5]
-        bits = self.writer.calculate_floating_point(value[0])
-        expected = struct.pack('<BB', bits[0], bits[1])
+        value = [[128, 128]]
+        expected = struct.pack('<BB', value[0][0], value[0][1])
         self.assertEqual(expected, self.writer.encode_data(value, input_dict))
 
     def test_encode_data_floating_point_multiple(self):
@@ -242,11 +246,14 @@ class TestEepromWriter(unittest.TestCase):
             'floating_point': True,
             'type': 'HHH'
         }
-        values = [0, 128.5, 256]
+        values = [
+            [0, 0],
+            [128, 128],
+            [255, 255],
+        ]
         expected = ''
         for value in values:
-            bits = self.writer.calculate_floating_point(value)
-            expected += struct.pack('<BB', bits[0], bits[1])
+            expected += struct.pack('<BB', value[0], value[1])
         self.assertEqual(expected, self.writer.encode_data(values, input_dict))
 
     def test_encode_data_normal_value(self):
