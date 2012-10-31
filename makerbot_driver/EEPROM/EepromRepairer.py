@@ -23,14 +23,41 @@ class EepromRepairer(object):
             packed_data += struct.pack('<B', 0xFF)
         return packed_data
 
-    def repair_mapped_region(self, offset, sub_dict):
-        constraints = sub_dict['constraints']
+    def repair_mapped_region(self, repair_dict):
+        constraints = repair_dict['constraints']
         if 'l' == constraints[0]:
-            self.repair_mapped_region_list(offset, sub_dict) 
+            self.repair_mapped_region_list(repair_dict) 
         elif 'm' == constraints[0]:
-            self.repair_mapped_region_min_max(offset, sub_dict)
+            self.repair_mapped_region_min_max(repair_dict)
         else:
-            self.repair_mapped_region_any(offset, sub_dict)
+            self.repair_mapped_region_any(repair_dict)
+
+    def repair_mapped_region_list(self, repair_dict):
+        assert 'l' == repair_dict['constraints'][0]
+        value = makerbot_driver.EEPROM.parse_out_constraints(repair_dict['constraints'])[1]
+        offset = repair_dict['offset']
+        data = ''
+        for char in repair_dict['type']:
+            data += struct.pack('<%s' % (char), value)
+        self._flush_out_data(offset, data)
+
+    def repair_mapped_region_min_max(self, repair_dict):
+        assert 'm' == repair_dict['constraints'][0]
+        value = makerbot_driver.EEPROM.parse_out_constraints(repair_dict['constraints'])[1]
+        offset = repair_dict['offset']
+        data = ''
+        for char in repair_dict['type']:
+            data += struct.pack('<%s' % (char), value)
+        self._flush_out_data(offset, data)
+
+    def repair_mapped_region_any(self, repair_dict):
+        assert 'a' == repair_dict['constraints'][0]
+        value = 0
+        offset = repair_dict['offset']
+        data = ''
+        for char in repair_dict['type']:
+            data += struct.pack('<%s' % (char), value)
+        self._flush_out_data(offset, data)
         
     def repair_unmapped_region(self, bad_offsets):
         sequences = self.build_sequences(bad_offsets)

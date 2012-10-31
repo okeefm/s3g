@@ -199,7 +199,7 @@ class EepromVerifier(object):
         unmapped_value = "FF"
         bad_values = {'unmapped_entries': []}
         for key in self.hex_flags:
-            if not self.hex_flags[key]:
+            if self.hex_flags[key] is False:
                 if not self.hex_map[key].upper() == unmapped_value:
                     all_good = False
                     bad_values['unmapped_entries'].append(key)
