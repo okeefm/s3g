@@ -4,7 +4,7 @@ makerbot-driver (1.0.2) precise; urgency=low
   * Added EEPROM map for firmware 6.2
   * Fixed Replicator2 start gcode
 
- -- MakerBot Industries dev team <dev@makerbot.com> Fri, 12 Oct 2012 10:27:20  -0400
+ -- MakerBot Industries dev team <dev@makerbot.com> Wed, 31 Oct 2012 11:52:00 -0400
 
 makerbot-driver (1.0.1) precise; urgency=low
 
