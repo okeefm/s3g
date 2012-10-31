@@ -149,7 +149,7 @@ class EepromVerifier(object):
         for i in range(offset, offset+length):
             self.hex_flags[i] = True
             hex_val += self.hex_map[i]
-        hex_val = struct.unpack('>%s' % (the_type), hex_val.decode('hex'))[0]
+        hex_val = struct.unpack('<%s' % (the_type), hex_val.decode('hex'))[0]
         return hex_val
 
     def get_float(self, offset, the_type='H'):
