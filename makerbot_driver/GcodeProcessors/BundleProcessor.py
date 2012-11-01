@@ -21,10 +21,6 @@ class BundleProcessor(LineTransformProcessor):
         for processor in self.processors:
             if processor.is_bundleable:
                 self.code_map.update(processor.code_map)
-                for func in dir(processor):
-                    new_function = getattr(processor, func)
-                    if inspect.isfunction(new_function) and re.match(transform_code, func):
-                        setattr(self, func, new_function)
 
     def process_gcode(self, gcodes, callback=None):
         self.collate_codemaps()
