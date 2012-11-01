@@ -51,8 +51,10 @@ class MachineFactory(object):
         if len(matches) > 0:
             bestProfile = matches[0]
             setattr(return_object, 's3g', s3gBot)
-            setattr(return_object, 'profile',
-                    makerbot_driver.Profile(bestProfile, self.profile_dir))
+            profile = makerbot_driver.Profile(bestProfile, self.profile_dir)
+            profile.values['print_to_file_type']=machine_setup_dict['print_to_file_type']
+            profile.values['machine_name'] = machine_setup_dict['proper_name']            
+            setattr(return_object, 'profile', profile)
             parser = makerbot_driver.Gcode.GcodeParser()
             parser.s3g = s3gBot
             parser.state.profile = getattr(return_object, 'profile')
@@ -138,6 +140,11 @@ class MachineInquisitor(object):
 
         if settings['fw_version'] >= makerbot_driver.x3g_minimum_version:
             s3gDriver.set_print_to_file_type('x3g')
+            settings['print_to_file_type'] = 'x3g'
+        else: 
+            s3gDriver.set_print_to_file_type('s3g')
+            settings['print_to_file_type'] = 's3g'
+          
         if not leaveOpen:
             s3gDriver.close()
         return s3gDriver, settings

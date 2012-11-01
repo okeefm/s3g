@@ -113,6 +113,6 @@ maximum_payload_length = 32
 max_retry_count = 5
 timeout_length = 1.0
 s3g_version = 100
-x3g_minimum_version = 602
+x3g_minimum_version = 700
 max_tool_index = 127
 vid_pid = [0x23C1, 0xD314]
