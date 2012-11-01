@@ -16,6 +16,9 @@ class AnchorProcessor(LineTransformProcessor):
         self.looking_for_first_move = True
         self.speed = 1000
 
+    def _grab_extruder(self, match):
+        self.extruder = match.group(2)
+
     def _transform_anchor(self, match):
         return_lines = [match.string]
         if self.looking_for_first_move:
@@ -50,7 +53,7 @@ class AnchorProcessor(LineTransformProcessor):
                 anchor_command += part
                 anchor_command += ' '
         anchor_command += 'F%i ' % (self.speed)
-        extruder = self.get_extruder(end_movement_codes)
+        extruder = "E"
         extrusion_distance = self.find_extrusion_distance(
             start_movement_codes, end_movement_codes)
         anchor_command += extruder + str(extrusion_distance) + "\n"
