@@ -166,7 +166,9 @@ class EepromVerifier(object):
         length = struct.calcsize(the_type)
         for i in range(offset, offset+length):
             self.hex_flags[i] = True
-            vals.append(int(self.hex_map[i], 16))
+            # We unpack the two bytes separately to calc the floating point
+            val = struct.unpack('<B', self.hex_map[i].decode('hex'))[0]
+            vals.append(val)
         special_float = vals[0] + vals[1] / 255.0
         return special_float 
 

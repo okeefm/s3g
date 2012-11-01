@@ -23,6 +23,9 @@ class EepromRepairer(object):
             packed_data += struct.pack('<B', 0xFF)
         return packed_data
 
+    def repair_mapped_region_simple(self):
+        self.s3g.reset_to_factory()
+
     def repair_mapped_region(self, repair_dict):
         constraints = repair_dict['constraints']
         if 'l' == constraints[0]:

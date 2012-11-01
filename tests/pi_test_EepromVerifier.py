@@ -127,7 +127,7 @@ class testEepromVerifier(unittest.TestCase):
         self.assertFalse(self.ev.hex_flags[1])
 
     def test_get_number_short_unsigned(self):
-        expected_value = 0xA00A
+        expected_value = 2720
         offset = 0
         the_type = 'H'
         self.ev.hex_map = {
@@ -149,7 +149,7 @@ class testEepromVerifier(unittest.TestCase):
             self.assertFalse(self.ev.hex_flags[i])
 
     def test_get_number_short_signed(self):
-        expected_value = -32768
+        expected_value = 128
         offset = 0
         the_type = 'h'
         self.ev.hex_map = {
