@@ -105,9 +105,10 @@
   "print_end_sequence" : {
     "end_position" : {
       "replicator_end_position" : [
+        "M18 A B(Turn off A and B Steppers)",
         "G1 Z155 F900",
         "G162 X Y F2000",
-        "M18 X Y Z A B(Turn off steppers after a build)"
+        "M18 X Y Z(Turn off steppers after a build)"
         ]
       },
     "cool_platform": {
