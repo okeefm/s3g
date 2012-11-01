@@ -137,13 +137,20 @@ class MachineInquisitor(object):
             settings['proper_name'] = s3gDriver.get_name()
             #Generate random UUID
             settings['uuid'] = uuid.uuid4()
+        
+        try:
+            version_settings = s3gDriver.get_advanced_version();
+            if version_settings['SoftwareVariant'] != 0:
+                s3gDriver.set_print_to_file_type('x3g')
+                settings['print_to_file_type'] = 'x3g'
+            else: 
+                s3gDriver.set_print_to_file_type('s3g')
+                settings['print_to_file_type'] = 's3g'
 
-        if settings['fw_version'] >= makerbot_driver.x3g_minimum_version:
-            s3gDriver.set_print_to_file_type('x3g')
-            settings['print_to_file_type'] = 'x3g'
-        else: 
+        except makerbot_driver.CommandNotSupportedError:
             s3gDriver.set_print_to_file_type('s3g')
             settings['print_to_file_type'] = 's3g'
+            
           
         if not leaveOpen:
             s3gDriver.close()

@@ -332,6 +332,7 @@ class S3gTestsFirmwareClassic(unittest.TestCase):
         info = {
             'Version': 0x5DD5,
             'InternalVersion': 0x0110,
+            'SoftwareVariant': 10,
             'ReservedA': 0,
             'ReservedB': 0
         }
@@ -340,7 +341,8 @@ class S3gTestsFirmwareClassic(unittest.TestCase):
         response_payload.append(constants.response_code_dict['SUCCESS'])
         response_payload.extend(Encoder.encode_uint16(info['Version']))
         response_payload.extend(Encoder.encode_uint16(info['InternalVersion']))
-        response_payload.extend(Encoder.encode_uint16(info['ReservedA']))
+        response_payload.append(info['SoftwareVariant'])
+        response_payload.append(info['ReservedA'])
         response_payload.extend(Encoder.encode_uint16(info['ReservedB']))
         self.outputstream.write(Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)

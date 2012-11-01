@@ -122,16 +122,17 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_name = mock.Mock(return_value=proper_name)
         self.s3g_mock.get_vid_pid = mock.Mock()
         self.s3g_mock.get_vid_pid.return_value = vid, pid
+        self.s3g_mock.get_advanced_version = mock.Mock(return_value=makerbot_driver.CommandNotSupportedError)
         #Mock the returned s3g obj
         expected_mock_s3g_obj = 'SUCCESS%i' % (version)
         self.factory.create_s3g = mock.Mock()
         self.factory.create_s3g.return_value = expected_mock_s3g_obj
         expected_profile = makerbot_driver.Profile('ReplicatorSingle')
+        expected_profile.values['print_to_file_type']=['s3g']
+        expected_profile.values['machine_name'] = proper_name          
         expected_parser = makerbot_driver.Gcode.GcodeParser()
         return_obj = self.factory.build_from_port('/dev/dummy_port')
         self.assertTrue(getattr(return_obj, 's3g') is not None)
-        self.assertTrue(
-            len(self.s3g_mock.set_print_to_file_type.mock_calls) == 0)
         self.assertEqual(
             expected_profile.values, getattr(return_obj, 'profile').values)
         self.assertTrue(getattr(return_obj, 'gcodeparser') is not None)
@@ -150,15 +151,16 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_name = mock.Mock(return_value=proper_name)
         self.s3g_mock.get_vid_pid = mock.Mock()
         self.s3g_mock.get_vid_pid.return_value = vid, pid
+        self.s3g_mock.get_advanced_version = mock.Mock(return_value=makerbot_driver.CommandNotSupportedError)
         #Mock the returned s3g obj
         expected_mock_s3g_obj = 'SUCCESS%i' % (version)
         self.factory.create_s3g = mock.Mock()
         self.factory.create_s3g.return_value = expected_mock_s3g_obj
         expected_profile = makerbot_driver.Profile('ReplicatorDual')
+        expected_profile.values['print_to_file_type']=['s3g']
+        expected_profile.values['machine_name'] = proper_name          
         return_obj = self.factory.build_from_port('/dev/dummy_port')
         self.assertTrue(getattr(return_obj, 's3g') is not None)
-        self.assertTrue(
-            len(self.s3g_mock.set_print_to_file_type.mock_calls) == 0)
         self.assertEqual(
             expected_profile.values, getattr(return_obj, 'profile').values)
         self.assertTrue(getattr(return_obj, 'gcodeparser') is not None)
@@ -170,6 +172,13 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
         vid, pid = 0x23C1, 0xB404
         verified_status = True
         proper_name = 'test_bot'
+        advanced_version_info = {
+            'Version': version,
+            'InternalVersion': 0,
+            'SoftwareVariant': 1,
+            'ReservedA': 0,
+            'ReservedB': 0,
+        }
         self.s3g_mock.get_version = mock.Mock(return_value=version)
         self.s3g_mock.get_toolhead_count = mock.Mock(return_value=tool_count)
         self.s3g_mock.get_verified_status = mock.Mock(
@@ -177,6 +186,8 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_name = mock.Mock(return_value=proper_name)
         self.s3g_mock.get_vid_pid = mock.Mock()
         self.s3g_mock.get_vid_pid.return_value = vid, pid
+        self.s3g_mock.get_advanced_version = mock.Mock()
+        self.s3g_mock.get_advanced_version.return_value = advanced_version_info
         #Mock the returned s3g obj
         expected_mock_s3g_obj = 'SUCCESS%i' % (version)
         self.factory.create_s3g = mock.Mock()
@@ -202,7 +213,8 @@ class TestMachineInquisitor(unittest.TestCase):
     def test_low_version(self):
         version = 000
         self.s3g_mock.get_version.return_value = version
-        expected_settings = {'fw_version': version}
+        self.s3g_mock.set_print_to_file_type('s3g')
+        expected_settings = {'fw_version': version, 'print_to_file_type':'s3g'}
         s3g, got_settings = self.inquisitor.query()
         self.assertEqual(s3g, self.s3g_mock)
         self.assertEqual(expected_settings, got_settings)
@@ -222,6 +234,7 @@ class TestMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_vid_pid = mock.Mock()
         self.s3g_mock.get_vid_pid.return_value = vid, pid
         self.s3g_mock.get_advanced_name = mock.Mock()
+        self.s3g_mock.get_advanced_version = mock.Mock(return_value=makerbot_driver.CommandNotSupportedError)
         (s3g, got_settings) = self.inquisitor.query()
         #Random uuids have two bytes which have constaints on them
         rand_uuid = got_settings['uuid']
