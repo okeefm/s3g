@@ -65,11 +65,14 @@ def search_profiles_with_regex(regex, profiledir=None):
             os.path.abspath(os.path.dirname(__file__)),
             'profiles',
         )
-    possible_files = os.listdir(profiledir)
+    path = _getprofiledir(profiledir)
+    profile_extension = '.json'
+    possible_files = os.listdir(path)
     matches = []
     if regex is not None:
         for f in possible_files:
             match = re.search(regex, f)
-            if match:
+            root, ext = os.path.splitext(f)
+            if match and ext == profile_extension:
                 matches.append(match.group())
     return matches

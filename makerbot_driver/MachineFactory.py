@@ -53,7 +53,6 @@ class MachineFactory(object):
             setattr(return_object, 's3g', s3gBot)
             profile = makerbot_driver.Profile(bestProfile, self.profile_dir)
             profile.values['print_to_file_type']=[machine_setup_dict['print_to_file_type']]
-            profile.values['machine_name'] = machine_setup_dict['proper_name']            
             setattr(return_object, 'profile', profile)
             parser = makerbot_driver.Gcode.GcodeParser()
             parser.s3g = s3gBot
@@ -82,12 +81,17 @@ class MachineFactory(object):
         if 'vid' in machine_setup_dict and 'pid' in machine_setup_dict:
             regex = self.get_profile_regex_has_vid_pid(machine_setup_dict)
         if '.*Replicator2' == regex:
-            pass
+            if regex and machine_setup_dict.get('tool_count', 0) == 2:
+                regex = regex + 'X'
+            elif machine_setup_dict.get('tool_count', 0) != 1:
+                regex = None
         else:
             if regex and machine_setup_dict.get('tool_count', 0) == 1:
                 regex = regex + 'Single'
             elif regex and machine_setup_dict.get('tool_count', 0) == 2:
                 regex = regex + 'Dual'
+            else:
+              regex = None
         return regex
 
     def get_profile_regex_has_vid_pid(self, machine_setup_dict):
@@ -124,19 +128,10 @@ class MachineInquisitor(object):
         @return a tuple of an (s3gObj, dictOfSettings
         """
         import makerbot_driver.s3g as s3g
-        import uuid
         settings = {}
         s3gDriver = self.create_s3g()
-        settings['fw_version'] = s3gDriver.get_version()
-        if settings['fw_version'] < 500 and settings['fw_version'] >= 300:
-            settings['vid'], settings['pid'] = s3gDriver.get_vid_pid()
-        elif settings['fw_version'] >= 500:
-            settings['tool_count'] = s3gDriver.get_toolhead_count()
-            settings['vid'], settings['pid'] = s3gDriver.get_vid_pid()
-            settings['verified_status'] = s3gDriver.get_verified_status()
-            settings['proper_name'] = s3gDriver.get_name()
-            #Generate random UUID
-            settings['uuid'] = uuid.uuid4()
+        settings['vid'], settings['pid'] = s3gDriver.get_vid_pid()
+        settings['tool_count'] = s3gDriver.get_toolhead_count()
         
         try:
             version_settings = s3gDriver.get_advanced_version();

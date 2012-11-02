@@ -61,8 +61,10 @@ class ProfileInitTests(unittest.TestCase):
         expected_profiles = [
             'ReplicatorDual',
             'ReplicatorSingle',
-            'TOMStepstruder',
+            'TOMStepstruderSingle',
+            'TOMStepstruderDual',
             'Replicator2',
+            'Replicator2X',
         ]
         for profile in expected_profiles:
             self.assertTrue(profile in makerbot_driver.list_profiles())
@@ -102,8 +104,8 @@ class ProfileInitTests(unittest.TestCase):
 
     def test_search_profiles_with_regex(self):
         cases = [
-            ['.*Dual.*', ['ReplicatorDual.json']],
-            ['.*Single.*', ['ReplicatorSingle.json']],
+            ['.*Dual.*', ['ReplicatorDual.json', 'TOMStepstruderDual.json']],
+            ['.*Single.*', ['ReplicatorSingle.json', 'TOMStepstruderSingle.json']],
             ['.*Replicator.*', ['Replicator2.json',
                                 'ReplicatorDual.json',
                                 'ReplicatorSingle.json',

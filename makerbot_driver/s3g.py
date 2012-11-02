@@ -18,7 +18,6 @@ class s3g(object):
 
     POINT_LENGTH = 3
     EXTENDED_POINT_LENGTH = 5
-    ACCELERATED_FIRMWARE_VERSION = 601
 
     @classmethod
     def from_filename(cls, port, baudrate=115200, timeout=.2):
