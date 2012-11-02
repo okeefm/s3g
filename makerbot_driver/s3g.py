@@ -503,14 +503,19 @@ class s3g(object):
     def set_potentiometer_value(self, axis, value):
         """
         Sets the value of the digital potentiometers that control the voltage references for the botsteps
-        @param axis: Axis whose potentiometers should be set
+        @param axis: Axis whose potentiometers should be set.  Each axis has a specific code:
+            X: 0,
+            Y: 1,
+            Z: 2,
+            A: 3,
+            B: 4,
         @param int value: The value to set the digital potentiometer to.
         """
         payload = struct.pack(
             '<BBB',
             makerbot_driver.host_action_command_dict['SET_POT_VALUE'],
-            makerbot_driver.Encoder.encode_axis(axis),
-            value
+            axis,
+            value,
         )
 
         self.writer.send_action_payload(payload)

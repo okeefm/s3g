@@ -1182,7 +1182,7 @@ class S3gTestsFirmwareClassic(unittest.TestCase):
         self.assertEqual(payload[5], 0x00)  # reserved byte
 
     def test_set_potentiometer_value(self):
-        axes = 'x'
+        axes = 0
         value = 2
 
         response_payload = bytearray()
@@ -1197,7 +1197,7 @@ class S3gTestsFirmwareClassic(unittest.TestCase):
 
         self.assertEqual(
           payload[0], constants.host_action_command_dict['SET_POT_VALUE'])
-        self.assertEqual(payload[1], Encoder.encode_axis(axes))
+        self.assertEqual(payload[1], axes)
         self.assertEqual(payload[2], value)
 
     def test_recall_home_positions(self):
