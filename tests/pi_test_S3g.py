@@ -1181,6 +1181,26 @@ class S3gTestsFirmwareClassic(unittest.TestCase):
         self.assertEqual(payload[4], blink)
         self.assertEqual(payload[5], 0x00)  # reserved byte
 
+    def test_set_potentiometer_value_capped(self):
+        axes = 0
+        value = 128
+        capped_value = 127
+
+        response_payload = bytearray()
+        response_payload.append(constants.response_code_dict['SUCCESS'])
+        self.outputstream.write(Encoder.encode_payload(response_payload))
+        self.outputstream.seek(0)
+
+        self.r.set_potentiometer_value(axes, value)
+
+        packet = bytearray(self.inputstream.getvalue())
+        payload = Encoder.decode_packet(packet)
+
+        self.assertEqual(
+          payload[0], constants.host_action_command_dict['SET_POT_VALUE'])
+        self.assertEqual(payload[1], axes)
+        self.assertEqual(payload[2], capped_value)
+
     def test_set_potentiometer_value(self):
         axes = 0
         value = 2

@@ -511,6 +511,8 @@ class s3g(object):
             B: 4,
         @param int value: The value to set the digital potentiometer to.
         """
+        max_value = 127
+        value = min(value, max_value)
         payload = struct.pack(
             '<BBB',
             makerbot_driver.host_action_command_dict['SET_POT_VALUE'],
