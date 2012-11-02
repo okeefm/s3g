@@ -785,7 +785,8 @@ Response
 
     uint16_t Firmware Version
     uint16_t Internal Version
-    uint16_t Reserved for future use
+    uint8_t Software Variant, MBI_OFFICIAL variant number is 1.  This param can be extended to addtional variant types.
+    uint8_t Reserved for future use
     uint16_t Reserved for future use
 
 # Host Buffered Commands

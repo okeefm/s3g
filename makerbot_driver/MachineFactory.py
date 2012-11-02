@@ -52,7 +52,7 @@ class MachineFactory(object):
             bestProfile = matches[0]
             setattr(return_object, 's3g', s3gBot)
             profile = makerbot_driver.Profile(bestProfile, self.profile_dir)
-            profile.values['print_to_file_type']=machine_setup_dict['print_to_file_type']
+            profile.values['print_to_file_type']=[machine_setup_dict['print_to_file_type']]
             profile.values['machine_name'] = machine_setup_dict['proper_name']            
             setattr(return_object, 'profile', profile)
             parser = makerbot_driver.Gcode.GcodeParser()
