@@ -136,18 +136,17 @@ class GcodeParser(object):
 
         @param dict codes: Codes parsed out of the gcode command
         """
-        #Put all values in a hash table
-        valTable = {}
-        #For each code in codes thats an axis:
-        for a in makerbot_driver.Gcode.parse_out_axes(codes):
-            #Try to append it to the appropriate list
-            try:
-                valTable[codes[a]].append(a)
-            #Never been encountered before, make a list
-            except KeyError:
-                valTable[codes[a]] = [a]
-        for val in valTable:
-            self.s3g.set_potentiometer_value(valTable[val][0], val)
+        axis_codes = {
+            'X': 0,
+            'Y': 1,
+            'Z': 2,
+            'A': 3,
+            'B': 4,
+        }
+        for axis in axis_codes.keys():
+            if axis in codes:
+                value = codes[axis]
+                self.s3g.set_potentiometer_value(axis_codes[axis], value)
 
     def find_axes_maximums(self, codes, flags, command):
         """Moves the given axes in the position direction until a timeout

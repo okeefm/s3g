@@ -529,33 +529,43 @@ class gcodeTests(unittest.TestCase):
         self.g.set_potentiometer_values(codes, [], '')
         self.assertEqual(self.mock.call_count, 0)
 
-    def test_set_potentiometer_values_one_axis(self):
-        codes = {'G': 130, 'X': 0}
-        axes = 'X'
-        val = 0
-        self.g.set_potentiometer_values(codes, [], '')
-        self.mock.set_potentiometer_value.assert_called_once_with(axes, val)
-
-    def test_set_potentiometer_values_all_axes(self):
-        codes = {'X': 0, 'Y': 1, 'Z': 2, 'A': 3, 'B': 4}
+    def test_set_potentiometer_values_one_axes(self):
+        codes = {'X': 5}
         expected = [
-            ('X', 0),
-            ('Y', 1),
-            ('Z', 2),
-            ('A', 3),
-            ('B', 4),
+            (0, 5),
         ]
         self.g.set_potentiometer_values(codes, [], '')
-        for i in range(len(expected)):
-            self.assertEqual(self.mock.method_calls[i], (
-                'set_potentiometer_value', expected[i], {}))
+        calls = self.mock.mock_calls
+        self.assertEqual(len(calls), len(expected))
+        got_calls = [
+            calls[0][1],
+        ]
+        got_calls.sort()
+        expected.sort()
+        self.assertEqual(got_calls, expected)
 
-    def test_set_potentiometer_values_all_codes_same(self):
-        codes = {'X': 0, 'Y': 0, 'Z': 0, 'A': 0, 'B': 0}
+    def test_set_potentiometer_values_all_axes(self):
+        codes = {'X': 5, 'Y': 4, 'Z': 3, 'A': 2, 'B': 1}
+        expected = [
+            (0, 5),
+            (1, 4),
+            (2, 3),
+            (3, 2),
+            (4, 1),
+        ]
         self.g.set_potentiometer_values(codes, [], '')
-        axes = ['X', 'Y', 'Z', 'A', 'B']
-        val = 0
-        self.mock.set_potentiometer_value.called_once_with(axes, val)
+        calls = self.mock.mock_calls
+        self.assertEqual(len(calls), len(expected))
+        got_calls = [
+            calls[0][1],
+            calls[1][1],
+            calls[2][1],
+            calls[3][1],
+            calls[4][1],
+        ]
+        got_calls.sort()
+        expected.sort()
+        self.assertEqual(got_calls, expected)
 
     def test_dwell_all_codes_accounted_for(self):
         codes = 'P'
