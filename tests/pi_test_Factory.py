@@ -21,7 +21,7 @@ class TestFactory(unittest.TestCase):
         makerbot_driver.s3g.from_filename = self.real_from_filename
 
     def test_create_parser_legacy(self):
-        machine_name = 'TOMStepstruder'
+        machine_name = 'TOMStepstruderSingle'
         parser = makerbot_driver.create_parser(machine_name, legacy=True)
         self.assertTrue(parser.__class__.__name__ == 'GcodeParser')
         self.assertEqual(getattr(parser, 's3g'), None)
@@ -39,7 +39,7 @@ class TestFactory(unittest.TestCase):
             parser.state.profile.values['type'] == "The Replicator Single")
 
     def test_create_print_to_file_legacy(self):
-        machine_name = 'TOMStepstruder'
+        machine_name = 'TOMStepstruderSingle'
         with tempfile.NamedTemporaryFile(suffix='.s3g', delete=True) as f:
             path = f.name
         parser = makerbot_driver.create_print_to_file_parser(
@@ -68,7 +68,7 @@ class TestFactory(unittest.TestCase):
 
     def test_create_print_to_stream_legacy(self):
         port = '/dev/tty.ACM0'
-        machine_name = 'TOMStepstruder'
+        machine_name = 'TOMStepstruderSingle'
         parser = makerbot_driver.create_print_to_stream_parser(
             port, machine_name, legacy=True)
         self.assertTrue(parser.__class__.__name__ == 'GcodeParser')

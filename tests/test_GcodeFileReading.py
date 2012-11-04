@@ -20,7 +20,7 @@ class TOMReading(unittest.TestCase):
         self.p = makerbot_driver.Gcode.GcodeParser()
         self.p.state = makerbot_driver.Gcode.LegacyGcodeStates()
         self.p.state.values['build_name'] = 'test'
-        self.p.state.profile = makerbot_driver.Profile('TOMStepstruder')
+        self.p.state.profile = makerbot_driver.Profile('TOMStepstruderSingle')
         self.s3g = makerbot_driver.s3g()
         with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
             path = f.name

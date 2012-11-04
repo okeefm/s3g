@@ -18,7 +18,6 @@ class s3g(object):
 
     POINT_LENGTH = 3
     EXTENDED_POINT_LENGTH = 5
-    ACCELERATED_FIRMWARE_VERSION = 601
 
     @classmethod
     def from_filename(cls, port, baudrate=115200, timeout=.2):
@@ -163,13 +162,15 @@ class s3g(object):
         [response_code,
          version,
          internal_version,
+         software_variant,
          reserved_a,
-         reserved_b] = makerbot_driver.Encoder.unpack_response('<BHHHH', response)
+         reserved_b] = makerbot_driver.Encoder.unpack_response('<BHHBBH', response)
         # TODO: check response_code
 
         version_info = {
             'Version': version,
             'InternalVersion': internal_version,
+            'SoftwareVariant': software_variant,
             'ReservedA': reserved_a,
             'ReservedB': reserved_b,
         }
