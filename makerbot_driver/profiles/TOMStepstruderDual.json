@@ -23,8 +23,8 @@
         "A": {
             "max_feedrate": 1600,
             "steps_per_mm": -50.23547880690741
-        }
-	"B": {
+        },
+	    "B": {
             "max_feedrate": 1600,
             "steps_per_mm": -50.23547880690741
         }
@@ -34,8 +34,8 @@
             "name": "Mk7 Right",
             "model": "Mk7",
             "stepper_axis": "A"
-        }
- 	"1": {
+        },
+ 	    "1": {
             "name": "Mk7 Left",
             "model": "Mk7",
             "stepper_axis": "B"
