@@ -59,7 +59,7 @@
       "replicator_start_position": [
         "G92 X152 Y75 Z0 A0 B0",
         "G1 X-112 Y-73 Z150 F3300.0 (move to waiting position)",
-        "G130 X0 Y0 A0 B0 (Lower stepper Vrefs while heating)"
+        "G130 X20 Y20 A20 B20 (Lower stepper Vrefs while heating)"
         ]
       },
     "heat_platform" : {
