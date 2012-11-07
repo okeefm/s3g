@@ -106,8 +106,12 @@ class Uploader(object):
                 shutil.copy(url, local_path)
         else:
             self._logger.info('{"event":"downloading_url", "url":%s}' % url)
-            #Download the file
-            dl_file = self.urlopen(url)
+            try:
+                #Download the file
+                dl_file = self.urlopen(url)
+            except urllib2.URLError as e:
+                # Means we have no internet connection
+                raise e
             #Write out the file
             with open(local_path, 'w') as f:
                 f.write(dl_file.read())
