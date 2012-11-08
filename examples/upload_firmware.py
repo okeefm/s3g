@@ -31,9 +31,8 @@ else:
 machine_name = options.machine.replace(' ', '')
 
 u = makerbot_driver.Firmware.Uploader()
-u.download_firmware(machine_name, options.version)
-fw_filename = os.path.join(u.dest_path, 'Mighty-mb40-v%s.hex' %(options.version))
-print "Press the upload button NOW!!!!!!!!!!!"
+u.update()
+fw_filename = u.download_firmware(machine_name, options.version)
 try:
   u.upload_firmware(port, machine_name, fw_filename)
 except subprocess.CalledProcessError as e:
