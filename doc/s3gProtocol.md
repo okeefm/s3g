@@ -785,9 +785,38 @@ Response
 
     uint16_t Firmware Version
     uint16_t Internal Version
-    uint8_t Software Variant, MBI_OFFICIAL variant number is 1.  This param can be extended to addtional variant types.
+    uint8_t Software Variant, see software variant table for valid IDs
     uint8_t Reserved for future use
     uint16_t Reserved for future use
+
+Sofware Variant IDs are as follows
+<table>
+<tr>
+  <td>0x00</td>
+  <td>unknown</td>
+</tr>
+<tr>
+  <td>0x01</td>
+  <td>MBI Official</td>
+</tr>
+<tr>
+  <td>0x02-0x7F</td>
+  <td>reserved</td>
+</tr>
+<tr>
+  <td>0x80</td>
+  <td>Sailfish</td>
+</tr>
+<tr>
+  <td>0x81-0xBF</td>
+  <td>unassigned variants</td>
+</tr>
+<tr>
+  <td>0xC0-0xFF</td>
+  <td>reserved</td>
+</tr>
+</table>
+
 
 # Host Buffered Commands
 
