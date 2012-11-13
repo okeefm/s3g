@@ -79,6 +79,12 @@ class ExtractCommentsTests(unittest.TestCase):
         self.assertEqual('asdf', command)
         self.assertEqual('testingqwer', comment)
 
+    def test_command_right(self):
+        line = 'asdf (qwer)'
+        [command, comment] = makerbot_driver.Gcode.extract_comments(line)
+        self.assertEqual('asdf ', command)
+        self.assertEqual('qwer', comment)
+
 
 class ParseCommandTests(unittest.TestCase):
     def test_empty_string(self):
