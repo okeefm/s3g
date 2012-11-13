@@ -1,3 +1,14 @@
+"""
+After dualstrusion, the gcode file has repeasted progress updates that give
+oscillating results.  This processor transforms all progress updates to be linear.
+
+We make some assumptions about the gcode file coming in:
+
+    * It contains a total of 200 non-decimal progress updates (we disregard updates 
+with percentages of .5, .2, etc), 100 for each toolhead
+    * There are no repeat progress updates within a specific toolhead
+"""
+
 from __future__ import absolute_import
 
 from .LineTransformProcessor import LineTransformProcessor
