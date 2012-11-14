@@ -245,6 +245,18 @@ class TestUploader(unittest.TestCase):
     def tearDown(self):
         self.uploader = None
 
+    """
+    This test assumes firmware version 6.0, 6.1 and 6.2 are in makerbot_driver/EEPROM
+    """
+    def test_compatible_firmware_version(self):
+        cases = [
+            '6.0',
+            '6.1',
+            '6.2',
+        ]
+        for case in cases:
+            self.assertTrue(self.uploader.compatible_firmware(case))   
+
     def test_update(self):
         pull_products_mock = mock.Mock()
         self.uploader._pull_products = pull_products_mock
