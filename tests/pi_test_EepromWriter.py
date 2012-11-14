@@ -23,7 +23,7 @@ class TestResetEEPROMCompletely(unittest.TestCase):
 
     def test_reset_eeprom_completely(self):
         self.eeprom_writer.reset_eeprom_completely()
-        expected_num_commands = int(self.eeprom_writer.eeprom_map[self.eeprom_writer.data_map]['EEPROM_SIZE']['offset'], 16)
+        expected_num_commands = makerbot_driver.EEPROM.total_eeprom_size
         self.assertEqual(expected_num_commands, len(self.s3g.mock_calls))
         for command in self.s3g.mock_calls:
             command = command[1]

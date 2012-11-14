@@ -13,20 +13,19 @@ import makerbot_driver
 class EepromWriter(object):
 
     @classmethod
-    def factory(cls, s3gObj=None, firmware_version='5.6', working_directory=None):
+    def factory(cls, s3gObj=None, firmware_version='6.0', working_directory=None):
         """ factory for creating an eeprom reader
         @param s3gObj an makerbot_driver.s3g object
         @param eeprom_map json file.
         @param working_directory container of eeprom_map name file
         """
-        eeprom_map_template = 'eeprom_map_%s.json'
-        map_name = eeprom_map_template % (firmware_version)
+        map_name = makerbot_driver.EEPROM.constants.eeprom_map_name % (firmware_version)
         eeprom_writer = makerbot_driver.EEPROM.EepromWriter(map_name, working_directory)
         eeprom_writer.s3g = s3gObj
         return eeprom_writer
 
     def __init__(self, map_name=None, working_directory=None):
-        self.map_name = map_name if map_name else 'eeprom_map_5.6.json'
+        self.map_name = map_name if map_name else makerbot_driver.EEPROM.constants.eeprom_map_name % ('6.0')
         self.working_directory = working_directory if working_directory else os.path.abspath(os.path.dirname(__file__))
         #Load the eeprom map
         with open(os.path.join(self.working_directory, self.map_name)) as f:
@@ -42,7 +41,7 @@ class EepromWriter(object):
         eeprom entry.
         """
         offset = 0
-        size = int(self.eeprom_map[self.data_map]['EEPROM_SIZE']['offset'], 16)
+        size = makerbot_driver.EEPROM.constants.total_eeprom_size
         for i in range(size):
             self.s3g.write_to_EEPROM(offset + i, struct.pack('<B', 255))
 

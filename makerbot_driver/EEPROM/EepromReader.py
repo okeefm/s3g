@@ -15,14 +15,13 @@ import makerbot_driver
 class EepromReader(object):
 
     @classmethod
-    def factory(cls, s3gObj=None, firmware_version='5.6', working_directory=None):
+    def factory(cls, s3gObj=None, firmware_version='6.0', working_directory=None):
         """ factory for creating an eeprom reader
        @param s3gObj an makerbot_driver.s3g object
        @param eeprom_map json file.
        @param working_directory container of eeprom_map name file
        """
-        eeprom_map_template = 'eeprom_map_%s.json'
-        map_name = eeprom_map_template % (firmware_version)
+        map_name = makerbot_driver.EEPROM.constants.eeprom_map_name % (firmware_version)
         eeprom_reader = makerbot_driver.EEPROM.EepromReader(map_name, working_directory)
         eeprom_reader.s3g = s3gObj
         return eeprom_reader
@@ -32,7 +31,7 @@ class EepromReader(object):
         @param map_name filename of the map to use. eeprom_map.json if not specifie
         @param working_directory drectory containing the map file name
         """
-        self.map_name = map_name if map_name else 'eeprom_map_5.6.json'
+        self.map_name = map_name if map_name else makerbot_driver.EEPROM.constants.eeprom_map_name % ('6.0')
         self.working_directory = working_directory if working_directory else os.path.abspath(os.path.dirname(__file__))
         #Load the eeprom map
         with open(os.path.join(self.working_directory, self.map_name)) as f:

@@ -1,6 +1,7 @@
 all = ['EepromAnalyzer', 'EepromReader', 'EepromWriter', 'errors']
 
 from errors import *
+from constants import *
 from EepromAnalyzer import *
 from EepromReader import *
 from EepromWriter import *

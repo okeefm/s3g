@@ -15,7 +15,7 @@ class EepromVerifier(object):
         self.firmware_version = firmware_version
         self.map_name = os.path.join(
             os.path.abspath(os.path.dirname(__file__)),
-            'eeprom_map_%s.json' % (self.firmware_version)
+            makerbot_driver.EEPROM.eeprom_map_name % (self.firmware_version)
             )
         with open(self.map_name) as f:
             self.eeprom_map = json.load(f)
