@@ -29,7 +29,8 @@ class StreamMock(object):
 class StreamWriterOpenCloseTests(unittest.TestCase):
     def setUp(self):
         self.file = StreamMock()
-        self.writer = makerbot_driver.Writer.StreamWriter(self.file)
+        condition = threading.Condition()
+        self.writer = makerbot_driver.Writer.StreamWriter(self.file, condition)
 
     def tearDown(self):
         self.file = None
@@ -59,7 +60,8 @@ class StreamWriterTests(unittest.TestCase):
         )  # Stream that we will receive commands on
 
         file = io.BufferedRWPair(self.outputstream, self.inputstream)
-        self.w = makerbot_driver.Writer.StreamWriter(file)
+        condition = threading.Condition()
+        self.w = makerbot_driver.Writer.StreamWriter(file, condition)
 
     def tearDown(self):
         self.w = None
@@ -315,7 +317,8 @@ class TestUnderlyingFile(unittest.TestCase):
         self.mock.open.side_effect = side_effect_open
         self.mock.close.side_effect = side_effect_close
         #file = io.BufferedRWPair(self.outputstream, self.inputstream)
-        self.sWriter = makerbot_driver.Writer.StreamWriter(self.mock)
+        condition = threading.Condition()
+        self.sWriter = makerbot_driver.Writer.StreamWriter(self.mock, condition)
 
     def test_underlying_open_close(self):
         "verify underlying file object gets open/close"""

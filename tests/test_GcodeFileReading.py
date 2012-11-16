@@ -10,9 +10,10 @@ except ImportError:
 import mock
 
 import tempfile
+import threading
+import warnings
 
 import makerbot_driver
-import warnings
 
 
 class TOMReading(unittest.TestCase):
@@ -24,7 +25,8 @@ class TOMReading(unittest.TestCase):
         self.s3g = makerbot_driver.s3g()
         with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
             path = f.name
-        self.s3g.writer = makerbot_driver.Writer.FileWriter(open(path, 'wb'))
+        condition = threading.Condition()
+        self.s3g.writer = makerbot_driver.Writer.FileWriter(open(path, 'wb'), condition)
         self.p.s3g = self.s3g
 
     def tearDown(self):
@@ -56,7 +58,8 @@ class SingleHeadReading(unittest.TestCase):
             pass
         input_path = input_file.name
         os.unlink(input_path)
-        self.writer = makerbot_driver.Writer.FileWriter(open(input_path, 'wb'))
+        condition = threading.Condition()
+        self.writer = makerbot_driver.Writer.FileWriter(open(input_path, 'wb'), condition)
         self.s3g.writer = self.writer
         self.p.s3g = self.s3g
 
@@ -125,7 +128,8 @@ class DualHeadReading(unittest.TestCase):
             pass
         input_path = input_file.name
         os.unlink(input_path)
-        self.writer = makerbot_driver.Writer.FileWriter(open(input_path, 'wb'))
+        condition = threading.Condition()
+        self.writer = makerbot_driver.Writer.FileWriter(open(input_path, 'wb'), condition)
         self.s3g.writer = self.writer
         self.p.s3g = self.s3g
 

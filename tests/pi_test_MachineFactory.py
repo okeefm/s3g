@@ -267,7 +267,8 @@ class TestMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_advanced_version = mock.Mock(side_effect=makerbot_driver.CommandNotSupportedError)
         self.s3g_mock.set_print_to_file_type('s3g')
         expected_settings = {'vid':vid, 'pid':pid, 'tool_count':tool_count, 'print_to_file_type':'s3g'}
-        s3g, got_settings = self.inquisitor.query()
+        condition = mock.Mock()
+        s3g, got_settings = self.inquisitor.query(condition)
         self.assertEqual(s3g, self.s3g_mock)
         self.assertEqual(expected_settings, got_settings)
 
@@ -288,7 +289,8 @@ class TestMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_advanced_version.return_value = advanced_version_info
         self.s3g_mock.set_print_to_file_type('s3g')
         expected_settings = {'vid':vid, 'pid':pid, 'tool_count':tool_count, 'print_to_file_type':'s3g'}
-        s3g, got_settings = self.inquisitor.query()
+        condition = mock.Mock()
+        s3g, got_settings = self.inquisitor.query(condition)
         self.assertEqual(s3g, self.s3g_mock)
         self.assertEqual(expected_settings, got_settings)
 
@@ -309,7 +311,8 @@ class TestMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_advanced_version.return_value = advanced_version_info
         self.s3g_mock.set_print_to_file_type('x3g')
         expected_settings = {'vid':vid, 'pid':pid, 'tool_count':tool_count, 'print_to_file_type':'x3g'}
-        s3g, got_settings = self.inquisitor.query()
+        condition = mock.Mock()
+        s3g, got_settings = self.inquisitor.query(condition)
         self.assertEqual(s3g, self.s3g_mock)
         self.assertEqual(expected_settings, got_settings)
 

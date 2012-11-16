@@ -8,6 +8,7 @@ import unittest
 import io
 import struct
 import mock
+import threading
 
 import serial
 from makerbot_driver import Writer, constants, s3g, errors, Encoder
@@ -50,7 +51,8 @@ class TestS3gPrintToFileType(unittest.TestCase):
 
 class TestFromFileName(unittest.TestCase):
     def setUp(self):
-        self.obj = s3g.from_filename(None)
+        self.condition = threading.Condition()
+        self.obj = s3g.from_filename(None, self.condition)
 
     def tearDown(self):
         self.obj = None
@@ -68,14 +70,15 @@ class TestFromFileName(unittest.TestCase):
     def test_from_filename_use_all_parameters(self):
         baudrate = 9800
         timeout = 5
-        self.obj = s3g.from_filename(None, baudrate=9800, timeout=5)
+        self.obj = s3g.from_filename(None, self.condition, baudrate=9800, timeout=5)
         self.assertEqual(self.obj.writer.file.baudrate, baudrate)
         self.assertEqual(self.obj.writer.file.timeout, timeout)
+        self.assertEqual(self.condition, self.obj.writer._condition)
 
     def test_from_filename_none_case(self):
         """ test the from_filename s3g factory."""
         self.assertRaises(serial.serialutil.SerialException, s3g.from_filename,
-                          "/dev/this_is_hopefully_not_a_real_port")
+                          "/dev/this_is_hopefully_not_a_real_port", self.condition)
 
 
 class S3gTestsFirmwareX3g(unittest.TestCase):
@@ -91,7 +94,8 @@ class S3gTestsFirmwareX3g(unittest.TestCase):
         )  # Stream that we will receive commands on
 
         file = io.BufferedRWPair(self.outputstream, self.inputstream)
-        writer = Writer.StreamWriter(file)
+        self.condition = threading.Condition()
+        writer = Writer.StreamWriter(file, self.condition)
         self.r.writer = writer
 
     def tearDown(self):
@@ -144,7 +148,8 @@ class S3gTestsFirmwareClassic(unittest.TestCase):
         )  # Stream that we will receive commands on
 
         file = io.BufferedRWPair(self.outputstream, self.inputstream)
-        writer = Writer.StreamWriter(file)
+        self.condition = threading.Condition()
+        writer = Writer.StreamWriter(file, self.condition)
         self.r.writer = writer
 
     def tearDown(self):
