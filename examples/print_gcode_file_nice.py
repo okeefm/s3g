@@ -60,6 +60,15 @@ if port is None:
     md = makerbot_driver.MachineDetector()
     md.scan(machine)
     port = md.get_first_machine()
+
+def exec_line(line):
+    while True:
+        try:
+            parser.execute_line(line)
+            break
+        except makerbot_driver.BufferOverflowError as e:
+            parser.s3g.writer._condition.wait(.2)
+
 if port is None:
     print "Cant Find %s" %(machine)
     sys.exit()
@@ -87,14 +96,14 @@ else:
 
     if not parsed.startend:
         for line in start_gcode:
-            parser.execute_line(line)
+            exec_line(line)
     with open(parsed.filename, 'r') as f:
         for line in f:
             print(line)
-            parser.execute_line(line)
+            exec_line(line)
     if not parsed.startend:
         for line in end_gcode:
-            parser.execute_line(line)
+            exec_line(line)
     exit(0)
 
     
