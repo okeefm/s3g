@@ -15,6 +15,7 @@ import makerbot_driver
 import optparse
 import struct
 import array
+import threading
 
 parser = optparse.OptionParser()
 parser.add_option("-p", "--port", dest="port",
@@ -24,7 +25,8 @@ parser.add_option("-b", "--baud", dest="serialbaud",
 
 (options, args) = parser.parse_args()
 
-s = makerbot_driver.s3g.from_filename(options.port)
+condition = threading.Condition()
+s = makerbot_driver.s3g.from_filename(options.port, condition)
 print "---Clearing Buffer---"
 s.clear_buffer()
 print "---Success---"

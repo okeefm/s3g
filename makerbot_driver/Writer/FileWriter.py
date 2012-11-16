@@ -5,7 +5,6 @@ if a user tries to write a query command to file, we throw a AttemptedQueryComma
 """
 from __future__ import absolute_import
 import logging
-import threading
 
 from . import AbstractWriter
 import makerbot_driver
@@ -14,12 +13,12 @@ import makerbot_driver
 class FileWriter(AbstractWriter):
     """ A file writer can be used to export an s3g payload stream to a file
     """
-    def __init__(self, file):
+    def __init__(self, file, condition):
         """ Initialize a new file writer
 
         @param string file File object to write to.
         """
-        super(FileWriter, self).__init__(file)
+        super(FileWriter, self).__init__(file, condition)
         self.check_binary_mode()
         self._log = logging.getLogger(self.__class__.__name__)
 

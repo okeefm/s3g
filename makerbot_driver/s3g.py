@@ -20,7 +20,7 @@ class s3g(object):
     EXTENDED_POINT_LENGTH = 5
 
     @classmethod
-    def from_filename(cls, port, baudrate=115200, timeout=.2):
+    def from_filename(cls, port, condition, baudrate=115200, timeout=.2):
         """Constructs and returns an s3g object connected to the
         passed file endpoint passed as a string @port (ie 'COM0' or '/dev/tty9')
 
@@ -42,7 +42,7 @@ class s3g(object):
         s.baudrate = baudrate
         # end baud rate hack
 
-        mb_streamWriter = makerbot_driver.Writer.StreamWriter(s)
+        mb_streamWriter = makerbot_driver.Writer.StreamWriter(s, condition)
         return s3g(mb_streamWriter)
 
     def __init__(self, mb_stream_writer=None):

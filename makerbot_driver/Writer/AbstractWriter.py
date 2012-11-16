@@ -1,11 +1,8 @@
-import threading
-
-
 class AbstractWriter(object):
 
-    def __init__(self, file):
+    def __init__(self, file, condition):
         self.external_stop = False
-        self._condition = threading.Condition()
+        self._condition = condition
         self.file = file
 
     def open(self):

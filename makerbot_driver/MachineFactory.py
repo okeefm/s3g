@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function
 
 import os
+import threading
 
 import makerbot_driver
 
@@ -32,13 +33,15 @@ class MachineFactory(object):
         """
         return MachineInquisitor(portname)
 
-    def build_from_port(self, portname, leaveOpen=True):
+    def build_from_port(self, portname, leaveOpen=True, condition=None):
         """
         Returns a tuple of an (s3gObj, ProfileObj)
         for a machine at port portname
         """
         machineInquisitor = self.create_inquisitor(portname)
-        s3gBot, machine_setup_dict = machineInquisitor.query(leaveOpen)
+        if None is condition:
+            condition = threading.Condition()
+        s3gBot, machine_setup_dict = machineInquisitor.query(condition, leaveOpen)
 
         profile_regex = self.get_profile_regex(machine_setup_dict)
         matches = makerbot_driver.search_profiles_with_regex(
@@ -111,15 +114,15 @@ class MachineInquisitor(object):
         """ build a machine Inqusitor for an exact port"""
         self._portname = portname
 
-    def create_s3g(self):
+    def create_s3g(self, condition):
         """
         This is made to ameliorate testing, this having to
         assign internal objects with <obj>.<internal_obj> = <obj> is a
         pain.
         """
-        return makerbot_driver.s3g.from_filename(self._portname)
+        return makerbot_driver.s3g.from_filename(self._portname, condition)
 
-    def query(self, leaveOpen=True):
+    def query(self, condition, leaveOpen=True):
         """
         open a connection to a machine and  query a machine for
         key settings needed to construct a machine from a profile
@@ -129,7 +132,7 @@ class MachineInquisitor(object):
         """
         import makerbot_driver.s3g as s3g
         settings = {}
-        s3gDriver = self.create_s3g()
+        s3gDriver = self.create_s3g(condition)
         settings['vid'], settings['pid'] = s3gDriver.get_vid_pid()
         settings['tool_count'] = s3gDriver.get_toolhead_count()
         

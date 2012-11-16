@@ -33,7 +33,8 @@ rLock = threading.Lock()
 r = makerbot_driver.s3g()
 
 file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
-r.writer = makerbot_driver.Writer.StreamWriter(file)
+condition = threading.Condition()
+r.writer = makerbot_driver.Writer.StreamWriter(file, condition)
 
 # TODO: Remove this hack.
 r.velocity = 1600

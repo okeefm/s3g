@@ -12,6 +12,7 @@ sys.path.insert(0, lib_path)
 import makerbot_driver
 import optparse
 import tempfile
+import threading
 
 parser = optparse.OptionParser(usage="use this to check if a gcode file is compatible with makerbot_driver")
 parser.add_option("-m", "--machine_type", dest="machine",
@@ -27,7 +28,8 @@ for input_file in args:
   fh = tempfile.NamedTemporaryFile() 
 
   s = makerbot_driver.s3g()
-  s.writer = makerbot_driver.Writer.FileWriter(fh) 
+  condition = threading.Condition()
+  s.writer = makerbot_driver.Writer.FileWriter(fh, condition) 
 
   profile = makerbot_driver.Profile(options.machine)
 
