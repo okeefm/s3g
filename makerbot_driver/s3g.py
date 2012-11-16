@@ -49,6 +49,7 @@ class s3g(object):
         self.writer = mb_stream_writer
         self._eeprom_reader = None
         self.print_to_file_type = 's3g'
+        self.tool_query_code = 'Bbb'
 
     def set_print_to_file_type(self, print_to_file_type):
         self.print_to_file_type = print_to_file_type
@@ -596,7 +597,7 @@ class s3g(object):
             raise makerbot_driver.ToolIndexError(1)
 
         payload = struct.pack(
-            '<Bbb',
+            '<%s' % self.tool_query_code,
             makerbot_driver.host_query_command_dict['TOOL_QUERY'],
             tool_index,
             command,
@@ -617,6 +618,7 @@ class s3g(object):
         @param int length: Number of bytes to read from the EEPROM (max 31)
         @return byte array of data read from EEPROM
         """
+        # We can only read 31 bytes
         if length > makerbot_driver.maximum_payload_length - 1:
             raise makerbot_driver.EEPROMLengthError(length)
 
@@ -637,11 +639,13 @@ class s3g(object):
         @param byte offset: EEPROM location to begin writing to
         @param int data: Data to write to the EEPROM
         """
-        if len(data) > makerbot_driver.maximum_payload_length - 4:
+        code = '<Bhb'
+        # Check the length of data against maximum_payload_length and the compulsory packet values
+        if len(data) > makerbot_driver.maximum_payload_length - struct.calcsize(code):
             raise makerbot_driver.EEPROMLengthError(len(data))
 
         payload = struct.pack(
-            '<BHb',
+            code,
             makerbot_driver.host_query_command_dict['WRITE_TO_EEPROM'],
             offset,
             len(data),
@@ -1263,6 +1267,7 @@ class s3g(object):
         @param int length: Number of bytes to read from the EEPROM (max 31)
         @return byte array: of data read from EEPROM
         """
+        # We can only read 31 bytes
         if length > makerbot_driver.maximum_payload_length - 1:
             raise makerbot_driver.EEPROMLengthError(length)
 
@@ -1284,12 +1289,15 @@ class s3g(object):
         @param byte offset: EEPROM location to begin writing to
         @param list data: Data to write to the EEPROM
         """
-        # TODO: this length is bad
-        if len(data) > makerbot_driver.maximum_payload_length - 6:
+        code = '<HB'
+        packet_length = struct.calcsize('%s%s' % (code, self.tool_query_code))
+        # Check the length of data against maximum_payload_length and the compulsory packet values
+        # (Including Tool Packet values
+        if len(data) > makerbot_driver.maximum_payload_length - packet_length:
             raise makerbot_driver.EEPROMLengthError(len(data))
 
         payload = struct.pack(
-            '<HB',
+            code,
             offset,
             len(data),
         )
