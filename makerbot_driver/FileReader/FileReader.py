@@ -24,7 +24,7 @@ class FileReader(object):
         data = self.file.read(count)
 
         if len(data) != count:
-            self._log.error('{"event":"insufficient_data"}')
+            self._log.debug('{"event":"insufficient_data"}')
             raise makerbot_driver.FileReader.InsufficientDataError
 
         return data
@@ -41,10 +41,10 @@ class FileReader(object):
         while True:
             b += self.ReadBytes(1)
             if b == '':  # We just read in an empty string, so we ran out of data
-                self._log.error('{"event":"insufficient_data"}')
+                self._log.debug('{"event":"insufficient_data"}')
                 raise makerbot_driver.FileReader.InsufficientDataError
             if len(b) > makerbot_driver.maximum_payload_length:
-                self._log.error('{"event":"string_too_long"}')
+                self._log.debug('{"event":"string_too_long"}')
                 raise makerbot_driver.FileReader.StringTooLongError
             elif b[-1] == '\x00':
                 return b
@@ -64,7 +64,7 @@ class FileReader(object):
         # TODO: Break the tool action commands out of here
         if (not cmd in makerbot_driver.slave_action_command_dict.values()) and \
            (not cmd in makerbot_driver.host_action_command_dict.values()):
-            self._log.error('{"event":"bad_read_command", "command":%s}', cmd)
+            self._log.debug('{"event":"bad_read_command", "command":%s}', cmd)
             raise makerbot_driver.FileReader.BadCommandError(cmd)
 
         return cmd
@@ -104,13 +104,13 @@ class FileReader(object):
         try:
             return self.ParseOutParameters(makerbot_driver.FileReader.hostFormats[cmd])
         except KeyError:
-            self._log.error(
+            self._log.debug(
                 '{"event":"bad_host_command", "bad_command":%s}', cmd)
             raise makerbot_driver.FileReader.BadHostCommandError(cmd)
 
     def ParseToolAction(self, cmd):
         if cmd != makerbot_driver.host_action_command_dict['TOOL_ACTION_COMMAND']:
-            self._log.error(
+            self._log.debug(
                 '{"event":"cmd_is_not_tool_action_cmd", "bad_cmd":%s}', cmd)
             raise makerbot_driver.FileReader.NotToolActionCmdError
         data = []
@@ -119,7 +119,7 @@ class FileReader(object):
         try:
             data.extend(self.ParseOutParameters(makerbot_driver.FileReader.slaveFormats[slaveCmd]))
         except KeyError:
-            self._log.error(
+            self._log.debug(
                 '{"event":"bad_slave_cmd", "bad_cmd":%s}', slaveCmd)
             raise makerbot_driver.FileReader.BadSlaveCommandError(slaveCmd)
         return data
