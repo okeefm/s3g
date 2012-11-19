@@ -161,7 +161,7 @@ class FileReader(object):
                 payload = self.ParseNextPayload()
                 payloads.append(payload)
                 if callback:
-                    percent = self.bytesread / self.totalsize * 100
+                    percent = int(self.bytesread / self.totalsize * 100)
                     callback(percent)
         # TODO: We aren't catching partial packets at the end of files here.
         except makerbot_driver.FileReader.EndOfFileError:
