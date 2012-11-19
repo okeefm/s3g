@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import struct
 import logging
+import os
 
 import makerbot_driver
 
@@ -14,6 +15,7 @@ class FileReader(object):
 
     def __init__(self):
         self._log = logging.getLogger(self.__class__.__name__)
+        self.bytesread = 0
 
     def ReadBytes(self, count):
         """ Read a number of bytes from the current file.
@@ -27,6 +29,7 @@ class FileReader(object):
             self._log.debug('{"event":"insufficient_data"}')
             raise makerbot_driver.FileReader.InsufficientDataError
 
+        self.bytesread += count
         return data
 
     def GetStringBytes(self):
@@ -136,12 +139,20 @@ class FileReader(object):
             params = self.ParseHostAction(cmd)
         return [cmd] + params
 
-    def ReadFile(self):
+    def ReadFile(self, callback=None):
         """Reads from an s3g file until it cant read anymore
 
         @return payloads: A list of payloads, where each index of
           the list is comprised of one payload
         """
+        
+        # We try to find the total size of the file we're reading.  If
+        # we cant, we set it to one and continue
+        try:
+            self.totalsize = float(os.stat(self.file.name).st_size)
+        except AttributeError as e:
+            self.totalsize = 1
+        self.bytesread = 0
         payloads = []
         try:
             self._log.debug('{"event":"reading_bytes_from_file", "file":%s}',
@@ -149,6 +160,9 @@ class FileReader(object):
             while True:
                 payload = self.ParseNextPayload()
                 payloads.append(payload)
+                if callback:
+                    percent = self.bytesread / self.totalsize * 100
+                    callback(percent)
         # TODO: We aren't catching partial packets at the end of files here.
         except makerbot_driver.FileReader.EndOfFileError:
             self._log.debug('{"event":"done_reading_file"}')

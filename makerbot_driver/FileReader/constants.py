@@ -22,7 +22,7 @@ hostFormats = {
     152: ['B'],  # "RESET TO FACTORY",
     153: ['I', 's'],  # "BUILD START NOTIFICATION",
     154: ['B'],  # "BUILD END NOTIFICATION"
-    155: ['i', 'i', 'i', 'i', 'i', 'I', 'B', 'f', 'h'],
+    155: ['i', 'i', 'i', 'i', 'i', 'I', 'B', 'f', 'h'],  # Queue Extended Point Accelerated
     157: ['B', 'B', 'B', 'I', 'H', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B'],
 }
 slaveFormats = {
