@@ -175,8 +175,8 @@ class TestFanProcessor(unittest.TestCase):
             '(</layer>)',
         ]
         expected_codes = codes[:]
-        expected_codes.insert(8, 'M126 (Fan On)\n')
-        expected_codes.append('M127 (Fan Off)\n')
+        expected_codes.insert(8, 'M126 T0 (Fan On)\n')
+        expected_codes.append('M127 T0 (Fan Off)\n')
         got_codes = self.fan_processor.process_gcode(codes)
         self.assertEqual(expected_codes, got_codes)
 
@@ -210,8 +210,8 @@ class TestFanProcessor(unittest.TestCase):
             '(</layer>)',
         ]
         expected_codes = codes[:]
-        expected_codes.insert(18, 'M126 (Fan On)\n')
-        expected_codes.append('M127 (Fan Off)\n')
+        expected_codes.insert(18, 'M126 T0 (Fan On)\n')
+        expected_codes.append('M127 T0 (Fan Off)\n')
         got_codes = self.fan_processor.process_gcode(codes)
         self.assertEqual(expected_codes, got_codes)
 
@@ -271,8 +271,8 @@ class TestFanProcessor(unittest.TestCase):
             '(</layer>)',
         ]
         expected_codes = codes[:]
-        expected_codes.insert(18, 'M126 (Fan On)\n')
-        expected_codes.append('M127 (Fan Off)\n')
+        expected_codes.insert(18, 'M126 T0 (Fan On)\n')
+        expected_codes.append('M127 T0 (Fan Off)\n')
         got_codes = self.fan_processor.process_gcode(codes)
         self.assertEqual(expected_codes, got_codes)
 

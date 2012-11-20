@@ -15,8 +15,8 @@ class FanProcessor(Processor):
         self.layer_end = re.compile("\(\</layer\>\)")
         self.fan_codes = re.compile("[^(;]*([(][^)]*[)][^(;]*)*[mM]126|[^(;]*([(][^)]*[)][^(;]*)*[mM]127")
         self.layer_count = 2 # Turn on fan at this layer AFTER The raft
-        self.fan_on = "M126 (Fan On)\n"
-        self.fan_off = "M127 (Fan Off)\n"
+        self.fan_on = "M126 T0 (Fan On)\n"
+        self.fan_off = "M127 T0 (Fan Off)\n"
 
     def gather_stats(self, gcodes):
         """
