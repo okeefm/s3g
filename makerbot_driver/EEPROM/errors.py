@@ -51,3 +51,9 @@ class SubMapReadError(Exception):
     """
     def __init__(self, value):
         self.value = value
+
+class MissingEepromMapError(IOError):
+    """Thrown when an Eeprom Map cant be found in the given directory
+    """
+    def __init__(self, value):
+        self.value = value
