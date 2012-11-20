@@ -50,6 +50,18 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
     def tearDown(self):
         self.writer = None
 
+    def test_cant_find_eeprom_map(self):
+        wd = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            'test_files',
+        )
+        map_name = 'this map better not be in WD.some fake extension'
+        with self.assertRaises(makerbot_driver.EEPROM.MissingEepromMapError):
+            self.writer = makerbot_driver.EEPROM.EepromWriter(
+                map_name=map_name,
+                working_directory=wd,
+            )
+
     def test_flush_data_no_data(self):
         self.writer.flush_data()
         self.assertEqual(0, len(self.write_to_eeprom_mock.mock_calls))

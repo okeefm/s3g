@@ -8,6 +8,7 @@ import array
 import json
 import struct
 import os
+import logging
 
 import makerbot_driver
 
@@ -31,11 +32,17 @@ class EepromReader(object):
         @param map_name filename of the map to use. eeprom_map.json if not specifie
         @param working_directory drectory containing the map file name
         """
+        self._log = logging.getLogger(self.__class__.__name__)
         self.map_name = map_name if map_name else makerbot_driver.EEPROM.constants.eeprom_map_name % ('6.0')
         self.working_directory = working_directory if working_directory else os.path.abspath(os.path.dirname(__file__))
         #Load the eeprom map
-        with open(os.path.join(self.working_directory, self.map_name)) as f:
-            self.eeprom_map = json.load(f)
+        path = os.path.join(self.working_directory, self.map_name)
+        try:
+            with open(path) as f:
+                self.eeprom_map = json.load(f)
+        except IOError as e:
+            self._log.error("Could not find %s", path)
+            raise makerbot_driver.EEPROM.MissingEepromMapError(path)
         #We always start with the main map
         self.main_map = 'eeprom_map'
 
