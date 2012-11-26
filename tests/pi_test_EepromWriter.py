@@ -23,7 +23,7 @@ class TestResetEEPROMCompletely(unittest.TestCase):
 
     def test_reset_eeprom_completely(self):
         self.eeprom_writer.reset_eeprom_completely()
-        expected_num_commands = int(self.eeprom_writer.eeprom_map[self.eeprom_writer.data_map]['EEPROM_SIZE']['offset'], 16)
+        expected_num_commands = makerbot_driver.EEPROM.total_eeprom_size
         self.assertEqual(expected_num_commands, len(self.s3g.mock_calls))
         for command in self.s3g.mock_calls:
             command = command[1]
@@ -49,6 +49,18 @@ class TestEepromWriterUseTestEepromMap(unittest.TestCase):
 
     def tearDown(self):
         self.writer = None
+
+    def test_cant_find_eeprom_map(self):
+        wd = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            'test_files',
+        )
+        map_name = 'this map better not be in WD.some fake extension'
+        with self.assertRaises(makerbot_driver.EEPROM.MissingEepromMapError):
+            self.writer = makerbot_driver.EEPROM.EepromWriter(
+                map_name=map_name,
+                working_directory=wd,
+            )
 
     def test_flush_data_no_data(self):
         self.writer.flush_data()

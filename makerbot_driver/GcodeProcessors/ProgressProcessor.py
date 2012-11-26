@@ -12,8 +12,8 @@ class ProgressProcessor(Processor):
         super(ProgressProcessor, self).__init__()
         self.command = re.compile('([A-Z]\d+(\.\d+)? )+')
 
-    @classmethod
-    def create_progress_msg(cls, percent):
+    @staticmethod
+    def create_progress_msg(percent):
         progressmsg = "M73 P%s (progress (%s%%))\n" % (percent, percent)
         return progressmsg
 

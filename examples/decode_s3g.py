@@ -17,8 +17,11 @@ parser.add_option("-o", "--output_file", dest="output_file",
 (options, args) = parser.parse_args()
 
 reader = makerbot_driver.FileReader.FileReader()
-reader.file = open(options.input_file, 'rb')
-payloads = reader.ReadFile()
+#reader.file = open(options.input_file, 'rb')
+def callback(percent):
+    print percent
+with open(options.input_file, 'rb') as reader.file:
+    payloads = reader.ReadFile(callback)
 with open(options.output_file, 'w') as f:
   for payload in payloads:
     f.write(str(payload) + '\n')

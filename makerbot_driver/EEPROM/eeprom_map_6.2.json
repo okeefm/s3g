@@ -1,32 +1,6 @@
 {
   "eeprom_data": {}, 
   "eeprom_map": {
-    "ACCELERATION2_SETTINGS": {
-      "eeprom_map": "acceleration2_eeprom_offsets", 
-      "offset": "0x01D8", 
-      "sub_map": {
-        "EXTRUDER_DEPRIME_STEPS": {
-          "constraints": "a", 
-          "offset": "0x08", 
-          "type": "HH"
-        }, 
-        "JKN_ADVANCE_K": {
-          "constraints": "a", 
-          "offset": "0x00", 
-          "type": "I"
-        }, 
-        "JKN_ADVANCE_K2": {
-          "constraints": "a", 
-          "offset": "0x04", 
-          "type": "I"
-        }, 
-        "SLOWDOWN_FLAG": {
-          "constraints": "l,0,1", 
-          "offset": "0x0C", 
-          "type": "B"
-        }
-      }
-    }, 
     "ACCELERATION_SETTINGS": {
       "eeprom_map": "acceleration_eeprom_offsets", 
       "offset": "0x016E", 

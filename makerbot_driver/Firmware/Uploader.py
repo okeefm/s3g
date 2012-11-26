@@ -32,7 +32,7 @@ def _check_output(*popenargs, **kwargs):
 class Uploader(object):
     """ Firmware Uploader is used to send firmware to a 3D printer."""
 
-    def __init__(self, source_url=None, dest_path=None, autoUpdate=True):
+    def __init__(self, source_url=None, dest_path=None, autoUpdate=True, path_to_eeprom=None):
         """Build an uploader.
         @param source_url: specify a url to fetch firmware metadata from. Can be a directory
         @param dest_path: path to use as the local file store location
@@ -45,8 +45,23 @@ class Uploader(object):
 
         self.run_subprocess = _check_output
         self.urlopen = urllib2.urlopen
+        self.path_to_eeprom = path_to_eeprom if path_to_eeprom else os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            '..',
+            'EEPROM',
+        )
         if autoUpdate:
             self.update()
+
+    def compatible_firmware(self, firmware_version):
+        """
+        Determines if a firmware version is compatible with the current driver
+
+        @param str firmware_version: Firmware version to check
+        @return bool: True if firmware is compatible, false otherwise
+        """
+        map_name = makerbot_driver.EEPROM.eeprom_map_name % (firmware_version)
+        return map_name in os.listdir(self.path_to_eeprom)
 
     def pathjoin(self, base, resource):
         """ joins URL or filename paths to find a resource relative to base"""

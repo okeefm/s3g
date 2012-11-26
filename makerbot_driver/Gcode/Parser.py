@@ -119,8 +119,7 @@ class GcodeParser(object):
             gcode_error.values['Suggestion'] = 'Preprocessors are available in makerbot_driver/Preprocessors to correct for non supported commands'
             raise gcode_error
         except makerbot_driver.Gcode.VectorLengthZeroError:
-            self._log.warning('{"event":vector_length_zero_error"}')
-            pass
+            self._log.debug('{"event":vector_length_zero_error"}')
         except makerbot_driver.Gcode.GcodeError as gcode_error:
             self._log.error('{"event":"gcode_error"}')
             gcode_error.values['Command'] = command

@@ -3,19 +3,23 @@ from __future__ import absolute_import
 import os
 import json
 import struct
+import logging
 
 import makerbot_driver
 
 class EepromRepairer(object):
 
-    def __init__(self, firmware_version='6.0'):
-        self.firmware_version = firmware_version
-        self.map_name = os.path.join(
-            os.path.abspath(os.path.dirname(__file__)),
-            'eeprom_map_%s.json' % (self.firmware_version)
-        )
-        with open(self.map_name) as f:
-            self.eeprom_map = json.load(f)
+    def __init__(self, map_name=None, working_directory=None):
+        self._log = logging.getLogger(self.__class__.__name__)
+        self.map_name = map_name if map_name else makerbot_driver.EEPROM.constants.eeprom_map_name % ('6.0')
+        self.working_directory = working_directory if working_directory else os.path.abspath(os.path.dirname(__file__))
+        path = os.path.join(self.working_directory, self.map_name)
+        try:
+            with open(path) as f:
+                self.eeprom_map = json.load(f)
+        except IOError as e:
+            self._log.error("Could not find %s", path)
+            raise makerbot_driver.EEPROM.MissingEepromMapError(path)
 
     def build_packed_data(self, length):
         packed_data = ''

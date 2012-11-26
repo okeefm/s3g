@@ -283,10 +283,6 @@ const static uint16_t FILAMENT_LIFETIME     = 0x01B8;
 //$BEGIN_ENTRY
 //$type:qq $ignore:True $constraints:a
 const static uint16_t FILAMENT_TRIP     = 0x01C8;
-/// Acceleration2 settings 28 bytes: additional acceleration settings
-//$BEGIN_ENTRY
-//$eeprom_map:acceleration2_eeprom_offsets
-const static uint16_t ACCELERATION2_SETTINGS     = 0x01D8;
 /// axis max feedrates XYZAB 5*32bit = 20 bytes
 //$BEGIN_ENTRY
 //$type:HHHHH $constraints:a
@@ -365,23 +361,6 @@ namespace acceleration_eeprom_offsets{
     //$BEGIN_ENTRY
     //$type:B $constraints:a
     const static uint16_t DEFAULTS_FLAG         = 0x1A; //uint8_t Bit 7 == 1 is defaults written
-}
-
-namespace acceleration2_eeprom_offsets{
-    //$BEGIN_ENTRY
-    //$type:I $constraints:a
-    const static uint16_t JKN_ADVANCE_K         = 0x00; //uint32_t
-    //$BEGIN_ENTRY
-    //$type:I $constraints:a
-    const static uint16_t JKN_ADVANCE_K2        = 0x04; //uint32_t
-    //$BEGIN_ENTRY
-    //$type:HH $constraints:a
-    const static uint16_t EXTRUDER_DEPRIME_STEPS = 0x08; //2 * uint16_t (A & B axis)
-    //$BEGIN_ENTRY
-    //$type:B $constraints:l,0,1
-    const static uint16_t SLOWDOWN_FLAG         = 0x0C; //uint8_t Bit 0 == 1 is slowdown enabled
-    const static uint16_t FUTURE_USE            = 0x0E; //18 bytes for future use
-    //0x1C is end of acceleration2 settings (28 bytes long)
 }
 
 namespace build_time_offsets{
