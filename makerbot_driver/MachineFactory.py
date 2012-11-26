@@ -44,7 +44,7 @@ class MachineFactory(object):
         matches = makerbot_driver.search_profiles_with_regex(
             profile_regex, self.profile_dir)
         matches = list(matches)
-        return_object = ReturnObject
+        return_object = ReturnObject()
         attrs = ['s3g', 'profile', 'gcodeparser']
         for a in attrs:
             setattr(return_object, a, None)
