@@ -38,10 +38,10 @@ class BundleProcessor(LineTransformProcessor):
                 output, progress_callback)
         return output
 
-    def set_external_stop(self):
-        super(BundleProcessor, self).set_external_stop()
+    def set_external_stop(self, value=True):
+        super(BundleProcessor, self).set_external_stop(value)
         with self._condition:
-            self.progress_processor.set_external_stop()
+            self.progress_processor.set_external_stop(value)
 
     def new_callback(self, percent):
         """

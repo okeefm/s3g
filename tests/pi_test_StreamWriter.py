@@ -255,7 +255,7 @@ class StreamWriterTests(unittest.TestCase):
             expected_payload), self.inputstream.getvalue())
 
     def test_external_stop(self):
-        self.w.set_external_stop()
+        self.w.set_external_stop(True)
         self.assertTrue(self.w.external_stop)
 
     def test_external_stop_works_precondition(self):
@@ -264,7 +264,7 @@ class StreamWriterTests(unittest.TestCase):
         self.outputstream.write(
             makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
-        self.w.set_external_stop()
+        self.w.set_external_stop(True)
         self.assertRaises(
             makerbot_driver.ExternalStopError, self.w.send_command, 'asdf')
 

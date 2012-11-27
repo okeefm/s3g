@@ -31,6 +31,6 @@ class AbstractWriter(object):
         """
         raise NotImplementedError()
 
-    def set_external_stop(self):
+    def set_external_stop(self, value=True):
         with self._condition:
-            self.external_stop = True
+            self.external_stop = value
