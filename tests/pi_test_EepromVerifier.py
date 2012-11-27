@@ -14,10 +14,27 @@ class testEepromVerifier(unittest.TestCase):
         with tempfile.NamedTemporaryFile(suffix='.hex', delete=False) as f:
             f.write(self.mock_hex)
             self.hex_path = f.name
-        self.ev = makerbot_driver.EEPROM.EepromVerifier(self.hex_path, "6.0")
+        self.ev = makerbot_driver.EEPROM.EepromVerifier(self.hex_path)
 
     def tearDown(self):
         self.ev = None
+
+    def test_cant_find_eeprom_map(self):
+        self.mock_hex = ":20000000010617FF9FFF7676287676FF1BFF97340000E91800000000000000000000000040\n:20002000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40\n"
+        with tempfile.NamedTemporaryFile(suffix='.hex', delete=False) as f:
+            f.write(self.mock_hex)
+            hex_path = f.name
+        wd = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            'test_files',
+        )
+        map_name = 'this map better not be in WD.some fake extension'
+        with self.assertRaises(makerbot_driver.EEPROM.MissingEepromMapError):
+            self.verifier= makerbot_driver.EEPROM.EepromVerifier(
+                hex_path,        
+                map_name=map_name,
+                working_directory=wd,
+            )
 
     def test_parse_hex_file(self):
         usable_hex = self.mock_hex[9:-3]

@@ -17,6 +17,19 @@ class TestEepromRepairer(unittest.TestCase):
     def tearDown(self):
         self.er = None
 
+    def test_cant_find_eeprom_map(self):
+        wd = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            'test_files',
+        )
+        map_name = 'this map better not be in WD.some fake extension'
+        with self.assertRaises(makerbot_driver.EEPROM.MissingEepromMapError):
+            self.repairer = makerbot_driver.EEPROM.EepromRepairer(
+                map_name=map_name,
+                working_directory=wd,
+            )
+
+
     def test_repair_mapped_region_list(self):
         sub_dict = {
             'constraints': 'l,1,2,3',

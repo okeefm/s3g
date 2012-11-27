@@ -53,14 +53,14 @@ class Uploader(object):
         if autoUpdate:
             self.update()
 
-    def compatible_firmware(self, firmware_version):
+    def compatible_firmware(self, firmware_version, software_variant):
         """
         Determines if a firmware version is compatible with the current driver
 
         @param str firmware_version: Firmware version to check
         @return bool: True if firmware is compatible, false otherwise
         """
-        map_name = makerbot_driver.EEPROM.eeprom_map_name % (firmware_version)
+        map_name = makerbot_driver.EEPROM.eeprom_map_name % (firmware_version, software_variant)
         return map_name in os.listdir(self.path_to_eeprom)
 
     def pathjoin(self, base, resource):

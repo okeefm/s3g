@@ -167,7 +167,7 @@ const static uint16_t VERSION_HIGH				= 0x0001;
 /// Axis N (where X=0, Y=1, etc.) is inverted if the Nth bit is set.
 /// Bit 7 is used for HoldZ OFF: 1 = off, 0 = on
 //$BEGIN_ENTRY
-//$type:B  $constraints:a
+//$type:B  $constraints:a $axis_expand:True
 const static uint16_t AXIS_INVERSION			= 0x0002;
 /// Endstop inversion flags: 1 byte.
 /// The endstops for axis N (where X=0, Y=1, etc.) are considered
@@ -176,7 +176,7 @@ const static uint16_t AXIS_INVERSION			= 0x0002;
 /// that endstops are not present.
 /// Ordinary endstops (H21LOB et. al.) are inverted.
 //$BEGIN_ENTRY
-//$type:B $constraints:a
+//$type:B $constraints:a $axis_expand:True
 const static uint16_t ENDSTOP_INVERSION			= 0x0004;
 /// Digital Potentiometer Settings : 5 Bytes
 //$BEGIN_ENTRY
@@ -184,7 +184,7 @@ const static uint16_t ENDSTOP_INVERSION			= 0x0004;
 const static uint16_t DIGI_POT_SETTINGS			= 0x0006;
 /// axis home direction (1 byte)
 //$BEGIN_ENTRY
-//$type:B $constraints:a
+//$type:B $constraints:a $axis_expand:True
 const static uint16_t AXIS_HOME_DIRECTION 		= 0x000C;
 /// Default locations for the axis in step counts: 5 x 32 bit = 20 bytes
 //$BEGIN_ENTRY
@@ -269,7 +269,7 @@ const static uint16_t BOT_STATUS_BYTES = 0x018A;
 const static uint16_t AXIS_LENGTHS				= 0x018C;
 /// total lifetime print hours, 3bytes
 //$BEGIN_ENTRY
-//$eeprom_map: build_time_offsets
+//$eeprom_map:build_time_offsets
 const static uint16_t TOTAL_BUILD_TIME			= 0x01A0;
 /// axis steps per mm XYZAB 5*32bit = 20 bytes
 //$BEGIN_ENTRY
@@ -283,10 +283,6 @@ const static uint16_t FILAMENT_LIFETIME     = 0x01B8;
 //$BEGIN_ENTRY
 //$type:qq $ignore:True $constraints:a
 const static uint16_t FILAMENT_TRIP     = 0x01C8;
-/// Acceleration2 settings 28 bytes: additional acceleration settings
-//$BEGIN_ENTRY
-//$eeprom_map:acceleration2_eeprom_offsets
-const static uint16_t ACCELERATION2_SETTINGS     = 0x01D8;
 /// axis max feedrates XYZAB 5*32bit = 20 bytes
 //$BEGIN_ENTRY
 //$type:HHHHH $constraints:a
@@ -365,23 +361,6 @@ namespace acceleration_eeprom_offsets{
     //$BEGIN_ENTRY
     //$type:B $constraints:a
     const static uint16_t DEFAULTS_FLAG         = 0x1A; //uint8_t Bit 7 == 1 is defaults written
-}
-
-namespace acceleration2_eeprom_offsets{
-    //$BEGIN_ENTRY
-    //$type:I $constraints:a
-    const static uint16_t JKN_ADVANCE_K         = 0x00; //uint32_t
-    //$BEGIN_ENTRY
-    //$type:I $constraints:a
-    const static uint16_t JKN_ADVANCE_K2        = 0x04; //uint32_t
-    //$BEGIN_ENTRY
-    //$type:HH $constraints:a
-    const static uint16_t EXTRUDER_DEPRIME_STEPS = 0x08; //2 * uint16_t (A & B axis)
-    //$BEGIN_ENTRY
-    //$type:B $constraints:l,0,1
-    const static uint16_t SLOWDOWN_FLAG         = 0x0C; //uint8_t Bit 0 == 1 is slowdown enabled
-    const static uint16_t FUTURE_USE            = 0x0E; //18 bytes for future use
-    //0x1C is end of acceleration2 settings (28 bytes long)
 }
 
 namespace build_time_offsets{
@@ -465,6 +444,12 @@ enum HeatMask{
 
 
 namespace eeprom_info {
+
+//$BEGIN_INFO_ENTRY
+//$name:software_variant $value:0x00
+
+//$BEGIN_INFO_ENTRY
+//$name:dependent_toolhead_map $value:None
 
 const static uint16_t EEPROM_SIZE = 0x1000;
 const int MAX_MACHINE_NAME_LEN = 16;
