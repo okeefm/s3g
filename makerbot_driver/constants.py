@@ -48,7 +48,7 @@ host_action_command_dict = {
     'BUILD_START_NOTIFICATION': 153,
     'BUILD_END_NOTIFICATION': 154,
     'QUEUE_EXTENDED_POINT_ACCELERATED': 155,
-    'S4G_VERSION': 157,
+    'X3G_VERSION': 157,
 }
 
 # TODO: Change name to tool

@@ -1475,7 +1475,7 @@ class s3g(object):
         """
         payload = struct.pack(
         '<BBBBIHBBBBBBBBBBB',
-        makerbot_driver.host_action_command_dict['S4G_VERSION'],
+        makerbot_driver.host_action_command_dict['X3G_VERSION'],
         high_bite,
         low_bite,
         0,
