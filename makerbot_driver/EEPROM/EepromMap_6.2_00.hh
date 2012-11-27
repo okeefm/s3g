@@ -167,7 +167,7 @@ const static uint16_t VERSION_HIGH				= 0x0001;
 /// Axis N (where X=0, Y=1, etc.) is inverted if the Nth bit is set.
 /// Bit 7 is used for HoldZ OFF: 1 = off, 0 = on
 //$BEGIN_ENTRY
-//$type:B  $constraints:a
+//$type:B  $constraints:a $axis_expand:True
 const static uint16_t AXIS_INVERSION			= 0x0002;
 /// Endstop inversion flags: 1 byte.
 /// The endstops for axis N (where X=0, Y=1, etc.) are considered
@@ -176,7 +176,7 @@ const static uint16_t AXIS_INVERSION			= 0x0002;
 /// that endstops are not present.
 /// Ordinary endstops (H21LOB et. al.) are inverted.
 //$BEGIN_ENTRY
-//$type:B $constraints:a
+//$type:B $constraints:a $axis_expand:True
 const static uint16_t ENDSTOP_INVERSION			= 0x0004;
 /// Digital Potentiometer Settings : 5 Bytes
 //$BEGIN_ENTRY
@@ -184,7 +184,7 @@ const static uint16_t ENDSTOP_INVERSION			= 0x0004;
 const static uint16_t DIGI_POT_SETTINGS			= 0x0006;
 /// axis home direction (1 byte)
 //$BEGIN_ENTRY
-//$type:B $constraints:a
+//$type:B $constraints:a $axis_expand:True
 const static uint16_t AXIS_HOME_DIRECTION 		= 0x000C;
 /// Default locations for the axis in step counts: 5 x 32 bit = 20 bytes
 //$BEGIN_ENTRY
@@ -269,7 +269,7 @@ const static uint16_t BOT_STATUS_BYTES = 0x018A;
 const static uint16_t AXIS_LENGTHS				= 0x018C;
 /// total lifetime print hours, 3bytes
 //$BEGIN_ENTRY
-//$eeprom_map: build_time_offsets
+//$eeprom_map:build_time_offsets
 const static uint16_t TOTAL_BUILD_TIME			= 0x01A0;
 /// axis steps per mm XYZAB 5*32bit = 20 bytes
 //$BEGIN_ENTRY
@@ -444,6 +444,12 @@ enum HeatMask{
 
 
 namespace eeprom_info {
+
+//$BEGIN_INFO_ENTRY
+//$name:software_variant $value:0x00
+
+//$BEGIN_INFO_ENTRY
+//$name:dependent_toolhead_map $value:None
 
 const static uint16_t EEPROM_SIZE = 0x1000;
 const int MAX_MACHINE_NAME_LEN = 16;
