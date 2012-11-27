@@ -22,6 +22,7 @@ class Profile(object):
         """
         self._log = logging.getLogger(self.__class__.__name__)
         self.path = _getprofiledir(profiledir)
+        self.name = os.path.splitext(name)[0] # name without any extension
         extension = '.json'
         if not name.endswith(extension):
             name += extension
