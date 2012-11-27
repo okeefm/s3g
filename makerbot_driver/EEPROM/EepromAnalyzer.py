@@ -31,6 +31,8 @@ class eeprom_analyzer(object):
         self.input_fh = input_fh
         self.eeprom_map = {}  # Contains entries and offsets
         self.eeprom_data = {}  # Contains data about the eeprom (i.e. length)
+        self.eeprom_info = 'eeprom_info'
+        self.info_marker = '$BEGIN_INFO_ENTRY'
 
     def parse_file(self):
         self.eeprom_map = {}
@@ -40,40 +42,45 @@ class eeprom_analyzer(object):
                 namespace = {}
                 try:
                     while True:
-                        self.find_next_entry()
+                        data = {}
+                        marker = self.find_next_entry()
                         #At this point we are on a line thats supposed to have variables
                         variables = self.parse_out_variables(
-                        self.input_fh.readline())
-                        #AT this point we are at the variable declaration in the .hh file
-                        (name, location) = self.parse_out_name_and_location(
                             self.input_fh.readline())
+                        #AT this point we are at the variable declaration in the .hh file
                         #Begin creating the dict for this entry
-                        v = {
-                            'offset': location,
-                        }
                         #Parse all variables and add them to the dict
+                        variable_dict = {}
                         for variable in variables:
                             variable = variable.split(':')
-                            v[variable[0]] = variable[1]
-                        if self.ignore_flag in v and not self.include_ignore:
+                            variable_dict[variable[0]] = variable[1]
+                        if self.info_marker in marker:
+                            name = variable_dict['name']
+                            del(variable_dict['name'])
+                        else:
+                            (name, location) = self.parse_out_name_and_location(
+                                self.input_fh.readline())
+                            data['offset'] = location
+                        data.update(variable_dict)
+                        if self.ignore_flag in data and not self.include_ignore:
                             pass
                         else:
-                            namespace[name] = v
+                            namespace[name] = data
                 except EndOfNamespaceError:
-                    if namespace_name == "eeprom_info":
+                    if namespace_name == self.eeprom_info:
                         self.eeprom_data = namespace
                     else:
                         self.eeprom_map[namespace_name] = namespace
         except EndOfEepromError:
-            collated_map = {'eeprom_data': self.eeprom_data, 'eeprom_map':
+            collated_map = {'eeprom_info': self.eeprom_data, 'eeprom_map':
                             self.collate_maps(self.eeprom_map['eeprom_offsets'])}
             self.dump_json(collated_map)
 
     def find_next_entry(self):
         namespace_end = '}'
-        entry_line = '//$BEGIN_ENTRY'
+        entry_line = re.compile('[\s]*\/\/\$BEGIN_ENTRY|[\s]*\/\/\$BEGIN_INFO_ENTRY')
         line = self.input_fh.readline()
-        while entry_line not in line:
+        while not re.match(entry_line, line):
             if namespace_end in line:
                 raise EndOfNamespaceError
             line = self.input_fh.readline()
@@ -137,8 +144,10 @@ class eeprom_analyzer(object):
         for s in ['\n', '\r', '\t', ]:
             line = line.rstrip(s)
         line = line.lstrip('//')
-        line = line.replace(' ', '')
         parts = line.split('$')
+        for i in range(len(parts)):
+            parts[i] = parts[i].lstrip(' ')
+            parts[i] = parts[i].rstrip(' ')
         #Dont return the first, since its empty
         return parts[1:]
 
@@ -147,6 +156,11 @@ class eeprom_analyzer(object):
         self.output_fh.write(output)
 
     def collate_maps(self, the_map):
+        """
+        Iterates over all entries in a given map and, if necessary,
+        inserts a submap where needed.  All entries' submaps point to 
+        a namespace of the same name.
+        """
         collated_map = the_map
         for key in the_map:
             if 'eeprom_map' in the_map[key]:

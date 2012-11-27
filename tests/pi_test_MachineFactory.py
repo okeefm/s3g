@@ -162,7 +162,8 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
         self.factory.create_s3g = mock.Mock()
         self.factory.create_s3g.return_value = expected_mock_s3g_obj
         expected_profile = makerbot_driver.Profile('ReplicatorSingle')
-        expected_profile.values['print_to_file_type']=['s3g']
+        expected_profile.values['print_to_file_type'] = ['s3g']
+        expected_profile.values['software_variant'] = 0
         expected_parser = makerbot_driver.Gcode.GcodeParser()
         return_obj = self.factory.build_from_port('/dev/dummy_port')
         self.assertTrue(getattr(return_obj, 's3g') is not None)
@@ -183,7 +184,8 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
         self.factory.create_s3g = mock.Mock()
         self.factory.create_s3g.return_value = expected_mock_s3g_obj
         expected_profile = makerbot_driver.Profile('ReplicatorDual')
-        expected_profile.values['print_to_file_type']=['s3g']
+        expected_profile.values['print_to_file_type'] = ['s3g']
+        expected_profile.values['software_variant'] = 0
         return_obj = self.factory.build_from_port('/dev/dummy_port')
         self.assertTrue(getattr(return_obj, 's3g') is not None)
         self.assertEqual(
@@ -212,6 +214,7 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
         self.factory.create_s3g.return_value = expected_mock_s3g_obj
         expected_profile = makerbot_driver.Profile('ReplicatorDual')
         expected_profile.values['print_to_file_type']=['x3g']
+        expected_profile.values['software_variant']=advanced_version_info['SoftwareVariant']
         return_obj = self.factory.build_from_port('/dev/dummy_port')
         self.assertTrue(getattr(return_obj, 's3g') is not None)
         self.s3g_mock.set_print_to_file_type.assert_called_once_with('x3g')
@@ -241,6 +244,7 @@ class TestBuildFromPortMockedMachineInquisitor(unittest.TestCase):
         self.factory.create_s3g.return_value = expected_mock_s3g_obj
         expected_profile = makerbot_driver.Profile('ReplicatorDual')
         expected_profile.values['print_to_file_type']=['s3g']
+        expected_profile.values['software_variant'] = advanced_version_info['SoftwareVariant']
         return_obj = self.factory.build_from_port('/dev/dummy_port')
         self.assertTrue(getattr(return_obj, 's3g') is not None)
         self.s3g_mock.set_print_to_file_type.assert_called_once_with('s3g')
@@ -266,7 +270,7 @@ class TestMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_toolhead_count = mock.Mock(return_value=tool_count)
         self.s3g_mock.get_advanced_version = mock.Mock(side_effect=makerbot_driver.CommandNotSupportedError)
         self.s3g_mock.set_print_to_file_type('s3g')
-        expected_settings = {'vid':vid, 'pid':pid, 'tool_count':tool_count, 'print_to_file_type':'s3g'}
+        expected_settings = {'vid':vid, 'pid':pid, 'tool_count':tool_count, 'print_to_file_type':'s3g', 'software_variant':0}
         condition = mock.Mock()
         s3g, got_settings = self.inquisitor.query(condition)
         self.assertEqual(s3g, self.s3g_mock)
@@ -288,7 +292,7 @@ class TestMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_advanced_version = mock.Mock()
         self.s3g_mock.get_advanced_version.return_value = advanced_version_info
         self.s3g_mock.set_print_to_file_type('s3g')
-        expected_settings = {'vid':vid, 'pid':pid, 'tool_count':tool_count, 'print_to_file_type':'s3g'}
+        expected_settings = {'vid':vid, 'pid':pid, 'tool_count':tool_count, 'print_to_file_type':'s3g', 'software_variant':0}
         condition = mock.Mock()
         s3g, got_settings = self.inquisitor.query(condition)
         self.assertEqual(s3g, self.s3g_mock)
@@ -310,7 +314,7 @@ class TestMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_advanced_version = mock.Mock()
         self.s3g_mock.get_advanced_version.return_value = advanced_version_info
         self.s3g_mock.set_print_to_file_type('x3g')
-        expected_settings = {'vid':vid, 'pid':pid, 'tool_count':tool_count, 'print_to_file_type':'x3g'}
+        expected_settings = {'vid':vid, 'pid':pid, 'tool_count':tool_count, 'print_to_file_type':'x3g', 'software_variant':1}
         condition = mock.Mock()
         s3g, got_settings = self.inquisitor.query(condition)
         self.assertEqual(s3g, self.s3g_mock)

@@ -47,7 +47,7 @@ class MachineFactory(object):
         matches = makerbot_driver.search_profiles_with_regex(
             profile_regex, self.profile_dir)
         matches = list(matches)
-        return_object = ReturnObject
+        return_object = ReturnObject()
         attrs = ['s3g', 'profile', 'gcodeparser']
         for a in attrs:
             setattr(return_object, a, None)
@@ -56,6 +56,7 @@ class MachineFactory(object):
             setattr(return_object, 's3g', s3gBot)
             profile = makerbot_driver.Profile(bestProfile, self.profile_dir)
             profile.values['print_to_file_type']=[machine_setup_dict['print_to_file_type']]
+            profile.values['software_variant'] = machine_setup_dict['software_variant']
             setattr(return_object, 'profile', profile)
             parser = makerbot_driver.Gcode.GcodeParser()
             parser.s3g = s3gBot
@@ -138,6 +139,7 @@ class MachineInquisitor(object):
         
         try:
             version_settings = s3gDriver.get_advanced_version();
+            settings['software_variant'] = version_settings['SoftwareVariant']
             if version_settings['SoftwareVariant'] != 0:
                 s3gDriver.set_print_to_file_type('x3g')
                 settings['print_to_file_type'] = 'x3g'
@@ -147,6 +149,7 @@ class MachineInquisitor(object):
 
         except makerbot_driver.CommandNotSupportedError:
             s3gDriver.set_print_to_file_type('s3g')
+            settings['software_variant'] = 0
             settings['print_to_file_type'] = 's3g'
             
           

@@ -47,8 +47,8 @@ class TestLineReader(unittest.TestCase):
             self.assertEqual(expected_name, got_name)
 
     def test_parse_out_variables_good_line(self):
-        line = '//$S:1 $B:2 $C:3\n'
-        expected = ['S:1', 'B:2', 'C:3']
+        line = '       //$S:1 $B:2 $C:3 $D:here are some spaces                   \n'
+        expected = ['S:1', 'B:2', 'C:3', 'D:here are some spaces']
         self.assertEqual(expected, self.reader.parse_out_variables(line))
 
     def testDumpJSON(self):

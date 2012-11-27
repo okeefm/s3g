@@ -6,6 +6,7 @@ from __future__ import (absolute_import)
 import json
 import struct
 import os
+import logging
 
 import makerbot_driver
 
@@ -13,23 +14,32 @@ import makerbot_driver
 class EepromWriter(object):
 
     @classmethod
-    def factory(cls, s3gObj=None, firmware_version='6.0', working_directory=None):
+    def factory(cls, s3gObj=None, firmware_version='6.0', software_variant='00', working_directory=None):
         """ factory for creating an eeprom reader
         @param s3gObj an makerbot_driver.s3g object
         @param eeprom_map json file.
         @param working_directory container of eeprom_map name file
         """
-        map_name = makerbot_driver.EEPROM.constants.eeprom_map_name % (firmware_version)
+        map_name = makerbot_driver.EEPROM.constants.eeprom_map_name % (firmware_version, software_variant)
         eeprom_writer = makerbot_driver.EEPROM.EepromWriter(map_name, working_directory)
         eeprom_writer.s3g = s3gObj
         return eeprom_writer
 
     def __init__(self, map_name=None, working_directory=None):
-        self.map_name = map_name if map_name else makerbot_driver.EEPROM.constants.eeprom_map_name % ('6.0')
+        self._log = logging.getLogger(self.__class__.__name__)
+        self.map_name = map_name if map_name else makerbot_driver.EEPROM.constants.eeprom_map_name % (
+            makerbot_driver.EEPROM.constants.default_version, 
+            makerbot_driver.EEPROM.constants.default_software_variant
+        )
         self.working_directory = working_directory if working_directory else os.path.abspath(os.path.dirname(__file__))
         #Load the eeprom map
-        with open(os.path.join(self.working_directory, self.map_name)) as f:
-            self.eeprom_map = json.load(f)
+        path = os.path.join(self.working_directory, self.map_name)
+        try:
+            with open(path) as f:
+                self.eeprom_map = json.load(f)
+        except IOError as e:
+            self._log.error("Could not find %s", path)
+            raise makerbot_driver.EEPROM.MissingEepromMapError(path)
         #We always start with the main map
         self.main_map = 'eeprom_map'
         self.data_map = 'eeprom_data'

@@ -61,6 +61,18 @@ class TestReadFromEeprom(unittest.TestCase):
     def tearDown(self):
         self.reader = None
 
+    def test_cant_find_eeprom_map(self):
+        wd = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
+            'test_files',
+        )
+        map_name = 'this map better not be in WD.some fake extension'
+        with self.assertRaises(makerbot_driver.EEPROM.MissingEepromMapError):
+            self.writer = makerbot_driver.EEPROM.EepromReader(
+                map_name=map_name,
+                working_directory=wd,
+            )
+
     def test_get_dict_by_contect_first_level(self):
         expected_dict = self.reader.eeprom_map[
             self.reader.main_map]['ACCELERATION_SETTINGS']

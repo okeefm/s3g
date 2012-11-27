@@ -27,7 +27,7 @@ class TestFactory(unittest.TestCase):
         self.assertEqual(getattr(parser, 's3g'), None)
         self.assertTrue(parser.state.__class__.__name__ == 'LegacyGcodeStates')
         self.assertTrue(parser.state.profile.values['type']
-                        == "Thing-O-Matic with Stepstruder Mk7")
+                        == "Thing-O-Matic Single, Stepstruder Mk6+")
 
     def test_create_parser(self):
         machine_name = 'ReplicatorSingle'
@@ -50,7 +50,7 @@ class TestFactory(unittest.TestCase):
         self.assertTrue(parser.s3g.writer.file.name == path)
         self.assertTrue(parser.state.__class__.__name__ == 'LegacyGcodeStates')
         self.assertTrue(parser.state.profile.values['type']
-                        == 'Thing-O-Matic with Stepstruder Mk7')
+                        == 'Thing-O-Matic Single, Stepstruder Mk6+')
 
     def test_create_print_to_file(self):
         machine_name = 'ReplicatorSingle'
@@ -74,7 +74,7 @@ class TestFactory(unittest.TestCase):
         self.assertTrue(parser.__class__.__name__ == 'GcodeParser')
         self.assertTrue(parser.state.__class__.__name__ == 'LegacyGcodeStates')
         self.assertTrue(parser.state.profile.values['type']
-                        == 'Thing-O-Matic with Stepstruder Mk7')
+                        == 'Thing-O-Matic Single, Stepstruder Mk6+')
         self.from_filename_mock.assert_called_once_with(port)
 
     def test_create_print_to_stream(self):
@@ -91,18 +91,20 @@ class TestFactory(unittest.TestCase):
     def test_create_eeprom_reader(self):
         port = '/dev/tty.ACM0'
         fw_version = 6.0
+        software_variant  = '00'
         working_directory = None
         reader = makerbot_driver.create_eeprom_reader(
-            port, fw_version, working_directory)
+            port, fw_version, software_variant, working_directory)
         self.assertTrue(reader.__class__.__name__ == 'EepromReader')
         self.from_filename_mock.assert_called_once_with(port)
 
     def test_create_eeprom_reader(self):
         port = '/dev/tty.ACM0'
         fw_version = 6.0
+        software_variant  = '00'
         working_directory = None
         writer = makerbot_driver.create_eeprom_writer(
-            port, fw_version, working_directory)
+            port, fw_version, software_variant, working_directory)
         self.assertTrue(writer.__class__.__name__ == 'EepromWriter')
         self.from_filename_mock.assert_called_once_with(port)
 
