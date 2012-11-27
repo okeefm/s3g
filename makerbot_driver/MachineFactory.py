@@ -136,7 +136,7 @@ class MachineInquisitor(object):
         
         try:
             version_settings = s3gDriver.get_advanced_version();
-            settings['software_variant'] = version_settings['SoftwareVariant']
+            settings['software_variant'] = hex(version_settings['SoftwareVariant'])
             if version_settings['SoftwareVariant'] != 0:
                 s3gDriver.set_print_to_file_type('x3g')
                 settings['print_to_file_type'] = 'x3g'
@@ -146,10 +146,12 @@ class MachineInquisitor(object):
 
         except makerbot_driver.CommandNotSupportedError:
             s3gDriver.set_print_to_file_type('s3g')
-            settings['software_variant'] = 0
+            settings['software_variant'] = hex(0)
             settings['print_to_file_type'] = 's3g'
+
+        if len(settings['software_variant'].split('x')[1]) == 1:
+            settings['software_variant'] = settings['software_variant'].replace('x', 'x0')
             
-          
         if not leaveOpen:
             s3gDriver.close()
         return s3gDriver, settings

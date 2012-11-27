@@ -91,7 +91,7 @@ class TestFactory(unittest.TestCase):
     def test_create_eeprom_reader(self):
         port = '/dev/tty.ACM0'
         fw_version = 6.0
-        software_variant  = '00'
+        software_variant  = '0x00'
         working_directory = None
         reader = makerbot_driver.create_eeprom_reader(
             port, fw_version, software_variant, working_directory)
@@ -101,7 +101,7 @@ class TestFactory(unittest.TestCase):
     def test_create_eeprom_reader(self):
         port = '/dev/tty.ACM0'
         fw_version = 6.0
-        software_variant  = '00'
+        software_variant  = '0x00'
         working_directory = None
         writer = makerbot_driver.create_eeprom_writer(
             port, fw_version, software_variant, working_directory)

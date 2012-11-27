@@ -14,7 +14,7 @@ import makerbot_driver
 class EepromWriter(object):
 
     @classmethod
-    def factory(cls, s3gObj=None, firmware_version='6.0', software_variant='00', working_directory=None):
+    def factory(cls, s3gObj=None, firmware_version='6.0', software_variant='0x00', working_directory=None):
         """ factory for creating an eeprom reader
         @param s3gObj an makerbot_driver.s3g object
         @param eeprom_map json file.

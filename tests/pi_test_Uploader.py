@@ -250,9 +250,9 @@ class TestUploader(unittest.TestCase):
     """
     def test_compatible_firmware_version(self):
         cases = [
-            ['6.0', '00'],
-            ['6.1', '00'],
-            ['6.2', '00'],
+            ['6.0', '0x00'],
+            ['6.1', '0x00'],
+            ['6.2', '0x00'],
         ]
         for case in cases:
             self.assertTrue(self.uploader.compatible_firmware(case[0], case[1])) 
