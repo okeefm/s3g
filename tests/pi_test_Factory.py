@@ -91,18 +91,20 @@ class TestFactory(unittest.TestCase):
     def test_create_eeprom_reader(self):
         port = '/dev/tty.ACM0'
         fw_version = 6.0
+        software_variant  = '00'
         working_directory = None
         reader = makerbot_driver.create_eeprom_reader(
-            port, fw_version, working_directory)
+            port, fw_version, software_variant, working_directory)
         self.assertTrue(reader.__class__.__name__ == 'EepromReader')
         self.from_filename_mock.assert_called_once_with(port)
 
     def test_create_eeprom_reader(self):
         port = '/dev/tty.ACM0'
         fw_version = 6.0
+        software_variant  = '00'
         working_directory = None
         writer = makerbot_driver.create_eeprom_writer(
-            port, fw_version, working_directory)
+            port, fw_version, software_variant, working_directory)
         self.assertTrue(writer.__class__.__name__ == 'EepromWriter')
         self.from_filename_mock.assert_called_once_with(port)
 

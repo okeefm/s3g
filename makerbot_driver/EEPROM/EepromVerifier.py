@@ -15,7 +15,10 @@ class EepromVerifier(object):
         self._log = logging.getLogger(self.__class__.__name__)
         self.hex_path = hex_path
         self.working_directory = working_directory if working_directory else os.path.abspath(os.path.dirname(__file__))
-        self.map_name = map_name if map_name else makerbot_driver.EEPROM.constants.eeprom_map_name % ('6.0')
+        self.map_name = map_name if map_name else makerbot_driver.EEPROM.constants.eeprom_map_name % (
+            makerbot_driver.EEPROM.constants.default_version, 
+            makerbot_driver.EEPROM.constants.default_software_variant
+        )
         path = os.path.join(self.working_directory, self.map_name)
         try:
             with open(path) as f:

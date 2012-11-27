@@ -16,13 +16,13 @@ import makerbot_driver
 class EepromReader(object):
 
     @classmethod
-    def factory(cls, s3gObj=None, firmware_version='6.0', working_directory=None):
+    def factory(cls, s3gObj=None, firmware_version='6.0', software_variant='00', working_directory=None):
         """ factory for creating an eeprom reader
        @param s3gObj an makerbot_driver.s3g object
        @param eeprom_map json file.
        @param working_directory container of eeprom_map name file
        """
-        map_name = makerbot_driver.EEPROM.constants.eeprom_map_name % (firmware_version)
+        map_name = makerbot_driver.EEPROM.constants.eeprom_map_name % (firmware_version, software_variant)
         eeprom_reader = makerbot_driver.EEPROM.EepromReader(map_name, working_directory)
         eeprom_reader.s3g = s3gObj
         return eeprom_reader
@@ -33,7 +33,10 @@ class EepromReader(object):
         @param working_directory drectory containing the map file name
         """
         self._log = logging.getLogger(self.__class__.__name__)
-        self.map_name = map_name if map_name else makerbot_driver.EEPROM.constants.eeprom_map_name % ('6.0')
+        self.map_name = map_name if map_name else makerbot_driver.EEPROM.constants.eeprom_map_name % (
+            makerbot_driver.EEPROM.constants.default_version, 
+            makerbot_driver.EEPROM.constants.default_software_variant
+        )
         self.working_directory = working_directory if working_directory else os.path.abspath(os.path.dirname(__file__))
         #Load the eeprom map
         path = os.path.join(self.working_directory, self.map_name)

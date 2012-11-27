@@ -11,7 +11,10 @@ class EepromRepairer(object):
 
     def __init__(self, map_name=None, working_directory=None):
         self._log = logging.getLogger(self.__class__.__name__)
-        self.map_name = map_name if map_name else makerbot_driver.EEPROM.constants.eeprom_map_name % ('6.0')
+        self.map_name = map_name if map_name else makerbot_driver.EEPROM.constants.eeprom_map_name % (
+            makerbot_driver.EEPROM.constants.default_version, 
+            makerbot_driver.EEPROM.constants.default_software_variant
+        )
         self.working_directory = working_directory if working_directory else os.path.abspath(os.path.dirname(__file__))
         path = os.path.join(self.working_directory, self.map_name)
         try:

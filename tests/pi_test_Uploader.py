@@ -250,12 +250,12 @@ class TestUploader(unittest.TestCase):
     """
     def test_compatible_firmware_version(self):
         cases = [
-            '6.0',
-            '6.1',
-            '6.2',
+            ['6.0', '00'],
+            ['6.1', '00'],
+            ['6.2', '00'],
         ]
         for case in cases:
-            self.assertTrue(self.uploader.compatible_firmware(case))   
+            self.assertTrue(self.uploader.compatible_firmware(case[0], case[1])) 
 
     def test_update(self):
         pull_products_mock = mock.Mock()

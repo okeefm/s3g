@@ -31,15 +31,15 @@ def create_print_to_stream_parser(port, machine_name, legacy=False):
     return parser
 
 
-def create_eeprom_reader(port, firmware_verison=5.6, working_directory=None):
+def create_eeprom_reader(port, firmware_verison=6.0, software_variant='00', working_directory=None):
     s3g = makerbot_driver.s3g.from_filename(port)
     reader = makerbot_driver.EEPROM.EepromReader.factory(
-        s3g, firmware_verison, working_directory)
+        s3g, firmware_verison, software_variant, working_directory)
     return reader
 
 
-def create_eeprom_writer(port, firmware_version=5.6, working_directory=None):
+def create_eeprom_writer(port, firmware_version=6.0, software_variant='00', working_directory=None):
     s3g = makerbot_driver.s3g.from_filename(port)
     writer = makerbot_driver.EEPROM.EepromWriter.factory(
-        s3g, firmware_version, working_directory)
+        s3g, firmware_version, software_variant, working_directory)
     return writer
