@@ -110,6 +110,11 @@ class InvalidFeedrateError(GcodeError):
     An InvalidFeedrateError is thrown when a feedrate <0 is given for a movement command
     """
 
+class NoFeedrateSpecifiedError(GcodeError):
+    """
+    Raised when no feedrate is specified in the codes and the state machine has no feedrate set
+    """
+
 
 class BadPercentageError(GcodeError):
     """
