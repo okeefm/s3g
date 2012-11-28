@@ -213,7 +213,7 @@ const static uint16_t INTERNAL_VERSION			= 0x0048;
 const static uint16_t COMMIT_VERSION			= 0x004A;
 /// HBP Present or not
 //$BEGIN_ENTRY
-//$type:B $constraints:l,0,1 $tooltip:'non zero if the bot has a heated build platform'
+//$type:B $constraints:l,0,1 $tooltip:Set to 1 if this machine has a heated build platform.  0 if it does not.
 const static uint16_t HBP_PRESENT				= 0x004C;
 /// 38 bytes padding
 /// Thermistor table 0: 128 bytes
@@ -249,7 +249,7 @@ const static uint16_t FIRST_BOOT_FLAG  = 0x0156;
 const static uint16_t PREHEAT_SETTINGS = 0x0158;
 /// 1 byte,  0x01 for help menus on, 0x00 for off
 //$BEGIN_ENTRY
-//$type:B $constraints:l,0,1 $tooltip:'Display extra help during the load filament scripts? non zero value == yes.'  
+//$type:B $constraints:l,0,1 $tooltip:Set to 1 to show help dialogue during Load/Unload Filament Utilities.
 const static uint16_t FILAMENT_HELP_TEXT_ON = 0x0160;
 /// This indicates how far out of tolerance the toolhead0 toolhead1 distance is
 /// in steps.  3 x 32 bits = 12 bytes
