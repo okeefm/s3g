@@ -2094,7 +2094,7 @@ class S3gTestsFirmwareClassic(unittest.TestCase):
         payload = Encoder.decode_packet(packet)
 
         self.assertEqual(
-          payload[0], constants.host_action_command_dict['S4G_VERSION'])
+          payload[0], constants.host_action_command_dict['X3G_VERSION'])
         self.assertEqual(payload[1], high_bite)
         self.assertEqual(payload[2], low_bite)
         self.assertEqual(payload[3], extra_byte)
