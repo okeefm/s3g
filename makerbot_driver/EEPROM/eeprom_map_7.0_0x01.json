@@ -110,7 +110,7 @@
       "constraints": "a", 
       "offset": "0x01F4", 
       "type": "HHHHH", 
-      "unit": "mm/sec"
+      "unit": "mm/s"
     }, 
     "AXIS_STEPS_PER_MM": {
       "constraints": "a", 
@@ -342,6 +342,16 @@
       "eeprom_map": "build_time_offsets", 
       "offset": "0x01A0", 
       "sub_map": {}
+    }, 
+    "VERSION_HIGH": {
+      "constraints": "m,0,10", 
+      "offset": "0x0001", 
+      "type": "B"
+    }, 
+    "VERSION_LOW": {
+      "constraints": "m,0,100", 
+      "offset": "0x0000", 
+      "type": "B"
     }
   }
 }
