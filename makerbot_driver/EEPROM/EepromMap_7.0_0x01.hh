@@ -158,11 +158,11 @@ const static uint16_t COOLING_FAN_SETTINGS 	= 	0x001A;
 namespace eeprom_offsets {
 /// Firmware Version, low byte: 1 byte
 //$BEGIN_ENTRY
-//$type:B $ignore:True $constraints:m,0,100
+//$type:B $constraints:m,0,100
 const static uint16_t VERSION_LOW				= 0x0000;
 /// Firmware Version, high byte: 1 byte
 //$BEGIN_ENTRY
-//$type:B $ignore:True $constraints:m,0,10
+//$type:B $constraints:m,0,10
 const static uint16_t VERSION_HIGH				= 0x0001;
 /// Axis inversion flags: 1 byte.
 /// Axis N (where X=0, Y=1, etc.) is inverted if the Nth bit is set.
@@ -290,7 +290,7 @@ const static uint16_t FILAMENT_TRIP     = 0x01C8;
 const static uint16_t ACCELERATION2_SETTINGS     = 0x01D8;
 /// axis max feedrates XYZAB 5*32bit = 20 bytes
 //$BEGIN_ENTRY
-//$type:HHHHH $constraints:a $unit:mm/sec
+//$type:HHHHH $constraints:a $unit:mm/s
 const static uint16_t AXIS_MAX_FEEDRATES     = 0x01F4;
 /// Hardware configuration settings 
 //$BEGIN_ENTRY
