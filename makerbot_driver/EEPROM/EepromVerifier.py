@@ -23,6 +23,8 @@ class EepromVerifier(object):
         try:
             with open(path) as f:
                 self.eeprom_map = json.load(f)
+            if 'eeprom_map' in self.eeprom_map:
+                self.eeprom_map = self.eeprom_map['eeprom_map']
         except IOError as e:
             self._log.error("Could not find %s", path)
             raise makerbot_driver.EEPROM.MissingEepromMapError(path)
