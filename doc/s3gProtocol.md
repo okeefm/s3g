@@ -1141,7 +1141,7 @@ If the "last message in group" is not sent, the message will never be displayed
 
 if the "clear message" flag is 0, the message buffer will be cleared and any existing timeout out will be cleared.
 
-If the "wait on button" flag is 1, the message screen will clear after a users presses the center button. The timeout field is still relevant if the button press is never received.
+If the "wait on button" flag is 1, the message screen will _not_ clear after a users presses the center button.  The display will linger until something else is drawn. The timeout field is still relevant if the button press is never received.
 
 Text will auto-wrap at end of line. \n is recognized as new line start. \r is ignored.
 
