@@ -13,7 +13,7 @@ class FanProcessor(Processor):
         self.raft_end = re.compile("\(\<raftLayerEnd\> \<\/raftLayerEnd\>\)")
 
         self.layer_end = re.compile("\(\</layer\>\)")
-        self.fan_codes = re.compile("[^(;]*([(][^)]*[)][^(;]*)*[mM]126|[^(;]*([(][^)]*[)][^(;]*)*[mM]127")
+        self.fan_codes = re.compile("[^(;]*[mM]126|[^(;]*[mM]127")
         self.layer_count = 2 # Turn on fan at this layer AFTER The raft
         self.fan_on = "M126 T0 (Fan On)\n"
         self.fan_off = "M127 T0 (Fan Off)\n"

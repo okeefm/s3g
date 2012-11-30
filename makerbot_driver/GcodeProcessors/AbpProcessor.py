@@ -12,8 +12,8 @@ class AbpProcessor(LineTransformProcessor):
         super(AbpProcessor, self).__init__()
         self.is_bundleable = True
         self.code_map = {
-            re.compile("[^(;]*([(][^)]*[)][^(;]*)*[mM]106"): self._transform_m106,
-            re.compile("[^(;]*([(][^)]*[)][^(;]*)*[mM]107"): self._transform_m107,
+            re.compile("[^;(]*[mM]106"): self._transform_m106,
+            re.compile("[^;(]*[mM]107"): self._transform_m107,
         }
 
     def _transform_m107(self, match):

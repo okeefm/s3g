@@ -12,9 +12,9 @@ class RemoveProgressProcessor(LineTransformProcessor):
         super(RemoveProgressProcessor, self).__init__()
         self.is_bundleable = True
         self.code_map = {
-            re.compile("[^(;]*([(][^)]*[)][^;(]*)*[mM]73"): self._transform_m73,
-            re.compile("[^(;]*([(][^)]*[)][^;(]*)*[mM]136"): self._transform_m136,
-            re.compile("[^(;]*([(][^)]*[)][^;(]*)*[mM]137"): self._transform_m137,
+            re.compile("[^;(]*[mM]73"): self._transform_m73,
+            re.compile("[^;(]*[mM]136"): self._transform_m136,
+            re.compile("[^;(]*[mM]137"): self._transform_m137,
         }
 
     def _transform_m73(self, match):

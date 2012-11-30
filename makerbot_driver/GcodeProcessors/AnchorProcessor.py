@@ -12,7 +12,7 @@ class AnchorProcessor(LineTransformProcessor):
         super(AnchorProcessor, self).__init__()
         self.is_bundleable = True
         self.code_map = {
-            re.compile('[^(;]*([(][^)]*[)][^(;]*)*[gG]1 [XY]-?\d'): self._transform_anchor,
+            re.compile('[^(;]*[gG]1 [XY]-?\d'): self._transform_anchor,
         }
         self.looking_for_first_move = True
         self.speed = 1000

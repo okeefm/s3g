@@ -22,7 +22,7 @@ class TestToolSwapProcessor(unittest.TestCase):
         cases = [
             ['(This Swaps Toolhead 0)', ['(This Swaps Toolhead 0)']],
             ['(This Swaps Toolhead A)', ['(This Swaps Toolhead A)']],
-            ['(comment) (comment) M132 T0', ['(COMMENT) (COMMENT) M132 T1']],
+            ['(comment) (comment) M132 T0', ['(comment) (comment) M132 T0']],
             ['M132 T0', ['M132 T1']],
             ['G1 A50', ['G1 B50']],
             ['G1 E50', ['G1 E50']],

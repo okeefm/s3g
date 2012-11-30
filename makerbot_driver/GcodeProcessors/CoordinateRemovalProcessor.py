@@ -21,11 +21,11 @@ class CoordinateRemovalProcessor(LineTransformProcessor):
         super(CoordinateRemovalProcessor, self).__init__()
         self.is_bundleable = True
         self.code_map = {
-            re.compile('[^(;]*([(][^)]*[)][^;(]*)*[gG]10'): self._transform_g10,
-            re.compile('[^(;]*([(][^)]*[)][^;(]*)*[gG]54'): self._transform_g54,
-            re.compile('[^(;]*([(][^)]*[)][^;(]*)*[gG]55'): self._transform_g55,
-            re.compile('[^(;]*([(][^)]*[)][^;(]*)*[gG]21'): self._transform_g21,
-            re.compile('[^(;]*([(][^)]*[)][^;(]*)*[gG]90'): self._transform_g90,
+            re.compile('[^(;]*[gG]10'): self._transform_g10,
+            re.compile('[^(;]*[gG]54'): self._transform_g54,
+            re.compile('[^(;]*[gG]55'): self._transform_g55,
+            re.compile('[^(;]*[gG]21'): self._transform_g21,
+            re.compile('[^(;]*[gG]90'): self._transform_g90,
         }
 
     def _transform_g10(self, match):
