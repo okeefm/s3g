@@ -28,8 +28,8 @@ class ExtractCommentsTests(unittest.TestCase):
     def test_semicolon_with_data(self):
         line = ';;asdf'
         [command, comment] = makerbot_driver.Gcode.extract_comments(line)
-        assert '' == command
-        assert ';asdf' == comment
+        self.assertEqual('', command)
+        self.assertEqual(';asdf', comment)
 
     def test_parens_after_semicolon_ignored(self):
         line = ';)))'
@@ -46,44 +46,39 @@ class ExtractCommentsTests(unittest.TestCase):
     def test_right_paren_with_comment(self):
         line = '(comment'
         [command, comment] = makerbot_driver.Gcode.extract_comments(line)
-        assert '' == command
-        assert 'comment' == comment
-
-    def test_command_left_paren(self):
-        line = 'command)'
-        self.assertRaises(makerbot_driver.Gcode.CommentError,
-                          makerbot_driver.Gcode.extract_comments, line)
+        self.assertEqual('', command)
+        self.assertEqual('comment', comment)
 
     def test_closed_parens(self):
         line = '()'
         [command, comment] = makerbot_driver.Gcode.extract_comments(line)
         assert '' == command
-        assert '' == comment
+        assert ')' == comment
 
     def test_closed_parens_with_nested_parens(self):
         line = '(())'
         [command, comment] = makerbot_driver.Gcode.extract_comments(line)
         assert '' == command
-        assert '' == comment
+        assert '())' == comment
 
     def test_command_closed_parens_with_comment(self):
         line = 'commanda(comment)commandb'
 
         [command, comment] = makerbot_driver.Gcode.extract_comments(line)
-        assert 'commandacommandb' == command
-        assert 'comment' == comment
+        self.assertEqual('commanda', command)
+        self.assertEqual('comment)commandb', comment)
 
     def test_comment_left_and_semicolon(self):
         line = 'asdf(qwer);testing'
         [command, comment] = makerbot_driver.Gcode.extract_comments(line)
         self.assertEqual('asdf', command)
-        self.assertEqual('testingqwer', comment)
+        self.assertEqual('qwer)testing', comment)
 
     def test_command_right(self):
         line = 'asdf (qwer)'
         [command, comment] = makerbot_driver.Gcode.extract_comments(line)
         self.assertEqual('asdf ', command)
-        self.assertEqual('qwer', comment)
+        self.assertEqual('qwer)', comment)
 
 
 class ParseCommandTests(unittest.TestCase):

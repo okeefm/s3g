@@ -59,8 +59,7 @@ class RpmProcessor(unittest.TestCase):
             'M108 T0\n': 'M135 T0\n',
             'M108 T0 R25.1\n': 'M135 T0\n',
             'M108 T0 R25.1;superCOMMENT\n': 'M135 T0; superCOMMENT\n',
-            'M108 (heres a comment) T0\n': 'M135 T0; heres a comment\n',
-            'M108 (heres a comment) T0;heres another comment\n': 'M135 T0; heres another commentheres a comment\n',
+            'M108 T0 (heres a comment) T0\n': 'M135 T0; heres a comment) T0\n',
         }
         for key in input_output_dict:
             match_obj = re.search('.*', key)

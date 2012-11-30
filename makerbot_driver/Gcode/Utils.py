@@ -15,25 +15,11 @@ def extract_comments(line):
     # Anything after the first semicolon is a comment
     semicolon_free_line, x, comment = line.partition(';')
 
-    command = ''
-
     paren_count = 0
-    for char in semicolon_free_line:
-        if char == '(':
-            paren_count += 1
+    command, x, paren_comment = semicolon_free_line.partition('(')
+    unified_comment = '%s%s' % (paren_comment, comment)
 
-        elif char == ')':
-            if paren_count < 1:
-                raise makerbot_driver.Gcode.CommentError
-            paren_count -= 1
-
-        elif paren_count > 0:
-            comment += char
-
-        else:
-            command += char
-
-    return command, comment
+    return command, unified_comment
 
 
 def parse_command(command):
