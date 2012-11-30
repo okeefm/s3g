@@ -14,34 +14,6 @@ import tempfile
 import makerbot_driver
 import warnings
 
-
-class TOMReading(unittest.TestCase):
-    def setUp(self):
-        self.p = makerbot_driver.Gcode.GcodeParser()
-        self.p.state = makerbot_driver.Gcode.LegacyGcodeStates()
-        self.p.state.values['build_name'] = 'test'
-        self.p.state.profile = makerbot_driver.Profile('TOMStepstruderSingle')
-        self.s3g = makerbot_driver.s3g()
-        with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
-            path = f.name
-        self.s3g.writer = makerbot_driver.Writer.FileWriter(open(path, 'wb'))
-        self.p.s3g = self.s3g
-
-    def tearDown(self):
-        self.p = None
-        self.s3g = None
-
-    def test_single_head_miracle_grue(self):
-        the_file = os.path.join(
-            os.path.abspath(os.path.dirname(__file__)),
-            '..',
-            'doc',
-            'gcode_samples',
-            'miracle_grue_single_extrusion_20_mm_box.gcode'
-        )
-        execute_file(the_file, self.p)
-
-
 class SingleHeadReading(unittest.TestCase):
 
     def setUp(self):
@@ -195,17 +167,7 @@ def process_file_with_pro(the_file, pro):
 
 def execute_file(the_file, parser):
     ga = makerbot_driver.GcodeAssembler(parser.state.profile)
-    if "Thing-O-Matic" in parser.state.profile.values['machinenames']:
-        start, end, variables = ga.assemble_recipe(
-            begin_print='tom_begin',
-            homing='tom_homing',
-            start_position='tom_start_position',
-            end_start_sequence='tom_end_start_sequence',
-            end_position='tom_end_position',
-            end_print='tom_end',
-        )
-    else:
-        start, end, variables = ga.assemble_recipe()
+    start, end, variables = ga.assemble_recipe()
     start_gcode = ga.assemble_start_sequence(start)
     end_gcode = ga.assemble_end_sequence(end)
     parser.environment.update(variables)

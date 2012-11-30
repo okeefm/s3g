@@ -82,9 +82,7 @@ class MachineFactory(object):
         if 'vid' in machine_setup_dict and 'pid' in machine_setup_dict:
             regex = self.get_profile_regex_has_vid_pid(machine_setup_dict)
         if '.*Replicator2' == regex:
-            if regex and machine_setup_dict.get('tool_count', 0) == 2:
-                regex = regex + 'X'
-            elif machine_setup_dict.get('tool_count', 0) != 1:
+            if machine_setup_dict.get('tool_count', 0) != 1:
                 regex = None
         else:
             if regex and machine_setup_dict.get('tool_count', 0) == 1:

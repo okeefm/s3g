@@ -55,16 +55,6 @@ class TestMachineFactor(unittest.TestCase):
         result = self.factory.get_profile_regex(bot_dict)
         self.assertEqual(expected_regex, result)
 
-    def test_get_profile_regex_had_vid_pid_rep2_tool_count2(self):
-        bot_dict = {
-            'vid': 0x23C1,
-            'pid': 0xB015,
-            'tool_count': 2,
-        }
-        expected_regex = '.*Replicator2X'
-        result = self.factory.get_profile_regex(bot_dict)
-        self.assertEqual(expected_regex, result)
-
     def test_get_profile_regex_has_vid_pid_tom_tool_count_1(self):
         bot_dict = {
             'vid': 0x0403,
