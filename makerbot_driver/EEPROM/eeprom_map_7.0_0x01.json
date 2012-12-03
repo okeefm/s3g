@@ -42,11 +42,7 @@
         "ACCELERATION_ACTIVE": {
           "constraints": "l,0,1", 
           "offset": "0x00", 
-          "type": "B"
-        }, 
-        "DEFAULTS_FLAG": {
-          "constraints": "a", 
-          "offset": "0x1A", 
+          "tooltip": "Set to 1 to use acceleration.  0 for no acceleration.  Note that you must turn acceleration on to print safely at speeds over 50mm/s.", 
           "type": "B"
         }, 
         "MAX_ACCELERATION_AXIS": {
@@ -59,7 +55,7 @@
           "constraints": "a", 
           "offset": "0x18", 
           "type": "H", 
-          "unit": "mm/s"
+          "unit": "mm/s\u00b2"
         }, 
         "MAX_ACCELERATION_NORMAL_MOVE": {
           "constraints": "a", 
@@ -80,6 +76,7 @@
       "axis_expand": "True", 
       "constraints": "a", 
       "offset": "0x000C", 
+      "tooltip": "A Bitfield representing the XYZAB axes, with X as bit 0. If an axis is homing in the wrong direction, toggle the bit for that axis", 
       "type": "B"
     }, 
     "AXIS_HOME_POSITIONS_MM": {
@@ -88,16 +85,11 @@
       "type": "iiiii", 
       "unit": "mm"
     }, 
-    "AXIS_HOME_POSITIONS_STEPS": {
-      "constraints": "a", 
-      "offset": "0x000E", 
-      "type": "iiiii", 
-      "unit": "steps"
-    }, 
     "AXIS_INVERSION": {
       "axis_expand": "True", 
       "constraints": "a", 
       "offset": "0x0002", 
+      "tooltip": "A Bitfield representing the XYZAB axes, with X as bit 0. If an axis is moving in the wrong direction, toggle the bit for that axis", 
       "type": "B"
     }, 
     "AXIS_LENGTHS_MM": {
@@ -108,14 +100,15 @@
     }, 
     "AXIS_MAX_FEEDRATES": {
       "constraints": "a", 
-      "offset": "0x01F4", 
+      "offset": "0x0246", 
       "type": "HHHHH", 
-      "unit": "mm/s"
+      "unit": "mm/sec"
     }, 
     "AXIS_STEPS_PER_MM": {
       "constraints": "a", 
       "offset": "0x01A4", 
-      "type": "IIIII"
+      "type": "IIIII", 
+      "unit": "1,000,000 * steps/mm"
     }, 
     "BUZZ_SETTINGS": {
       "eeprom_map": "buzz_eeprom_offsets", 
@@ -124,6 +117,7 @@
         "SOUND_ON": {
           "constraints": "l,0,1", 
           "offset": "0x00", 
+          "tooltip": "Set to 1 to play bot sounds.  0 for no sounds.", 
           "type": "B"
         }
       }
@@ -143,7 +137,7 @@
     "FILAMENT_HELP_TEXT_ON": {
       "constraints": "l,0,1", 
       "offset": "0x0160", 
-      "tooltip": "Set to 1 to show help dialogue during Load/Unload Filament Utilities.", 
+      "tooltip": "'Display extra help during the load filament scripts? non zero value == yes.'", 
       "type": "B"
     }, 
     "HBP_PRESENT": {
@@ -157,6 +151,12 @@
       "offset": "0x020A", 
       "type": "BBB", 
       "unit": "scaling factor"
+    }, 
+    "HEATER_TIMEOUT_ON_CANCEL": {
+      "contraints": "m,0,30", 
+      "offset": "0x0244", 
+      "type": "B", 
+      "units": "minutes"
     }, 
     "LED_STRIP_SETTINGS": {
       "eeprom_map": "blink_eeprom_offsets", 
@@ -194,19 +194,19 @@
           "constraints": "m,0,300", 
           "offset": "0x02", 
           "type": "H", 
-          "unit": "\u00b0C"
+          "unit": "C"
         }, 
         "PREHEAT_PLATFORM_TEMP": {
           "constraints": "m,0,200", 
           "offset": "0x04", 
           "type": "H", 
-          "unit": "\u00b0C"
+          "unit": "C"
         }, 
         "PREHEAT_RIGHT_TEMP": {
           "constraints": "m,0,300", 
           "offset": "0x00", 
           "type": "H", 
-          "unit": "\u00b0C"
+          "unit": "C"
         }
       }
     }, 
@@ -227,7 +227,7 @@
               "constraints": "m,0,300", 
               "offset": "1", 
               "type": "B", 
-              "unit": "\u00b0C"
+              "unit": "C"
             }
           }
         }, 
@@ -275,7 +275,7 @@
               "constraints": "m,0,300", 
               "offset": "1", 
               "type": "B", 
-              "unit": "\u00b0C"
+              "unit": "C"
             }
           }
         }, 
@@ -306,27 +306,6 @@
       }, 
       "tool_index": "1"
     }, 
-    "THERM_TABLE": {
-      "eeprom_map": "therm_eeprom_offsets", 
-      "offset": "0x0074", 
-      "sub_map": {
-        "THERM_BETA": {
-          "constraints": "a", 
-          "offset": "0x08", 
-          "type": "i"
-        }, 
-        "THERM_R0": {
-          "constraints": "a", 
-          "offset": "0x00", 
-          "type": "i"
-        }, 
-        "THERM_T0": {
-          "constraints": "a", 
-          "offset": "0x04", 
-          "type": "i"
-        }
-      }
-    }, 
     "TOOLHEAD_OFFSET_SETTINGS_MM": {
       "constraints": "m,-2000,35000", 
       "offset": "0x0238", 
@@ -336,21 +315,6 @@
     "TOOL_COUNT": {
       "constraints": "l,1,2", 
       "offset": "0x0042", 
-      "type": "B"
-    }, 
-    "TOTAL_BUILD_TIME": {
-      "eeprom_map": "build_time_offsets", 
-      "offset": "0x01A0", 
-      "sub_map": {}
-    }, 
-    "VERSION_HIGH": {
-      "constraints": "m,0,10", 
-      "offset": "0x0001", 
-      "type": "B"
-    }, 
-    "VERSION_LOW": {
-      "constraints": "m,0,100", 
-      "offset": "0x0000", 
       "type": "B"
     }
   }
