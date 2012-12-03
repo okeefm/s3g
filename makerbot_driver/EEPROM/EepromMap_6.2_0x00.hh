@@ -157,11 +157,11 @@ const static uint16_t COOLING_FAN_SETTINGS 	= 	0x001A;
 namespace eeprom_offsets {
 /// Firmware Version, low byte: 1 byte
 //$BEGIN_ENTRY
-//$type:B $constraints:m,0,100
+//$type:B $constraints:m,0,100 $ignore:True
 const static uint16_t VERSION_LOW				= 0x0000;
 /// Firmware Version, high byte: 1 byte
 //$BEGIN_ENTRY
-//$type:B $constraints:m,0,10
+//$type:B $constraints:m,0,10 $ignore:True
 const static uint16_t VERSION_HIGH				= 0x0001;
 /// Axis inversion flags: 1 byte.
 /// Axis N (where X=0, Y=1, etc.) is inverted if the Nth bit is set.
@@ -204,11 +204,11 @@ const static uint16_t TOOL_COUNT 				= 0x0042;
 const static uint16_t VID_PID_INFO				= 0x0044;
 /// Version Number for internal releases
 //$BEGIN_ENTRY
-//$type:H  $constraints:a
+//$type:H  $constraints:a $ignore:True
 const static uint16_t INTERNAL_VERSION			= 0x0048;
 /// Version number to be tagged with Git Commit
 //$BEGIN_ENTRY
-//$type:H $constraints:a 
+//$type:H $constraints:a $ignore:True
 const static uint16_t COMMIT_VERSION			= 0x004A;
 /// HBP Present or not
 //$BEGIN_ENTRY
@@ -217,7 +217,7 @@ const static uint16_t HBP_PRESENT				= 0x004C;
 /// 38 bytes padding
 /// Thermistor table 0: 128 bytes
 //$BEGIN_ENTRY
-//$eeprom_map:therm_eeprom_offsets
+//$eeprom_map:therm_eeprom_offsets $ignore:True
 const static uint16_t THERM_TABLE				= 0x0074;
 /// Padding: 8 bytes
 // Toolhead 0 data: 28 bytes (see above)
@@ -261,15 +261,15 @@ const static uint16_t TOOLHEAD_OFFSET_SETTINGS = 0x0162;
 const static uint16_t ACCELERATION_SETTINGS     = 0x016E;
 /// 2 bytes bot status info bytes
 //$BEGIN_ENTRY
-//$type:BB $constraints:a
+//$type:BB $constraints:a $ignore:True
 const static uint16_t BOT_STATUS_BYTES = 0x018A;
 /// axis lengths XYZ AB 5*32bit = 20 bytes
 //$BEGIN_ENTRY
 //$type:iiiii $constraints:m,0,2147483647
-const static uint16_t AXIS_LENGTHS				= 0x018C;
+const static uint16_t AXIS_LENGTHS_STEPS		= 0x018C;
 /// total lifetime print hours, 3bytes
 //$BEGIN_ENTRY
-//$eeprom_map:build_time_offsets
+//$eeprom_map:build_time_offsets $ignore:True
 const static uint16_t TOTAL_BUILD_TIME			= 0x01A0;
 /// axis steps per mm XYZAB 5*32bit = 20 bytes
 //$BEGIN_ENTRY
@@ -285,11 +285,11 @@ const static uint16_t FILAMENT_LIFETIME     = 0x01B8;
 const static uint16_t FILAMENT_TRIP     = 0x01C8;
 /// axis max feedrates XYZAB 5*32bit = 20 bytes
 //$BEGIN_ENTRY
-//$type:HHHHH $constraints:a
+//$type:HHHHH $constraints:a $ignore:True
 const static uint16_t AXIS_MAX_FEEDRATES     = 0x01F4;
 /// Hardware configuration settings 
 //$BEGIN_ENTRY
-//$type:B $constraints:l,1,2
+//$type:B $constraints:l,1,2 $ignore:True
 const static uint16_t BOTSTEP_TYPE      = 0x0208;
 /// temperature offset calibration: 1 byte x 3 heaters = 3 bytes
 //$BEGIN_ENTRY
@@ -301,11 +301,11 @@ const static uint16_t HEATER_CALIBRATION = 0x020A;
 const static uint16_t VERSION6_1_UPDATE_FLAG = 0x20E;
 /// axis lengths XYZ AB 5*32bit = 20 bytes
 //$BEGIN_ENTRY
-//$type:IIIII $constraints:a
+//$type:IIIII $constraints:a $ignore:True
 const static uint16_t AXIS_LENGTHS_MM			= 0x0210;
 /// Default locations for the axis in step counts: 5 x 32 bit = 20 bytes
 //$BEGIN_ENTRY
-//$type:iiiii $constraints:a
+//$type:iiiii $constraints:a $ignore:True
 const static uint16_t AXIS_HOME_POSITIONS_MM	= 0x0224;
 
 
@@ -356,10 +356,10 @@ namespace acceleration_eeprom_offsets{
     //$type:HHHHH $floating_point:True $constraints:a
     const static uint16_t MAX_SPEED_CHANGE          = 0x0E; //5 * uint16_t
     //$BEGIN_ENTRY
-    //$type:H $constraints:a
+    //$type:H $constraints:a $ignore:True
     const static uint16_t MAX_ACCELERATION_EXTRUDER_MOVE    = 0x18; //uint16_t
     //$BEGIN_ENTRY
-    //$type:B $constraints:a
+    //$type:B $constraints:a $ignore:True
     const static uint16_t DEFAULTS_FLAG         = 0x1A; //uint8_t Bit 7 == 1 is defaults written
 }
 
