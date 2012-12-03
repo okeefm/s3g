@@ -29,7 +29,7 @@ namespace cooler_eeprom_offsets{
 //$type:B $constraints:l,0,1
 const static uint16_t ENABLE   =     0;
 //$BEGIN_ENTRY
-//$type:B $constraints:m,0,300 $unit:C
+//$type:B $constraints:m,0,300 $unit:°C
 const static uint16_t SETPOINT_C  =  1;
 }
 
@@ -290,7 +290,7 @@ const static uint16_t FILAMENT_TRIP     = 0x01C8;
 const static uint16_t ACCELERATION2_SETTINGS     = 0x01D8;
 /// axis max feedrates XYZAB 5*16bit = 10 bytes
 //$BEGIN_ENTRY
-//$type:IIIII $constraints:a $unit:mm/sec $ignore:True
+//$type:IIIII $constraints:a $unit:mm/s $ignore:True
 const static uint16_t AXIS_MAX_FEEDRATES_MIN     = 0x01F4;
 /// Hardware configuration settings 
 //$BEGIN_ENTRY
@@ -318,11 +318,11 @@ const static uint16_t AXIS_HOME_POSITIONS_MM	= 0x0224;
 //$type:iii $constraints:m,-2000,35000 $unit:µm
 const static uint16_t TOOLHEAD_OFFSET_SETTINGS_MM = 0x0238;
 //$BEGIN_ENTRY
-//$type:B $contraints:m,0,30 $units:minutes
+//$type:B $contraints:m,0,30 $units:min
 const static uint16_t HEATER_TIMEOUT_ON_CANCEL = 0x0244;
 /// axis max feedrates XYZAB 5*16bit = 10 bytes
 //$BEGIN_ENTRY
-//$type:HHHHH $constraints:a $unit:mm/sec
+//$type:HHHHH $constraints:a $unit:mm/s
 const static uint16_t AXIS_MAX_FEEDRATES     = 0x0246;
 
 /// start of free space
@@ -452,13 +452,13 @@ const static uint16_t THERM_DATA                 = 0x10;
 /** preheat EERROM offset values and on/off settings for each heater */
 namespace preheat_eeprom_offsets{
 //$BEGIN_ENTRY
-//$type:H $constraints:m,0,300 $unit:C
+//$type:H $constraints:m,0,300 $unit:°C
 const static uint16_t PREHEAT_RIGHT_TEMP                = 0x00;
 //$BEGIN_ENTRY
-//$type:H $constraints:m,0,300 $unit:C
+//$type:H $constraints:m,0,300 $unit:°C
 const static uint16_t PREHEAT_LEFT_TEMP                = 0x02;
 //$BEGIN_ENTRY
-//$type:H $constraints:m,0,200 $unit:C
+//$type:H $constraints:m,0,200 $unit:°C
 const static uint16_t PREHEAT_PLATFORM_TEMP           = 0x04;
 // this byte is firmware local to note if preheat is active 
 //$BEGIN_ENTRY
