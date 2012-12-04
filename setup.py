@@ -66,7 +66,7 @@ setup(
         'makerbot_driver.FileReader',
         'makerbot_driver.Firmware',
         'makerbot_driver.Gcode',
-        'makerbot_driver.Preprocessors',
+        'makerbot_driver.GcodeProcessors',
         'makerbot_driver.Writer'
     ],
     package_data={'makerbot_driver.EEPROM': ['*.json'],
