@@ -102,7 +102,7 @@
       "constraints": "a", 
       "offset": "0x0246", 
       "type": "HHHHH", 
-      "unit": "mm/sec"
+      "unit": "mm/s"
     }, 
     "AXIS_STEPS_PER_MM": {
       "constraints": "a", 
@@ -156,7 +156,7 @@
       "contraints": "m,0,30", 
       "offset": "0x0244", 
       "type": "B", 
-      "units": "minutes"
+      "units": "min"
     }, 
     "LED_STRIP_SETTINGS": {
       "eeprom_map": "blink_eeprom_offsets", 
@@ -194,19 +194,19 @@
           "constraints": "m,0,300", 
           "offset": "0x02", 
           "type": "H", 
-          "unit": "C"
+          "unit": "\u00b0C"
         }, 
         "PREHEAT_PLATFORM_TEMP": {
           "constraints": "m,0,200", 
           "offset": "0x04", 
           "type": "H", 
-          "unit": "C"
+          "unit": "\u00b0C"
         }, 
         "PREHEAT_RIGHT_TEMP": {
           "constraints": "m,0,300", 
           "offset": "0x00", 
           "type": "H", 
-          "unit": "C"
+          "unit": "\u00b0C"
         }
       }
     }, 
@@ -227,7 +227,7 @@
               "constraints": "m,0,300", 
               "offset": "1", 
               "type": "B", 
-              "unit": "C"
+              "unit": "\u00b0C"
             }
           }
         }, 
@@ -275,7 +275,7 @@
               "constraints": "m,0,300", 
               "offset": "1", 
               "type": "B", 
-              "unit": "C"
+              "unit": "\u00b0C"
             }
           }
         }, 
