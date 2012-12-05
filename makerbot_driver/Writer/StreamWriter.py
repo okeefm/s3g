@@ -22,7 +22,7 @@ class StreamWriter(AbstractWriter):
         """
         super(StreamWriter, self).__init__(file)
         self._log = logging.getLogger(self.__class__.__name__)
-        self._log.info('{"event":"begin_writing_to_stream", "stream":%s}',
+        self._log.debug('{"event":"begin_writing_to_stream", "stream":%s}',
                        str(self.file))
         self.total_retries = 0
         self.total_overflows = 0
@@ -120,7 +120,7 @@ class StreamWriter(AbstractWriter):
                 # Sent a packet to the host, but got a malformed response or timed out waiting
                 # for a reply. Retry immediately.
 
-                self._log.warning('{"event":"transmission_problem", "exception":"%s", "message":"%s", "retry_count"=%i}', type(e), e.__str__(), retry_count)
+                self._log.debug('{"event":"transmission_problem", "exception":"%s", "message":"%s", "retry_count"=%i}', type(e), e.__str__(), retry_count)
 
                 self.total_retries += 1
                 retry_count += 1

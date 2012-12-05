@@ -57,7 +57,7 @@ class GcodeParser(object):
         """
         #If command is in unicode, encode it into ascii
         if isinstance(command, unicode):
-            self._log.warning('{"event":"encoding_gcode_into_utf8"}')
+            self._log.debug('{"event":"encoding_gcode_into_utf8"}')
             command = command.encode("utf8")
         elif not isinstance(command, str):
             self._log.error('{"event":"gcode_file_in_improper_format"}')
