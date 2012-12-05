@@ -250,6 +250,16 @@
       "constraints": "l,1,2", 
       "offset": "0x0042", 
       "type": "B"
+    }, 
+    "VERSION_HIGH": {
+      "constraints": "m,0,10", 
+      "offset": "0x0001", 
+      "type": "B"
+    }, 
+    "VERSION_LOW": {
+      "constraints": "m,0,100", 
+      "offset": "0x0000", 
+      "type": "B"
     }
   }
 }
