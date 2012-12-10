@@ -132,7 +132,7 @@ const static uint16_t BACKOFF_TRIGGER_TIME      = 0x0008;
 const static uint16_t EXTRUDER_PID_BASE         = 0x000A;
 /// HBP heater base location: 6 bytes data
 //$BEGIN_ENTRY
-//$eeprom_map:pid_eeprom_offsets $ignore:True
+//$eeprom_map:pid_eeprom_offsets
 const static uint16_t HBP_PID_BASE              = 0x0010;
 /// Extra features word: 2 bytes
 //$BEGIN_ENTRY
@@ -217,9 +217,7 @@ const static uint16_t COMMIT_VERSION			= 0x004A;
 const static uint16_t HBP_PRESENT				= 0x004C;
 /// 38 bytes padding
 /// Thermistor table 0: 128 bytes
-//$BEGIN_ENTRY
-//$eeprom_map:therm_eeprom_offsets $ignore:True
-//const static uint16_t THERM_TABLE				= 0x0074;
+const static uint16_t THERM_TABLE				= 0x0074;
 /// Padding: 8 bytes
 // Toolhead 0 data: 28 bytes (see above)
 //$BEGIN_ENTRY
