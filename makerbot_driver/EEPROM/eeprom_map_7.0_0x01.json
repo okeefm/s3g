@@ -254,6 +254,30 @@
               "type": "H"
             }
           }
+        }, 
+        "HBP_PID_BASE": {
+          "eeprom_map": "pid_eeprom_offsets", 
+          "offset": "0x0010", 
+          "sub_map": {
+            "D_TERM": {
+              "constraints": "m,0,100", 
+              "floating_point": "True", 
+              "offset": "4", 
+              "type": "H"
+            }, 
+            "I_TERM": {
+              "constraints": "m,0,1", 
+              "floating_point": "True", 
+              "offset": "2", 
+              "type": "H"
+            }, 
+            "P_TERM": {
+              "constraints": "m,0,100", 
+              "floating_point": "True", 
+              "offset": "0", 
+              "type": "H"
+            }
+          }
         }
       }, 
       "tool_index": "0"
@@ -282,6 +306,30 @@
         "EXTRUDER_PID_BASE": {
           "eeprom_map": "pid_eeprom_offsets", 
           "offset": "0x000A", 
+          "sub_map": {
+            "D_TERM": {
+              "constraints": "m,0,100", 
+              "floating_point": "True", 
+              "offset": "4", 
+              "type": "H"
+            }, 
+            "I_TERM": {
+              "constraints": "m,0,1", 
+              "floating_point": "True", 
+              "offset": "2", 
+              "type": "H"
+            }, 
+            "P_TERM": {
+              "constraints": "m,0,100", 
+              "floating_point": "True", 
+              "offset": "0", 
+              "type": "H"
+            }
+          }
+        }, 
+        "HBP_PID_BASE": {
+          "eeprom_map": "pid_eeprom_offsets", 
+          "offset": "0x0010", 
           "sub_map": {
             "D_TERM": {
               "constraints": "m,0,100", 
