@@ -11,7 +11,6 @@ from .LineTransformProcessor import LineTransformProcessor
 from .CoordinateRemovalProcessor import CoordinateRemovalProcessor
 from .TemperatureProcessor import TemperatureProcessor
 from .RpmProcessor import RpmProcessor
-from .AnchorProcessor import AnchorProcessor
 
 import makerbot_driver
 
@@ -29,7 +28,6 @@ class Skeinforge50Processor(BundleProcessor):
             TemperatureProcessor(),
             RpmProcessor(),
             SkeinforgeVersionChecker(self.version),
-            AnchorProcessor(),
         ]
         self.code_map = {}
 
