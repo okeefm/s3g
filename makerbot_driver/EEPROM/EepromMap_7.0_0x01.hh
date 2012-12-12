@@ -158,11 +158,11 @@ const static uint16_t COOLING_FAN_SETTINGS 	= 	0x001A;
 namespace eeprom_offsets {
 /// Firmware Version, low byte: 1 byte
 //$BEGIN_ENTRY
-//$type:B $ignore:True $constraints:m,0,100
+//$type:B $constraints:m,0,100
 const static uint16_t VERSION_LOW				= 0x0000;
 /// Firmware Version, high byte: 1 byte
 //$BEGIN_ENTRY
-//$type:B $ignore:True $constraints:m,0,10
+//$type:B $constraints:m,0,10
 const static uint16_t VERSION_HIGH				= 0x0001;
 /// Axis inversion flags: 1 byte.
 /// Axis N (where X=0, Y=1, etc.) is inverted if the Nth bit is set.
