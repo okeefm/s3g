@@ -42,12 +42,11 @@ class Skeinforge50ProcessorTests(unittest.TestCase):
             "(<version> 12.03.14 </version)\n",
             "G90\n",
             "G21\n",
-            "M104 S500\n",
-            "M105 S500\n",
             "M101\n",
             "M102\n",
             "M108\n",
-            "G92 X0 Y0 Z0 A0 B0\n"
+            "G92 X0 Y0 Z0 A0 B0\n",
+            "M105 S100\n",
         ]
         expected_output = [
             '(<version> 12.03.14 </version)\n',
@@ -66,10 +65,9 @@ class Skeinforge50ProcessorTests(unittest.TestCase):
             "M101\n",
             "G21\n",
             "G92 A0\n",
-            "M104\n",
             "M108\n",
             "G92 B0\n",
-            "M105\n",
+            "M105 S100\n",    
         ]
         expected_output = [
             "G92 A0\n",
