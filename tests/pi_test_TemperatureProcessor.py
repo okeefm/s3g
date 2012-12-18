@@ -39,6 +39,7 @@ class TestSetTemperatureProcessor(unittest.TestCase):
 
     def test_regex(self):
         cases = [
+            ["M104 S500\n", []],
             ["M104\n", []],
             ["M104(comments)\n", []],
             ["", []],
