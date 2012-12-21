@@ -87,6 +87,7 @@ class SingleHeadReading(unittest.TestCase):
             'skeinforge_single_extrusion_20mm_box.gcode'
         )
         the_file = process_file_with_pro(the_file, 'Skeinforge50Processor')
+        the_file = process_file_with_pro(the_file, 'SetTemperatureProcessor')
         execute_file(the_file, self.p)
 
     def test_single_head_skeinforge_single_snake(self):
@@ -98,6 +99,7 @@ class SingleHeadReading(unittest.TestCase):
             'skeinforge_single_extrusion_snake.gcode'
         )
         the_file = process_file_with_pro(the_file, 'Skeinforge50Processor')
+        the_file = process_file_with_pro(the_file, 'SetTemperatureProcessor')
         execute_file(the_file, self.p)
 
     def test_single_head_miracle_grue(self):
@@ -144,6 +146,7 @@ class DualHeadReading(unittest.TestCase):
             'gcode_samples',
             'skeinforge_dual_extrusion_hilbert_cube.gcode')
         the_file = process_file_with_pro(the_file, 'Skeinforge50Processor')
+        the_file = process_file_with_pro(the_file, 'SetTemperatureProcessor')
         the_file = process_file_with_pro(
             the_file, 'CoordinateRemovalProcessor')
         execute_file(the_file, self.p)
@@ -157,6 +160,7 @@ class DualHeadReading(unittest.TestCase):
             'skeinforge_single_extrusion_20mm_box.gcode'
         )
         the_file = process_file_with_pro(the_file, 'Skeinforge50Processor')
+        the_file = process_file_with_pro(the_file, 'SetTemperatureProcessor')
         execute_file(the_file, self.p)
 
     def test_single_head_skeinforge_single_snake(self):
@@ -167,6 +171,7 @@ class DualHeadReading(unittest.TestCase):
             'gcode_samples',
             'skeinforge_single_extrusion_snake.gcode')
         the_file = process_file_with_pro(the_file, 'Skeinforge50Processor')
+        the_file = process_file_with_pro(the_file, 'SetTemperatureProcessor')
         execute_file(the_file, self.p)
 
     def test_single_head_miracle_grue(self):
