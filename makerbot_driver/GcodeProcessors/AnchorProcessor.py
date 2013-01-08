@@ -103,4 +103,10 @@ class AnchorProcessor(LineTransformProcessor):
         return distance
 
     def get_start_position(self):
-        return "G1 X-112 Y-73 Z150 F3300.0 (move to waiting position)"
+        start_position = (-112, -73, 150)
+        if hasattr(self, 'profile') and None != self.profile:
+            sp = self.profile.values['print_start_sequence']['start_position']
+            start_position = (sp['start_x'], sp['start_y'], sp['start_z'])
+        start_codes = "G1 X%.3f Y%.3f Z%.3f F3300.0 (move to waiting position)"
+        start_codes = start_codes % start_position
+        return start_codes
