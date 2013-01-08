@@ -14,9 +14,11 @@ class ProcessorFactory(object):
             pros.remove('errors')
         return pros
 
-    def create_processor_from_name(self, name):
+    def create_processor_from_name(self, name, profile = None):
         try:
-            return getattr(makerbot_driver.GcodeProcessors, name)()
+            processor = getattr(makerbot_driver.GcodeProcessors, name)()
+            processor.profile = profile
+            return processor
         except AttributeError:
             raise makerbot_driver.GcodeProcessors.ProcessorNotFoundError
 
@@ -28,8 +30,8 @@ class ProcessorFactory(object):
                 strings.remove(s)
         return strings
 
-    def get_processors(self, processors):
+    def get_processors(self, processors, profile = None):
         if isinstance(processors, str):
             processors = self.process_list_with_commas(processors)
         for processor in processors:
-            yield self.create_processor_from_name(processor)
+            yield self.create_processor_from_name(processor, profile)

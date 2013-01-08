@@ -31,9 +31,11 @@ class TestAnchorProcessor(unittest.TestCase):
                 self.ap.calc_euclidean_distance(case[0], case[1]), case[2])
 
     def test_get_start_position(self):
-        expected_start_position = 'G1 X-112 Y-73 Z150 F3300.0 (move to waiting position)'
+        # Not sure what to test here. 
+        # Should I check that the values returned are all numbers?
+        example_start_position = [0, 0, 1]
         got_start_position = self.ap.get_start_position()
-        self.assertEqual(expected_start_position, got_start_position)
+        self.assertEqual(len(example_start_position), len(got_start_position))
 
     def test_get_extruder(self):
         cases = [
@@ -47,23 +49,28 @@ class TestAnchorProcessor(unittest.TestCase):
             self.assertEqual(case[1], got_extruder)
 
     def test_find_extrusion_distance_no_distance(self):
-        codes = {
+        start_position = [
+            0,
+            0,
+            1,
+        ]
+        end_codes = {
             'X': 0,
             'Y': 0,
             'Z': 1,
         }
         expected_distance = 0
-        got_distance = self.ap.find_extrusion_distance(codes, codes)
+        got_distance = self.ap.find_extrusion_distance(start_position, end_codes)
         self.assertEqual(expected_distance, got_distance)
 
     def test_find_extrusion_distance_distance_is_one(self):
         layer_height = 1
         width_over_height = 1.6
-        start_codes = {
-            'X': 0,
-            'Y': 0,
-            'Z': layer_height,
-        }
+        start_position = [
+            0,
+            0,
+            layer_height,
+        ]
         end_codes = {
             'X': 1,
             'Y': 0,
@@ -71,17 +78,17 @@ class TestAnchorProcessor(unittest.TestCase):
         }
         expected_distance = self.ap.feed_cross_section_area(
             layer_height, width_over_height)
-        got_distance = self.ap.find_extrusion_distance(start_codes, end_codes)
+        got_distance = self.ap.find_extrusion_distance(start_position, end_codes)
         self.assertEqual(expected_distance, got_distance)
 
     def test_find_extrusion_distance_is_two(self):
         layer_height = 1
         width_over_height = 1.6
-        start_codes = {
-            'X': 0,
-            'Y': 0,
-            'Z': layer_height,
-        }
+        start_position = [
+            0,
+            0,
+            layer_height,
+        ]
         end_codes = {
             'X': 2,
             'Y': 0,
@@ -89,11 +96,11 @@ class TestAnchorProcessor(unittest.TestCase):
         }
         expected_distance = self.ap.feed_cross_section_area(
             layer_height, width_over_height) * 2
-        got_distance = self.ap.find_extrusion_distance(start_codes, end_codes)
+        got_distance = self.ap.find_extrusion_distance(start_position, end_codes)
         self.assertEqual(expected_distance, got_distance)
 
     def test_create_anchor_command_no_distance_no_extruder_axis(self):
-        start_position = "G1 X0 Y0 Z1"
+        start_position = [0, 0, 1]
         end_position = "G1 X0 Y0 Z1"
         expected_anchor_commands = ["G1 X0 Y0 Z1 F1000 E0.0\n", "G92 E0\n"]
 
@@ -102,7 +109,7 @@ class TestAnchorProcessor(unittest.TestCase):
         self.assertEqual(expected_anchor_commands, got_anchor_commands)
 
     def test_create_anchor_command_no_distance_e_extruder_axis(self):
-        start_position = "G1 X0 Y0 Z1"
+        start_position = [0, 0, 1]
         end_position = "G1 X0 Y0 Z1 E10"
         expected_anchor_commands = ["G1 X0 Y0 Z1 F1000 E0.0\n", "G92 E0\n"]
         got_anchor_commands = self.ap.create_anchor_command(
@@ -110,7 +117,7 @@ class TestAnchorProcessor(unittest.TestCase):
         self.assertEqual(expected_anchor_commands, got_anchor_commands)
 
     def test_create_anchor_command_no_distance_b_extruder_axis(self):
-        start_position = "G1 X0 Y0 Z1"
+        start_position = [0, 0, 1]
         end_position = "G1 X0 Y0 Z1 B10"
         expected_anchor_commands = ["G1 X0 Y0 Z1 F1000 E0.0\n", "G92 E0\n"]
         got_anchor_commands = self.ap.create_anchor_command(
@@ -118,7 +125,7 @@ class TestAnchorProcessor(unittest.TestCase):
         self.assertEqual(expected_anchor_commands, got_anchor_commands)
 
     def test_create_anchor_command_distance_is_one(self):
-        start_position = "G1 X0 Y0 Z1"
+        start_position = [0, 0, 1]
         end_position = "G1 X0 Y1 Z1"
         layer_height = 1
         width_over_height = 1.6
@@ -132,7 +139,7 @@ class TestAnchorProcessor(unittest.TestCase):
         self.assertEqual(expected_anchor_commands, got_anchor_commands)
 
     def test_create_anchor_command_distance_is_two(self):
-        start_position = "G1 X0 Y0 Z1"
+        start_position = [0, 0, 1]
         end_position = "G1 X0 Y2 Z1"
         distance = 2
         layer_height = 1
@@ -147,7 +154,7 @@ class TestAnchorProcessor(unittest.TestCase):
         self.assertEqual(expected_anchor_commands, got_anchor_commands)
 
     def test_create_anchor_command_distance_is_two_z_distance_greater_than_0(self):
-        start_position = "G1 X0 Y0 Z100"
+        start_position = [0, 0, 100]
         end_position = "G1 X0 Y2 Z1"
         distance = 2
         layer_height = 1
@@ -186,18 +193,18 @@ class TestAnchorProcessor(unittest.TestCase):
         self.assertEqual(expected_codes, got_gcodes)
 
     def test_create_z_move_if_necessary_no_delta(self):
-        start_codes = {'Z': 0}
+        start_position = [0, 0, 0]
         end_codes = {'Z': 0}
         self.assertEqual(
-            [], self.ap.create_z_move_if_necessary(start_codes, end_codes))
+            [], self.ap.create_z_move_if_necessary(start_position, end_codes))
 
     def test_create_z_move_if_necessary_delta(self):
         d = .5
-        start_codes = {'Z': 100}
+        start_position = [0, 0, 0]
         end_codes = {'Z': d}
         expected_codes = ['G1 Z%f F1000\n' % (d)]
         self.assertEqual(expected_codes, self.ap.create_z_move_if_necessary(
-            start_codes, end_codes))
+            start_position, end_codes))
 
 if __name__ == "__main__":
     unittest.main()

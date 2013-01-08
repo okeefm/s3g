@@ -30,10 +30,10 @@ class AnchorProcessor(LineTransformProcessor):
             self.looking_for_first_move = False
         return return_lines
 
-    def create_z_move_if_necessary(self, start_movement_codes, end_movement_codes):
+    def create_z_move_if_necessary(self, start_position, end_movement_codes):
         return_codes = []
-        if 'Z' in start_movement_codes and 'Z' in end_movement_codes:
-            start_z = start_movement_codes['Z']
+        if 'Z' in end_movement_codes:
+            start_z = start_position[2]
             end_z = end_movement_codes['Z']
             if start_z - end_z is not 0:
                 return_codes.append('G1 Z%f F%i\n' % (end_z, self.speed))
@@ -41,8 +41,7 @@ class AnchorProcessor(LineTransformProcessor):
 
     def create_anchor_command(self, start_position, end_position):
         assert start_position is not None and end_position is not None
-        start_movement_codes = makerbot_driver.Gcode.parse_line(
-            start_position)[0]
+
         end_movement_codes = makerbot_driver.Gcode.parse_line(end_position)[0]
         # We dont really know what the next command contains; it could have all or
         # none of the following, so we need to generate the next command in this
@@ -56,10 +55,10 @@ class AnchorProcessor(LineTransformProcessor):
         anchor_command += 'F%i ' % (self.speed)
         extruder = "E"
         extrusion_distance = self.find_extrusion_distance(
-            start_movement_codes, end_movement_codes)
+            start_position, end_movement_codes)
         anchor_command += extruder + str(extrusion_distance) + "\n"
         reset_command = "G92 %s0" % (extruder) + "\n"
-        return_codes = self.create_z_move_if_necessary(start_movement_codes, end_movement_codes)
+        return_codes = self.create_z_move_if_necessary(start_position, end_movement_codes)
         return_codes.extend([anchor_command, reset_command])
         return return_codes
 
@@ -71,12 +70,11 @@ class AnchorProcessor(LineTransformProcessor):
             extruder = 'E'
         return extruder
 
-    def find_extrusion_distance(self, start_position_codes, end_position_codes):
+    def find_extrusion_distance(self, start_position, end_position_codes):
         layer_height = end_position_codes.get('Z', 0)
-        start_position_point = []
+        start_position_point = start_position[0:2]
         end_position_point = []
         for d in ['X', 'Y']:
-            start_position_point.append(start_position_codes.get(d, 0))
             end_position_point.append(end_position_codes.get(d, 0))
         distance = self.calc_euclidean_distance(
             start_position_point, end_position_point)
@@ -103,4 +101,8 @@ class AnchorProcessor(LineTransformProcessor):
         return distance
 
     def get_start_position(self):
-        return "G1 X-112 Y-73 Z150 F3300.0 (move to waiting position)"
+        start_position = [-112, -73, 150]
+        if hasattr(self, 'profile') and None != self.profile:
+            sp = self.profile.values['print_start_sequence']['start_position']
+            start_position = [sp['start_x'], sp['start_y'], sp['start_z']]
+        return start_position
