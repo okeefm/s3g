@@ -35,6 +35,24 @@ class TestAnchorProcessor(unittest.TestCase):
         got_start_position = self.ap.get_start_position()
         self.assertEqual(expected_start_position, got_start_position)
 
+    def test_get_start_position_with_profile(self):
+        expected_start_position = 'G1 X0 Y0 Z1 F3300.0 (move to waiting position)'
+        # quick, mock profile
+        class profile():
+            def __init__(self):
+                self.values = {
+                    'print_start_sequence' : {
+                        'start_position' : {
+                            'start_x' : 0,
+                            'start_y' : 0,
+                            'start_z' : 1
+                        }
+                    }
+                }
+        self.ap.profile = profile()
+        got_start_position = self.ap.get_start_position()
+        self.assertEqual(expected_start_position, got_start_position)
+
     def test_get_extruder(self):
         cases = [
             [['G', 'A', 'X'], 'A'],
