@@ -31,7 +31,7 @@ class TestAnchorProcessor(unittest.TestCase):
                 self.ap.calc_euclidean_distance(case[0], case[1]), case[2])
 
     def test_get_start_position(self):
-        expected_start_position = 'G1 X-112.000 Y-73.000 Z150.000 F3300.0 (move to waiting position)'
+        expected_start_position = 'G1 X-112 Y-73 Z150 F3300.0 (move to waiting position)'
         got_start_position = self.ap.get_start_position()
         self.assertEqual(expected_start_position, got_start_position)
 

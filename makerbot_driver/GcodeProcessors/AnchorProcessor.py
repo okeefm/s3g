@@ -107,6 +107,6 @@ class AnchorProcessor(LineTransformProcessor):
         if hasattr(self, 'profile') and None != self.profile:
             sp = self.profile.values['print_start_sequence']['start_position']
             start_position = (sp['start_x'], sp['start_y'], sp['start_z'])
-        start_codes = "G1 X%.3f Y%.3f Z%.3f F3300.0 (move to waiting position)"
+        start_codes = "G1 X%s Y%s Z%s F3300.0 (move to waiting position)"
         start_codes = start_codes % start_position
         return start_codes
