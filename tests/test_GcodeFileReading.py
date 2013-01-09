@@ -21,6 +21,13 @@ class TOMReading(unittest.TestCase):
         self.p.state = makerbot_driver.Gcode.LegacyGcodeStates()
         self.p.state.values['build_name'] = 'test'
         self.p.state.profile = makerbot_driver.Profile('TOMStepstruderSingle')
+        start_pos = self.p.state.profile.values['print_start_sequence']['start_position']
+        start_position = {
+            'START_X' : start_pos['start_x'],
+            'START_Y' : start_pos['start_y'],
+            'START_Z' : start_pos['start_z']
+        }
+        self.p.environment.update(start_position)
         self.s3g = makerbot_driver.s3g()
         with tempfile.NamedTemporaryFile(suffix='.gcode', delete=True) as f:
             path = f.name
@@ -49,6 +56,13 @@ class SingleHeadReading(unittest.TestCase):
         self.s = makerbot_driver.Gcode.GcodeStates()
         self.s.values['build_name'] = 'test'
         self.profile = makerbot_driver.Profile('ReplicatorSingle')
+        start_pos = self.profile.values['print_start_sequence']['start_position']
+        start_position = {
+            'START_X' : start_pos['start_x'],
+            'START_Y' : start_pos['start_y'],
+            'START_Z' : start_pos['start_z']
+        }
+        self.p.environment.update(start_position)
         self.s.profile = self.profile
         self.p.state = self.s
         self.s3g = makerbot_driver.s3g()
@@ -120,6 +134,13 @@ class DualHeadReading(unittest.TestCase):
         self.s = makerbot_driver.Gcode.GcodeStates()
         self.s.values['build_name'] = 'test'
         self.profile = makerbot_driver.Profile('ReplicatorDual')
+        start_pos = self.profile.values['print_start_sequence']['start_position']
+        start_position = {
+            'START_X' : start_pos['start_x'],
+            'START_Y' : start_pos['start_y'],
+            'START_Z' : start_pos['start_z']
+        }
+        self.p.environment.update(start_position)
         self.s.profile = self.profile
         self.p.state = self.s
         self.s3g = makerbot_driver.s3g()
