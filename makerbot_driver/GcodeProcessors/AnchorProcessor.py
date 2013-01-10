@@ -31,6 +31,15 @@ class AnchorProcessor(LineTransformProcessor):
         return return_lines
 
     def create_z_move_if_necessary(self, start_movement_codes, end_movement_codes):
+        """
+        The platform must be moved up to the extruder to successfully anchor across the platform.
+        This function checks the location of the platform, and emits the correct G1 command to 
+        move the platform
+
+        @param str start_movement_codes: Where the machine is moving from
+        @param str end_movement_codes: Where the machine is moving to
+        @return list: List of movements commands to move the platform
+        """
         return_codes = []
         if 'Z' in start_movement_codes and 'Z' in end_movement_codes:
             start_z = start_movement_codes['Z']
@@ -40,18 +49,24 @@ class AnchorProcessor(LineTransformProcessor):
         return return_codes
 
     def create_anchor_command(self, start_position, end_position):
+        """
+        Given two G1 commands, draws an anchor between them.  Moves the platform if
+        necessary
+
+        @param str start_position: Where the machine is moving from
+        @param str end_position: Where the machine is moving to
+        @return list: The anchor commands
+        """
         assert start_position is not None and end_position is not None
         start_movement_codes = makerbot_driver.Gcode.parse_line(
-            start_position)[0]
-        end_movement_codes = makerbot_driver.Gcode.parse_line(end_position)[0]
-        # We dont really know what the next command contains; it could have all or
-        # none of the following, so we need to generate the next command in this
-        # seemingly bad way
+            start_position)[0] # Where the Bot is moving from
+        end_movement_codes = makerbot_driver.Gcode.parse_line(end_position)[0] # Where the bot is moving to
+        # Construct the next G1 command based on where the bot is moving to
         anchor_command = "G1 "
         for d in ['X', 'Y', 'Z']:
             if d in end_movement_codes:
-                part = d + str(end_movement_codes[d])
-                anchor_command += part
+                part = d + str(end_movement_codes[d]) # The next [XYZ] code
+                anchor_command += part 
                 anchor_command += ' '
         anchor_command += 'F%i ' % (self.speed)
         extruder = "E"
