@@ -749,20 +749,42 @@ class gcodeTests(unittest.TestCase):
             sorted(codes), sorted(self.g.MCODE_INSTRUCTIONS[135][1]))
         self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[135][2])
 
-    def test_tool_change_no_t_code(self):
+    def test_tool_change_no_t_code_no_toolhead_index(self):
+        self.assertFalse('last_toolhead_index' in self.g.state.values)
         codes = {}
         flags = []
         comments = ''
         self.assertRaises(KeyError, self.g.change_tool, codes, flags, comments)
 
-    def test_tool_change(self):
+    def test_tool_change_no_t_code_saved_toolhead_index(self):
         tool_index = 2
+        self.g.state.values['last_toolhead_index'] = tool_index
+        self.g.change_tool({}, [], '')
+        self.mock.change_tool.assert_called_once_with(tool_index)
+        self.assertEqual(self.g.state.values['tool_index'], tool_index)
+        self.assertEqual(self.g.state.values['last_toolhead_index'], tool_index)
+
+    def test_tool_change_t_code_no_toolhead_index(self):
+        tool_index = 2
+        self.assertFalse('last_toolhead_index' in self.g.state.values)
         codes = {'T': tool_index}
         flags = []
         comments = ''
         self.g.change_tool(codes, flags, comments)
         self.mock.change_tool.assert_called_once_with(tool_index)
         self.assertEqual(self.g.state.values['tool_index'], tool_index)
+        self.assertEqual(self.g.state.values['last_toolhead_index'], tool_index)
+
+    def test_tool_change_t_code_saved_toolhead_index(self):
+        tool_index = 2
+        self.g.state.values['last_toolhead_index'] = tool_index
+        codes = {
+            'T': tool_index
+        }
+        self.g.change_tool(codes, [], '')
+        self.mock.change_tool.assert_called_once_with(tool_index)
+        self.assertEqual(self.g.state.values['tool_index'], tool_index)
+        self.assertEqual(self.g.state.values['last_toolhead_index'], tool_index)
 
     def test_wait_for_tool_ready_all_codes_accounted_for(self):
         codes = 'PT'

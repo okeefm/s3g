@@ -369,9 +369,11 @@ class GcodeParser(object):
     def change_tool(self, codes, flags, comments):
         """Sends a chagne tool command to the machine.
         """
-        self.state.values['tool_index'] = codes['T']
-        self._log.debug('{"event":"gcode_state_change", "change":"tool_change", "new_tool_index":%i}', codes['T'])
-        self.s3g.change_tool(codes['T'])
+        if 'T' in codes:
+            self.state.values['last_toolhead_index'] = codes['T']
+        self.state.values['tool_index'] = self.state.values['last_toolhead_index']
+        self._log.debug('{"event":"gcode_state_change", "change":"tool_change", "new_tool_index":%i}', self.state.values['last_toolhead_index'])
+        self.s3g.change_tool(self.state.values['last_toolhead_index'])
 
     def build_start_notification(self, codes, flags, comments):
         """Sends a build start notification command to the machine.
