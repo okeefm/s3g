@@ -14,8 +14,8 @@ class GcodeError(ValueError):
             v = str(self.values[key])
             v = v.rstrip(
                 '\n')  # Line commands have carriage returns
-            returnStr += key + ': ' + v + '; '
-        returnStr = returnStr.rstrip('; ')  # Remove final semicolon
+            returnStr += key + ': ' + v + '\n'
+        returnStr = returnStr.rstrip('\n')  # Remove final semicolon
         return returnStr
 
 

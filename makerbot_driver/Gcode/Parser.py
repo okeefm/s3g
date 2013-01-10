@@ -96,8 +96,7 @@ class GcodeParser(object):
                     self._log.error('{"event":"unrecognized_command", "command":%s}', codes['M'])
                     gcode_error = makerbot_driver.Gcode.UnrecognizedCommandError()
                     gcode_error.values['UnrecognizedCommand'] = codes['M']
-                    gcode_error.values['Suggestion'] = 'This gcode command is not valid for makerbot_driver. makerbot_driver/PreProcessors' \
-                        ' can be used for backwards compatiblity with older gcode.'
+                    gcode_error.values['Suggestion'] = 'This gcode command is not valid for makerbot_driver.'
                     raise gcode_error
 
             # Not a G or M code, should we throw here?
@@ -116,7 +115,7 @@ class GcodeParser(object):
             gcode_error.values['MissingCode'] = e[0]
             gcode_error.values['LineNumber'] = self.line_number
             gcode_error.values['Command'] = command
-            gcode_error.values['Suggestion'] = 'Preprocessors are available in makerbot_driver/Preprocessors to correct for non supported commands'
+            gcode_error.values['Suggestion'] = 'This gcode command is not valid for makerbot_driver'
             raise gcode_error
         except makerbot_driver.Gcode.VectorLengthZeroError:
             self._log.debug('{"event":vector_length_zero_error"}')
