@@ -610,14 +610,45 @@ class gcodeTests(unittest.TestCase):
         self.mock.set_toolhead_temperature.assert_called_once_with(
             tool_index, temperature)
 
-    def test_set_toolhead_temperature_doesnt_update_state_machine(self):
-        tool_index = 0
+    def test_set_toolhead_temperature_no_t_code_no_saved_toolhead_index(self):
+        codes = {'S': 100}
+        self.assertRaises(
+            KeyError, self.g.set_toolhead_temperature, codes, [], '')
+
+    def test_set_toolhead_temperature_no_t_code_saved_toolhead_index(self):
+        toolhead_index = 2
         temperature = 100
-        codes = {'S': temperature, 'T': tool_index}
-        flags = []
-        comments = ''
-        self.g.set_toolhead_temperature(codes, flags, comments)
-        self.assertTrue('tool_index' not in self.g.state.values)
+        self.g.state.values['last_toolhead_index'] = toolhead_index
+        codes = {
+            'S': temperature
+        }
+        self.g.set_toolhead_temperature(codes, [], '')
+        self.mock.set_toolhead_temperature.assert_called_once_with(toolhead_index, temperature)
+        self.assertEqual(self.g.state.values['last_toolhead_index'], toolhead_index)
+
+    def test_set_toolhead_temperature_t_code_no_saved_toolhead_index(self):
+        toolhead_index = 2
+        temperature = 100
+        self.assertFalse('last_toolhead_index' in self.g.state.values)
+        codes = {
+            'S': temperature,
+            'T': toolhead_index
+        }
+        self.g.set_toolhead_temperature(codes, [], '')
+        self.assertEqual(self.g.state.values['last_toolhead_index'], toolhead_index)
+        self.mock.set_toolhead_temperature.assert_called_once_with(toolhead_index, temperature)
+
+    def test_set_toolhead_temperature_t_code_saved_toolhead_index(self):
+        toolhead_index = 2
+        temperature = 100
+        self.g.state.values['last_toolhead_index'] = toolhead_index + 1
+        codes = {
+            'S': temperature,
+            'T': toolhead_index,
+        }
+        self.g.set_toolhead_temperature(codes, [], '')
+        self.assertEqual(self.g.state.values['last_toolhead_index'], toolhead_index)
+        self.mock.set_toolhead_temperature.assert_called_once_with(toolhead_index, temperature)
 
     def test_set_platform_temperature_all_codes_accounted_for(self):
         codes = 'ST'
@@ -631,10 +662,45 @@ class gcodeTests(unittest.TestCase):
         self.assertRaises(
             KeyError, self.g.set_platform_temperature, codes, [], '')
 
-    def test_set_platform_temperature_no_t_code(self):
+    def test_set_platform_temperature_no_t_code_no_saved_platform_index(self):
         codes = {'S': 100}
         self.assertRaises(
             KeyError, self.g.set_platform_temperature, codes, [], '')
+
+    def test_set_platform_temperature_no_t_code_saved_platform_index(self):
+        platform_index = 2
+        temperature = 100
+        self.g.state.values['last_platform_index'] = platform_index
+        codes = {
+            'S': temperature
+        }
+        self.g.set_platform_temperature(codes, [], '')
+        self.mock.set_platform_temperature.assert_called_once_with(platform_index, temperature)
+        self.assertEqual(self.g.state.values['last_platform_index'], platform_index)
+
+    def test_set_platform_temperature_t_code_no_saved_platform_index(self):
+        platform_index = 2
+        temperature = 100
+        self.assertFalse('last_platform_index' in self.g.state.values)
+        codes = {
+            'S': temperature,
+            'T': platform_index
+        }
+        self.g.set_platform_temperature(codes, [], '')
+        self.assertEqual(self.g.state.values['last_platform_index'], platform_index)
+        self.mock.set_platform_temperature.assert_called_once_with(platform_index, temperature)
+
+    def test_set_platform_temperature_t_code_saved_platfor_index(self):
+        platform_index = 2
+        temperature = 100
+        self.g.state.values['last_platform_index'] = platform_index + 1
+        codes = {
+            'S': temperature,
+            'T': platform_index,
+        }
+        self.g.set_platform_temperature(codes, [], '')
+        self.assertEqual(self.g.state.values['last_platform_index'], platform_index)
+        self.mock.set_platform_temperature.assert_called_once_with(platform_index, temperature)
 
     def test_set_platform_temperature_all_code_defined(self):
         tool_index = 0
@@ -748,14 +814,38 @@ class gcodeTests(unittest.TestCase):
             timeout
         )
 
-    def test_wait_for_tool_ready_doesnt_update_state_machine(self):
-        tool_index = 0
-        timeout = 42
-        codes = {'T': tool_index, 'P': timeout}
-        flags = []
-        comments = ''
-        self.g.wait_for_tool_ready(codes, flags, comments)
-        self.assertTrue('tool_index' not in self.g.state.values)
+    def test_wait_for_tool_ready_no_t_code_no_saved_tool_index(self):
+        self.assertFalse('last_toolhead_index' in self.g.state.values)
+        with self.assertRaises(KeyError):
+            self.g.wait_for_tool_ready({}, [], '')
+
+    def test_wait_for_tool_ready_no_t_code_saved_tool_index(self):
+        tool_index = 2
+        self.g.state.values['last_toolhead_index'] = tool_index
+        codes = {}
+        self.g.wait_for_tool_ready(codes, [], '')
+        self.mock.wait_for_tool_ready.assert_called_once_with(tool_index, self.g.state.wait_for_ready_packet_delay, self.g.state.wait_for_ready_timeout)
+        self.assertEqual(self.g.state.values['last_toolhead_index'], tool_index) 
+
+    def test_wait_for_tool_ready_t_code_no_saved_tool_index(self):
+        tool_index = 2
+        self.assertFalse('last_toolhead_index' in self.g.state.values)
+        codes = {
+            'T': tool_index
+        }
+        self.g.wait_for_tool_ready(codes, [], '')
+        self.mock.wait_for_tool_ready.assert_called_once_with(tool_index, self.g.state.wait_for_ready_packet_delay, self.g.state.wait_for_ready_timeout)
+        self.assertEqual(self.g.state.values['last_toolhead_index'], tool_index)
+
+    def test_wait_for_tool_ready_t_code_saved_tool_index(self):
+        tool_index = 2
+        self.g.state.values['last_toolhead_index'] = tool_index + 1
+        codes = {
+            'T': tool_index
+        }
+        self.g.wait_for_tool_ready(codes, [], '')
+        self.mock.wait_for_tool_ready.assert_called_once_with(tool_index, self.g.state.wait_for_ready_packet_delay, self.g.state.wait_for_ready_timeout)
+        self.assertEqual(self.g.state.values['last_toolhead_index'], tool_index)
 
     def test_wait_for_platform_ready_all_codes_accounted_for(self):
         codes = 'PT'
@@ -764,7 +854,7 @@ class gcodeTests(unittest.TestCase):
             sorted(codes), sorted(self.g.MCODE_INSTRUCTIONS[134][1]))
         self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[134][2])
 
-    def test_wait_for_platform_no_p_or_t_codes(self):
+    def test_wait_for_platform_ready_no_p_or_t_codes(self):
         codes = {}
         flags = []
         comments = ''
@@ -775,6 +865,39 @@ class gcodeTests(unittest.TestCase):
             flags,
             comments
         )
+
+    def test_wait_for_platform_ready_no_t_code_no_saved_platform_index(self):
+        self.assertFalse('last_platform_index' in self.g.state.values)
+        with self.assertRaises(KeyError):
+            self.g.wait_for_platform_ready({}, [], '')
+
+    def test_wait_for_platform_ready_no_t_code_saved_platform_index(self):
+        platform_index = 2
+        self.g.state.values['last_platform_index'] = platform_index
+        codes = {}
+        self.g.wait_for_platform_ready(codes, [], '')
+        self.mock.wait_for_platform_ready.assert_called_once_with(platform_index, self.g.state.wait_for_ready_packet_delay, self.g.state.wait_for_ready_timeout)
+        self.assertEqual(self.g.state.values['last_platform_index'], platform_index) 
+
+    def test_wait_for_platform_ready_t_code_no_saved_platform_index(self):
+        platform_index = 2
+        self.assertFalse('last_platform_index' in self.g.state.values)
+        codes = {
+            'T': platform_index
+        }
+        self.g.wait_for_platform_ready(codes, [], '')
+        self.mock.wait_for_platform_ready.assert_called_once_with(platform_index, self.g.state.wait_for_ready_packet_delay, self.g.state.wait_for_ready_timeout)
+        self.assertEqual(self.g.state.values['last_platform_index'], platform_index)
+
+    def test_wait_for_platform_ready_t_code_saved_platform_index(self):
+        platform_index = 2
+        self.g.state.values['last_platform_index'] = platform_index + 1
+        codes = {
+            'T': platform_index
+        }
+        self.g.wait_for_platform_ready(codes, [], '')
+        self.mock.wait_for_platform_ready.assert_called_once_with(platform_index, self.g.state.wait_for_ready_packet_delay, self.g.state.wait_for_ready_timeout)
+        self.assertEqual(self.g.state.values['last_platform_index'], platform_index)
 
     def test_wait_for_platform_no_p_code_defined(self):
         tool_index = 0
@@ -832,20 +955,40 @@ class gcodeTests(unittest.TestCase):
         self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[126][1])
         self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[126][2])
 
-    def test_enable_extra_device_no_t_code(self):
+    def test_enable_extra_device_no_t_code_no_extra_index(self):
         codes = {}
         flags = []
         comments = ''
+        self.assertFalse('last_extra_index' in self.g.state.values)
         self.assertRaises(
             KeyError, self.g.enable_extra_output, codes, flags, comments)
 
-    def test_enable_extra_device_t_code_defined(self):
+    def test_enable_extra_device_no_t_code_saved_extra_index(self):
+        tool_index = 2
+        self.g.state.values['last_extra_index'] = tool_index
+        self.g.enable_extra_output({}, [], '')
+        self.mock.toggle_extra_output.assert_called_once_with(self.g.state.values['last_extra_index'], True)
+        self.assertEqual(self.g.state.values['last_extra_index'], tool_index)
+
+    def test_enable_extra_device_t_code_defined_no_saved_extra_index(self):
+        self.assertFalse('last_extra_index' in self.g.state.values)
         tool_index = 2
         codes = {'T': tool_index}
         flags = []
         comments = ''
         self.g.enable_extra_output(codes, flags, comments)
         self.mock.toggle_extra_output.assert_called_once_with(tool_index, True)
+        self.assertEqual(self.g.state.values['last_extra_index'], tool_index)
+
+    def test_enable_extra_device_t_code_defined_saved_extra_index(self):
+        tool_index = 2
+        self.g.state.values['last_extra_index'] = tool_index + 1
+        codes = {
+            'T': tool_index
+        }
+        self.g.enable_extra_output(codes, [], '')
+        self.mock.toggle_extra_output.assert_called_once_with(tool_index, True)
+        self.assertEqual(self.g.state.values['last_extra_index'], tool_index)
 
     def test_disable_extra_device_all_codes_accounted_for(self):
         codes = 'T'
@@ -853,21 +996,40 @@ class gcodeTests(unittest.TestCase):
         self.assertEqual(codes, self.g.MCODE_INSTRUCTIONS[127][1])
         self.assertEqual(flags, self.g.MCODE_INSTRUCTIONS[127][2])
 
-    def test_disable_extra_device_no_t_code(self):
+    def test_disable_extra_device_no_t_code_no_extra_index(self):
         codes = {}
         flags = []
         comments = ''
+        self.assertFalse('last_extra_index' in self.g.state.values)
         self.assertRaises(
             KeyError, self.g.disable_extra_output, codes, flags, comments)
 
-    def test_disable_extra_device_t_code_defined(self):
+    def test_disable_extra_device_no_t_code_saved_extra_index(self):
+        tool_index = 2
+        self.g.state.values['last_extra_index'] = tool_index
+        self.g.disable_extra_output({}, [], '')
+        self.mock.toggle_extra_output.assert_called_once_with(self.g.state.values['last_extra_index'], False)
+        self.assertEqual(self.g.state.values['last_extra_index'], tool_index)
+
+    def test_disable_extra_device_t_code_defined_no_saved_extra_index(self):
+        self.assertFalse('last_extra_index' in self.g.state.values)
         tool_index = 2
         codes = {'T': tool_index}
         flags = []
         comments = ''
         self.g.disable_extra_output(codes, flags, comments)
-        self.mock.toggle_extra_output.assert_called_once_with(
-            tool_index, False)
+        self.mock.toggle_extra_output.assert_called_once_with(tool_index, False)
+        self.assertEqual(self.g.state.values['last_extra_index'], tool_index)
+
+    def test_disable_extra_device_t_code_defined_saved_extra_index(self):
+        tool_index = 2
+        self.g.state.values['last_extra_index'] = tool_index + 1
+        codes = {
+            'T': tool_index
+        }
+        self.g.disable_extra_output(codes, [], '')
+        self.mock.toggle_extra_output.assert_called_once_with(tool_index, False)
+        self.assertEqual(self.g.state.values['last_extra_index'], tool_index)
 
 if __name__ == "__main__":
     unittest.main()

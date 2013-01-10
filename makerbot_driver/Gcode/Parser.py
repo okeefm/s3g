@@ -206,8 +206,10 @@ class GcodeParser(object):
             timeout = codes['P']
         else:
             timeout = self.state.wait_for_ready_timeout
+        if 'T' in codes:    
+            self.state.values['last_toolhead_index'] = codes['T']
         self.s3g.wait_for_tool_ready(
-            codes['T'],
+            self.state.values['last_toolhead_index'],
             self.state.wait_for_ready_packet_delay,
             timeout
         )
@@ -222,8 +224,10 @@ class GcodeParser(object):
             timeout = codes['P']
         else:
             timeout = self.state.wait_for_ready_timeout
+        if 'T' in codes:
+            self.state.values['last_platform_index'] = codes['T']
         self.s3g.wait_for_platform_ready(
-            codes['T'],
+            self.state.values['last_platform_index'],
             self.state.wait_for_ready_packet_delay,
             timeout
         )
@@ -342,14 +346,18 @@ class GcodeParser(object):
         a specific temperature.  We set the state's tool_idnex to be the
         'T' code (if present) and use that tool_index when heating.
         """
-        self.s3g.set_toolhead_temperature(codes['T'], codes['S'])
+        if 'T' in codes:
+            self.state.values['last_toolhead_index'] = codes['T']
+        self.s3g.set_toolhead_temperature(self.state.values['last_toolhead_index'], codes['S'])
 
     def set_platform_temperature(self, codes, flags, comment):
         """Sets the platform temperature for a specific toolhead to a specific
         temperature.  We set the state's tool_index to be the 'T' code (if present)
         and use that tool_index when heating.
         """
-        self.s3g.set_platform_temperature(codes['T'], codes['S'])
+        if 'T' in codes:
+            self.state.values['last_platform_index'] = codes['T']
+        self.s3g.set_platform_temperature(self.state.values['last_platform_index'], codes['S'])
 
     def load_position(self, codes, flags, comment):
         """Loads the home positions for the XYZ axes from the eeprom
@@ -389,11 +397,15 @@ class GcodeParser(object):
         Enables an extra output attached to a certain toolhead
         of the machine
         """
-        self.s3g.toggle_extra_output(codes['T'], True)
+        if 'T' in codes:
+            self.state.values['last_extra_index'] = codes['T']
+        self.s3g.toggle_extra_output(self.state.values['last_extra_index'], True)
 
     def disable_extra_output(self, codes, flags, comment):
         """
         Disables an extra output attached to a certain toolhead
         of the machine
         """
-        self.s3g.toggle_extra_output(codes['T'], False)
+        if 'T' in codes:
+            self.state.values['last_extra_index'] = codes['T']
+        self.s3g.toggle_extra_output(self.state.values['last_extra_index'], False)
