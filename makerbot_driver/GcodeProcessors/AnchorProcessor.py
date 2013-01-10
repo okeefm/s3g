@@ -106,7 +106,7 @@ class AnchorProcessor(LineTransformProcessor):
         Taken from MG, (hopefully not wrongfully) assumed to work
         """
         radius = height / 2.0
-        tau = math.pi
+        tau = math.pi * 2
         return (tau / 2.0) * (radius * radius) + height * (width - height)
 
     def calc_euclidean_distance(self, p1, p2):
