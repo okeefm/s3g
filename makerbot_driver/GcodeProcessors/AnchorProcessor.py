@@ -16,6 +16,7 @@ class AnchorProcessor(LineTransformProcessor):
         }
         self.looking_for_first_move = True
         self.speed = 1000
+        self.width_over_height = .8
 
     def _grab_extruder(self, match):
         self.extruder = match.group(2)
@@ -95,9 +96,8 @@ class AnchorProcessor(LineTransformProcessor):
             end_position_point.append(end_position_codes.get(d, 0))
         distance = self.calc_euclidean_distance(
             start_position_point, end_position_point)
-        width_over_height = 1.6
         cross_section = self.feed_cross_section_area(
-            float(layer_height), width_over_height)
+            float(layer_height), self.width_over_height)
         extrusion_distance = cross_section * distance
         return extrusion_distance
 
