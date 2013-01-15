@@ -14,6 +14,17 @@ debug = GetOption('debug_build')
 
 env = Environment(ENV = os.environ)
 
+env.Tool('mb_install', toolpath=[Dir('submodule/mw-scons-tools')])
+
+driver_src = []
+src_str = '#/makerbot_driver'
+
+for curpath, dirnames, filenames in os.walk(str(Dir(src_str))):
+    driver_src.append(filter(lambda f:
+                                 (os.path.exists(str(f)) and
+                                  not os.path.isdir(str(f))),
+                             env.Glob(os.path.join(curpath, '*.py'))))
+
 if 'win32' == sys.platform:
 	vcmd=env.Command('virtualenv', 'setup.bat', 'setup.bat')
 else:
@@ -34,6 +45,14 @@ path_to_avrdude = os.path.join(
     )
 
 env.Command(path_to_avrdude, vcmd, 'python copy_avrdude.py')
+
+s3g_egg = env.Command('dist/makerbot_driver-0.1.1-py2.7.egg',
+                      driver_src,
+               "python -c 'import setuptools; execfile(\"setup.py\")' bdist_egg")
+
+env.MBInstallEgg(s3g_egg)
+
+env.MBCreateInstallTarget()
 
 #if run_test:
 #    env.Command('test', 'unit_tests.py', 'python unit_tests.py')
