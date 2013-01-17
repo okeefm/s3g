@@ -214,6 +214,38 @@ class s3g(object):
         # TODO: check response_code
         return sdResponse
 
+
+    def cmp_files(self, filename):
+        """ one use function for comparing the name file (filename) on the bots SD,
+        to a blob of bytes in the bots progmem
+        Returns True if the files match, False if they don't, and -1 if it gets a corrupt byte"""
+        payload = struct.pack(
+            '<B',
+            makerbot_driver.host_query_command_dict['CMP_SD_FILE_TO_MEMFILE'],
+        )
+        payload += filename
+        payload += '\x00'
+
+        response = self.writer.send_query_payload(payload)
+        fp = open('cmp_file.out', 'wb')
+        fp.write(response)
+        fp.flush()
+        fp.close()
+
+        [response_code, cmp_return_val, extra_code] = makerbot_driver.Encoder.unpack_response('<BBB', response)
+
+        if(response_code != response_code_dict['SUCCESS']):
+            print('RESPONSE CODE: ERROR')
+            return -1
+        else:
+            if(cmp_return_val == 0xFF):
+                return True
+            elif(cmp_return_val == 0x00):
+                return False
+            else:
+                return -1
+
+
     def reset(self):
         """
         reset the bot, unless the bot is waiting to tell us a build is cancelled.
