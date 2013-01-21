@@ -234,16 +234,17 @@ class s3g(object):
 
         [response_code, cmp_return_val, extra_code] = makerbot_driver.Encoder.unpack_response('<BBB', response)
 
-        if(response_code != response_code_dict['SUCCESS']):
+        print str(response_code) + str(cmp_return_val) + str(extra_code)
+        if(response_code != makerbot_driver.response_code_dict['SUCCESS']):
             print('RESPONSE CODE: ERROR')
             return -1
         else:
             if(cmp_return_val == 0xFF):
-                return True
+                return (True, cmp_return_val)
             elif(cmp_return_val == 0x00):
-                return False
+                return (False, cmp_return_val)
             else:
-                return -1
+                return (-1, cmp_return_val)
 
 
     def reset(self):
@@ -1526,4 +1527,29 @@ class s3g(object):
         0,
         )
         self.writer.send_action_payload(payload)
+
+    def send_raw_data(self, data):
+
+        data.reverse()
+
+        while(1):
+            bytes = []
+            if(len(data) > (makerbot_driver.constants.maximum_payload_length-1)):
+                while((len(data) > 0) and (len(bytes) < (makerbot_driver.constants.maximum_payload_length-1))):
+                    bytes.append(data.pop())
+            elif(len(data) > 0):
+                data.reverse()
+                bytes = data
+                data = []
+            else:
+                return
+                
+            payload = struct.pack('<B', makerbot_driver.host_query_command_dict['RAW_DATA'])
+
+            for byte in bytes:
+                payload += struct.pack('<B', byte)
+
+            packet = makerbot_driver.Encoder.encode_payload(payload)
+
+            self.writer.send_packet(packet)
 

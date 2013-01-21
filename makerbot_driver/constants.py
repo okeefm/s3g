@@ -4,6 +4,7 @@ host_query_command_dict = {
     'GET_AVAILABLE_BUFFER_SIZE': 2,
     'CLEAR_BUFFER': 3,
     'CMP_SD_FILE_TO_MEMFILE': 5,
+    'RAW_DATA': 6,
     'ABORT_IMMEDIATELY': 7,
     'PAUSE': 8,
     'TOOL_QUERY': 10,
