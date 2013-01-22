@@ -48,7 +48,7 @@ env.Command(path_to_avrdude, vcmd, 'python copy_avrdude.py')
 
 s3g_egg = env.Command('dist/makerbot_driver-0.1.1-py2.7.egg',
                       driver_src,
-               "python -c 'import setuptools; execfile(\"setup.py\")' bdist_egg")
+               'python -c "import setuptools; execfile(\'setup.py\')" bdist_egg')
 
 env.MBInstallEgg(s3g_egg)
 
