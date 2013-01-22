@@ -47,7 +47,7 @@ path_to_avrdude = os.path.join(
 env.Command(path_to_avrdude, vcmd, 'python copy_avrdude.py')
 
 if 'win32' == sys.platform:
-    pycmd = 'virtualenv/Scripts/python'
+    pycmd = 'virtualenv\\Scripts\\python'
 else:
     pycmd = 'virtualenv/bin/python'
 
