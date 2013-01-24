@@ -66,47 +66,5 @@ class TestFactory(unittest.TestCase):
         self.assertTrue(
             parser.state.profile.values['type'] == 'The Replicator Single')
 
-    def test_create_print_to_stream_legacy(self):
-        port = '/dev/tty.ACM0'
-        machine_name = 'TOMStepstruderSingle'
-        parser = makerbot_driver.create_print_to_stream_parser(
-            port, machine_name, legacy=True)
-        self.assertTrue(parser.__class__.__name__ == 'GcodeParser')
-        self.assertTrue(parser.state.__class__.__name__ == 'LegacyGcodeStates')
-        self.assertTrue(parser.state.profile.values['type']
-                        == 'Thing-O-Matic Single, Stepstruder Mk6+')
-        self.from_filename_mock.assert_called_once_with(port)
-
-    def test_create_print_to_stream(self):
-        port = '/dev/tty.ACM0'
-        machine_name = 'ReplicatorSingle'
-        parser = makerbot_driver.create_print_to_stream_parser(
-            port, machine_name)
-        self.assertTrue(parser.__class__.__name__ == 'GcodeParser')
-        self.assertTrue(parser.state.__class__.__name__ == 'GcodeStates')
-        self.assertTrue(
-            parser.state.profile.values['type'] == 'The Replicator Single')
-        self.from_filename_mock.assert_called_once_with(port)
-
-    def test_create_eeprom_reader(self):
-        port = '/dev/tty.ACM0'
-        fw_version = 6.0
-        software_variant  = '0x00'
-        working_directory = None
-        reader = makerbot_driver.create_eeprom_reader(
-            port, fw_version, software_variant, working_directory)
-        self.assertTrue(reader.__class__.__name__ == 'EepromReader')
-        self.from_filename_mock.assert_called_once_with(port)
-
-    def test_create_eeprom_reader(self):
-        port = '/dev/tty.ACM0'
-        fw_version = 6.0
-        software_variant  = '0x00'
-        working_directory = None
-        writer = makerbot_driver.create_eeprom_writer(
-            port, fw_version, software_variant, working_directory)
-        self.assertTrue(writer.__class__.__name__ == 'EepromWriter')
-        self.from_filename_mock.assert_called_once_with(port)
-
 if __name__ == "__main__":
     unittest.main()
