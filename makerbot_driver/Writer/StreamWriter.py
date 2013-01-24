@@ -4,7 +4,6 @@ from __future__ import absolute_import
 
 import time
 import logging
-import threading
 
 from . import AbstractWriter
 import makerbot_driver
@@ -15,12 +14,12 @@ class StreamWriter(AbstractWriter):
     to a bot at the end of a wire.
     """
 
-    def __init__(self, file):
+    def __init__(self, file, condition):
         """ Initialize a new StreamWriter object
 
         @param string file File object to interact with
         """
-        super(StreamWriter, self).__init__(file)
+        super(StreamWriter, self).__init__(file, condition)
         self._log = logging.getLogger(self.__class__.__name__)
         self._log.debug('{"event":"begin_writing_to_stream", "stream":%s}',
                        str(self.file))
@@ -105,16 +104,14 @@ class StreamWriter(AbstractWriter):
                 return decoder.payload
 
             except (makerbot_driver.BufferOverflowError) as e:
-                # Buffer overflow error- wait a while for the buffer to clear, then try again.
-                # TODO: This could hang forever if the machine gets stuck; is that what we want?
+                # Relative to the StreamWriter, BufferOverflowErrors aren't retryable.  But, they
+                # are expected to be caught by a higher power
 
                 self._log.debug('{"event":"buffer_overflow", "overflow_count":%i, "retry_count"=%i}', overflow_count, retry_count)
 
                 self.total_overflows += 1
                 overflow_count += 1
-
-                with self._condition:
-                    self._condition.wait(.2)
+                raise e
 
             except makerbot_driver.RetryableError as e:
                 # Sent a packet to the host, but got a malformed response or timed out waiting

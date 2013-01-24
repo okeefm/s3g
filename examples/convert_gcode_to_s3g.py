@@ -11,6 +11,7 @@ sys.path.append(lib_path)
 import makerbot_driver
 import optparse
 import tempfile
+import threading
 
 parser = optparse.OptionParser()
 parser.add_option("-i", "--inputfile", dest="input_file",
@@ -24,8 +25,9 @@ parser.add_option("-s", "--sequences", dest="sequences",
                   default=True, action="store_false")
 (options, args) = parser.parse_args()
 
+condition = threading.Condition()
 s = makerbot_driver.s3g()
-s.writer = makerbot_driver.Writer.FileWriter(open(options.output_file, 'wb'))
+s.writer = makerbot_driver.Writer.FileWriter(open(options.output_file, 'wb'), condition)
 
 profile = makerbot_driver.Profile(options.machine)
 
@@ -38,7 +40,7 @@ parser.state.profile = profile
 parser.s3g = s
 
 ga = makerbot_driver.GcodeAssembler(profile)
-start, end, variables = ga.assemble_recipe()
+start, end, variables = ga.assemble_recipe(tool_0=True, tool_1=True, material='PLA')
 start_gcode = ga.assemble_start_sequence(start)
 end_gcode = ga.assemble_end_sequence(end)
 parser.environment.update(variables)

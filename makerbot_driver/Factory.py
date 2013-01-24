@@ -4,6 +4,7 @@ makerbot_driver
 """
 
 from __future__ import absolute_import
+import threading
 
 import makerbot_driver
 
@@ -21,7 +22,8 @@ def create_parser(machine_name, legacy=False):
 def create_print_to_file_parser(filename, machine_name, legacy=False):
     parser = create_parser(machine_name, legacy)
     parser.s3g = makerbot_driver.s3g()
-    parser.s3g.writer = makerbot_driver.Writer.FileWriter(open(filename, 'wb'))
+    condition = threading.Condition()
+    parser.s3g.writer = makerbot_driver.Writer.FileWriter(open(filename, 'wb'), condition)
     return parser
 
 

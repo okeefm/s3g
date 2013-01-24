@@ -28,3 +28,9 @@ class Point(object):
         for axis in ['X', 'Y', 'Z', 'A', 'B']:
             if axis in codes:
                 setattr(self, axis, codes[axis])
+
+    def copy(self):
+        copy_point = Point()
+        for axis in ['X', 'Y', 'Z', 'A', 'B']:
+            setattr(copy_point, axis, getattr(self, axis))
+        return copy_point

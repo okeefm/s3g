@@ -154,7 +154,6 @@ class GcodeParser(object):
         axes = makerbot_driver.Gcode.parse_out_axes(flags)
         if len(axes) == 0:
             return
-        self.state.lose_position(flags)
         #We need some axis information to calc the DDA speed
         axes_feedrates, axes_SPM = self.state.get_axes_feedrate_and_SPM(axes)
         dda_speed = makerbot_driver.Gcode.calculate_homing_DDA_speed(
@@ -162,8 +161,13 @@ class GcodeParser(object):
             axes_feedrates,
             axes_SPM
         )
-        self.s3g.find_axes_maximums(axes, dda_speed, self.state.profile.values[
-                                    'find_axis_maximum_timeout'])
+        try:
+            self.s3g.find_axes_maximums(axes, dda_speed, self.state.profile.values[
+                                        'find_axis_maximum_timeout'])
+        except Exception:
+            raise
+        else:
+            self.state.lose_position(flags)
 
     def find_axes_minimums(self, codes, flags, comment):
         """Moves the given axes in the negative direction until a timeout
@@ -173,7 +177,6 @@ class GcodeParser(object):
         axes = makerbot_driver.Gcode.parse_out_axes(flags)
         if len(axes) == 0:
             return
-        self.state.lose_position(flags)
         #We need some axis information to calc the DDA speed
         axes_feedrates, axes_SPM = self.state.get_axes_feedrate_and_SPM(axes)
         dda_speed = makerbot_driver.Gcode.calculate_homing_DDA_speed(
@@ -181,19 +184,32 @@ class GcodeParser(object):
             axes_feedrates,
             axes_SPM
         )
-        self.s3g.find_axes_minimums(axes, dda_speed, self.state.profile.values[
+        try:
+            self.s3g.find_axes_minimums(axes, dda_speed, self.state.profile.values[
                                     'find_axis_minimum_timeout'])
+        except Exception:
+            raise
+        else:
+            self.state.lose_position(flags)
 
     def set_position(self, codes, flags, comment):
         """Explicitely sets the position of the state machine and bot
         to the given point
         """
-        self.state.set_position(codes)
+        new_position = self.state.position.copy()
+        new_position.SetPoint(codes)
+        new_position = new_position.ToList()
         stepped_position = makerbot_driver.Gcode.multiply_vector(
-            self.state.get_position(),
+#            self.state.get_position(),
+            new_position,
             self.state.get_axes_values('steps_per_mm')
         )
-        self.s3g.set_extended_position(stepped_position)
+        try:
+            self.s3g.set_extended_position(stepped_position)
+        except Exception:
+            raise
+        else:
+            self.state.set_position(codes)
 
     def wait_for_tool_ready(self, codes, flags, comment):
         """
@@ -268,8 +284,12 @@ class GcodeParser(object):
         if percentage > 100 or percentage < 0:
             raise makerbot_driver.Gcode.BadPercentageError
 
-        self.s3g.set_build_percent(percentage)
-        self.state.percentage = percentage
+        try:
+            self.s3g.set_build_percent(percentage)
+        except Exception:
+            raise
+        else:
+            self.state.percentage = percentage
 
     def linear_interpolation(self, codes, flags, comment):
         """Movement command that has two flavors: E and AB commands.
@@ -278,57 +298,63 @@ class GcodeParser(object):
         AB Commands increment the AB axes.
         Having both E and A or B codes will throw errors.
         """
-        if 'F' in codes:
-            self.state.values['feedrate'] = codes['F']
-            self._log.debug('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', codes['F'])
-        if len(makerbot_driver.Gcode.parse_out_axes(codes)) > 0 or 'E' in codes:
-            #if 'A' in codes and 'B' in codes:
-            #  gcode_error = ConflictingCodesError()
-            #  gcode_error.values['ConflictingCodes'] = ['A', 'B']
-            #  raise gcode_error
-            current_position = self.state.get_position()
-            self.state.set_position(codes)
-            try:
-                feedrate = self.state.values['feedrate']
+        try:
+            if 'F' in codes:
+                new_feedrate = codes['F']
+                self._log.debug('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', codes['F'])
+            elif 'feedrate' in self.state.values:
+                new_feedrate = self.state.values['feedrate']
+            else:
+                raise makerbot_driver.Gcode.NoFeedrateSpecifiedError
+            if len(makerbot_driver.Gcode.parse_out_axes(codes)) > 0 or 'E' in codes:
+                current_position = self.state.get_position()
+                new_position = self.state.position.copy() 
+                new_position.SetPoint(codes)
+                new_position = new_position.ToList()
                 dda_speed = makerbot_driver.Gcode.calculate_DDA_speed(
                     current_position,
-                    self.state.get_position(),
-                    feedrate,
+                    new_position,
+                    new_feedrate,
                     self.state.get_axes_values('max_feedrate'),
                     self.state.get_axes_values('steps_per_mm'),
                 )
                 stepped_point = makerbot_driver.Gcode.multiply_vector(
-                    self.state.get_position(),
+                    new_position,
                     self.state.get_axes_values('steps_per_mm')
                 )
                 #Get euclidean distance for x,y,z axes
-                e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance(current_position[:3], self.state.get_position()[:3])
+                e_distance = makerbot_driver.Gcode.Utils.calculate_euclidean_distance(current_position[:3], new_position[:3])
                 #If that distance is 0, get e_distance for A axis
                 if e_distance == 0:
                     e_distance = max(
-                        makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[3]], [self.state.get_position()[3]]),
-                        makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[4]], [self.state.get_position()[4]]),
+                        makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[3]], [new_position[3]]),
+                        makerbot_driver.Gcode.Utils.calculate_euclidean_distance([current_position[4]], [new_position[4]]),
                     )
                 displacement_vector = makerbot_driver.Gcode.calculate_vector_difference(
-                    self.state.get_position(),
-                    current_position
+                    new_position,
+                    current_position,
                 )
                 safe_feedrate_mm_min = makerbot_driver.Gcode.get_safe_feedrate(
                     displacement_vector,
                     self.state.get_axes_values('max_feedrate'),
-                    self.state.values['feedrate'],
+                    new_feedrate,
                 )
                 move_minutes = e_distance / safe_feedrate_mm_min
                 safe_feedrate_mm_sec = safe_feedrate_mm_min / 60.0
                 self.s3g.queue_extended_point(stepped_point, dda_speed, e_distance, safe_feedrate_mm_sec)
 
-            except KeyError as e:
-                if e[0] == 'feedrate':  # A key error would return 'feedrate' as the missing key,
-                                     # when in respect to the executed command the 'F' command
-                                     # is the one missing. So we remake the KeyError to report
-                                     # 'F' instead of 'feedrate'.
-                    e = KeyError('F')
-                raise e
+        except KeyError as e:
+            if e[0] == 'feedrate':  # A key error would return 'feedrate' as the missing key,
+                                 # when in respect to the executed command the 'F' command
+                                 # is the one missing. So we remake the KeyError to report
+                                 # 'F' instead of 'feedrate'.
+                e = KeyError('F')
+            raise e
+
+        else:
+            self.state.values['feedrate'] = new_feedrate
+            self.state.set_position(codes)
+
 
     def dwell(self, codes, flags, comment):
         """Pauses the machine for a specified amount of miliseconds
@@ -362,8 +388,12 @@ class GcodeParser(object):
         """Loads the home positions for the XYZ axes from the eeprom
         """
         axes = makerbot_driver.Gcode.parse_out_axes(flags)
-        self.state.lose_position(axes)
-        self.s3g.recall_home_positions(axes)
+        try:
+            self.s3g.recall_home_positions(axes)
+        except Exception:
+            raise
+        else:
+            self.state.lose_position(axes)
 
     def change_tool(self, codes, flags, comments):
         """Sends a chagne tool command to the machine.
@@ -388,10 +418,15 @@ class GcodeParser(object):
         """Sends a build end notification command to the machine
         """
         self._log.debug('{"event":"build_end"}')
-        self.state.values['build_name'] = None
-        self._log.debug(
-            '{"event":"gcode_state_change", "change":"remove_build_name"}')
-        self.s3g.build_end_notification()
+        try:
+            self.s3g.build_end_notification()
+        except Exception:
+            raise
+        else:
+            self.state.values['build_name'] = None
+            self._log.debug(
+                '{"event":"gcode_state_change", "change":"remove_build_name"}')
+            
 
     def enable_extra_output(self, codes, flags, comment):
         """

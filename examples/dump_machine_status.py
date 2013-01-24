@@ -13,6 +13,7 @@ import makerbot_driver
 import serial
 import optparse
 import binascii
+import threading
 
 parser = optparse.OptionParser()
 parser.add_option("-p", "--serialport", dest="serialportname",
@@ -28,7 +29,8 @@ parser.add_option("-d", "--dumpeeprom", dest="dump_eeprom",
 
 file = serial.Serial(options.serialportname, options.serialbaud, timeout=0)
 r = makerbot_driver.s3g()
-r.writer = makerbot_driver.Writer.StreamWriter(file)
+condition = threading.Condition()
+r.writer = makerbot_driver.Writer.StreamWriter(file, condition)
 
 print "firmware version: %i"%(r.get_version())
 print "build name: %s"%(r.get_build_name())

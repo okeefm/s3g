@@ -45,12 +45,20 @@ parser = getattr(obj, 'gcodeparser')
 parser.environment.update(variables)
 parser.state.values["build_name"] = filename[:15]
 
+def exec_line(line):
+    while True:
+        try:
+            parser.execute_line(line)
+            break
+        except makerbot_driver.BufferOverflowError as e:
+            parser.s3g.writer._condition.wait(.2)
+
 if options.sequences:
     for line in start_gcode:
-        parser.execute_line(line)
+        exec_line(line)
 with open(options.filename) as f:
     for line in f:
-        parser.execute_line(line)
+        exec_line(line)
 if options.sequences:
     for line in end_gcode:
-        parser.execute_line(line)
+        exec_line(line)

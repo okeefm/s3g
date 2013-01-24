@@ -9,6 +9,7 @@ import io
 import struct
 import array
 import tempfile
+import threading
 
 import makerbot_driver
 
@@ -44,8 +45,9 @@ class FileReaderTestsWithS3g(unittest.TestCase):
         with tempfile.NamedTemporaryFile(delete=True, suffix='.gcode') as f:
             self.path = f.name
 
+        condition = threading.Condition()
         self.r.writer = makerbot_driver.Writer.FileWriter(
-            open(self.path, 'wb'))
+            open(self.path, 'wb'), condition)
 
         self.d = makerbot_driver.FileReader.FileReader()
         self.d.file = open(self.path, 'rb')

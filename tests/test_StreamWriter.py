@@ -29,7 +29,8 @@ class StreamMock(object):
 class StreamWriterOpenCloseTests(unittest.TestCase):
     def setUp(self):
         self.file = StreamMock()
-        self.writer = makerbot_driver.Writer.StreamWriter(self.file)
+        condition = threading.Condition()
+        self.writer = makerbot_driver.Writer.StreamWriter(self.file, condition)
 
     def tearDown(self):
         self.file = None
@@ -59,7 +60,8 @@ class StreamWriterTests(unittest.TestCase):
         )  # Stream that we will receive commands on
 
         file = io.BufferedRWPair(self.outputstream, self.inputstream)
-        self.w = makerbot_driver.Writer.StreamWriter(file)
+        condition = threading.Condition()
+        self.w = makerbot_driver.Writer.StreamWriter(file, condition)
 
     def tearDown(self):
         self.w = None
@@ -262,7 +264,7 @@ class StreamWriterTests(unittest.TestCase):
             expected_payload), self.inputstream.getvalue())
 
     def test_external_stop(self):
-        self.w.set_external_stop()
+        self.w.set_external_stop(True)
         self.assertTrue(self.w.external_stop)
 
     def test_external_stop_works_precondition(self):
@@ -271,13 +273,13 @@ class StreamWriterTests(unittest.TestCase):
         self.outputstream.write(
             makerbot_driver.Encoder.encode_payload(response_payload))
         self.outputstream.seek(0)
-        self.w.set_external_stop()
+        self.w.set_external_stop(True)
         self.assertRaises(
             makerbot_driver.ExternalStopError, self.w.send_command, 'asdf')
 
     def delay_and_external_stop_in_thread(self):
         time.sleep(makerbot_driver.timeout_length)
-        self.w.set_external_stop()
+        self.w.set_external_stop(True)
 
     def test_delay_and_external_stop_in_thread(self):
         self.assertFalse(self.w.external_stop)
@@ -315,7 +317,8 @@ class TestUnderlyingFile(unittest.TestCase):
         self.mock.open.side_effect = side_effect_open
         self.mock.close.side_effect = side_effect_close
         #file = io.BufferedRWPair(self.outputstream, self.inputstream)
-        self.sWriter = makerbot_driver.Writer.StreamWriter(self.mock)
+        condition = threading.Condition()
+        self.sWriter = makerbot_driver.Writer.StreamWriter(self.mock, condition)
 
     def test_underlying_open_close(self):
         "verify underlying file object gets open/close"""

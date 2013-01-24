@@ -2,6 +2,7 @@ from __future__ import (absolute_import, print_function, unicode_literals)
 
 import os
 import sys
+import threading
 import uuid
 lib_path = os.path.abspath('./')
 sys.path.insert(0, lib_path)
@@ -258,6 +259,7 @@ class TestMachineInquisitor(unittest.TestCase):
         self.inquisitor = makerbot_driver.MachineInquisitor('/dev/dummy_port')
         self.s3g_mock = mock.Mock(makerbot_driver.s3g)
         self.inquisitor.create_s3g = mock.Mock(return_value=self.s3g_mock)
+        self.condition = threading.Condition()
 
     def tearDown(self):
         self.inquisitor = None
@@ -271,7 +273,7 @@ class TestMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_advanced_version = mock.Mock(side_effect=makerbot_driver.CommandNotSupportedError)
         self.s3g_mock.set_print_to_file_type('s3g')
         expected_settings = {'vid':vid, 'pid':pid, 'tool_count':tool_count, 'print_to_file_type':'s3g', 'software_variant':'0x00'}
-        s3g, got_settings = self.inquisitor.query()
+        s3g, got_settings = self.inquisitor.query(self.condition)
         self.assertEqual(s3g, self.s3g_mock)
         self.assertEqual(expected_settings, got_settings)
 
@@ -292,7 +294,7 @@ class TestMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_advanced_version.return_value = advanced_version_info
         self.s3g_mock.set_print_to_file_type('s3g')
         expected_settings = {'vid':vid, 'pid':pid, 'tool_count':tool_count, 'print_to_file_type':'s3g', 'software_variant':'0x00'}
-        s3g, got_settings = self.inquisitor.query()
+        s3g, got_settings = self.inquisitor.query(self.condition)
         self.assertEqual(s3g, self.s3g_mock)
         self.assertEqual(expected_settings, got_settings)
 
@@ -313,7 +315,7 @@ class TestMachineInquisitor(unittest.TestCase):
         self.s3g_mock.get_advanced_version.return_value = advanced_version_info
         self.s3g_mock.set_print_to_file_type('x3g')
         expected_settings = {'vid':vid, 'pid':pid, 'tool_count':tool_count, 'print_to_file_type':'x3g', 'software_variant':'0x01'}
-        s3g, got_settings = self.inquisitor.query()
+        s3g, got_settings = self.inquisitor.query(self.condition)
         self.assertEqual(s3g, self.s3g_mock)
         self.assertEqual(expected_settings, got_settings)
 

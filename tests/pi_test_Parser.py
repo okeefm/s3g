@@ -126,13 +126,20 @@ class test_linear_interpolation(unittest.TestCase):
             sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[1][1]))
         self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[1][2])
 
-    def test_linear_interpolation_doesnt_call_s3g_with_no_codes(self):
-        codes = {}
+    def test_linear_interpolation_doesnt_call_s3g_with_no_codes_axis_codes(self):
+        codes = {'F': 0}
         flags = []
         comments = ''
         self.g.linear_interpolation(codes, flags, comments)
         calls = self.mock.mock_calls
         self.assertEqual(0, len(calls))
+
+    def test_linear_interpolation_no_feedrate_specified_error(self):
+        codes = {}
+        flags = []
+        comments = ''
+        with self.assertRaises(makerbot_driver.Gcode.NoFeedrateSpecifiedError):
+            self.g.linear_interpolation(codes, flags, comments)
 
     def test_linear_interpolation_doesnt_call_s3g_with_only_feedrate(self):
         codes = {'F': 10}
@@ -147,15 +154,6 @@ class test_linear_interpolation(unittest.TestCase):
         codes = {'F': feedrate}
         self.g.linear_interpolation(codes, [], '')
         self.assertEqual(feedrate, self.g.state.values['feedrate'])
-
-    def test_linear_interpolation_no_feedrate_no_last_feedrate_set(self):
-        codes = {
-            'X': 0,
-            'Y': 1,
-            'Z': 2,
-            'A': 3,
-        }
-        self.assertRaises(KeyError, self.g.linear_interpolation, codes, [], '')
 
     def test_linear_interpolation_no_feedrate_code_last_feedrate_set(self):
         feedrate = 50
