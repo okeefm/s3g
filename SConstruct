@@ -26,9 +26,9 @@ for curpath, dirnames, filenames in os.walk(str(Dir(src_str))):
                              env.Glob(os.path.join(curpath, '*.py'))))
 
 if 'win32' == sys.platform:
-	vcmd=env.Command('virtualenv', 'setup.bat', 'setup.bat')
+    vcmd=env.Command('virtualenv', 'setup.bat', 'setup.bat')
 else:
-	vcmd=env.Command('virtualenv', 'setup.sh', './setup.sh')
+    vcmd=env.Command('virtualenv', 'setup.sh', './setup.sh')
 
 env.Clean(vcmd,'virtualenv')
 
@@ -56,6 +56,10 @@ s3g_egg = env.Command('dist/makerbot_driver-0.1.1-py2.7.egg',
                       pycmd + ' -c "import setuptools; execfile(\'setup.py\')" bdist_egg')
 
 env.MBInstallEgg(s3g_egg)
+
+if 'win32' == sys.platform:
+    env.MBInstallResources('#\makerbot_driver\EEPROM', 's3g')
+    env.MBInstallResources('#\makerbot_driver\profiles', 's3g')
 
 env.MBCreateInstallTarget()
 
