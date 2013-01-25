@@ -25,7 +25,7 @@ for curpath, dirnames, filenames in os.walk(str(Dir(src_str))):
                                   not os.path.isdir(str(f))),
                              env.Glob(os.path.join(curpath, '*.py'))))
 
-if 'win32' == sys.platform:
+if env.MBIsWindows():
     vcmd=env.Command('virtualenv', 'setup.bat', 'setup.bat')
 else:
     vcmd=env.Command('virtualenv', 'setup.sh', './setup.sh')
@@ -33,7 +33,7 @@ else:
 env.Clean(vcmd,'virtualenv')
 
 if run_test:
-    if 'win32' == sys.platform:
+    if env.MBIsWindows():
         env.Command('test', 'test.bat', 'test.bat')
     else: 
         env.Command('test', 'test.sh', 'test.sh')
@@ -46,7 +46,7 @@ path_to_avrdude = os.path.join(
 
 env.Command(path_to_avrdude, vcmd, 'python copy_avrdude.py')
 
-if 'win32' == sys.platform:
+if env.MBIsWindows():
     pycmd = 'virtualenv\\Scripts\\python'
 else:
     pycmd = 'virtualenv/bin/python'
@@ -57,7 +57,7 @@ s3g_egg = env.Command('dist/makerbot_driver-0.1.1-py2.7.egg',
 
 env.MBInstallEgg(s3g_egg)
 
-if 'win32' == sys.platform:
+if env.MBIsWindows():
     env.MBInstallResources('#\makerbot_driver\EEPROM', 's3g')
     env.MBInstallResources('#\makerbot_driver\profiles', 's3g')
 
