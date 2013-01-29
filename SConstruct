@@ -57,9 +57,8 @@ s3g_egg = env.Command('dist/makerbot_driver-0.1.1-py2.7.egg',
 
 env.MBInstallEgg(s3g_egg)
 
-if env.MBIsWindows():
-    env.MBInstallResources('#\makerbot_driver\EEPROM', 's3g')
-    env.MBInstallResources('#\makerbot_driver\profiles', 's3g')
+env.MBInstallResources('#/makerbot_driver/EEPROM', 's3g')
+env.MBInstallResources('#/makerbot_driver/profiles', 's3g')
 
 env.MBCreateInstallTarget()
 
