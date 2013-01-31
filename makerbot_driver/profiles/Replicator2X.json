@@ -68,7 +68,7 @@
     "start_position" : {
       "replicator_start_position": [
         "G92 X163 Y75 Z0 A0 B0",
-        "G1 X#START_X Y#START_Y #START_Z F3300.0 (move to waiting position)",
+        "G1 X#START_X Y#START_Y Z#START_Z F3300.0 (move to waiting position)",
         "G130 X20 Y20 A20 B20 (Lower stepper Vrefs while heating)"
         ],
       "start_x" : -112,
