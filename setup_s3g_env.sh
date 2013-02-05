@@ -56,7 +56,7 @@ easy_install -q $MB_EGGS/pyserial-2.7_mb2.1-py$PYVERSION.egg
 
 pip install -q --use-mirrors coverage doxypy unittest-xml-reporting
 
-if [ -f $BASEDIR/python/makerbot_driver-0.1.1-py$PYVERSION.egg ]; then
-    easy_install -q $BASEDIR/python/makerbot_driver-0.1.1-py$PYVERSION.egg
+if [ -f $MB_EGGS/makerbot_driver-0.1.1-py$PYVERSION.egg ]; then
+    easy_install -q $MB_EGGS/makerbot_driver-0.1.1-py$PYVERSION.egg
 fi
 
