@@ -41,7 +41,7 @@ eggs = [
   os.path.join(mb_eggs, 'pyserial-2.7_mb2.1-py2.7.egg')
 ]
 s3g_egg = os.path.join(mb_eggs, 'makerbot_driver-0.1.1-py2.7.egg')
-if os.path.exists(s3g_egg)
+if os.path.exists(s3g_egg):
   eggs.append(s3g_egg)
   
 try:
