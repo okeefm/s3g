@@ -51,7 +51,7 @@ env.Clean(vcmd,'virtualenv')
 if env.MBIsMac():
     py26cmd = 'virtualenv26/bin/python'
     vcmd26 = env.Command('virtualenv26', setup_script,
-                         ' '.join(['python', os.path.join('.', setup_script)] + paths))
+                         ' '.join(['python2.6', os.path.join('.', setup_script)] + paths))
 
     s3g_egg26 = env.Command('dist/makerbot_driver-0.1.1-py2.6.egg',
                           driver_src + [vcmd26],
