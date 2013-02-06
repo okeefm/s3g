@@ -32,7 +32,7 @@ def _check_output(*popenargs, **kwargs):
 class Uploader(object):
     """ Firmware Uploader is used to send firmware to a 3D printer."""
 
-    def __init__(self, source_url=None, dest_path=None, autoUpdate=True, path_to_eeprom=None):
+    def __init__(self, source_url=None, dest_path=None, autoUpdate=True, path_to_eeprom=None, avrdude_exe=None, avrdude_conf_file=None):
         """Build an uploader.
         @param source_url: specify a url to fetch firmware metadata from. Can be a directory
         @param dest_path: path to use as the local file store location
@@ -50,6 +50,8 @@ class Uploader(object):
             '..',
             'EEPROM',
         )
+        self._avrdude_exe = avrdude_exe
+        self._avrdude_conf_file = avrdude_conf_file
         if autoUpdate:
             self.update()
 
@@ -196,19 +198,25 @@ class Uploader(object):
         """
         values = self.get_firmware_values(machine)
         values = values['firmware']
-        process = 'avrdude'
-        if platform.system() == "Windows":
-            process += ".exe"
-        if local_avr:
-            path = os.path.join(
+        if None is not self._avrdude_exe:
+            process = self._avrdude_exe
+        else:
+            process = 'avrdude'
+            if platform.system() == "Windows":
+                process += ".exe"
+            if local_avr:
+                path = os.path.join(
+                    os.path.abspath(os.path.dirname(__file__)),
+                    process,
+                )
+                process = path
+        if None is not self._avrdude_conf_file:
+            config_file = self._avrdude_conf_file
+        else:
+            config_file = os.path.join(
                 os.path.abspath(os.path.dirname(__file__)),
-                process,
+                'avrdude.conf'
             )
-            process = path
-        config_file = os.path.join(
-            os.path.abspath(os.path.dirname(__file__)),
-            'avrdude.conf'
-        )
         flags = []
         #get the part
         flags.append('-C' + config_file)
