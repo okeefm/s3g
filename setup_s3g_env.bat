@@ -36,7 +36,9 @@ pip install -q --use-mirrors coverage doxypy unittest-xml-reporting
 
 easy_install -q %MB_EGGS%/pyserial-2.7_mb2.1-py2.7.egg
 
-IF EXIST %MB_EGGS%\makerbot_driver-0.1.1-py2.7.egg easy_install -q %MB_EGGS%/makerbot_driver-0.1.1-py2.7.egg
+IF NOT EXIST %MB_EGGS%\makerbot_driver-0.1.1-py2.7.egg GOTO NOINSTALL
+easy_install -q %MB_EGGS%/makerbot_driver-0.1.1-py2.7.egg
+:NOINSTALL
 
 SET PYTHONPATH=%PYTHONPATH%;%CD%
 
