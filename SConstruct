@@ -32,7 +32,7 @@ if env.MBIsWindows():
     if env.MBUseDevelLibs():
         setup_script = 'setup-dev.bat'
     else:
-        setup_script = 'setup_s3g_env.bat'
+        setup_script = 'setup_s3g_env.py'
 else:
     pycmd = 'virtualenv/bin/python'
     pyvers = '2.7'
