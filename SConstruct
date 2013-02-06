@@ -44,8 +44,8 @@ else:
 
 vcmd = env.Command('virtualenv', setup_script,
                    ' '.join([os.path.join('.', setup_script), pyvers,
-                             str(Dir('#/submodule/conveyor_bins/python')),
-                             env['MB_EGG_DIR']]))
+                             '"'+str(Dir('#/submodule/conveyor_bins/python'))+'"',
+                             '"'+env['MB_EGG_DIR']+'"']))
 
 
 s3g_egg = env.Command('dist/makerbot_driver-0.1.1-py2.7.egg',
