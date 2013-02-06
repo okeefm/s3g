@@ -28,11 +28,8 @@ for curpath, dirnames, filenames in os.walk(str(Dir(src_str))):
 setup_script = 'setup_s3g_env.py'
 if env.MBIsWindows():
     pycmd = 'virtualenv\\Scripts\\python'
-    #other platforms need the version of python, windows needs the interpreter
-    pyvers = 'python'
 else:
     pycmd = 'virtualenv/bin/python'
-    pyvers = '2.7'
 
 paths = [os.path.join('submodule', 'conveyor_bins', 'python')]
 if env.MBUseDevelLibs():
@@ -41,7 +38,7 @@ else:
     paths.append(env['MB_EGG_DIR'])
     
 vcmd = env.Command('virtualenv', setup_script,
-                   ' '.join([os.path.join('.', setup_script)] + paths))
+                   ' '.join(['python', os.path.join('.', setup_script)] + paths))
 
 
 s3g_egg = env.Command('dist/makerbot_driver-0.1.1-py2.7.egg',
@@ -54,9 +51,7 @@ env.Clean(vcmd,'virtualenv')
 if env.MBIsMac():
     py26cmd = 'virtualenv26/bin/python'
     vcmd26 = env.Command('virtualenv26', setup_script,
-                         ' '.join([os.path.join('.', setup_script), '2.6',
-                                   str(Dir('#/submodule/conveyor_bins/python')),
-                                   env['MB_EGG_DIR'], 'virtualenv26']))
+                         ' '.join(['python', os.path.join('.', setup_script)] + paths))
 
     s3g_egg26 = env.Command('dist/makerbot_driver-0.1.1-py2.6.egg',
                           driver_src + [vcmd26],

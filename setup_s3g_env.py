@@ -2,17 +2,23 @@ import os
 import sys
 import subprocess
 
+python_version = ".".join(sys.version.split()[0].split(".")[0:2])
+
 req_eggs = [
-  'mock-1.0.1-py2.7.egg',
-  'lockfile-0.9.1-py2.7.egg',
-  'argparse-1.2.1-py2.7.egg',
-  'unittest2-0.5.1-py2.7.egg',
-  'pyserial-2.7_mb2.1-py2.7.egg'
+  'mock-1.0.1',
+  'lockfile-0.9.1',
+  'argparse-1.2.1',
+  'unittest2-0.5.1',
+  'pyserial-2.7_mb2.1'
 ]
 
+req_eggs = [egg + '-py' + python_version + '.egg' for egg in req_eggs]
+
 opt_eggs = [
-  'makerbot_driver-0.1.1-py2.7.egg'
+  'makerbot_driver-0.1.1'
 ]
+
+opt_eggs = [egg + '-py' + python_version + '.egg' for egg in opt_eggs]
 
 def find_egg(paths, egg):
   for path in paths:
