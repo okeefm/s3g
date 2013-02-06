@@ -25,27 +25,23 @@ for curpath, dirnames, filenames in os.walk(str(Dir(src_str))):
                                   not os.path.isdir(str(f))),
                              env.Glob(os.path.join(curpath, '*.py'))))
 
+setup_script = 'setup_s3g_env.py'
 if env.MBIsWindows():
     pycmd = 'virtualenv\\Scripts\\python'
     #other platforms need the version of python, windows needs the interpreter
     pyvers = 'python'
-    if env.MBUseDevelLibs():
-        setup_script = 'setup-dev.bat'
-    else:
-        setup_script = 'setup_s3g_env.py'
 else:
     pycmd = 'virtualenv/bin/python'
     pyvers = '2.7'
 
-    if env.MBUseDevelLibs():
-        setup_script = 'setup-dev.sh'
-    else:
-        setup_script = 'setup_s3g_env.sh'
-
+paths = [os.path.join('submodule', 'conveyor_bins', 'python')]
+if env.MBUseDevelLibs():
+    paths.append(os.path.join('..', 'pyserial', 'dist'))
+else:
+    paths.append(env['MB_EGG_DIR'])
+    
 vcmd = env.Command('virtualenv', setup_script,
-                   ' '.join([os.path.join('.', setup_script), pyvers,
-                             '"'+str(Dir('#/submodule/conveyor_bins/python'))+'"',
-                             '"'+env['MB_EGG_DIR']+'"']))
+                   ' '.join([os.path.join('.', setup_script)] + paths))
 
 
 s3g_egg = env.Command('dist/makerbot_driver-0.1.1-py2.7.egg',
