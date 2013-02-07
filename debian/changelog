@@ -1,6 +1,5 @@
 makerbot-driver (1.1.3) presice; urgency=low
   * Added Eeprom Map for 7.1
-  * Nonstandard paths can be specified for AVRDude
 
 makerbot-driver (1.1.0) precise; urgency=low
   * Bugfixes for makerware release 1.1.0
