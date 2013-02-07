@@ -37,6 +37,9 @@ if env.MBUseDevelLibs():
 else:
     paths.append(env['MB_EGG_DIR'])
     
+# add quoting. 
+paths = ['"'+path+'"' for path in paths]
+    
 vcmd = env.Command('virtualenv', setup_script,
                    ' '.join(['python', os.path.join('.', setup_script)] + paths))
 
