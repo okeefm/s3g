@@ -57,7 +57,7 @@ if env.MBIsMac():
                           driver_src + [vcmd26],
                           py26cmd + ' -c "import setuptools; execfile(\'setup.py\')" bdist_egg')
     env.MBInstallEgg(s3g_egg26)
-    env.Clean(vcmd,'virtualenv')
+    env.Clean(vcmd26,'virtualenv26')
     
 
 if run_test:
