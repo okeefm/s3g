@@ -50,6 +50,7 @@ try:
 except subprocess.CalledProcessError as e:
   print 'something went wrong calling virtualenv:'
   print e
+  print '\nDid you forget to pass the path to the setuptools egg?'
   sys.exit(2)
 
 
@@ -59,9 +60,15 @@ else:
   virtualenv_easy_install = os.path.join(env_dir, 'bin', 'easy_install')
 e_install = [virtualenv_easy_install, '-q']
 
+missing_required_eggs = False
 try:
   for egg in req_eggs:
-    subprocess.check_call(e_install + [find_egg(search_paths, egg)])
+    egg_found = find_egg(search_paths, egg)
+    if egg_found != None:
+      subprocess.check_call(e_install + [egg_found])
+    else:
+      print 'egg ' + egg + ' not found'
+      missing_required_eggs = True
 except subprocess.CalledProcessError as e:
   print 'something went wrong installing the required eggs'
   sys.exit(4)
@@ -76,3 +83,8 @@ try:
 except subprocess.CalledProcessError as e:
   print 'something went wrong installing the optional eggs'
   sys.exit(5)
+
+if missing_required_eggs:
+  print 'Some of the required eggs were not found.'
+  print '\nDid you forget to pass search paths for those eggs?'
+  sys.exit(6)
