@@ -25,15 +25,13 @@ class EmptyLayerProcessor(Processor):
             self.match = re.match(self.layer_start, self.gcodes[self.code_index])
             if self.match is not None:
                 if self.match.group(1) == '<layer>':
-                    self.is_empty, self.new_code_index = self._layer_test_if_empty(self.code_index, self.gcodes, slicer='SF')
+                    self.is_empty, self.new_code_index = self._layer_test_if_empty(
+                        self.code_index, self.gcodes, slicer='SF')
                 elif self.match.group(1) == 'Slice':
-                    self.is_empty, self.new_code_index = self._layer_test_if_empty(self.code_index, self.gcodes, slicer='MG')
-                print 'IS_EMPTY: ' + str(self.is_empty)
-                print 'CODE: ' + str(self.code_index)
-                print 'NEWCODE: ' +str(self.new_code_index)
+                    self.is_empty, self.new_code_index = self._layer_test_if_empty(
+                        self.code_index, self.gcodes, slicer='MG')
                 if(self.is_empty ==  True):
                     self.code_index = self.new_code_index
-                    print 'NEW_CODEI: ' + str(self.new_code_index)
                     continue #skip appending
                 elif((self.is_empty == -1) and (self.new_code_index == 'MG')):
                 #Hacky way to remove final empty slice for Miracle Grue 
@@ -70,7 +68,7 @@ class EmptyLayerProcessor(Processor):
             else:
                 return (False, None)
         elif(slicer == 'SF'):
-            if(gcodes_in_layer <= 0):
+            if(gcodes_in_layer <= 1):
                 return (True, code_index)
             else:
                 return (False, None)

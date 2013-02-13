@@ -53,14 +53,14 @@ class Rep2XDualstrusionProcessor(Processor):
                     if(self.slicer == 'MG'):
                         self.new_feedrate = (float(self.snort_match.group(1))/2) #divide feedrate by two
                         self.new_extruder_pos = (float(self.snort_match.group(2))-self.retract_distance_mm) #TODO? make retract distance vary on preview extruder positions
-                        self.output[self.snort_index] = "G1 F{0:.3f} A{1:.3f} (snort)".format(self.new_feedrate, self.new_extruder_pos)
+                        self.output[self.snort_index] = "G1 F{0:.3f} A{1:.3f} (snort)\n".format(self.new_feedrate, self.new_extruder_pos)
                     if(self.slicer == 'SF'):
                         self.old_feedrate = float(self.output[self.snort_index-1].split('F')[1])
                         #This is based on the assumption that the feedrate for the snort is set the line before
                         self.new_feedrate = self.old_feedrate/2
                         self.new_extruder_pos = (float(self.snort_match.group(1))-self.retract_distance_mm)
-                        self.output[self.snort_index-1] = "G1 F{0:.1f}".format(self.new_feedrate)
-                        self.output[self.snort_index] = "G1 E{0:.3f}".format(self.new_extruder_pos)
+                        self.output[self.snort_index-1] = "G1 F{0:.1f}\n".format(self.new_feedrate)
+                        self.output[self.snort_index] = "G1 E{0:.3f}\n".format(self.new_extruder_pos)
             self.code_index += 1
 
         return self.output
