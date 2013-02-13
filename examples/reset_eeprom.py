@@ -8,6 +8,7 @@ import serial
 import serial.tools.list_ports
 import struct
 import optparse
+import threading
 
 parser = optparse.OptionParser()
 parser.add_option("-p", "--port", dest="port",
@@ -31,7 +32,8 @@ else:
 print '\nPORT: ' + port
 print "Fully reseting EEPROM, this will take a couple seconds"
 print "------------------------------------------------------"
-r = makerbot_driver.s3g.from_filename(port)
+condition = threading.Condition()
+r = makerbot_driver.s3g.from_filename(port, condition)
 eeprom_length = 4000
 value = struct.pack('<B', 0xFF)
 for i in range(eeprom_length):
