@@ -26,11 +26,11 @@ if not options.platform:
   if platform.system() == "Windows": 
     platform_folder = 'windows'
     avrdude_name = "avrdude.exe"
-    files = [avrdude_name, "libusb0.dll"]
+    files = [avrdude_name, "avrdude.conf", "libusb0.dll"]
   elif platform.system() == "Darwin":
     platform_folder = 'mac'
     avrdude_name = "avrdude"
-    files = [avrdude_name]
+    files = [avrdude_name, "avrdude.conf"]
   elif platform.system() == 'Linux':
     print "Nothing to copy; use distribution utility to obtain AVRDude."
     sys.exit(0)
