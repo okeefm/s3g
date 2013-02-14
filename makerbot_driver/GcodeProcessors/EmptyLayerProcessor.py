@@ -61,7 +61,7 @@ class EmptyLayerProcessor(Processor):
             code_index += 1
             if(code_index > max_index): #if end of input reached return
                 return (-1, slicer)
-        print 'gcodes_in_layer: ' + str(gcodes_in_layer)
+        #print 'gcodes_in_layer: ' + str(gcodes_in_layer)
         if(slicer == 'MG'):
             if(gcodes_in_layer <= 1):
                 return (True, code_index)
