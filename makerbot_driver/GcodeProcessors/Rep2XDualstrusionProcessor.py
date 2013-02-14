@@ -9,17 +9,21 @@ import makerbot_driver
 
 class Rep2XDualstrusionProcessor(Processor):
 
-    def __init__(self):
+    def __init__(self, profile):
         super(Rep2XDualstrusionProcessor, self).__init__()
         self.is_bundleable = True
         self.SF_snortsquirt = re.compile("^G1 E([0-9.]+)")
         self.MG_snort = re.compile("^G1 F([0-9.]+) A([0-9.]+) \(snort\)")
         self.toolchange = re.compile("^M135 T([0-9])")
 
-        self.retract_distance_mm = makerbot_driver.profile.Profile("Replicator2X.json").values[
+        self.retract_distance_mm = makerbot_driver.profile.Profile(profile).values[
             "dualstrusion_retract_distance_mm"]
 
     def process_gcode(self, gcodes, callback = None):
+        #This prevents non-2X bots from running through this processor
+        if self.retract_distance_mm == 'NULL':
+            return gcodes
+
         self.gcodes = gcodes
         self.max_index = (len(gcodes)-1)
 
