@@ -56,18 +56,18 @@ class TestEmptyLayerProcessor(unittest.TestCase):
 
     def test_process_file(self):
         #SKEINFORGE TEST
-        gcode_file = open(os.path.abspath(os.path.join('test_files','sf_empty_slice_input.gcode'), 'r'))
+        gcode_file = open(os.path.abspath('tests/test_files/sf_empty_slice_input.gcode'), 'r')
         in_gcodes = list(gcode_file)
-        expected_out =  open(os.path.abspath(os.path.join('test_files', 'sf_empty_slice_expect.gcode'), 'r'))
+        expected_out =  open(os.path.abspath('tests/test_files/sf_empty_slice_expect.gcode'), 'r')
         expected_gcodes = list(expected_out)
 
         got_gcodes = self.p.process_gcode(in_gcodes)
         self.assertEqual(expected_gcodes, got_gcodes)
 
         #MIRACLE GRUE TEST
-        gcode_file = open(os.path.abspath(os.path.join('test_files','mg_empty_slice_input.gcode'), 'r'))
+        gcode_file = open(os.path.abspath('tests/test_files/mg_empty_slice_input.gcode'), 'r')
         in_gcodes = list(gcode_file)
-        expected_out =  open(os.path.abspath(os.path.join('test_files', 'mg_empty_slice_expect.gcode'), 'r'))
+        expected_out =  open(os.path.abspath('tests/test_files/mg_empty_slice_expect.gcode'), 'r')
         expected_gcodes = list(expected_out)
 
         got_gcodes = self.p.process_gcode(in_gcodes)
