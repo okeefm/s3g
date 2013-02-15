@@ -35,7 +35,7 @@ paths = [os.path.join('submodule', 'conveyor_bins', 'python')]
 if env.MBUseDevelLibs():
     paths.append(os.path.join('..', 'pyserial', 'dist'))
 else:
-    if enb.MBIsLinux() and 'MB_SYSTEM_EGG_DIR' in env:
+    if env.MBIsLinux() and 'MB_SYSTEM_EGG_DIR' in env:
         paths.append(env['MB_SYSTEM_EGG_DIR'])
     else:
         paths.append(env['MB_EGG_DIR'])
