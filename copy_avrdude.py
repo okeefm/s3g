@@ -26,11 +26,11 @@ if not options.platform:
   if platform.system() == "Windows": 
     platform_folder = 'windows'
     avrdude_name = "avrdude.exe"
-    files = [avrdude_name, "libusb0.dll"]
+    files = [avrdude_name, "avrdude.conf", "libusb0.dll"]
   elif platform.system() == "Darwin":
     platform_folder = 'mac'
     avrdude_name = "avrdude"
-    files = [avrdude_name]
+    files = [avrdude_name, "avrdude.conf"]
   elif platform.system() == 'Linux':
     print "Nothing to copy; use distribution utility to obtain AVRDude."
     sys.exit(0)
@@ -43,8 +43,9 @@ else:
   platform_folder = options.platform
 
 if not os.path.isfile(os.path.join(path_to_firmware, avrdude_name)):
-  print 'Copying avrdude into %s' %(path_to_firmware)
+  print 'Copying avrdude files into %s' %(path_to_firmware)
   for file in files:
+    print file
     shutil.copy(os.path.join(tool_path, platform_folder, file), path_to_firmware)
   sys.exit(0)
 else:

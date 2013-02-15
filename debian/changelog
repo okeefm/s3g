@@ -4,6 +4,19 @@ makerbot-driver (2.0.0) precise; urgency=low
 
  -- MakerBot Industries dev team <dev@makerbot.com>  Fri, 15 Feb 2013 06:00:00  -0400
 
+makerbot-driver (1.1.3) precise; urgency=low
+  * Added Eeprom Map for 7.1
+
+ -- MakerBot Industries dev team <dev@makerbot.com>  Thu, 7 Feb 2013 15:52:00  -0500
+
+makerbot-driver (1.1.2) precise; urgency=low
+  * Bugfixes for makerware release 1.1.2
+  * Improved Anchoring
+  * More robust gcode parser state machine
+  * Better error reporting
+
+ -- MakerBot Industries dev team <dev@makerbot.com>  Thu, 17 Jan 2013 16:23:00  -0500
+
 makerbot-driver (1.1.0) precise; urgency=low
   * Bugfixes for makerware release 1.1.0
   * X3G support

@@ -25,12 +25,47 @@ for curpath, dirnames, filenames in os.walk(str(Dir(src_str))):
                                   not os.path.isdir(str(f))),
                              env.Glob(os.path.join(curpath, '*.py'))))
 
+setup_script = 'setup_s3g_env.py'
 if env.MBIsWindows():
-    vcmd=env.Command('virtualenv', 'setup.bat', 'setup.bat')
+    pycmd = 'virtualenv\\Scripts\\python'
 else:
-    vcmd=env.Command('virtualenv', 'setup.sh', './setup.sh')
+    pycmd = 'virtualenv/bin/python'
 
+paths = [os.path.join('submodule', 'conveyor_bins', 'python')]
+if env.MBUseDevelLibs():
+    paths.append(os.path.join('..', 'pyserial', 'dist'))
+else:
+    if env.MBIsLinux() and 'MB_SYSTEM_EGG_DIR' in env:
+        paths.append(env['MB_SYSTEM_EGG_DIR'])
+    else:
+        paths.append(env['MB_EGG_DIR'])
+    
+# add quoting. 
+print paths
+paths = ['"'+path+'"' for path in paths]
+    
+vcmd = env.Command('virtualenv', setup_script,
+                   ' '.join(['python', os.path.join('.', setup_script)] + paths))
+
+
+s3g_egg = env.Command('dist/makerbot_driver-0.1.1-py2.7.egg',
+                      driver_src + ['virtualenv'],
+                      pycmd + ' -c "import setuptools; execfile(\'setup.py\')" bdist_egg')
+
+env.MBInstallEgg(s3g_egg)
 env.Clean(vcmd,'virtualenv')
+
+if env.MBIsMac():
+    py26cmd = 'virtualenv26/bin/python'
+    vcmd26 = env.Command('virtualenv26', setup_script,
+                         ' '.join(['python2.6', os.path.join('.', setup_script)] + paths))
+
+    s3g_egg26 = env.Command('dist/makerbot_driver-0.1.1-py2.6.egg',
+                          driver_src + [vcmd26],
+                          py26cmd + ' -c "import setuptools; execfile(\'setup.py\')" bdist_egg')
+    env.MBInstallEgg(s3g_egg26)
+    env.Clean(vcmd26,'virtualenv26')
+    
 
 if run_test:
     if env.MBIsWindows():
@@ -46,16 +81,7 @@ path_to_avrdude = os.path.join(
 
 env.Command(path_to_avrdude, vcmd, 'python copy_avrdude.py')
 
-if env.MBIsWindows():
-    pycmd = 'virtualenv\\Scripts\\python'
-else:
-    pycmd = 'virtualenv/bin/python'
 
-s3g_egg = env.Command('dist/makerbot_driver-0.1.1-py2.7.egg',
-                      driver_src + [vcmd],
-                      pycmd + ' -c "import setuptools; execfile(\'setup.py\')" bdist_egg')
-
-env.MBInstallEgg(s3g_egg)
 
 env.MBInstallResources('#/makerbot_driver/EEPROM', 's3g')
 env.MBInstallResources('#/makerbot_driver/profiles', 's3g')
