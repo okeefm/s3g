@@ -56,8 +56,6 @@ class TestMachineDetector(unittest.TestCase):
             [0x23C1, 0xB015, "The Replicator 2"],
             [0x23C1, 0xD314, "The Replicator"],
             [0x23C1, 0xB404, "MightyBoard"],
-            [0x0403, 0x6001, "TOM FTDI"],
-            [0x2341, 0x0010, "TOM 8U2"],
             [0x0000, 0xFFFF, None],
         ]
         for case in cases:

@@ -66,26 +66,6 @@ class TestMachineFactor(unittest.TestCase):
         result = self.factory.get_profile_regex(bot_dict)
         self.assertEqual(expected_regex, result)
 
-    def test_get_profile_regex_has_vid_pid_tom_tool_count_1(self):
-        bot_dict = {
-            'vid': 0x0403,
-            'pid': 0x6001,
-            'tool_count': 1,
-        }
-        expected_regex = '.*TOMStepstruderSingle'
-        result = self.factory.get_profile_regex(bot_dict)
-        self.assertEqual(expected_regex, result)
-
-    def test_get_profile_regex_has_vid_pid_tom_tool_count_2(self):
-        bot_dict = {
-            'vid': 0x0403,
-            'pid': 0x6001,
-            'tool_count': 2,
-        }
-        expected_regex = '.*TOMStepstruderDual'
-        result = self.factory.get_profile_regex(bot_dict)
-        self.assertEqual(expected_regex, result)
-
     def test_get_profile_regex_has_vid_pid_tool_count_1(self):
         bot_dict = {
             'vid': 0x23c1,
