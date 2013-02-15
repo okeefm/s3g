@@ -35,11 +35,13 @@ paths = [os.path.join('submodule', 'conveyor_bins', 'python')]
 if env.MBUseDevelLibs():
     paths.append(os.path.join('..', 'pyserial', 'dist'))
 else:
-    paths.append(env['MB_EGG_DIR'])
-    if 'MB_SYSTEM_EGG_DIR' in env:
+    if enb.MBIsLinux() and 'MB_SYSTEM_EGG_DIR' in env:
         paths.append(env['MB_SYSTEM_EGG_DIR'])
+    else:
+        paths.append(env['MB_EGG_DIR'])
     
 # add quoting. 
+print paths
 paths = ['"'+path+'"' for path in paths]
     
 vcmd = env.Command('virtualenv', setup_script,
