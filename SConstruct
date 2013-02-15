@@ -36,6 +36,8 @@ if env.MBUseDevelLibs():
     paths.append(os.path.join('..', 'pyserial', 'dist'))
 else:
     paths.append(env['MB_EGG_DIR'])
+    if 'MB_SYSTEM_EGG_DIR' in env:
+        paths.append(env['MB_SYSTEM_EGG_DIR'])
     
 # add quoting. 
 paths = ['"'+path+'"' for path in paths]
