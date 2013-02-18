@@ -15,6 +15,8 @@ class EmptyLayerProcessor(Processor):
         self.MG_nominal_comment = re.compile("\(Slowing to 0\% of nominal speeds\)")
         self.generic_gcode = re.compile("^[GM][0-9]+")
         self.move_gcode = re.compile("^G1 .*")
+        self.SF_layer_start = re.compile("^\(<layer> [0-9.]+.*\)")
+        self.SF_layer_end = re.compile("^\(</layer>\)")
 
 
     def process_gcode(self, gcode_in, outfile = None):
@@ -25,7 +27,7 @@ class EmptyLayerProcessor(Processor):
 
 
     def process_gcode_file(self, gcode_file_path, output_file_path,callback=None): 
-    #This process gcode from a file, and output to a file     
+    #process gcode from a file, and output to a file     
         self.code_index = 0
         self.gcodes = self.index_file(gcode_file_path)
 
@@ -33,15 +35,15 @@ class EmptyLayerProcessor(Processor):
 
         self.gcode_fp = open(gcode_file_path, 'r')
         self.output_fp = open(output_file_path, 'w')
-
+        print(str(self.output_fp))
 
         while(self.code_index <= self.max_index):
 
             self.gcode_fp.seek(self.gcodes[self.code_index])
             current_code = self.gcode_fp.readline()
-
             self.match = re.match(self.layer_start, current_code)
             if self.match is not None:
+                print self.match.group()
                 if self.match.group(1) == '<layer>':
                     self.is_empty, new_code_index = self._layer_test_if_empty(slicer='SF')
                 elif self.match.group(1) == 'Slice':
@@ -99,19 +101,28 @@ class EmptyLayerProcessor(Processor):
       
     def _layer_test_if_empty(self, slicer):
         code_index = self.code_index+1
-        gcodes_in_layer = 0
-        snorts_in_layer = 0
+        moves_in_layer = 0
+        comments_in_layer = 0
 
         self.gcode_fp.seek(self.gcodes[code_index])
         current_code = self.gcode_fp.readline()
-
-        while(not re.match(self.layer_start, current_code)):
-            #if the code looks like a G/Mcode count it
+        while(True):
+            #print('**&' +current_code)
+            match = re.match(self.SF_layer_end, current_code)
+            #print('"'+current_code+'"')
+            #if the code looks like a Gcode count it
             if(slicer == 'MG'):
+                if(re.match(self.layer_start, current_code)):
+                    break
                 if(re.match(self.move_gcode, current_code)):
-                    gcodes_in_layer += 1
+                    moves_in_layer += 1
                 if(re.match(self.MG_nominal_comment, current_code)):
-                    snorts_in_layer += 1
+                    comments_in_layer += 1
+            elif(slicer == 'SF'):
+                if(re.match(self.SF_layer_end, current_code)):
+                    break
+                if(re.match(self.move_gcode, current_code)):
+                    moves_in_layer += 1
 
             code_index += 1
             if(code_index > self.max_index): #if end of input reached return
@@ -121,13 +132,13 @@ class EmptyLayerProcessor(Processor):
 
         #print 'gcodes_in_layer: ' + str(gcodes_in_layer)
         if(slicer == 'MG'):
-            if((gcodes_in_layer <= 2) and (snorts_in_layer >= 1)):
+            if((moves_in_layer <= 2) and (comments_in_layer >= 1)):
                 return (True, code_index)
             else:
                 return (False, None)
         elif(slicer == 'SF'):
-            if(gcodes_in_layer <= 2):
-                return (True, code_index)
+            if(moves_in_layer <= 1):
+                return (True, code_index+1) #avoids adding the </layer> tag
             else:
                 return (False, None)
 
