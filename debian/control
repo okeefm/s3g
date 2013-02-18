@@ -10,7 +10,7 @@ Homepage: https://github.com/makerbot/s3g
 
 Package: makerbot-driver
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, python2.7, mb-pyserial (=0.01), avrdude
+Depends: ${shlibs:Depends}, ${misc:Depends}, python2.7, mb-pyserial (=2.0.0), avrdude
 Description: Python interface to MakerBot s3g devices.
  This library permits a python2.7 script to discover and control a 
  Replicator or other 3d printing device that supports the s3g
