@@ -11,11 +11,8 @@ class EmptyLayerProcessor(Processor):
         super(EmptyLayerProcessor, self).__init__()
         self.is_bundleable = True
         self.layer_start = re.compile("^\((Slice|<layer>) [0-9.]+.*\)")
-        self.MG_snort = re.compile("^G1 F([0-9.]+) A([0-9.]+) \(snort\)")
-        self.MG_nominal_comment = re.compile("\(Slowing to 0\% of nominal speeds\)")
-        self.generic_gcode = re.compile("^[GM][0-9]+")
+        self.MG_nominal_comment = re.compile("^\(Slowing to 0\% of nominal speeds\)")
         self.move_gcode = re.compile("^G1 .*")
-        self.SF_layer_start = re.compile("^\(<layer> [0-9.]+.*\)")
         self.SF_layer_end = re.compile("^\(</layer>\)")
         self.empty_line = re.compile("^\\n")
 
@@ -108,7 +105,6 @@ class EmptyLayerProcessor(Processor):
         self.gcode_fp.seek(self.gcodes[code_index])
         current_code = self.gcode_fp.readline()
         while(code_index <= self.max_index):
-            match = re.match(self.SF_layer_end, current_code)
             #Checks for a specific comment or G1 commands
             if(slicer == 'MG'):
                 if(re.match(self.empty_line, current_code)):
