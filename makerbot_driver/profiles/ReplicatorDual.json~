@@ -1,23 +1,27 @@
 {
-  "type"  :  "The Replicator Single",
+  "type"  :  "The Replicator Dual",
   "machinenames" : ["TheReplicator"],
   "axes"  : {
     "X" : {
-      "platform_length" : 227,
+      "platform_length"        : 227,
       "max_feedrate"  : 12450,
       "steps_per_mm"  : 94.139704
     },
     "Y" : {
-      "platform_length":  148,
+      "platform_length"        : 148,
       "max_feedrate"  : 12450,
       "steps_per_mm"  : 94.139704
     },
     "Z" : {
-      "platform_length": 150,
+      "platform_length"        : 150,
       "max_feedrate"  : 1170,
       "steps_per_mm"  : 400
     },
     "A" : {
+      "max_feedrate"  : 1600,
+      "steps_per_mm"  : -96.275
+    },
+    "B" : {
       "max_feedrate"  : 1600,
       "steps_per_mm"  : -96.275
     }
@@ -28,6 +32,11 @@
       "name"          : "Mk8 Right",
       "model"         : "Mk8",
       "stepper_axis"  : "A"
+    },
+    "1" : {
+      "name"          : "Mk8 Left",
+      "model"         : "Mk8",
+      "stepper_axis"  : "B"
     }
   },
   "heated_platforms" : {
@@ -41,7 +50,7 @@
   "print_start_sequence" : {
     "begin_print" : {
       "replicator_begin" : [
-          "M136",
+          "M136 (enable build progress)",
           "M73 P0"
           ]
       }, 
@@ -77,6 +86,17 @@
         "M135 T0",
         "M104 S#TOOL_0_TEMP T0",
         "M133 T0"
+        ],
+      "heat_1" : [
+        "M135 T1",
+        "M104 S#TOOL_1_TEMP T1",
+        "M133 T1"
+        ],
+      "dualstrusion" : [
+        "M104 S#TOOL_0_TEMP T0",
+        "M104 S#TOOL_1_TEMP T1",
+        "M133 T0",
+        "M133 T1"
         ]
       },
     "end_start_sequence" : {
@@ -88,7 +108,7 @@
   "print_end_sequence" : {
     "end_position" : {
       "replicator_end_position" : [
-        "M18 A B(Turn off A and B steppers)",
+        "M18 A B(Turn off A and B Steppers)",
         "G1 Z155 F900",
         "G162 X Y F2000",
         "M18 X Y Z(Turn off steppers after a build)"
@@ -99,19 +119,24 @@
       "cool_platform" : ["M109 S0 T0"]
       },
     "cool_tools": {
-      "cool_0" : ["M104 S0 T0"]
+      "cool_0" : ["M104 S0 T0"],
+      "cool_1" : ["M104 S0 T1"],
+      "dualstrusion" : [
+        "M104 S0 T0",
+        "M104 S0 T1"
+        ]
       },
     "end_print" : {
       "replicator_end" : [
         "M70 P5 (We <3 Making Things!)",
         "M72 P1  ( Play Ta-Da song )",
         "M73 P100 (end  build progress )",
-        "M137 (build end)"
+        "M137 (build end notification)"
         ]
       }
     },
   "find_axis_maximum_timeout"  : 20,
   "find_axis_minimum_timeout"  : 20,
   "dualstrusion_retract_distance_mm": "NULL",
-  "dualstrusion_squirt_reduce_mm": "NULL"
+  "dualstrusion_return_distance_mm": "NULL"
 }

@@ -113,5 +113,5 @@
   "find_axis_maximum_timeout"  : 20,
   "find_axis_minimum_timeout"  : 20,
   "dualstrusion_retract_distance_mm": "NULL",
-  "dualstrusion_squirt_reduce_mm": "NULL"
+  "dualstrusion_return_distance_mm": "NULL"
 }

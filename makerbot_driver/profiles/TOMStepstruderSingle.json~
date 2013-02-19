@@ -1,5 +1,5 @@
 {
-    "type": "Thing-O-Matic Dual, Stepstruder Mk6+",
+    "type": "Thing-O-Matic Single, Stepstruder Mk6+",
     "machinenames": [
         "Thing-O-Matic",
         "TOM"
@@ -23,10 +23,6 @@
         "A": {
             "max_feedrate": 1600,
             "steps_per_mm": -50.23547880690741
-        },
-	    "B": {
-            "max_feedrate": 1600,
-            "steps_per_mm": -50.23547880690741
         }
     },
     "tools": {
@@ -34,11 +30,6 @@
             "name": "Mk7 Right",
             "model": "Mk7",
             "stepper_axis": "A"
-        },
- 	    "1": {
-            "name": "Mk7 Left",
-            "model": "Mk7",
-            "stepper_axis": "B"
         }
     },
     "heated_platforms": {
@@ -112,5 +103,5 @@
     "find_axis_maximum_timeout": 20,
     "find_axis_minimum_timeout": 20,
     "dualstrusion_retract_distance_mm": "NULL",
-    "dualstrusion_squirt_reduce_mm": "NULL"
+    "dualstrusion_return_distance_mm": "NULL"
 }
