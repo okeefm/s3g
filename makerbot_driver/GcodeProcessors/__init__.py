@@ -1,4 +1,4 @@
-all = ['ProcessorFactory', 'Processor', 'ProgressProcessor', 'Skeinforge50Processor', 'SkeinforgeVersionChecker', 'ToolchangeProcessor', 'SingletonTProcessor', 'RpmProcessor', 'SlicerProcessor', 'SlicerVersionChecker', 'CoordinateRemovalProcessor', 'RemoveRepGStartEndGcode', 'LineTransformProcessor', 'GetTemperatureProcessor', 'SetTemperatureProcessor', 'AbpProcessor', 'BundleProcessor', 'RemoveProgressProcessor', 'AnchorProcessor', 'ToolSwapProcessor', 'DualstrusionProgressProcessor', 'FanProcessor', 'errors']
+all = ['ProcessorFactory', 'Processor', 'ProgressProcessor', 'Skeinforge50Processor', 'SkeinforgeVersionChecker', 'ToolchangeProcessor', 'SingletonTProcessor', 'RpmProcessor', 'SlicerProcessor', 'SlicerVersionChecker', 'CoordinateRemovalProcessor', 'RemoveRepGStartEndGcode', 'LineTransformProcessor', 'GetTemperatureProcessor', 'SetTemperatureProcessor', 'AbpProcessor', 'BundleProcessor', 'RemoveProgressProcessor', 'AnchorProcessor', 'ToolSwapProcessor', 'DualstrusionProgressProcessor', 'FanProcessor', 'errors', 'EmptyLayerProcessor', 'Rep2XDualstrusionProcessor']
 
 from ProcessorFactory import *
 from Processor import *
@@ -20,3 +20,5 @@ from ToolSwapProcessor import *
 from DualstrusionProgressProcessor import *
 from FanProcessor import *
 from errors import *
+from EmptyLayerProcessor import *
+from Rep2XDualstrusionProcessor import *
