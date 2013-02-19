@@ -17,12 +17,13 @@ class EmptyLayerProcessor(Processor):
         self.move_gcode = re.compile("^G1 .*")
         self.SF_layer_start = re.compile("^\(<layer> [0-9.]+.*\)")
         self.SF_layer_end = re.compile("^\(</layer>\)")
+        self.empty_line = re.compile("^\\n")
 
 
     def process_gcode(self, gcode_in, outfile = None):
         if outfile != None:
             return self.process_gcode_file(gcode_in, outfile)
-        else:
+        elif(isinstance(gcode_in, list)):
             return self.process_gcode_list(gcode_in)
 
 
@@ -106,13 +107,11 @@ class EmptyLayerProcessor(Processor):
 
         self.gcode_fp.seek(self.gcodes[code_index])
         current_code = self.gcode_fp.readline()
-        while(True):
-            #print('**&' +current_code)
+        while(code_index <= self.max_index):
             match = re.match(self.SF_layer_end, current_code)
-            #print('"'+current_code+'"')
-            #if the code looks like a Gcode count it
+            #Checks for a specific comment or G1 commands
             if(slicer == 'MG'):
-                if(re.match(self.layer_start, current_code)):
+                if(re.match(self.empty_line, current_code)):
                     break
                 if(re.match(self.move_gcode, current_code)):
                     moves_in_layer += 1
@@ -123,14 +122,11 @@ class EmptyLayerProcessor(Processor):
                     break
                 if(re.match(self.move_gcode, current_code)):
                     moves_in_layer += 1
-
+ 
             code_index += 1
-            if(code_index > self.max_index): #if end of input reached return
-                return (-1, slicer)
             self.gcode_fp.seek(self.gcodes[code_index])
             current_code = self.gcode_fp.readline()
 
-        #print 'gcodes_in_layer: ' + str(gcodes_in_layer)
         if(slicer == 'MG'):
             if((moves_in_layer <= 2) and (comments_in_layer >= 1)):
                 return (True, code_index)

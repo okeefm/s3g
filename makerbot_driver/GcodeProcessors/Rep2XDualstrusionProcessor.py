@@ -34,7 +34,7 @@ class Rep2XDualstrusionProcessor(Processor):
         if(outfile != None): #if there is no outfile assume that the input is a list
             return self.process_gcode_file(gcode_in, outfile)
         else:
-            if(isinstance(gcode_in, list))
+            if(isinstance(gcode_in, list)):
                 return self.process_gcode_list(gcode_in)
             else:
                 return False
@@ -107,20 +107,21 @@ class Rep2XDualstrusionProcessor(Processor):
                 if(self.last_tool == -1):
                     self.last_tool = self.match.group(1)
                 elif(self.last_tool != self.match.group(1)):
+                #If this is a significant tool change
                     self.last_tool = self.match.group(1)
 
-                    if(True):#self.last_extruder_pos != -1):
-                        squirt_index,extruder,current_feedrate,current_position,current_line_len = self.squirt_search(is_GcodeFile=True)
-                        #Handling Squirt Modification
-                        if(squirt_index != None):
-                            squirt_feedrate = current_feedrate/2
-                            squirt_position = current_position - self.squirt_redux
-                            if(squirt_position <= 0):
-                                squirt_position = 0
-                            if(self.slicer == 'MG' or self.slicer == 'SF'):
-                                formatted_squirt = self.format_squirt(
-                                    squirt_feedrate, squirt_position, extruder, current_line_len, squirt_index)             
-                                self.insert_snortsquirt(formatted_squirt, squirt_index)
+                    #search for the next squirt
+                    squirt_index,extruder,current_feedrate,current_position,current_line_len = self.squirt_search(is_GcodeFile=True)
+                    #Handling Squirt Modification
+                    if(squirt_index != None):
+                        squirt_feedrate = current_feedrate/2
+                        squirt_position = current_position - self.squirt_redux
+                        if(squirt_position <= 0):
+                            squirt_position = 0
+                        if(self.slicer == 'MG' or self.slicer == 'SF'):
+                            formatted_squirt = self.format_squirt(
+                                squirt_feedrate, squirt_position, extruder, current_line_len, squirt_index)             
+                            self.insert_snortsquirt(formatted_squirt, squirt_index)
 
                     #search backwards for the last snort
                     snort_index,extruder,current_feedrate,current_position,current_line_len = self.reverse_snort_search(is_GcodeFile=True)
@@ -143,16 +144,6 @@ class Rep2XDualstrusionProcessor(Processor):
             self.code_index += 1
         self.output_fp.close()
         return True
-
-
-    def insert_snortsquirt(self, snortsquirt_line, snortsquirt_index):
-        if(self.slicer == 'MG'):
-            self.output_fp.seek(self.gcodes[snortsquirt_index])
-            self.output_fp.write(snortsquirt_line)
-        if(self.slicer == 'SF'):
-            self.output_fp.seek(self.gcodes[snortsquirt_index-1])
-            #seek to index-1 because SF puts feedrate and extruder position on two lines
-            self.output_fp.write(snortsquirt_line)
 
 
     def squirt_search(self, is_GcodeFile):
@@ -276,6 +267,16 @@ class Rep2XDualstrusionProcessor(Processor):
             while(formatted_move_line[-1] == '\n'):
                 formatted_move_line = formatted_move_line[:-1]
         return (formatted_move_line+'\n')
+
+
+    def insert_snortsquirt(self, snortsquirt_line, snortsquirt_index):
+        if(self.slicer == 'MG'):
+            self.output_fp.seek(self.gcodes[snortsquirt_index])
+            self.output_fp.write(snortsquirt_line)
+        if(self.slicer == 'SF'):
+            self.output_fp.seek(self.gcodes[snortsquirt_index-1])
+            #seek to index-1 because SF puts feedrate and extruder position on two lines
+            self.output_fp.write(snortsquirt_line)
 
 
     def pad_line(self, line, old_line_len):
