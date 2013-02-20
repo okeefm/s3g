@@ -19,7 +19,9 @@ class EmptyLayerProcessor(Processor):
 
     def process_gcode(self, gcode_in, outfile = None):
         if outfile != None:
-            return self.process_gcode_file(gcode_in, outfile)
+            rv = self.process_gcode_file(gcode_in, outfile)
+            self.test_for_external_stop()
+            return rv
         elif(isinstance(gcode_in, list)):
             return self.process_gcode_list(gcode_in)
 
@@ -33,7 +35,6 @@ class EmptyLayerProcessor(Processor):
 
         self.gcode_fp = open(gcode_file_path, 'r')
         self.output_fp = open(output_file_path, 'w')
-        print(str(self.output_fp))
 
         while(self.code_index <= self.max_index):
 
@@ -41,7 +42,6 @@ class EmptyLayerProcessor(Processor):
             current_code = self.gcode_fp.readline()
             self.match = re.match(self.layer_start, current_code)
             if self.match is not None:
-                print self.match.group()
                 if self.match.group(1) == '<layer>':
                     self.is_empty, new_code_index = self._layer_test_if_empty(slicer='SF')
                 elif self.match.group(1) == 'Slice':
@@ -61,8 +61,9 @@ class EmptyLayerProcessor(Processor):
                 self.output_fp.write(current_code)
                 self.code_index += 1
             else:
-                print ("CODE_INDEX GREATER THAN MAX_INDEX")
                 break
+        self.output_fp.close()
+        self.gcode_fp.close()
         return True
 
 
@@ -83,7 +84,6 @@ class EmptyLayerProcessor(Processor):
                 if(self.is_empty ==  True):
                     self.code_index = self.new_code_index
                     continue #skip appending
-                print(str(self.new_code_index))
                 if((self.is_empty == -1) and (self.new_code_index == 'MG')):
                 #Hacky way to remove final empty slice for Miracle Grue 
                     self.code_index += 7
@@ -101,14 +101,16 @@ class EmptyLayerProcessor(Processor):
         code_index = self.code_index+1
         moves_in_layer = 0
         comments_in_layer = 0
+        lines_in_layer = 0
 
         self.gcode_fp.seek(self.gcodes[code_index])
         current_code = self.gcode_fp.readline()
-        while(code_index <= self.max_index):
+        while(True):
             #Checks for a specific comment or G1 commands
             if(slicer == 'MG'):
-                if(re.match(self.empty_line, current_code)):
+                if(re.match(self.layer_start, current_code)):
                     break
+                lines_in_layer += 1
                 if(re.match(self.move_gcode, current_code)):
                     moves_in_layer += 1
                 if(re.match(self.MG_nominal_comment, current_code)):
@@ -120,11 +122,13 @@ class EmptyLayerProcessor(Processor):
                     moves_in_layer += 1
  
             code_index += 1
+            if(code_index > self.max_index):
+                break
             self.gcode_fp.seek(self.gcodes[code_index])
             current_code = self.gcode_fp.readline()
 
         if(slicer == 'MG'):
-            if((moves_in_layer <= 2) and (comments_in_layer >= 1)):
+            if((moves_in_layer <= 2) and (lines_in_layer <= 10)):
                 return (True, code_index)
             else:
                 return (False, None)
@@ -134,15 +138,12 @@ class EmptyLayerProcessor(Processor):
             else:
                 return (False, None)
 
-
     def index_file(self, filename):
-
         line_indexes = []
-        offset = 0
-        with open(filename, 'r') as f:
-            for line in f:
-                line_indexes.append(offset)    
-                offset += len(line)
+        with open(filename, 'rb') as f:
+            while(True):
+               line_indexes.append(f.tell())
+               line = f.readline()
+               if(line == ''):
+                    break
         return line_indexes
-
-        
