@@ -29,8 +29,8 @@ class Rep2XDualstrusionProcessor(Processor):
 
         if(self.retract_distance_mm == 'NULL'):
         #if this value is null this process in not relevant, so return the input
-            self.gcode_fp = open(gcode_file_path, 'r')
-            self.output_fp = open(output_file_path, 'w+')
+            self.gcode_fp = open(gcode_in, 'r')
+            self.output_fp = open(outfile, 'w+')
             for line in self.gcode_fp:
                 self.output_fp.write(line)
             self.gcode_fp.close()
