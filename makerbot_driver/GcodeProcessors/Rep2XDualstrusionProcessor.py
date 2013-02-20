@@ -28,8 +28,13 @@ class Rep2XDualstrusionProcessor(Processor):
             "dualstrusion_squirt_reduce_mm"]
 
         if(self.retract_distance_mm == 'NULL'):
-        #if this value is null this process in not relevant
-            return None
+        #if this value is null this process in not relevant, so return the input
+            self.gcode_fp = open(gcode_file_path, 'r')
+            self.output_fp = open(output_file_path, 'w+')
+            for line in self.gcode_fp:
+                self.output_fp.write(line)
+            self.gcode_fp.close()
+            self.output_fp.close()
 
         if(outfile != None): #if there is no outfile assume that the input is a list
             return self.process_gcode_file(gcode_in, outfile)
