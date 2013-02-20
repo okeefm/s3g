@@ -15,11 +15,17 @@ class EmptyLayerProcessor(Processor):
         self.move_gcode = re.compile("^G1 .*")
         self.SF_layer_end = re.compile("^\(</layer>\)")
         self.empty_line = re.compile("^\\n")
+        self.logout = open('C:\Empty.log', 'w')
 
 
     def process_gcode(self, gcode_in, outfile = None):
         if outfile != None:
-            return self.process_gcode_file(gcode_in, outfile)
+            rv = self.process_gcode_file(gcode_in, outfile)
+            self.logout.write('RETURNING\n')
+            self.logout.flush()
+            self.test_for_external_stop()
+            self.logout.close()
+            return rv
         elif(isinstance(gcode_in, list)):
             return self.process_gcode_list(gcode_in)
 
@@ -33,7 +39,8 @@ class EmptyLayerProcessor(Processor):
 
         self.gcode_fp = open(gcode_file_path, 'r')
         self.output_fp = open(output_file_path, 'w')
-        print(str(self.output_fp))
+
+        self.logout.write(str(output_file_path) + '\n')
 
         while(self.code_index <= self.max_index):
 
@@ -61,8 +68,11 @@ class EmptyLayerProcessor(Processor):
                 self.output_fp.write(current_code)
                 self.code_index += 1
             else:
-                print ("CODE_INDEX GREATER THAN MAX_INDEX")
                 break
+        self.logout.write('END\n')
+        self.logout.flush()
+        self.output_fp.close()
+        self.gcode_fp.close()
         return True
 
 
@@ -101,14 +111,17 @@ class EmptyLayerProcessor(Processor):
         code_index = self.code_index+1
         moves_in_layer = 0
         comments_in_layer = 0
+        lines_in_layer = 0
 
         self.gcode_fp.seek(self.gcodes[code_index])
         current_code = self.gcode_fp.readline()
-        while(code_index <= self.max_index):
+        while(True):
             #Checks for a specific comment or G1 commands
             if(slicer == 'MG'):
-                if(re.match(self.empty_line, current_code)):
+                if(re.match(self.layer_start, current_code)):
+                    self.logout.write('start match\n')
                     break
+                lines_in_layer += 1
                 if(re.match(self.move_gcode, current_code)):
                     moves_in_layer += 1
                 if(re.match(self.MG_nominal_comment, current_code)):
@@ -120,11 +133,17 @@ class EmptyLayerProcessor(Processor):
                     moves_in_layer += 1
  
             code_index += 1
+            if(code_index > self.max_index):
+                break
             self.gcode_fp.seek(self.gcodes[code_index])
             current_code = self.gcode_fp.readline()
+            self.logout.write(str(code_index) + '\n')
+            self.logout.flush()
+        self.logout.write('OUT_OF_LOOP\n')
+        self.logout.flush()
 
         if(slicer == 'MG'):
-            if((moves_in_layer <= 2) and (comments_in_layer >= 1)):
+            if((moves_in_layer <= 2) and (lines_in_layer <= 10)):
                 return (True, code_index)
             else:
                 return (False, None)
@@ -134,15 +153,12 @@ class EmptyLayerProcessor(Processor):
             else:
                 return (False, None)
 
-
     def index_file(self, filename):
-
         line_indexes = []
-        offset = 0
-        with open(filename, 'r') as f:
-            for line in f:
-                line_indexes.append(offset)    
-                offset += len(line)
+        with open(filename, 'rb') as f:
+            while(True):
+               line_indexes.append(f.tell())
+               line = f.readline()
+               if(line == ''):
+                    break
         return line_indexes
-
-        
