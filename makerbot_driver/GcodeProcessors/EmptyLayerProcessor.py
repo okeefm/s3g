@@ -15,16 +15,12 @@ class EmptyLayerProcessor(Processor):
         self.move_gcode = re.compile("^G1 .*")
         self.SF_layer_end = re.compile("^\(</layer>\)")
         self.empty_line = re.compile("^\\n")
-        self.logout = open('C:\Empty.log', 'w')
 
 
     def process_gcode(self, gcode_in, outfile = None):
         if outfile != None:
             rv = self.process_gcode_file(gcode_in, outfile)
-            self.logout.write('RETURNING\n')
-            self.logout.flush()
             self.test_for_external_stop()
-            self.logout.close()
             return rv
         elif(isinstance(gcode_in, list)):
             return self.process_gcode_list(gcode_in)
@@ -40,15 +36,12 @@ class EmptyLayerProcessor(Processor):
         self.gcode_fp = open(gcode_file_path, 'r')
         self.output_fp = open(output_file_path, 'w')
 
-        self.logout.write(str(output_file_path) + '\n')
-
         while(self.code_index <= self.max_index):
 
             self.gcode_fp.seek(self.gcodes[self.code_index])
             current_code = self.gcode_fp.readline()
             self.match = re.match(self.layer_start, current_code)
             if self.match is not None:
-                print self.match.group()
                 if self.match.group(1) == '<layer>':
                     self.is_empty, new_code_index = self._layer_test_if_empty(slicer='SF')
                 elif self.match.group(1) == 'Slice':
@@ -69,8 +62,6 @@ class EmptyLayerProcessor(Processor):
                 self.code_index += 1
             else:
                 break
-        self.logout.write('END\n')
-        self.logout.flush()
         self.output_fp.close()
         self.gcode_fp.close()
         return True
@@ -93,7 +84,6 @@ class EmptyLayerProcessor(Processor):
                 if(self.is_empty ==  True):
                     self.code_index = self.new_code_index
                     continue #skip appending
-                print(str(self.new_code_index))
                 if((self.is_empty == -1) and (self.new_code_index == 'MG')):
                 #Hacky way to remove final empty slice for Miracle Grue 
                     self.code_index += 7
@@ -119,7 +109,6 @@ class EmptyLayerProcessor(Processor):
             #Checks for a specific comment or G1 commands
             if(slicer == 'MG'):
                 if(re.match(self.layer_start, current_code)):
-                    self.logout.write('start match\n')
                     break
                 lines_in_layer += 1
                 if(re.match(self.move_gcode, current_code)):
@@ -137,10 +126,6 @@ class EmptyLayerProcessor(Processor):
                 break
             self.gcode_fp.seek(self.gcodes[code_index])
             current_code = self.gcode_fp.readline()
-            self.logout.write(str(code_index) + '\n')
-            self.logout.flush()
-        self.logout.write('OUT_OF_LOOP\n')
-        self.logout.flush()
 
         if(slicer == 'MG'):
             if((moves_in_layer <= 2) and (lines_in_layer <= 10)):
