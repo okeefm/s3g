@@ -301,6 +301,7 @@ class GcodeParser(object):
         try:
             if 'F' in codes:
                 new_feedrate = codes['F']
+                self.state.values['feedrate'] = new_feedrate
                 self._log.debug('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', codes['F'])
             elif 'feedrate' in self.state.values:
                 new_feedrate = self.state.values['feedrate']
@@ -308,9 +309,8 @@ class GcodeParser(object):
                 raise makerbot_driver.Gcode.NoFeedrateSpecifiedError
             if len(makerbot_driver.Gcode.parse_out_axes(codes)) > 0 or 'E' in codes:
                 current_position = self.state.get_position()
-                new_position = self.state.position.copy() 
-                new_position.SetPoint(codes)
-                new_position = new_position.ToList()
+                self.state.set_position(codes)
+                new_position = self.state.get_position()
                 dda_speed = makerbot_driver.Gcode.calculate_DDA_speed(
                     current_position,
                     new_position,
@@ -350,10 +350,6 @@ class GcodeParser(object):
                                  # 'F' instead of 'feedrate'.
                 e = KeyError('F')
             raise e
-
-        else:
-            self.state.values['feedrate'] = new_feedrate
-            self.state.set_position(codes)
 
 
     def dwell(self, codes, flags, comment):
