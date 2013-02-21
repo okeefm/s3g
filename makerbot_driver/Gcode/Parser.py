@@ -206,8 +206,6 @@ class GcodeParser(object):
             self.s3g.set_extended_position(stepped_position)
         except Exception:
             raise
-        else:
-            self.state.set_position(codes)
 
     def wait_for_tool_ready(self, codes, flags, comment):
         """

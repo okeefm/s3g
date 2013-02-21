@@ -552,6 +552,40 @@ class gcodeTests(unittest.TestCase):
             sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[92][1]))
         self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[92][2])
 
+    def test_set_position_e_command_a_axis(self):
+        self.g.state.position.SetPoint({"X":0,"Y":0,"Z":0,"A":0,"B":0})
+        expected_position = [0, 0, 0, 3, 0]
+        self.g.state.values['tool_index'] = 0
+        codes = {
+            'E': 3,
+        }
+        flags = []
+        comments = ''
+        self.g.set_position(codes, flags, comments)
+        self.assertEqual(expected_position, self.g.state.get_position())
+        spmList = self.g.state.get_axes_values('steps_per_mm')
+        for i in range(len(spmList)):
+            expected_position[i] *= spmList[i]
+        self.mock.set_extended_position.assert_called_once_with(
+            expected_position)
+
+    def test_set_position_e_command_b_axis(self):
+        self.g.state.position.SetPoint({"X":0,"Y":0,"Z":0,"A":0,"B":0})
+        expected_position = [0, 0, 0, 0, 3]
+        self.g.state.values['tool_index'] = 1
+        codes = {
+            'E': 3,
+        }
+        flags = []
+        comments = ''
+        self.g.set_position(codes, flags, comments)
+        self.assertEqual(expected_position, self.g.state.get_position())
+        spmList = self.g.state.get_axes_values('steps_per_mm')
+        for i in range(len(spmList)):
+            expected_position[i] *= spmList[i]
+        self.mock.set_extended_position.assert_called_once_with(
+            expected_position)
+
     def test_set_position(self):
         expected_position = [0, 1, 2, 3, 4]
         codes = {
