@@ -13,33 +13,45 @@ class Rep2XDualstrusionProcessor(Processor):
         super(Rep2XDualstrusionProcessor, self).__init__()
         self.is_bundleable = True
         self.layer_start = re.compile("^\((Slice|<layer>) [0-9.]+.*\)")
-        self.SF_snortsquirt = re.compile("^G1 E([0-9.]+)")
-        self.MG_snort = re.compile("^G1 F([0-9.]+) ([AB])([0-9.]+) \(snort\)")
-        self.MG_squirt = re.compile("^G1 F([0-9.]+) ([AB])([0-9.]+) \(squirt\)")
         self.toolchange = re.compile("^M135 T([0-9])")
+        self.MG_snort = re.compile("^G1 F([0-9.-]+) ([AB])([0-9.-]+) \(snort\)")
+        self.MG_squirt = re.compile("^G1 F([0-9.-]+) ([AB])([0-9.-]+) \(squirt\)")
         self.SF_layer_end = re.compile("^\(</layer>\)")
+        self.SF_snortsquirt = re.compile("^G1 E([0-9.-]+)")
+
+        self.MG_anchor_end = re.compile("^G1 X([0-9.-]+) Y([0-9.-]+) Z([0-9.-]+) F([0-9.-]+) ([AB])([0-9.-]+) \(Anchor End\)")
+        self.SF_anchor = re.compile("^G1 X([0-9.-]+) Y([0-9.-]+) Z([0-9.-]+) F([0-9.-]+) E([0-9.-]+)")
+        self.SF_set_position_post_anchor = re.compile("^G92 E[0-9.-]+")
+
         self.retract_distance_mm = None
         self.return_distance_mm = None
 
     def process_gcode(self, gcode_in, outfile = None, profile = None):
-        self.retract_distance_mm = profile.values[
-            "dualstrusion_retract_distance_mm"]
-        self.squirt_redux = profile.values[
-            "dualstrusion_squirt_reduce_mm"]
+        self.retract_distance_mm = profile.values["dualstrusion"][
+            "retract_distance_mm"]
+        self.squirt_reduction = profile.values["dualstrusion"][
+            "squirt_reduce_mm"]
+        self.squirt_snort_feedrate = profile.values["dualstrusion"][
+            "squirt_snort_feedrate"]
 
-        if(self.retract_distance_mm == 'NULL'):
-        #if this value is null this process in not relevant, so return the input
-            self.gcode_fp = open(gcode_in, 'r')
-            self.output_fp = open(outfile, 'w+')
-            for line in self.gcode_fp:
-                self.output_fp.write(line)
-            self.gcode_fp.close()
-            self.output_fp.close()
 
         if(outfile != None): #if there is no outfile assume that the input is a list
-            return self.process_gcode_file(gcode_in, outfile)
+            if(self.retract_distance_mm == 'NULL'):
+            #if this value is null this process in not relevant, so return the input
+                self.gcode_fp = open(gcode_in, 'r')
+                self.output_fp = open(outfile, 'w+')
+                for line in self.gcode_fp:
+                    self.output_fp.write(line)
+                self.gcode_fp.close()
+                self.output_fp.close()
+                return
+            else:
+                return self.process_gcode_file(gcode_in, outfile)
         else:
             if(isinstance(gcode_in, list)):
+                if(self.retract_distance_mm == 'NULL'):
+                #if this value is null this process in not relevant, so return the input
+                    return gcode_in
                 return self.process_gcode_list(gcode_in)
             else:
                 return False
@@ -48,9 +60,6 @@ class Rep2XDualstrusionProcessor(Processor):
     def process_gcode_list(self, gcodes, callback=None):
 #TODO Update this to use the new functions
     #This processes gcode in the form of a list of gcodes, and the processed gcode is returned
-        if self.retract_distance_mm == 'NULL':
-            return gcodes
-
         self.gcodes = gcodes
         self.max_index = (len(gcodes)-1)
         self.output = []
@@ -69,11 +78,11 @@ class Rep2XDualstrusionProcessor(Processor):
                     (snort_index,current_feedrate,current_position) = self.reverse_snort_search(is_GcodeFile=False)
                     #depending on the slicer emit a new snort using fixed feedrates and position
                     if(self.slicer == 'MG'):
-                        self.new_feedrate = current_feedrate/2
+                        self.new_feedrate = self.squirt_snort_feedrate
                         self.new_extruder_pos = current_position-self.retract_distance_mm
                         self.output[snort_index] = "G1 F%.3f A%.3f (snort)\n"%(self.new_feedrate,self.new_extruder_pos)
                     elif(self.slicer == 'SF'):
-                        self.new_feedrate = current_feedrate/2
+                        self.new_feedrate = self.squirt_snort_feedrate
                         self.new_extruder_pos = current_position-self.retract_distance_mm
                         self.output[snort_index-1] = "G1 F.1%f\n" %(self.new_feedrate)
                         self.output[snort_index] = "G1 E.3%f\n" %(self.new_extruder_pos)
@@ -99,9 +108,6 @@ class Rep2XDualstrusionProcessor(Processor):
         self.output_fp.seek(0)
         self.gcode_fp.close()
 
-        if self.retract_distance_mm == 'NULL':
-            return True
-
         while(self.code_index <= self.max_index):
 
             self.output_fp.seek(self.gcodes[self.code_index])
@@ -119,8 +125,8 @@ class Rep2XDualstrusionProcessor(Processor):
                     squirt_index,extruder,current_feedrate,current_position,current_line_len = self.squirt_search(is_GcodeFile=True)
                     #Handling Squirt Modification
                     if(squirt_index != None):
-                        squirt_feedrate = current_feedrate/2
-                        squirt_position = current_position - self.squirt_redux
+                        squirt_feedrate = self.squirt_snort_feedrate
+                        squirt_position = current_position - self.squirt_reduction
                         
                         if(squirt_position < 0):
                             squirt_position = 0
@@ -137,7 +143,7 @@ class Rep2XDualstrusionProcessor(Processor):
                         continue
                     #Handling Snort Modification
                     #emit a new snort with a new feedrate and extruder position
-                    snort_feedrate = current_feedrate/2
+                    snort_feedrate = self.squirt_snort_feedrate
                     snort_extruder_pos = current_position-self.retract_distance_mm
                     
                     if(snort_extruder_pos < 0):
@@ -158,14 +164,11 @@ class Rep2XDualstrusionProcessor(Processor):
         feedrate = None
         position = None
 
-        if(is_GcodeFile):
-            self.output_fp.seek(self.gcodes[squirt_index])
-
         while(True):
             if(is_GcodeFile):
                 self.output_fp.seek(self.gcodes[squirt_index])
                 current_code = self.output_fp.readline()
-            elif(not is_GcodeFile):
+            else:
                 current_code = self.gcodes[squirt_index]
             squirt_match = re.match(self.MG_squirt, current_code)
             if squirt_match is not None:
@@ -222,12 +225,13 @@ class Rep2XDualstrusionProcessor(Processor):
         snort_index = self.code_index-2
         feedrate = None
         position = None
+        layer_starts = 0
 
         while(True):
             if(is_GcodeFile):
                 self.output_fp.seek(self.gcodes[snort_index])
                 current_code = self.output_fp.readline()
-            elif(not is_GcodeFile):
+            else:
                 current_code = self.gcodes[snort_index]
 
             snort_match = re.match(self.MG_snort, current_code)
@@ -250,8 +254,12 @@ class Rep2XDualstrusionProcessor(Processor):
 
             snort_index -= 1
             snort_match = re.match(self.layer_start, current_code)
-            if((snort_index < 0) or (snort_match is not None)):
-                return (None, None, None, None, None)
+            if(snort_match is not None):
+                layer_starts += 1
+                if((snort_index < 0) or (layer_starts > 0)):
+                    return(None, None, None, None, None)
+          #  if((snort_index < 0) or (snort_match is not None)):
+           #     return (None, None, None, None, None)
 
         return (snort_index, extruder, feedrate, position, len(snort_match.group()))
             
