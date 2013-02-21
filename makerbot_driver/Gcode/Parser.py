@@ -196,12 +196,10 @@ class GcodeParser(object):
         """Explicitely sets the position of the state machine and bot
         to the given point
         """
-        new_position = self.state.position.copy()
-        new_position.SetPoint(codes)
-        new_position = new_position.ToList()
+        self.state.set_position(codes)
+        current_position = self.state.get_position()
         stepped_position = makerbot_driver.Gcode.multiply_vector(
-#            self.state.get_position(),
-            new_position,
+            current_position,
             self.state.get_axes_values('steps_per_mm')
         )
         try:
