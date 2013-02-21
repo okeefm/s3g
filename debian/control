@@ -1,5 +1,5 @@
 Source: makerbot-driver
-Section: unknown
+Section: main
 Priority: extra
 Maintainer: MakerBot Industries dev team <dev@makerbot.com>
 Build-Depends: cdbs, debhelper, python2.7, mb-pyserial (>=2.0.0)
