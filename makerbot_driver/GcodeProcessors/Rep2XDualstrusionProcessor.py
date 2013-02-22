@@ -31,8 +31,10 @@ class Rep2XDualstrusionProcessor(Processor):
             "retract_distance_mm"]
         self.squirt_reduction = profile.values["dualstrusion"][
             "squirt_reduce_mm"]
-        self.squirt_snort_feedrate = profile.values["dualstrusion"][
-            "squirt_snort_feedrate"]
+        self.squirt_feedrate = profile.values["dualstrusion"][
+            "squirt_feedrate"]
+        self.snort_feedrate = profile.values["dualstrusion"][
+            "snort_feedrate"]
 
 
         if(outfile != None): #if there is no outfile assume that the input is a list
@@ -78,11 +80,11 @@ class Rep2XDualstrusionProcessor(Processor):
                     (snort_index,current_feedrate,current_position) = self.reverse_snort_search(is_GcodeFile=False)
                     #depending on the slicer emit a new snort using fixed feedrates and position
                     if(self.slicer == 'MG'):
-                        self.new_feedrate = self.squirt_snort_feedrate
+                        self.new_feedrate = self.snort_feedrate
                         self.new_extruder_pos = current_position-self.retract_distance_mm
                         self.output[snort_index] = "G1 F%.3f A%.3f (snort)\n"%(self.new_feedrate,self.new_extruder_pos)
                     elif(self.slicer == 'SF'):
-                        self.new_feedrate = self.squirt_snort_feedrate
+                        self.new_feedrate = self.snort_feedrate
                         self.new_extruder_pos = current_position-self.retract_distance_mm
                         self.output[snort_index-1] = "G1 F.1%f\n" %(self.new_feedrate)
                         self.output[snort_index] = "G1 E.3%f\n" %(self.new_extruder_pos)
@@ -125,7 +127,7 @@ class Rep2XDualstrusionProcessor(Processor):
                     squirt_index,extruder,current_feedrate,current_position,current_line_len = self.squirt_search(is_GcodeFile=True)
                     #Handling Squirt Modification
                     if(squirt_index != None):
-                        squirt_feedrate = self.squirt_snort_feedrate
+                        squirt_feedrate = self.squirt_feedrate
                         squirt_position = current_position - self.squirt_reduction
                         
                         if(squirt_position < 0):
@@ -143,7 +145,7 @@ class Rep2XDualstrusionProcessor(Processor):
                         continue
                     #Handling Snort Modification
                     #emit a new snort with a new feedrate and extruder position
-                    snort_feedrate = self.squirt_snort_feedrate
+                    snort_feedrate = self.snort_feedrate
                     snort_extruder_pos = current_position-self.retract_distance_mm
                     
                     if(snort_extruder_pos < 0):
