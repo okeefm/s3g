@@ -44,10 +44,8 @@ class Rep2XDualstrusionProcessor(Processor):
 
         self.slicer = slicer
 
-        print self.slicer
 
-
-        if(outfile != None): #if there is no outfile assume that the input is a list
+        if(outfile != None):
             if(self.retract_distance_mm == 'NULL'):
             #if this value is null this process in not relevant, so return the input
                 self.gcode_fp = open(gcode_in, 'r')
@@ -56,10 +54,11 @@ class Rep2XDualstrusionProcessor(Processor):
                     self.output_fp.write(line)
                 self.gcode_fp.close()
                 self.output_fp.close()
-                return
+                return True
             else:
                 return self.process_gcode_file(gcode_in, outfile)
         else:
+            #TODO update/fix list input functionality
             if(isinstance(gcode_in, list)):
                 raise NotImplementedError("List input not fully supported")
                 if(self.retract_distance_mm == 'NULL'):
@@ -71,7 +70,7 @@ class Rep2XDualstrusionProcessor(Processor):
 
 
     def process_gcode_list(self, gcodes, callback=None):
-#TODO Update this to use the new functions
+    #TODO Update this to use the new functions
     #This processes gcode in the form of a list of gcodes, and the processed gcode is returned
         self.gcodes = gcodes
         self.max_index = (len(gcodes)-1)
@@ -113,18 +112,15 @@ class Rep2XDualstrusionProcessor(Processor):
             match = re.match(self.toolchange, line)
             if match is not None:
 
-                print(match.group())
-
                 self.last_tool = match.group(1)
                 tool = not (int(match.group(1))) #get the other tool assuming that there aren't more than 2 extruders
 
                 self.output_fp.write("M135 T%i\n"%tool)
-                print self.slicer
+                self.output_fp.write("G92 %s%.2f\n"%(self.MG_TOOLHEADS[tool],self.retract_distance_mm))
                 if(self.slicer == 'miracle_grue'):
-                    print(self.slicer)
-                    self.output_fp.write("G1 F%.2f %s%.2f\n"%(self.snort_feedrate,self.MG_TOOLHEADS[tool],-self.retract_distance_mm))
+                    self.output_fp.write("G1 F%.2f %s%.2f\n"%(self.snort_feedrate,self.MG_TOOLHEADS[tool],0))
                 elif(self.slicer == 'skeinforge'):
-                   self.output_fp.write("G1 F%.2f\nG1 E%.2f\n"%(self.snort_feedrate,-self.retract_distance_mm))
+                   self.output_fp.write("G1 F%.2f\nG1 E%.2f\n"%(self.snort_feedrate,0))
 
                 self.output_fp.write(line)
                 self.output_fp.flush()
@@ -133,66 +129,76 @@ class Rep2XDualstrusionProcessor(Processor):
     def squirt_inactive_tool(self, tool, current_pos, isGcodeFile, doToolchange = False):
         if(doToolchange):
             self.output_fp.write("M135 T%i\n"%int(tool))
+            self.output_fp.write("G92 %s%.2f\n"%(self.MG_TOOLHEADS[int(tool)], 0))
         if(self.slicer == 'miracle_grue'):
-            self.output_fp.write("G1 G%.2f %s%.2f\n"%(self.squirt_feedrate, self.MG_TOOLHEADS[int(tool)], (current_pos+self.retract_distance_mm)))
+            self.output_fp.write("G1 F%.2f %s%.2f\n"%(self.squirt_feedrate, self.MG_TOOLHEADS[int(tool)], self.retract_distance_mm))
+            #attach a G92 after a inactive tool squirt to reset position to zero
+            #This only occurs at the start and end of a print
+            self.output_fp.write("G92 %s%.2f\n"%(self.MG_TOOLHEADS[int(tool)], 0))
         elif(self.slicer == 'skeinforge'):
-            self.output_fp.write("G1 F%.2f\nG1 E%.2f\n"%(self.squirt_feedrate, (current_pos+self.retract_distance_mm)))
+            self.output_fp.write("G1 F%.2f\nG1 E%.2f\n"%(self.squirt_feedrate, self.retract_distance_mm))
+            self.output_fp.write("G92 %s%.2f\n"%(self.MG_TOOLHEADS[int(tool)], 0))
         self.output_fp.flush()
 
 
 
     def process_gcode_file(self, gcode_file_path, output_file_path, callback=None):
     #This process gcode from a file, and output to a file
+
         self.last_tool = -1
-        self.last_extruder_pos = -1
+        self.last_snort_position = 0
+        self.last_squirt_position = 0
         self.code_index = 0
         self.gcode_fp = open(gcode_file_path, 'r')
         self.output_fp = open(output_file_path, 'w+')
 
         #self.write_preprint_purge(True)
+        
+        #snort the inactive tool at the start of the print
         self.snort_inactive_tool(True)
 
+        end_of_prebuild_index = 0
         toolchange = False
+
+        #while copying the file look for the first significant toolchange
+        #and reverse the retract
         for line in self.gcode_fp:
-            if(toolchange):
+            if(not toolchange):
                 match = re.match(self.toolchange, line)
                 if match is not None:
                     if(match.group(1) != self.last_tool):
                         self.output_fp.write(line)
-                        self.squirt_inactive_tool(match.group(1), -self.retract_distance_mm, True)
+                        self.squirt_inactive_tool(match.group(1), 0, True, doToolchange=False)
+                        #This is where further processing will start from
+                        end_of_prebuild_index = self.output_fp.tell()
                         toolchange = True
                         continue
             self.output_fp.write(line)
             self.output_fp.flush()
         self.gcode_fp.close()
 
-        self.gcodes = self.index_file(output_file_path)
-
+        self.gcodes = self.index_file(output_file_path, end_of_prebuild_index)
         self.max_index = (len(self.gcodes)-1)
-        print(int(self.max_index))
 
         while(self.code_index <= self.max_index):
-
             self.output_fp.seek(self.gcodes[self.code_index])
             current_code = self.output_fp.readline()
-            #print(current_code)
+
             self.match = re.match(self.toolchange, current_code)
             if self.match is not None:
-                print(self.match.group())
-                print(self.last_tool)
                 if(self.last_tool == -1):
                     self.last_tool = self.match.group(1)
                 elif(self.last_tool != self.match.group(1)):
-                    print('hello')
                 #If this is a significant tool change
                     self.last_tool = self.match.group(1)
-                    print(str(self.code_index))
+
                     #search for the next squirt
                     squirt_index,extruder,current_feedrate,current_position,current_line_len = self.squirt_search(is_GcodeFile=True)
-                    #Handling Squirt Modification
+                    #If a squirt was found handle the modification of the squirt
                     if(squirt_index != None):
                         squirt_feedrate = self.squirt_feedrate
                         squirt_position = current_position - self.squirt_reduction
+                        self.last_squirt_position = squirt_position
                         
                         if(squirt_position < 0):
                             squirt_position = 0
@@ -200,18 +206,18 @@ class Rep2XDualstrusionProcessor(Processor):
                             formatted_squirt = self.format_squirt(
                                 squirt_feedrate, squirt_position, extruder, current_line_len, squirt_index)             
                             self.insert_snortsquirt(formatted_squirt, squirt_index)
-                    print(str(self.code_index))
+
                     #search backwards for the last snort
                     snort_index,extruder,current_feedrate,current_position,current_line_len = self.reverse_snort_search(is_GcodeFile=True)
-                    
+                    #if a snort was not found in the previous slice continue on
                     if((current_feedrate == None) or (current_position == None)):
-                        #if a snort was not found in the previous slice continue on
                         self.code_index += 1
                         continue
                     #Handling Snort Modification
                     #emit a new snort with a new feedrate and extruder position
                     snort_feedrate = self.snort_feedrate
                     snort_extruder_pos = current_position-self.retract_distance_mm
+                    self.last_snort_position = snort_extruder_pos
                     
                     if(snort_extruder_pos < 0):
                         snort_extruder_pos = 0
@@ -223,8 +229,13 @@ class Rep2XDualstrusionProcessor(Processor):
 
             self.code_index += 1
 
-        self.squirt_inactive_tool(self.last_tool, self.last_extruder_pos, True, doToolchange=True)
+        #post print squirt the inactive tool
+        if(int(self.last_tool) == 0):
+            tool = 1
+        else:
+            tool = 0
 
+        self.squirt_inactive_tool(tool, self.last_extruder_pos, True, doToolchange=True)
         self.output_fp.close()
         return True
 
@@ -259,6 +270,7 @@ class Rep2XDualstrusionProcessor(Processor):
 
             squirt_index += 1
             if(self.slicer == 'miracle_grue'):
+                #if a new layer is encountered return
                 squirt_match = re.match(self.layer_start, current_code)
                 if((squirt_index > self.max_index) or (squirt_match is not None)):
                     return None, None, None, None, None
@@ -266,6 +278,14 @@ class Rep2XDualstrusionProcessor(Processor):
                 squirt_match = re.match(self.SF_layer_end, current_code)
                 if((squirt_index > self.max_index) or (squirt_match is not None)):
                     return None, None, None, None, None
+
+        #if the current extruder position is equal to the last extruder position
+        #assume it was modified already and return
+        if(position == self.last_squirt_position):
+            return(None,None,None,None,None)
+        else:
+            self.last_squirt_position = position
+
         return (squirt_index, extruder, feedrate, position, len(squirt_match.group()))
 
 
@@ -303,17 +323,12 @@ class Rep2XDualstrusionProcessor(Processor):
                 current_code = self.output_fp.readline()
             else:
                 current_code = self.gcodes[snort_index]
-
-            print(current_code)
             snort_match = re.match(self.MG_snort, current_code)
             if snort_match is not None:
-                print(snort_match.group())
                 self.slicer = 'miracle_grue'
                 feedrate = float(snort_match.group(1))
                 extruder = snort_match.group(2)
                 position = float(snort_match.group(3))
-                print snort_match.group()
-                print self.code_index
                 break
             snort_match = re.match(self.SF_snortsquirt, current_code)
             if snort_match is not None:
@@ -327,11 +342,19 @@ class Rep2XDualstrusionProcessor(Processor):
                 break
 
             snort_index -= 1
+
+            #if a new layer was encountered and another layer was parsed, return
             snort_match = re.match(self.layer_start, current_code)
             if(snort_match is not None):
                 if((snort_index < 0) or (layer_starts > 0)):
                     return(None, None, None, None, None)
                 layer_starts += 1
+
+        #if this snort was encountered before, return
+        if(position == self.last_snort_position):
+            return(None,None,None,None,None)
+        else:
+            self.last_snort_position = position
 
         return (snort_index, extruder, feedrate, position, len(snort_match.group()))
             
@@ -373,10 +396,11 @@ class Rep2XDualstrusionProcessor(Processor):
         return line
         
 
-    def index_file(self, filename):
+    def index_file(self, filename, start_index):
         line_indexes = []
         
         with open(filename, 'r') as f:
+            f.seek(start_index)
             while(True):
                line_indexes.append(f.tell())
                line = f.readline()
