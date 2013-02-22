@@ -108,6 +108,7 @@ class GcodeParser(object):
 
                 else:
                     pass
+
         except KeyError as e:
             self._log.error(
                 '{"event":"missing_code_error", "missing_code":%s}\n', e[0])
@@ -196,16 +197,19 @@ class GcodeParser(object):
         """Explicitely sets the position of the state machine and bot
         to the given point
         """
-        self.state.set_position(codes)
-        current_position = self.state.get_position()
+        new_point = self.state.position.copy()
+        self.state.update_point_with_codes(new_point, codes, self.state.values.get('tool_index', None))
+        new_position = new_point.ToList()
         stepped_position = makerbot_driver.Gcode.multiply_vector(
-            current_position,
+            new_position,
             self.state.get_axes_values('steps_per_mm')
         )
         try:
             self.s3g.set_extended_position(stepped_position)
         except Exception:
             raise
+        else:
+            self.state.update_point_with_codes(self.state.position, codes, self.state.values.get('tool_index', None))
 
     def wait_for_tool_ready(self, codes, flags, comment):
         """
@@ -297,16 +301,15 @@ class GcodeParser(object):
         try:
             if 'F' in codes:
                 new_feedrate = codes['F']
-                self.state.values['feedrate'] = new_feedrate
-                self._log.debug('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', codes['F'])
             elif 'feedrate' in self.state.values:
                 new_feedrate = self.state.values['feedrate']
             else:
                 raise makerbot_driver.Gcode.NoFeedrateSpecifiedError
             if len(makerbot_driver.Gcode.parse_out_axes(codes)) > 0 or 'E' in codes:
                 current_position = self.state.get_position()
-                self.state.set_position(codes)
-                new_position = self.state.get_position()
+                new_point = self.state.position.copy()
+                self.state.update_point_with_codes(new_point, codes, self.state.values.get('tool_index', None))
+                new_position = new_point.ToList()
                 dda_speed = makerbot_driver.Gcode.calculate_DDA_speed(
                     current_position,
                     new_position,
@@ -346,7 +349,11 @@ class GcodeParser(object):
                                  # 'F' instead of 'feedrate'.
                 e = KeyError('F')
             raise e
-
+        else:
+            self._log.debug('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', new_feedrate)
+            self._log.debug('{"event":"gcode_state_change", "change":"store_position", "new_position":%r}', self.state.get_position())
+            self.state.values['feedrate'] = new_feedrate
+            self.state.update_point_with_codes(self.state.position, codes, self.state.values.get('tool_index', None))
 
     def dwell(self, codes, flags, comment):
         """Pauses the machine for a specified amount of miliseconds
