@@ -23,6 +23,7 @@ class EmptyLayerProcessor(Processor):
             self.test_for_external_stop()
             return rv
         elif(isinstance(gcode_in, list)):
+            raise NotImplementedError("List input not fully supported")
             return self.process_gcode_list(gcode_in)
 
 
