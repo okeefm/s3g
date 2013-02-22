@@ -142,6 +142,7 @@
   "dualstrusion": {
     "retract_distance_mm": 20,
     "squirt_reduce_mm": 5,
-    "squirt_snort_feedrate": 600
+    "squirt_feedrate": 600,
+    "snort_feedrate" : 600
     }
 }
