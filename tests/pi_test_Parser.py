@@ -265,6 +265,7 @@ class TestLinearInterpolation(unittest.TestCase):
         self.g.linear_interpolation(codes, flags, comments)
 
     def test_linear_interpolation_good_input(self):
+        self.g.state.values['feedrate'] = None
         feedrate = 10
         codes = {
             'X': 10,
@@ -289,6 +290,7 @@ class TestLinearInterpolation(unittest.TestCase):
         expected_feedrate_mm_sec = self.g.state.values['feedrate'] * (1 / 60.0)
         self.assertEqual(e_distance, actual_params[2])
         self.assertEqual(expected_feedrate_mm_sec, actual_params[3])
+        self.assertEqual(feedrate, self.g.state.values['feedrate'])
 
     def test_linear_interpolation_e_command_updates_a_axis(self):
         self.g.state.values['feedrate'] = 100
@@ -344,6 +346,43 @@ class TestLinearInterpolation(unittest.TestCase):
         self.assertEqual(e_distance, actual_params[2])
         self.assertEqual(expected_feedrate_mm_sec, actual_params[3])
 
+    def test_dont_update_buffer_overflow(self):
+        curpos = [0, 0, 0, 0, 0]
+        def bufferoverflow(*args, **kwargs):
+            raise makerbot_driver.BufferOverflowError
+        self.mock.queue_extended_point = mock.Mock(side_effect=bufferoverflow)
+        codes = {
+            'X': 100,
+            'Y': 200,
+            'Z': 300,
+            'A': 400,
+            'B': 500,
+            'F': 600,
+        }
+        flags = []
+        comments = ''
+        self.g.state.values['feedrate'] = None
+        try:
+            self.g.linear_interpolation(codes, flags, comments)
+        except makerbot_driver.BufferOverflowError:
+            pass
+        self.assertEqual(curpos, self.g.state.get_position())
+        self.assertEqual(None, self.g.state.values['feedrate'])
+
+    def test_linear_interpolation_move_from_unknown_position(self):
+        self.g.state.position.X = None
+        codes = {
+            'X': 100,
+            'Y': 200,
+            'Z': 300,
+            'A': 400,
+            'B': 500,
+            'F': 5000,
+        }
+        flags = []
+        comments = ''
+        with self.assertRaises(makerbot_driver.Gcode.UnspecifiedAxisLocationError):
+            self.g.linear_interpolation(codes, flags, comments)
 
 class gcodeTests(unittest.TestCase):
     def setUp(self):
@@ -551,6 +590,73 @@ class gcodeTests(unittest.TestCase):
         self.assertEqual(
             sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[92][1]))
         self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[92][2])
+
+    def test_set_position_e_no_tool_index(self):
+        codes = {
+            'X': 1,
+            'Y': 2,
+            'Z': 3,
+            'E': 4,
+        }
+        flags = []
+        comments = ''
+        expected_position = [1, 2, 3, 4, 5]
+        self.assertTrue('tool_index' not in self.g.state.values)
+        with self.assertRaises(makerbot_driver.Gcode.NoToolIndexError):
+            self.g.set_position(codes, flags, comments)
+
+    def test_set_position_a_b_has_tool_index(self):
+        codes = {
+            'X': 1,
+            'Y': 2,
+            'Z': 3,
+            'A': 4,
+            'B': 5,
+        }
+        flags = []
+        comments = ''
+        expected_position = [1, 2, 3, 4, 5]
+        self.g.state.values['tool_index'] = 0
+        self.g.set_position(codes, flags, comments)
+        got_position = self.g.state.get_position()
+        self.assertEqual(expected_position, got_position)
+
+    def test_set_position_a_b_no_tool_index(self):
+        codes = {
+            'X': 1,
+            'Y': 2,
+            'Z': 3,
+            'A': 4,
+            'B': 5,
+        }
+        flags = []
+        comments = ''
+        expected_position = [1, 2, 3, 4, 5]
+        self.assertTrue('tool_index' not in self.g.state.values)
+        self.g.set_position(codes, flags, comments)
+        got_position = self.g.state.get_position()
+        self.assertEqual(expected_position, got_position)
+
+    def test_set_position_buffer_overflow_error(self):
+        self.g.state.position.SetPoint({"X":0,"Y":0,"Z":0,"A":0,"B":0})
+        expected_position = [0, 0, 0, 0, 0]
+        codes = {
+            'X': 0,
+            'Y': 1,
+            'Z': 2,
+            'A': 3,
+            'B': 4,
+        }
+        flags = []
+        comments = ''
+        def bufferoverflow(*args, **kwargs):
+            raise makerbot_driver.BufferOverflowError
+        self.mock.set_extended_position = mock.Mock(side_effect=bufferoverflow)
+        try:
+            self.g.set_position(codes, flags, comments)
+        except makerbot_driver.BufferOverflowError:
+            pass
+        self.assertEqual(expected_position, self.g.state.get_position())
 
     def test_set_position_e_command_a_axis(self):
         self.g.state.position.SetPoint({"X":0,"Y":0,"Z":0,"A":0,"B":0})
