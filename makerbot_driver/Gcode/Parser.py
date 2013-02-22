@@ -196,20 +196,16 @@ class GcodeParser(object):
         """Explicitely sets the position of the state machine and bot
         to the given point
         """
-        new_position = self.state.position.copy()
-        new_position.SetPoint(codes)
-        new_position = new_position.ToList()
+        self.state.set_position(codes)
+        current_position = self.state.get_position()
         stepped_position = makerbot_driver.Gcode.multiply_vector(
-#            self.state.get_position(),
-            new_position,
+            current_position,
             self.state.get_axes_values('steps_per_mm')
         )
         try:
             self.s3g.set_extended_position(stepped_position)
         except Exception:
             raise
-        else:
-            self.state.set_position(codes)
 
     def wait_for_tool_ready(self, codes, flags, comment):
         """
@@ -301,6 +297,7 @@ class GcodeParser(object):
         try:
             if 'F' in codes:
                 new_feedrate = codes['F']
+                self.state.values['feedrate'] = new_feedrate
                 self._log.debug('{"event":"gcode_state_change", "change":"store_feedrate", "new_feedrate":%i}', codes['F'])
             elif 'feedrate' in self.state.values:
                 new_feedrate = self.state.values['feedrate']
@@ -308,9 +305,8 @@ class GcodeParser(object):
                 raise makerbot_driver.Gcode.NoFeedrateSpecifiedError
             if len(makerbot_driver.Gcode.parse_out_axes(codes)) > 0 or 'E' in codes:
                 current_position = self.state.get_position()
-                new_position = self.state.position.copy() 
-                new_position.SetPoint(codes)
-                new_position = new_position.ToList()
+                self.state.set_position(codes)
+                new_position = self.state.get_position()
                 dda_speed = makerbot_driver.Gcode.calculate_DDA_speed(
                     current_position,
                     new_position,
@@ -350,10 +346,6 @@ class GcodeParser(object):
                                  # 'F' instead of 'feedrate'.
                 e = KeyError('F')
             raise e
-
-        else:
-            self.state.values['feedrate'] = new_feedrate
-            self.state.set_position(codes)
 
 
     def dwell(self, codes, flags, comment):

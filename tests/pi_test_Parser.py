@@ -103,7 +103,7 @@ class TestFindAxesMinMax(unittest.TestCase):
             KeyError, self.g.find_axes_maximums, codes, flags, comments)
 
 
-class test_linear_interpolation(unittest.TestCase):
+class TestLinearInterpolation(unittest.TestCase):
 
     def setUp(self):
         self.mock = mock.Mock(makerbot_driver.s3g())
@@ -280,6 +280,60 @@ class test_linear_interpolation(unittest.TestCase):
             expectedPoint[:3], self.g.state.get_position()[:3])
         self.g.linear_interpolation(codes, flags, comments)
         # Gcode works in steps, so we need to convert the expected position to steps
+        spmList = self.g.state.get_axes_values('steps_per_mm')
+        for i in range(len(expectedPoint)):
+            expectedPoint[i] *= spmList[i]
+        actual_params = self.mock.mock_calls[0][1]
+        for expected, actual in zip(expectedPoint, actual_params[0]):
+            self.assertAlmostEqual(expected, actual)
+        expected_feedrate_mm_sec = self.g.state.values['feedrate'] * (1 / 60.0)
+        self.assertEqual(e_distance, actual_params[2])
+        self.assertEqual(expected_feedrate_mm_sec, actual_params[3])
+
+    def test_linear_interpolation_e_command_updates_a_axis(self):
+        self.g.state.values['feedrate'] = 100
+        self.g.state.values['tool_index'] = 0
+        codes = {
+            'X': 10,
+            'Y': 20,
+            'Z': 30,
+            'E': 40,
+        }
+        flags = []
+        comments = ""
+        expectedPoint = [10, 20, 30, 40, 0]
+        e_distance = makerbot_driver.Gcode.calculate_euclidean_distance(
+            expectedPoint[:3], self.g.state.get_position()[:3])
+        self.g.linear_interpolation(codes, flags, comments)
+        gotPoint = self.g.state.get_position()
+        self.assertEqual(expectedPoint, gotPoint)
+        spmList = self.g.state.get_axes_values('steps_per_mm')
+        for i in range(len(expectedPoint)):
+            expectedPoint[i] *= spmList[i]
+        actual_params = self.mock.mock_calls[0][1]
+        for expected, actual in zip(expectedPoint, actual_params[0]):
+            self.assertAlmostEqual(expected, actual)
+        expected_feedrate_mm_sec = self.g.state.values['feedrate'] * (1 / 60.0)
+        self.assertEqual(e_distance, actual_params[2])
+        self.assertEqual(expected_feedrate_mm_sec, actual_params[3])
+
+    def test_linear_interpolation_e_command_updates_b_axis(self):
+        self.g.state.values['feedrate'] = 100
+        self.g.state.values['tool_index'] = 1
+        codes = {
+            'X': 10,
+            'Y': 20,
+            'Z': 30,
+            'E': 40,
+        }
+        flags = []
+        comments = ""
+        expectedPoint = [10, 20, 30, 0, 40]
+        e_distance = makerbot_driver.Gcode.calculate_euclidean_distance(
+            expectedPoint[:3], self.g.state.get_position()[:3])
+        self.g.linear_interpolation(codes, flags, comments)
+        gotPoint = self.g.state.get_position()
+        self.assertEqual(expectedPoint, gotPoint)
         spmList = self.g.state.get_axes_values('steps_per_mm')
         for i in range(len(expectedPoint)):
             expectedPoint[i] *= spmList[i]
@@ -497,6 +551,40 @@ class gcodeTests(unittest.TestCase):
         self.assertEqual(
             sorted(codes), sorted(self.g.GCODE_INSTRUCTIONS[92][1]))
         self.assertEqual(flags, self.g.GCODE_INSTRUCTIONS[92][2])
+
+    def test_set_position_e_command_a_axis(self):
+        self.g.state.position.SetPoint({"X":0,"Y":0,"Z":0,"A":0,"B":0})
+        expected_position = [0, 0, 0, 3, 0]
+        self.g.state.values['tool_index'] = 0
+        codes = {
+            'E': 3,
+        }
+        flags = []
+        comments = ''
+        self.g.set_position(codes, flags, comments)
+        self.assertEqual(expected_position, self.g.state.get_position())
+        spmList = self.g.state.get_axes_values('steps_per_mm')
+        for i in range(len(spmList)):
+            expected_position[i] *= spmList[i]
+        self.mock.set_extended_position.assert_called_once_with(
+            expected_position)
+
+    def test_set_position_e_command_b_axis(self):
+        self.g.state.position.SetPoint({"X":0,"Y":0,"Z":0,"A":0,"B":0})
+        expected_position = [0, 0, 0, 0, 3]
+        self.g.state.values['tool_index'] = 1
+        codes = {
+            'E': 3,
+        }
+        flags = []
+        comments = ''
+        self.g.set_position(codes, flags, comments)
+        self.assertEqual(expected_position, self.g.state.get_position())
+        spmList = self.g.state.get_axes_values('steps_per_mm')
+        for i in range(len(spmList)):
+            expected_position[i] *= spmList[i]
+        self.mock.set_extended_position.assert_called_once_with(
+            expected_position)
 
     def test_set_position(self):
         expected_position = [0, 1, 2, 3, 4]
