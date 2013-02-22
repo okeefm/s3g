@@ -12,7 +12,7 @@ class EmptyLayerProcessor(Processor):
         self.is_bundleable = True
         self.layer_start = re.compile("^\((Slice|<layer>) [0-9.]+.*\)")
         self.MG_nominal_comment = re.compile("^\(Slowing to 0\% of nominal speeds\)")
-        self.move_gcode = re.compile("^G1 .*")
+        self.move_with_extrude_gcode = re.compile("^G1.*[ABE][0-9.-].*")
         self.SF_layer_end = re.compile("^\(</layer>\)")
         self.empty_line = re.compile("^\\n")
 
@@ -27,7 +27,7 @@ class EmptyLayerProcessor(Processor):
             return self.process_gcode_list(gcode_in)
 
 
-    def process_gcode_file(self, gcode_file_path, output_file_path,callback=None): 
+    def process_gcode_file(self, gcode_file_path, output_file_path,callback=None):
     #process gcode from a file, and output to a file     
         self.code_index = 0
         self.gcodes = self.index_file(gcode_file_path)
@@ -107,19 +107,19 @@ class EmptyLayerProcessor(Processor):
         self.gcode_fp.seek(self.gcodes[code_index])
         current_code = self.gcode_fp.readline()
         while(True):
-            #Checks for a specific comment or G1 commands
+            #Checks for a specific comment or G1 with extrusion commands
             if(slicer == 'MG'):
                 if(re.match(self.layer_start, current_code)):
                     break
                 lines_in_layer += 1
-                if(re.match(self.move_gcode, current_code)):
+                if(re.match(self.move_with_extrude_gcode, current_code)):
                     moves_in_layer += 1
                 if(re.match(self.MG_nominal_comment, current_code)):
                     comments_in_layer += 1
             elif(slicer == 'SF'):
                 if(re.match(self.SF_layer_end, current_code)):
                     break
-                if(re.match(self.move_gcode, current_code)):
+                if(re.match(self.move_with_extrude_gcode, current_code)):
                     moves_in_layer += 1
  
             code_index += 1
@@ -129,7 +129,7 @@ class EmptyLayerProcessor(Processor):
             current_code = self.gcode_fp.readline()
 
         if(slicer == 'MG'):
-            if((moves_in_layer <= 2) and (lines_in_layer <= 10)):
+            if((moves_in_layer <= 2) and (lines_in_layer <= 15)):
                 return (True, code_index)
             else:
                 return (False, None)
