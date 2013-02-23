@@ -127,6 +127,7 @@ class Rep2XDualstrusionProcessor(Processor):
                 return
 
     def squirt_inactive_tool(self, tool, current_pos, isGcodeFile, doToolchange = False):
+        self.output_fp.write("TESTTESTTEST\n")
         if(doToolchange):
             self.output_fp.write("M135 T%i\n"%int(tool))
             self.output_fp.write("G92 %s%.2f\n"%(self.MG_TOOLHEADS[int(tool)], 0))
@@ -140,6 +141,15 @@ class Rep2XDualstrusionProcessor(Processor):
             self.output_fp.write("G92 %s%.2f\n"%(self.MG_TOOLHEADS[int(tool)], 0))
         self.output_fp.flush()
 
+
+    def get_first_toolchange(self):
+        for line in self.gcode_fp:
+            match = re.match(self.toolchange, line)
+            if match is not None:
+                initial_tool = int(match.group(1))
+                break
+        self.gcode_fp.seek(0)
+        return initial_tool
 
 
     def process_gcode_file(self, gcode_file_path, output_file_path, callback=None):
@@ -157,27 +167,26 @@ class Rep2XDualstrusionProcessor(Processor):
         #snort the inactive tool at the start of the print
         #self.snort_inactive_tool(True)
 
-        end_of_prebuild_index = 0
-        toolchange = False
+        initial_tool = self.get_first_toolchange()
 
+        toolchange = False
         #while copying the file look for the first significant toolchange
         #and reverse the retract
         for line in self.gcode_fp:
             if(not toolchange):
                 match = re.match(self.toolchange, line)
                 if match is not None:
-                    if(match.group(1) != self.last_tool):
+                    if(int(match.group(1)) != initial_tool):
                         self.output_fp.write(line)
                         self.squirt_inactive_tool(match.group(1), 0, True, doToolchange=False)
                         #This is where further processing will start from
-                        end_of_prebuild_index = self.output_fp.tell()
                         toolchange = True
                         continue
             self.output_fp.write(line)
             self.output_fp.flush()
         self.gcode_fp.close()
 
-        self.gcodes = self.index_file(output_file_path, end_of_prebuild_index)
+        self.gcodes = self.index_file(output_file_path, 0)
         self.max_index = (len(self.gcodes)-1)
 
         while(self.code_index <= self.max_index):
@@ -218,10 +227,9 @@ class Rep2XDualstrusionProcessor(Processor):
                     snort_feedrate = self.snort_feedrate
                     snort_extruder_pos = current_position-self.retract_distance_mm
                     self.last_snort_position = snort_extruder_pos
-                    
+
                     if(snort_extruder_pos < 0):
                         snort_extruder_pos = 0
-                    self.last_extruder_pos = snort_extruder_pos
                     if(self.slicer == 'miracle_grue' or self.slicer == 'skeinforge'):
                         formatted_snort = self.format_snort(
                             snort_feedrate, snort_extruder_pos, extruder, current_line_len, snort_index)
@@ -235,7 +243,7 @@ class Rep2XDualstrusionProcessor(Processor):
         else:
             tool = 0
 
-        self.squirt_inactive_tool(tool, self.last_extruder_pos, True, doToolchange=True)
+        self.squirt_inactive_tool(tool, 0, True, doToolchange=True)
         self.output_fp.close()
         return True
 
