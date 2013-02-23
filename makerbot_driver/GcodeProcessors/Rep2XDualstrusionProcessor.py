@@ -127,7 +127,6 @@ class Rep2XDualstrusionProcessor(Processor):
                 return
 
     def squirt_inactive_tool(self, tool, current_pos, isGcodeFile, doToolchange = False):
-        self.output_fp.write("TESTTESTTEST\n")
         if(doToolchange):
             self.output_fp.write("M135 T%i\n"%int(tool))
             self.output_fp.write("G92 %s%.2f\n"%(self.MG_TOOLHEADS[int(tool)], 0))
