@@ -155,7 +155,7 @@ class Rep2XDualstrusionProcessor(Processor):
         #self.write_preprint_purge(True)
         
         #snort the inactive tool at the start of the print
-        self.snort_inactive_tool(True)
+        #self.snort_inactive_tool(True)
 
         end_of_prebuild_index = 0
         toolchange = False
