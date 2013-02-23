@@ -50,5 +50,6 @@ class Rep2XDualstrusionPurgeProcessor(LineTransformProcessor):
                 "G92 A0 B0 (Reset after purge)\n",
             ])
             toadd.extend(self._get_retract_commands(self.profile, self.current_toolchange))
+            toadd.append(self.current_toolchange)
         self.looking_for_first_move = False
-        return toadd + [self.current_toolchange, match.string]
+        return toadd + [match.string]
