@@ -129,12 +129,12 @@ class EmptyLayerProcessor(Processor):
             current_code = self.gcode_fp.readline()
 
         if(slicer == 'MG'):
-            if((moves_in_layer <= 2) and (lines_in_layer <= 15)):
+            if((moves_in_layer < 1) and (lines_in_layer <= 15)):
                 return (True, code_index)
             else:
                 return (False, None)
         elif(slicer == 'SF'):
-            if(moves_in_layer <= 1):
+            if(moves_in_layer < 1):
                 return (True, code_index+1) #avoids adding the </layer> tag
             else:
                 return (False, None)
