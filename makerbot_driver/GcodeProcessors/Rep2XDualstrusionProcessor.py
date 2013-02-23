@@ -18,7 +18,7 @@ class Rep2XDualstrusionProcessor(Processor):
         self.MG_squirt = re.compile("^G1 F([0-9.-]+) ([AB])([0-9.-]+) \(squirt\)")
         self.SF_layer_end = re.compile("^\(</layer>\)")
         self.SF_snortsquirt = re.compile("^G1 E([0-9.-]+)")
-        self.SF_feedrate = re.compile("^G1 F(0-9.-]+)")
+        self.SF_feedrate = re.compile("^G1 F([0-9.-]+)")
 
         self.MG_anchor_end = re.compile("^G1 X([0-9.-]+) Y([0-9.-]+) Z([0-9.-]+) F([0-9.-]+) ([AB])([0-9.-]+) \(Anchor End\)")
         self.SF_anchor = re.compile("^G1 X([0-9.-]+) Y([0-9.-]+) Z([0-9.-]+) F([0-9.-]+) E([0-9.-]+)")
@@ -358,6 +358,7 @@ class Rep2XDualstrusionProcessor(Processor):
                 break
 
             snort_index -= 1
+
 
             #if a new layer was encountered and another layer was parsed, return
             snort_match = re.match(self.layer_start, current_code)
