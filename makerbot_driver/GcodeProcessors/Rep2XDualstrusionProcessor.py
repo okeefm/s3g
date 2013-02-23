@@ -18,6 +18,7 @@ class Rep2XDualstrusionProcessor(Processor):
         self.MG_squirt = re.compile("^G1 F([0-9.-]+) ([AB])([0-9.-]+) \(squirt\)")
         self.SF_layer_end = re.compile("^\(</layer>\)")
         self.SF_snortsquirt = re.compile("^G1 E([0-9.-]+)")
+        self.SF_feedrate = re.compile("^G1 F(0-9.-]+)
 
         self.MG_anchor_end = re.compile("^G1 X([0-9.-]+) Y([0-9.-]+) Z([0-9.-]+) F([0-9.-]+) ([AB])([0-9.-]+) \(Anchor End\)")
         self.SF_anchor = re.compile("^G1 X([0-9.-]+) Y([0-9.-]+) Z([0-9.-]+) F([0-9.-]+) E([0-9.-]+)")
@@ -271,6 +272,11 @@ class Rep2XDualstrusionProcessor(Processor):
                 position = float(squirt_match.group(1))
                 self.output_fp.seek(self.gcodes[squirt_index-1])
                 current_code = self.output_fp.readline()
+                match = re.match(self.SF_feedrate, current_code)
+                if match is not None:
+                    feedrate = float(match.group(1)) 
+                else:
+                    return(None,None,None,None,None)  
                 feedrate = float(current_code.split('F')[1])
                 extruder = None
                 break
@@ -342,8 +348,11 @@ class Rep2XDualstrusionProcessor(Processor):
                 self.slicer = 'skeinforge'
                 self.output_fp.seek(self.gcodes[snort_index-1])
                 current_code = self.output_fp.readline()
-                #This is based on the assumption that the feedrate for the snort is set the line before
-                feedrate = float(current_code.split('F')[1])     
+                match = re.match(self.SF_feedrate, current_code)
+                if match is not None:
+                    feedrate = float(match.group(1)) 
+                else:
+                    return(None,None,None,None,None)   
                 position = float(snort_match.group(1))
                 extruder = None
                 break
