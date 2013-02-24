@@ -89,7 +89,7 @@ class EmptyLayerProcessor(Processor):
                 #Hacky way to remove final empty slice for Miracle Grue 
                     self.code_index += 7
 
-            if(self.code_index <= self.max_index):
+            if(self.code_inde132x <= self.max_index):
                 self.output.append(self.gcodes[self.code_index])
                 self.code_index += 1
             else:
@@ -129,7 +129,7 @@ class EmptyLayerProcessor(Processor):
             current_code = self.gcode_fp.readline()
 
         if(slicer == 'MG'):
-            if((moves_in_layer < 1) and (lines_in_layer <= 15)):
+            if(moves_in_layer < 1):
                 return (True, code_index)
             else:
                 return (False, None)
