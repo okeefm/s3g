@@ -89,7 +89,7 @@ class EmptyLayerProcessor(Processor):
                 #Hacky way to remove final empty slice for Miracle Grue 
                     self.code_index += 7
 
-            if(self.code_inde132x <= self.max_index):
+            if(self.code_index <= self.max_index):
                 self.output.append(self.gcodes[self.code_index])
                 self.code_index += 1
             else:
