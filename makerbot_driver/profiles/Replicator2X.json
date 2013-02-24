@@ -141,7 +141,7 @@
   "find_axis_minimum_timeout"  : 20,
   "dualstrusion": {
     "retract_distance_mm": 17,
-    "squirt_reduce_mm": 0,
+    "squirt_reduce_mm": 1,
     "squirt_feedrate": 300,
     "snort_feedrate" : 300
     }
