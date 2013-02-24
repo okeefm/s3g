@@ -45,11 +45,12 @@ class Rep2XDualstrusionProcessor(Processor):
 
         self.slicer = slicer
 
+
         if(outfile != None):
-            self.gcode_fp = gcode_in
-            self.output_fp = outfile
             if(self.retract_distance_mm == 'NULL'):
             #if this value is null this process in not relevant, so return the input
+                self.gcode_fp = open(gcode_in, 'r')
+                self.output_fp = open(outfile, 'w+')
                 for line in self.gcode_fp:
                     self.output_fp.write(line)
                 self.gcode_fp.close()
@@ -128,7 +129,7 @@ class Rep2XDualstrusionProcessor(Processor):
 
     def squirt_inactive_tool(self, tool, current_pos, isGcodeFile, doToolchange = False):
         if(doToolchange):
-            self.output_fp.write("M135 T%i\n"%(int(tool)))
+            self.output_fp.write("M135 T%i\n"%int(tool))
             self.output_fp.write("G92 %s%.2f\n"%(self.MG_TOOLHEADS[int(tool)], 0))
         if(self.slicer == 'miracle_grue'):
             self.output_fp.write("G1 F%.2f %s%.2f\n"%(self.squirt_feedrate, self.MG_TOOLHEADS[int(tool)], self.retract_distance_mm))
@@ -158,8 +159,8 @@ class Rep2XDualstrusionProcessor(Processor):
         self.last_snort_position = 0
         self.last_squirt_position = 0
         self.code_index = 0
-        #self.gcode_fp = open(gcode_file_path, 'r')
-        #self.output_fp = open(output_file_path, 'w+')
+        self.gcode_fp = open(gcode_file_path, 'r')
+        self.output_fp = open(output_file_path, 'w+')
 
         #self.write_preprint_purge(True)
         
@@ -185,7 +186,7 @@ class Rep2XDualstrusionProcessor(Processor):
             self.output_fp.flush()
         self.gcode_fp.close()
 
-        self.gcodes = self.index_file(self.output_fp,0)
+        self.gcodes = self.index_file(output_file_path, 0)
         self.max_index = (len(self.gcodes)-1)
 
         while(True):
@@ -238,6 +239,7 @@ class Rep2XDualstrusionProcessor(Processor):
                 self.code_index += 1
             else:
                 break
+
         #post print squirt the inactive tool
         if(int(self.last_tool) == 0):
             tool = 1
@@ -416,16 +418,16 @@ class Rep2XDualstrusionProcessor(Processor):
         return line
         
 
-    def index_file(self, file_handle, start_index):
+    def index_file(self, filename, start_index):
         line_indexes = []
-        f = file_handle
-        f.seek(start_index)
-        while(True):
-           line_indexes.append(f.tell())
-           line = f.readline()
-           if(line == ''):
-                break
-        f.seek(start_index)
-        return line_indexes
+        
+        with open(filename, 'r') as f:
+            f.seek(start_index)
+            while(True):
+               line_indexes.append(f.tell())
+               line = f.readline()
+               if(line == ''):
+                    break
+            return line_indexes
 
                 
