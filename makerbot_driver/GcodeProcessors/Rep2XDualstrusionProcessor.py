@@ -228,8 +228,8 @@ class Rep2XDualstrusionProcessor(Processor):
                     snort_extruder_pos = current_position-self.retract_distance_mm
                     self.last_snort_position = snort_extruder_pos
 
-                    if(snort_extruder_pos < 0):
-                        snort_extruder_pos = 0
+                    #if(snort_extruder_pos < 0):
+                    #    snort_extruder_pos = 0
                     if(self.slicer == 'miracle_grue' or self.slicer == 'skeinforge'):
                         formatted_snort = self.format_snort(
                             snort_feedrate, snort_extruder_pos, extruder, current_line_len, snort_index)
