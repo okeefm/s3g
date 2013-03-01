@@ -39,7 +39,7 @@ class DualRetractProcessor(Processor):
 
         self.retract_distance_mm = profile.values["dualstrusion"][
             "retract_distance_mm"]
-        self.squirt_reduction = profile.values["dualstrusion"][
+        self.squirt_reduction_mm = profile.values["dualstrusion"][
             "squirt_reduce_mm"]
         self.squirt_feedrate = profile.values["dualstrusion"][
             "squirt_feedrate"]
@@ -49,6 +49,7 @@ class DualRetractProcessor(Processor):
         self.current_tool = -1
         self.last_tool = -1
         self.last_snort = {'index': None, 'extruder_position':None}
+        self.squirt_extruder_pos = None
         self.seeking_first_toolchange = True
         self.seeking_first_layer = True
         self.seeking_squirt = False
@@ -88,6 +89,7 @@ class DualRetractProcessor(Processor):
                     self.seeking_squirt = True
 
         #TODO: not worry about this and let the purge handle it?
+        #Squirt retracted tool at the end of the print
         self.squirt_tool(self.get_other_tool(self.current_tool))
 
         return self.output
@@ -97,6 +99,8 @@ class DualRetractProcessor(Processor):
         match = re.match(self.layer_start, string)
         if match is not None:
             return True
+        else:
+            return False
 
     def check_for_snort(self,string):
         match = re.match(self.snort, string)
@@ -111,9 +115,13 @@ class DualRetractProcessor(Processor):
             if match is not None:
                 self.SF_flag = True
             return True
+        else:
+            return False
 
 
     def check_for_significant_toolchange(self,string):
+    #Checks for significant toolchange(i.e. from tool 0 -> 1)
+    #Updates the current tool accordingly
         match = re.match(self.toolchange, string)
         if match is not None:
             if(self.current_tool == -1):
@@ -125,33 +133,45 @@ class DualRetractProcessor(Processor):
                 return True
             else:
                 return False
+        else:
+            return False
 
 
     def check_for_squirt(self, string):
         match = re.match(self.squirt, string)
         if match is not None:
+            extruder_position = match.group(1)
+            if(extruder_position == None):
+                extruder_position = match.group(2)
+            self.squirt_extruder_pos = float(extruder_position)
             match = re.match(self.SF_feedrate, string)
             if match is not None:
                 self.SF_handle_second_squirt_line = True
             self.seeking_squirt = False
+            return True
+        else:
+            return False
 
 
     def get_other_tool(self, tool):
-        inactive_tool = {0:1, 1:0, -1:1}
-        return inactive_tool[tool]
+        inactive_tool = {0:1, 1:0}
+        try:
+            return inactive_tool[tool]
+        except:
+            return -1
 
 
     def squirt_tool(self, tool):
         self.output.append("M135 T%i\n"%(tool))
-        self.output.append("G92 %s%f\n"%(TOOLHEADS[tool], 0))
+        self.output.append("G92 %s0\n"%(TOOLHEADS[tool]))
         self.output.append("G1 F%f %s%f\n"%(self.squirt_feedrate, TOOLHEADS[tool],
             self.retract_distance_mm))
-        self.output.append("G92 %s%f\n"%(TOOLHEADS[tool], 0))
+        self.output.append("G92 %s0\n"%(TOOLHEADS[tool]))
         self.output.append("M135 T%i\n"%(tool))
         
 
     def squirt_replace(self):
-        new_extruder_position = snort_extruder_position-self.squirt_reduction
+        new_extruder_position = self.squirt_extruder_pos-self.squirt_reduction_mm
 
         squirt_line = "G1 F%f %s%f\n"%(self.squirt_feedrate, TOOLHEADS[self.current_tool],
             new_extruder_position)
