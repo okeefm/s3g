@@ -6,22 +6,6 @@ from . import Processor
 import makerbot_driver
 
 
-TOOLHEADS = ['A', 'B']
-
-
-def sandwich_iter(iterable):
-#generator that yields the previous, current and next item for an iterable
-    iterator = iter(iterable)
-    current = iterator.next()
-    prev = None
-
-    for next in iterator:
-        yield(prev,current,next)
-        prev = current        
-        current = next
-    yield(prev,current,'')
-
-
 class DualRetractProcessor(Processor):
     def __init__(self):
         super(DualRetractProcessor, self).__init__()
@@ -34,7 +18,35 @@ class DualRetractProcessor(Processor):
         self.SF_feedrate = re.compile("^G1 F[0-9.-]+\n")
         self.purge = re.compile(".*purge.*|.*Purge.*")
 
+        self.TOOLHEADS = ['A', 'B']
+
+    def sandwich_iter(self, iterable):
+        """
+        This function returns an iterator with the previous,current,and next values
+        in a iterable
+
+        @param iterable: iterable object
+        @return iterator of triplets
+        """
+        iterator = iter(iterable)
+        current = iterator.next()
+        prev = None
+
+        for next in iterator:
+            yield(prev,current,next)
+            prev = current        
+            current = next
+        yield(prev,current,'')
+
+
     def process_gcode(self, gcode_in, profile_name):
+        """
+        This function adds retractions and squirt tweaks to a gcode input
+
+        @param gcode_in: iterable object containing gcode
+        @param profile_name: the name of the machine profile to use
+        @return output: iterable containing the processed gcode
+        """
         profile = makerbot_driver.profile.Profile(profile_name)
 
         self.retract_distance_mm = profile.values["dualstrusion"][
@@ -57,7 +69,7 @@ class DualRetractProcessor(Processor):
         self.SF_handle_second_snortsquirt_line = False
         self.output = []
 
-        for (previous_code,current_code,next_code) in sandwich_iter(gcode_in):    
+        for (previous_code,current_code,next_code) in self.sandwich_iter(gcode_in):    
             if(self.SF_handle_second_snortsquirt_line):
                 self.SF_handle_second_snort_squirt_line = False
                 continue
@@ -97,12 +109,17 @@ class DualRetractProcessor(Processor):
 
     def check_for_layer(self,string):
         match = re.match(self.layer_start, string)
-        if match is not None:
-            return True
-        else:
-            return False
+        return match is not None
+
 
     def check_for_snort(self,string):
+        """
+        Check to see if string is a snort
+        if so it save the snort values and returns
+        
+        @param string: string to be matched with the regex
+        @return boolean: True if it is a snort
+        """
         match = re.match(self.snort, string)
         if match is not None:
             extruder_position = match.group(1)
@@ -120,8 +137,13 @@ class DualRetractProcessor(Processor):
 
 
     def check_for_significant_toolchange(self,string):
-    #Checks for significant toolchange(i.e. from tool 0 -> 1)
-    #Updates the current tool accordingly
+        """
+        Checks for significant toolchange(i.e. from tool 0 -> 1)
+        Updates the current tool accordingly
+
+        @param string: string to be matched to toolchange regex
+        @return boolean: True if a significant toolchange is found
+        """
         match = re.match(self.toolchange, string)
         if match is not None:
             if(self.current_tool == -1):
@@ -138,6 +160,12 @@ class DualRetractProcessor(Processor):
 
 
     def check_for_squirt(self, string):
+        """
+        Check if string contains a squirt
+
+        @param string: string to be matched to squirt regex
+        @return boolean: True if squirt was found
+        """
         match = re.match(self.squirt, string)
         if match is not None:
             extruder_position = match.group(1)
@@ -163,28 +191,31 @@ class DualRetractProcessor(Processor):
 
     def squirt_tool(self, tool):
         self.output.append("M135 T%i\n"%(tool))
-        self.output.append("G92 %s0\n"%(TOOLHEADS[tool]))
-        self.output.append("G1 F%f %s%f\n"%(self.squirt_feedrate, TOOLHEADS[tool],
+        self.output.append("G92 %s0\n"%(self.TOOLHEADS[tool]))
+        self.output.append("G1 F%f %s%f\n"%(self.squirt_feedrate, self.TOOLHEADS[tool],
             self.retract_distance_mm))
-        self.output.append("G92 %s0\n"%(TOOLHEADS[tool]))
+        self.output.append("G92 %s0\n"%(self.TOOLHEADS[tool]))
         self.output.append("M135 T%i\n"%(tool))
         
 
     def squirt_replace(self):
         new_extruder_position = self.squirt_extruder_pos-self.squirt_reduction_mm
 
-        squirt_line = "G1 F%f %s%f\n"%(self.squirt_feedrate, TOOLHEADS[self.current_tool],
+        squirt_line = "G1 F%f %s%f\n"%(self.squirt_feedrate, self.TOOLHEADS[self.current_tool],
             new_extruder_position)
         self.output[-1] = squirt_line
 
 
     def snort_replace(self):
+        """
+        Replaces a past snort
+        """
         if(self.last_snort['index'] != None):
             snort_index = self.last_snort['index']
             snort_extruder_position = self.last_snort['extruder_position']
             new_extruder_position = snort_extruder_position-self.retract_distance_mm
 
-            snort_line = "G1 F%f %s%f\n"%(self.snort_feedrate, TOOLHEADS[self.last_tool],
+            snort_line = "G1 F%f %s%f\n"%(self.snort_feedrate, self.TOOLHEADS[self.last_tool],
                 new_extruder_position)
             self.output[snort_index] = snort_line
             #if SF replace second line of the snort with a blank line

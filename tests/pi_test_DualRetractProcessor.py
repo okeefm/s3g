@@ -149,7 +149,7 @@ class DualRetractProcessorTests(unittest.TestCase):
                 self.assertEqual(self.p.last_snort['extruder_position'], case[2])
 
 
-    def check_for_layer(self):
+    def test_check_for_layer(self):
         cases = [
             ("G1 F625 A1200 (snort)\n",False),
             ("(<layer> 0.135 )\n",True),
@@ -160,6 +160,19 @@ class DualRetractProcessorTests(unittest.TestCase):
         for case in cases:
             self.assertEqual(self.p.check_for_layer(case[0]), case[1])
 
+
+    def test_sandwich_iter(self):
+        input_iterable = [1,2,3,4,5]
+        expect_prev = [None,1,2,3,4]
+        expect_next = [2,3,4,5,'']
+
+        index = 0
+
+        for (prev,current,next) in self.p.sandwich_iter(input_iterable):
+            self.assertEqual(input_iterable[index],current)
+            self.assertEqual(expect_prev[index], prev)
+            self.assertEqual(expect_next[index], next)
+            index += 1
 
     def test_process_file(self):
         return
