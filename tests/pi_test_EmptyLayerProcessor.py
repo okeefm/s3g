@@ -1,119 +1,214 @@
 import os
 import sys
-import unittest
-import re
+sys.path.append(os.path.abspath('./'))
 
-sys.path.append(os.path.abspath('../../s3g'))
+import unittest
+
 import makerbot_driver
 
 class TestEmptyLayerProcessor(unittest.TestCase):
     def setUp(self):
         self.p = makerbot_driver.GcodeProcessors.EmptyLayerProcessor()
-    
+
     def tearDown(self):
         self.p = None
 
-    def test_regex(self):
-        self.test_layer_start()
-        self.test_move_gcode()
-        self.test_SF_layer_end_gcode()
-        self.test_MG_nominal_comment_gcode()
 
-    #simple smoke tests for RegExes
-    def test_layer_start(self):
-        layer_start_cases = [
-            ["(Slice 266 adfdafdf)", True, "(Slice 266 adfdafdf)"],
-            ["(<layer> 12.8675 adkkfj)", True, "(<layer> 12.8675 adkkfj)"],
-            ["(<layer> 12.8675", False, None],
-            ["(Slice)", False, None],
-            ["(layer 12.8675)", False, None],
-            ["(Slice<layer> 12.65)", False, None],
-            ["(12)", False, None],
-            ["(Slice 2.678 hellothere))))))))", True, "(Slice 2.678 hellothere))))))))"]
+    def test_process_gcode(self):
+                
+        cases = [
+            [
+                ["(Slice 0, 1 Extruder)\n",
+                 "M135 T0\n",
+                 "G1 X-15.84 Y19.008 Z0.54\n",
+                 "(Layer Height: 	0.270)\n",
+                 "(Layer Width: 	0.400)\n",
+                 "G1 Z0.540 F1380.000 (move Z)\n",
+                 "G1 X-10.800 Y-11.241 Z0.540 F6000.000 (move into position)\n",
+                 "G1 F300.000 A111.620 (squirt)\n",
+                 "\n",
+                 "M73\n",
+                 "G1 X-8.907 Y-12.833 Z0.540 F4800.000 A112.733 (d: 2.47355)\n",
+                 "G1 X-7.084 Y-13.902 Z0.540 F4800.000 A112.830 (d: 2.11347)\n",
+                 "G1 X-5.682 Y-14.516 Z0.540 F4800.000 A112.901 (d: 1.53041)\n",
+                 "G1 X-4.233 Y-15.003 Z0.540 F4800.000 A112.971 (d: 1.52843)\n",
+                 "G1 X-2.742 Y-15.346 Z0.540 F4800.000 A113.041 (d: 1.5298)\n",
+                 "G1 X-1.225 Y-15.541 Z0.540 F4800.000 A113.111 (d: 1.52984)\n",
+                 "G1 X0.304 Y-15.586 Z0.540 F4800.000 A113.182 (d: 1.52974)\n",
+                 "G1 X1.830 Y-15.481 Z0.540 F4800.000 A113.252 (d: 1.52981)\n",
+                 "G1 X3.339 Y-15.227 Z0.540 F4800.000 A113.322 (d: 1.5298)\n",
+                 "G1 F1200.000 A212.783 (squirt)\n",
+                 "G1 F1200.000 A211.783 (snort)\n",
+                 "(Slice 1, 1 Extruder)\n",
+                 "M135 T1\n",
+                 "G1 X-10.352 Y-15.396 Z0.27\n",
+                 "(Layer Height: 	0.270)\n",
+                 "(Layer Width: 	0.400)\n",
+                 "M73 P3 (progress (3%))\n",
+                 "G1 Z0.270 F1380.000 (move Z)\n",
+                 "(Slice 2, 1 Extruder)\n",
+                 "M135 T0\n",
+                 "G1 X-10.352 Y-9.396 Z0.27\n",
+                 "(Layer Height: 	0.270)\n",
+                 "(Layer Width: 	0.400)\n",
+                 "G1 Z0.270 F1380.000 (move Z)\n",
+                 "G1 X-8.907 Y-12.833 Z0.540 F4800.000 A112.733 (d: 2.47355)\n",
+                ],
+                ["(Slice 0, 1 Extruder)\n",
+                 "M135 T0\n",
+                 "G1 X-15.84 Y19.008 Z0.54\n",
+                 "(Layer Height: 	0.270)\n",
+                 "(Layer Width: 	0.400)\n",
+                 "G1 Z0.540 F1380.000 (move Z)\n",
+                 "G1 X-10.800 Y-11.241 Z0.540 F6000.000 (move into position)\n",
+                 "G1 F300.000 A111.620 (squirt)\n",
+                 "\n",
+                 "M73\n",
+                 "G1 X-8.907 Y-12.833 Z0.540 F4800.000 A112.733 (d: 2.47355)\n",
+                 "G1 X-7.084 Y-13.902 Z0.540 F4800.000 A112.830 (d: 2.11347)\n",
+                 "G1 X-5.682 Y-14.516 Z0.540 F4800.000 A112.901 (d: 1.53041)\n",
+                 "G1 X-4.233 Y-15.003 Z0.540 F4800.000 A112.971 (d: 1.52843)\n",
+                 "G1 X-2.742 Y-15.346 Z0.540 F4800.000 A113.041 (d: 1.5298)\n",
+                 "G1 X-1.225 Y-15.541 Z0.540 F4800.000 A113.111 (d: 1.52984)\n",
+                 "G1 X0.304 Y-15.586 Z0.540 F4800.000 A113.182 (d: 1.52974)\n",
+                 "G1 X1.830 Y-15.481 Z0.540 F4800.000 A113.252 (d: 1.52981)\n",
+                 "G1 X3.339 Y-15.227 Z0.540 F4800.000 A113.322 (d: 1.5298)\n",
+                 "G1 F1200.000 A212.783 (squirt)\n",
+                 "G1 F1200.000 A211.783 (snort)\n",
+                 "M73 P3 (progress (3%))\n",
+                 "(Slice 2, 1 Extruder)\n",
+                 "M135 T0\n",
+                 "G1 X-10.352 Y-9.396 Z0.27\n",
+                 "(Layer Height: 	0.270)\n",
+                 "(Layer Width: 	0.400)\n",
+                 "G1 Z0.270 F1380.000 (move Z)\n",
+                 "G1 X-8.907 Y-12.833 Z0.540 F4800.000 A112.733 (d: 2.47355)\n",
+                ],
+            ]
         ]
-        for case in layer_start_cases:
-            match = re.match(self.p.layer_start, case[0])
-            if not case[1]:
-                self.assertEqual(match, case[2])
-            else:
-                self.assertEqual(match.group(), case[2])
 
-    def test_move_gcode(self):
-        move_gcode_cases = [
-            ["G1 X0 Y0 Z0 F600 A1200", True, "G1 X0 Y0 Z0 F600 A1200"],
-            [";M135 T9", False, None],
-            ["G1 F1200 E3600", True, "G1 F1200 E3600"],
-            ["G1 T0", True, "G1 T0"],
-            ["G1 ", True, "G1 "],
-            ["M135", False, None],
-            ["H12", False, None],
-            ["Harvey", False, None]
+        for case in cases:
+            got_output = self.p.process_gcode(case[0])
+            self.assertEqual(got_output, case[1])
+
+
+    def test_layer_test_if_empty(self):
+        cases = [
+            (
+                ["M135 T1\n",
+                 "G1 X-10.352 Y-9.396 Z0.27\n",
+                 "(Layer Height: 	0.270)\n",
+                 "(Layer Width: 	0.400)\n",
+                 "G1 Z0.270 F1380.000 (move Z)\n",
+                 "(Slice 1, 1 Extruder)\n",
+                ],
+                True
+            ),
+            (
+                ["M135 T0\n",
+                 "G1 X-15.84 Y19.008 Z0.54\n",
+                 "(Layer Height: 	0.270)\n",
+                 "(Layer Width: 	0.400)\n",
+                 "G1 Z0.540 F1380.000 (move Z)\n",
+                 "G1 X-10.800 Y-11.241 Z0.540 F6000.000 (move into position)\n",
+                 "G1 F300.000 A111.620 (squirt)\n",
+                 "\n",
+                 "G1 X-8.907 Y-12.833 Z0.540 F4800.000 A112.733 (d: 2.47355)\n",
+                 "G1 X-7.084 Y-13.902 Z0.540 F4800.000 A112.830 (d: 2.11347)\n",
+                 "G1 X-5.682 Y-14.516 Z0.540 F4800.000 A112.901 (d: 1.53041)\n",
+                 "G1 X-4.233 Y-15.003 Z0.540 F4800.000 A112.971 (d: 1.52843)\n",
+                 "G1 X-2.742 Y-15.346 Z0.540 F4800.000 A113.041 (d: 1.5298)\n",
+                 "G1 X-1.225 Y-15.541 Z0.540 F4800.000 A113.111 (d: 1.52984)\n",
+                 "G1 X0.304 Y-15.586 Z0.540 F4800.000 A113.182 (d: 1.52974)\n",
+                 "G1 X1.830 Y-15.481 Z0.540 F4800.000 A113.252 (d: 1.52981)\n",
+                 "G1 X3.339 Y-15.227 Z0.540 F4800.000 A113.322 (d: 1.5298)\n",
+                 "G1 F1200.000 A212.783 (squirt)\n",
+                 "G1 F1200.000 A211.783 (snort)\n",
+                 "(Slice 1, 1 Extruder)\n",
+                ],
+                False
+            ),
+            (
+                ["M135 T1\n",
+                 "G1 X-10.352 Y-9.396 Z0.27\n",
+                 "(Layer Height: 	0.270)\n",
+                 "(Layer Width: 	0.400)\n",
+                 "G1 Z0.270 F1380.000 (move Z)\n",
+                 "G1 X-8.907 Y-12.833 Z0.540 F4800.000 A112.733 (d: 2.47355)\n",
+                 "(Slice 1, 1 Extruder)\n",
+                ],
+                False
+            ),
         ]
-        for case in move_gcode_cases:
-            match = re.match(self.p.move_gcode, case[0])
-            if not case[1]:
-                self.assertEqual(match, case[2])
-            else:
-                self.assertEqual(match.group(), case[2])
 
-    def test_SF_layer_end_gcode(self):
-        SF_layer_end_cases = [
-            ["(</layer>)", True, "(</layer>)"],
-            ["(</layer>)()()()()()", True, "(</layer>)"],
-            ["t(</layer>)", False, None],
-            ["M135", False, None],
-            ["(</layer>", False, None],
+        for case in cases:
+            self.p.layer_buffer = []
+            self.p.gcode_iter = iter(case[0])
+            rv = self.p.layer_test_if_empty(0)
+            self.assertEqual(rv, case[1])
+
+
+    def test_handle_layer_start_check(self):
+        cases = [("M135 T1\n","(Slice 1, 1 Extruder)\n",True, 0),
+                 ("(Slice 1, 1 Extruder)\n","G1 F1200.000 A211.783 (snort)\n",True, 1),
+                 ("G1 X18.0 Y-17.19 Z0.94\n", "(<layer> 0.945 )\n", True, 0),
+                 ("G1 X18.0 Y-17.19 Z0.94\n", "G1 X11.0 Y-17.19 Z0.94\n", False, 0)
+                ]
+
+        for case in cases:
+            self.p.layer_buffer = []
+            self.p.test_if_empty = False
+            self.p.init_moves = 0
+            self.p.handle_layer_start_check(case[0], case[1])
+            self.assertEqual(case[2], self.p.test_if_empty)
+            self.assertEqual(case[3], self.p.init_moves)
+
+    def test_check_for_move_with_extrude(self):
+        cases = [
+            ("G1 X-8.907 Y-12.833 Z0.540 F4800.000 A112.733 (d: 2.47355)\n",True),
+            ("(Slice 1, 1 Extruder)\n",False),
+            ("M135 T1\n",False),
+            ("G1 Z0.270 F1380.000 (move Z)\n",False),
+            ("G1 F300.000 A111.620 (squirt)\n",True),
         ]
-        for case in SF_layer_end_cases:
-            match = re.match(self.p.SF_layer_end, case[0])
-            if not case[1]:
-                self.assertEqual(match, case[2])
-            else:
-                self.assertEqual(match.group(), case[2])
+        for case in cases:
+            rv = self.p.check_for_move_with_extrude(case[0])
+            self.assertEqual(rv, case[1])
 
-    def test_MG_nominal_comment_gcode(self):
-        MG_nominal_comment_cases = [
-            ["(Slowing to 0% of nominal speeds)", True, "(Slowing to 0% of nominal speeds)"],
-            ["(Slowing to 0\% of nominal speeds)", False, None],
-            ["t(Slowing to 0% of nominal speeds)", False, None],
-            ["M135", False, None],
-            ["(Slowing to 0% of nominal speeds)$", True, "(Slowing to 0% of nominal speeds)"]
+
+    def test_check_for_progress(self):
+        cases = [
+            ("M73 P0.5 (progress (0.5%))\n",True),
+            ("M135 T1\n",False),
+            ("G1 Z0.270 F1380.000 (move Z)\n",False),
+            ("M73 P1 (progress (1%))\n",True),
         ]
-        for case in MG_nominal_comment_cases:
-            match = re.match(self.p.MG_nominal_comment, case[0])
-            if not case[1]:
-                self.assertEqual(match, case[2])
-            else:
-                self.assertEqual(match.group(), case[2])
+
+        for case in cases:
+            rv = self.p.check_for_progress(case[0])
+            self.assertEqual(rv, case[1])
 
 
-    def test_process_file(self):
-    #TODO update this to work with new formatting
-        pass
-    '''
-        #SKEINFORGE TEST
-        gcode_file = open(os.path.abspath('tests/test_files/sf_empty_slice_input.gcode'), 'r')
-        in_gcodes = list(gcode_file)
-        expected_out =  open(os.path.abspath('tests/test_files/sf_empty_slice_expect.gcode'), 'r')
-        expected_gcodes = list(expected_out)
+    def test_check_for_layer_end(self):
+        cases = [
+            ("(Slice 1, 1 Extruder)\n",'mg'),
+            ("(<layer> 0.405 )\n",False),
+            ("(</layer>)\n",'sf'),
+            ("G1 Z0.270 F1380.000 (move Z)\n",False),
+        ]
 
-        got_gcodes = self.p.process_gcode(in_gcodes)
-        self.assertEqual(expected_gcodes, got_gcodes)
-        #MIRACLE GRUE TEST
-        gcode_in_path = os.path.abspath('tests/test_files/mg_test_in.gcode')
-        gcode_emptied_path = os.path.abspath('tests/test_files/mg_test_postempty.gcode')
-        gcode_expected_path = os.path.abspath('tests/test_files/mg_test_emptied.gcode')
+        for case in cases:
+            rv = self.p.check_for_layer_end(case[0])
+            self.assertEqual(rv, case[1])
 
-        self.p.process_gcode(gcode_in_path, outfile=gcode_emptied_path)
+    def test_check_for_layer_start(self):
+        cases = [
+            ("(Slice 1, 1 Extruder)\n",True),
+            ("(<layer> 0.405 )\n",True),
+            ("(</layer>)\n",False),
+            ("G1 Z0.270 F1380.000 (move Z)\n",False),
+        ]
 
-        gcode_out = open(gcode_emptied_path, 'r')
-        out_gcodes = list(gcode_out)
-        expected_out =  open(gcode_expected_path, 'r')
-        expected_gcodes = list(expected_out)
-
-        self.assertEqual(expected_gcodes, out_gcodes)
-    '''
-
-
-if __name__ == '__main__':
-    unittest.main()
+        for case in cases:
+            rv = self.p.check_for_layer_start(case[0])
+            self.assertEqual(rv, case[1])
