@@ -11,6 +11,7 @@ class DualRetractProcessorTests(unittest.TestCase):
 
     def setUp(self):
         self.p = makerbot_driver.GcodeProcessors.DualRetractProcessor()
+        self.p.profile = makerbot_driver.profile.Profile('Replicator2X')
         self.p.retract_distance_mm = 20
         self.p.squirt_reduction_mm = 1
         self.p.squirt_feedrate = 300
@@ -186,7 +187,7 @@ class DualRetractProcessorTests(unittest.TestCase):
         mg_in_gcodes = f_in.readlines()
         mg_expect_gcodes = f_ex.readlines()
 
-        mg_out_gcodes = self.p.process_gcode(mg_in_gcodes, 'Replicator2X')
+        mg_out_gcodes = self.p.process_gcode(mg_in_gcodes)
 
         self.assertEqual(mg_out_gcodes, mg_expect_gcodes)
 
@@ -197,7 +198,7 @@ class DualRetractProcessorTests(unittest.TestCase):
         sf_in_gcodes = f_in.readlines()
         sf_expect_gcodes = f_ex.readlines()
 
-        sf_out_gcodes = self.p.process_gcode(sf_in_gcodes, 'Replicator2X')
+        sf_out_gcodes = self.p.process_gcode(sf_in_gcodes)
 
         self.assertEqual(sf_out_gcodes, sf_expect_gcodes) 
 
