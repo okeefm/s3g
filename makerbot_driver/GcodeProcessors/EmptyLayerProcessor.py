@@ -69,9 +69,7 @@ class EmptyLayerProcessor(Processor):
 
     def handle_layer_start_check(self, previous_code, current_code):
         """
-        Function that handles testing whether the previous code(for Miracle_Grue
-        and saves the previous and/or current codes accordingly, to be appended to the
-        output later if the slice they belong to is not empty
+        Checks if the current or previous code is a new layer and handles it accordingly
 
         This function is mostly for Miracle-Grue as it does not have a layer end comment
 
@@ -91,9 +89,9 @@ class EmptyLayerProcessor(Processor):
 
     def layer_test_if_empty(self, init_moves):
         """
-        Iterates through a gcode until the layer ends or EOF, counts the number of moves
-        with extrude commands are in the layer and decides if a layer is empty base on that 
-        number
+        Iterates through a gcode until the layer ends or EOF.
+        It counts the number of moves with extrude commands in the layer,
+        and decides if a layer is empty base on that number.
 
         @param init_moves: the inital moves_with_extrude in the layer (used for Miracle-Grue)
         @return boolean: True if the layer is empty

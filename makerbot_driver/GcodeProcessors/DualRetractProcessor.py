@@ -20,15 +20,30 @@ class DualRetractProcessor(Processor):
 
         self.TOOLHEADS = ['A', 'B']
 
+
+    def isGenerator(self,iterable):
+        """
+        Fucntion decides if the input iterable is a generator
+
+        @param iterable: iterable object
+        @return boolean: True if it is a generator
+        """
+        return hasattr(iterable, '__iter__') and not hasattr(iterable, '__len__')
+
+
     def sandwich_iter(self, iterable):
         """
         This function returns an iterator with the previous,current,and next values
-        in a iterable
+        in a given iterable
 
         @param iterable: iterable object
         @return iterator of triplets
         """
-        iterator = iter(iterable)
+        if(self.isGenerator(iterable)):
+            iterator = iterable
+        else:
+            iterator = iter(iterable)
+
         current = iterator.next()
         prev = None
 
@@ -118,8 +133,8 @@ class DualRetractProcessor(Processor):
 
     def check_for_snort(self,string):
         """
-        Check to see if string is a snort
-        if so it save the snort values and returns
+        Check to see if input string is a snort
+        if so it saves the snort values and returns
         
         @param string: string to be matched with the regex
         @return boolean: True if it is a snort
@@ -165,7 +180,7 @@ class DualRetractProcessor(Processor):
 
     def check_for_squirt(self, string):
         """
-        Check if string contains a squirt
+        Check if input string contains a squirt
 
         @param string: string to be matched to squirt regex
         @return boolean: True if squirt was found
