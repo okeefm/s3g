@@ -58,6 +58,10 @@ class DualRetractProcessor(Processor):
         self.snort_feedrate = profile.values["dualstrusion"][
             "snort_feedrate"]
 
+
+        if(not self.profile_supports_processor()):
+            return
+
         self.current_tool = -1
         self.last_tool = -1
         self.last_snort = {'index': None, 'extruder_position':None}
@@ -66,12 +70,12 @@ class DualRetractProcessor(Processor):
         self.seeking_first_layer = True
         self.seeking_squirt = False
         self.SF_flag = False
-        self.SF_handle_second_snortsquirt_line = False
+        self.SF_handle_second_squirt_line = False
         self.output = []
 
         for (previous_code,current_code,next_code) in self.sandwich_iter(gcode_in):    
-            if(self.SF_handle_second_snortsquirt_line):
-                self.SF_handle_second_snort_squirt_line = False
+            if(self.SF_handle_second_squirt_line):
+                self.SF_handle_second_squirt_line = False
                 continue
 
             self.output.append(current_code)
@@ -183,10 +187,7 @@ class DualRetractProcessor(Processor):
 
     def get_other_tool(self, tool):
         inactive_tool = {0:1, 1:0}
-        try:
-            return inactive_tool[tool]
-        except:
-            return -1
+        return inactive_tool.get(tool, -1)
 
 
     def squirt_tool(self, tool):
@@ -225,5 +226,12 @@ class DualRetractProcessor(Processor):
             #Reset Last Snort
             self.last_snort['index'] = None
             self.last_snort['extruder_position'] = None
+
+
+    def profile_supports_processor(self):
+        if(self.retract_distance_mm == 'NULL'):
+            return False
+        else:
+            return True
 
 
