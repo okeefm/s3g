@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append(os.path.abspath('./'))
+sys.path.insert(0, os.path.abspath('./'))
 
 import unittest
 import re
@@ -174,55 +174,31 @@ class DualRetractProcessorTests(unittest.TestCase):
             self.assertEqual(expect_next[index], next)
             index += 1
 
-    def test_process_file(self):
-        return
-        self.p.squirt_feedrate = 300
-        self.p.snort_feedrate = 300
-        self.p.retract_distance = 20
+    def test_process_gcode(self):
 
-        gcodes_mg = [
-            "M135 T0\n",
-            "G1 X10 Y10 Z10\n",
-            "G1 F1200 A120 (snort)\n",
-            "M135 T1\n",
-            "\n",
-            "\n",
-            "G1 F1200 B12 (squirt)\n",
-        ]
-        gcodes_out_mg = [
-            "M135 T0\n",
-            "G1 X10 Y10 Z10\n",
-            "G1 F%f A%f (snort)\n"%(self.p.snort_feedrate,120-self.p.retract_distance),
-            "M135 T1\n",
-            "\n",
-            "\n",
-            "G1 F%f B%f (squirt)\n"%(self.p.squirt_feedrate,12-self.squirt_reduction),
-        ]
+        start_dir = os.getcwd()
 
-        self.assertEqual(self.p.process_gcode(gcodes_mg), gcodes_out_mg)
+        os.chdir('tests/test_files')
+
+        f_in = open('mg_retract_input.gcode', 'r')
+        f_ex = open('mg_retract_expect.gcode', 'r')
+
+        mg_in_gcodes = f_in.readlines()
+        mg_expect_gcodes = f_ex.readlines()
+
+        mg_out_gcodes = self.p.process_gcode(mg_in_gcodes, 'Replicator2X')
+
+        self.assertEqual(mg_out_gcodes, mg_expect_gcodes)
 
 
-        gcodes_sf = [
-            "M135 T0\n",
-            "G1 X10 Y10 Z10\n",
-            "G1 F1200\n", 
-            "G1 E120\n",
-            "M135 T1\n",
-            "\n",
-            "\n",
-            "G1 F1200n\n",
-            "G1 E12\n",
-        ]
-        gcodes_out_sf = [
-            "M135 T0\n",
-            "G1 X10 Y10 Z10\n",
-            "G1 F%f\n"%(self.p.snort_feedrate),
-            "G1 E%f\n"%(120-self.p.retract_distance),
-            "M135 T1\n",
-            "\n",
-            "\n",
-            "G1 F%f\n"%(self.p.squirt_feedrate),
-            "G1 E%f\n"%(12-self.squirt_reduction),
-        ]
+        f_in = open('sf_retract_input.gcode', 'r')
+        f_ex = open('sf_retract_expect.gcode', 'r')
 
-        self.assertEqual(self.p.process_gcode(gcodes_sf), gcodes_out_sf)
+        sf_in_gcodes = f_in.readlines()
+        sf_expect_gcodes = f_ex.readlines()
+
+        sf_out_gcodes = self.p.process_gcode(sf_in_gcodes, 'Replicator2X')
+
+        self.assertEqual(sf_out_gcodes, sf_expect_gcodes) 
+
+        os.chdir(start_dir)
