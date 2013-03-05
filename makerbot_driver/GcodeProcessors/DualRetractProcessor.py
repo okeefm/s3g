@@ -54,7 +54,7 @@ class DualRetractProcessor(Processor):
         yield(prev,current,'')
 
 
-    def process_gcode(self, gcode_in, profile_name):
+    def process_gcode(self, gcode_in):
         """
         This function adds retractions and squirt tweaks to a gcode input
 
@@ -62,15 +62,14 @@ class DualRetractProcessor(Processor):
         @param profile_name: the name of the machine profile to use
         @return output: iterable containing the processed gcode
         """
-        profile = makerbot_driver.profile.Profile(profile_name)
 
-        self.retract_distance_mm = profile.values["dualstrusion"][
+        self.retract_distance_mm = self.profile.values["dualstrusion"][
             "retract_distance_mm"]
-        self.squirt_reduction_mm = profile.values["dualstrusion"][
+        self.squirt_reduction_mm = self.profile.values["dualstrusion"][
             "squirt_reduce_mm"]
-        self.squirt_feedrate = profile.values["dualstrusion"][
+        self.squirt_feedrate = self.profile.values["dualstrusion"][
             "squirt_feedrate"]
-        self.snort_feedrate = profile.values["dualstrusion"][
+        self.snort_feedrate = self.profile.values["dualstrusion"][
             "snort_feedrate"]
 
 
