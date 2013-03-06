@@ -65,7 +65,7 @@ M135 T1
 (* Extrude outlines: 0)
 
 G1 X-110.400 Y-74.000 Z0.270 F1800.000 (Anchor Start)
-G1 F300.000000 B0.000000
+G1 F1200.000 B1.000 (squirt)
 
 G1 X-10.352 Y-9.396 Z0.270 F1800.000 B12.865 (Anchor End)
 (Slice 0, 1 Extruder)

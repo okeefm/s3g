@@ -89,7 +89,7 @@ class EmptyLayerProcessor(Processor):
 
     def layer_test_if_empty(self, init_moves):
         """
-        Iterates through a gcode until the layer ends or EOF.
+        Iterates through a the gcode layer until the layer ends or EOF.
         It counts the number of moves with extrude commands in the layer,
         and decides if a layer is empty base on that number.
 
@@ -106,7 +106,7 @@ class EmptyLayerProcessor(Processor):
             elif(self.check_for_move_with_extrude(current)):
                 moves_with_extrude += 1
             rv = self.check_for_layer_end(current)
-            if(rv != False):
+            if(rv != None):
                 if(rv == 'mg'):
                     pass
                     #Save the current code since it is most likely a slice header
@@ -141,7 +141,7 @@ class EmptyLayerProcessor(Processor):
         if match is not None:
             return 'sf'
         else:
-            return False
+            return None
 
 
     def check_for_progress(self, string):
