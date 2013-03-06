@@ -107,16 +107,7 @@ class DualRetractProcessor(Processor):
                     continue
                 elif(self.check_for_significant_toolchange(current_code)):
                     if(self.seeking_first_toolchange):
-<<<<<<< HEAD
-                        match_prev = re.match(self.purge, previous_code)
-                        match_next = re.match(self.purge, next_code)
-                        if((match_prev is not None) or (match_next is not None)):
-                            #If toolchanges are in the purge ignore
-                            self.current_tool = self.last_tool
-                            self.last_tool = -1
-=======
                         if(self.check_if_in_prime(previous_code, next_code)):
->>>>>>> a840957... Fixing logic order in DualRetractProcessor, minor changes in EmptyLayerProcessor, updated unittests
                             continue
                         #if this is the first significant toolchange do an extra squirt
                         self.seeking_first_toolchange = False
