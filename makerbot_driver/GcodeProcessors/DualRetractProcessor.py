@@ -16,7 +16,7 @@ class DualRetractProcessor(Processor):
             "^G1 F[0-9.-]+ [AB]([0-9.-]+) \(squirt\)|^G1 F[0-9.-]+\nG1 E([0-9.-]+)")
         self.toolchange = re.compile("^M135 T([0-9])")
         self.SF_feedrate = re.compile("^G1 F[0-9.-]+\n")
-        self.purge = re.compile(".*purge.*|.*Purge.*")
+        self.prime = re.compile(".*prime.*|.*Prime.*")
 
         self.TOOLHEADS = ['A', 'B']
 
@@ -105,10 +105,10 @@ class DualRetractProcessor(Processor):
                     continue
                 elif(self.check_for_significant_toolchange(current_code)):
                     if(self.seeking_first_toolchange):
-                        match_prev = re.match(self.purge, previous_code)
-                        match_next = re.match(self.purge, next_code)
+                        match_prev = re.match(self.prime, previous_code)
+                        match_next = re.match(self.prime, next_code)
                         if((match_prev is not None) or (match_next is not None)):
-                            #If toolchanges are in the purge ignore
+                            #If toolchanges are in the prime ignore
                             self.current_tool = self.last_tool
                             self.last_tool = -1
                             continue
@@ -118,7 +118,7 @@ class DualRetractProcessor(Processor):
                     self.snort_replace()
                     self.seeking_squirt = True
 
-        #TODO: not worry about this and let the purge handle it?
+        #TODO: not worry about this and let the prime handle it?
         #Squirt retracted tool at the end of the print
         self.squirt_tool(self.get_other_tool(self.current_tool))
 
