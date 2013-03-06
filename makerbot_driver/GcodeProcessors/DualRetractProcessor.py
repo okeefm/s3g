@@ -78,7 +78,7 @@ class DualRetractProcessor(Processor):
 
         self.current_tool = -1
         self.last_tool = -1
-        self.last_snort = {'index': None, 'extruder_position':None}
+        self.last_snort = {'index': None, 'tool': None, 'extruder_position':None}
         self.squirt_extruder_pos = None
         self.seeking_first_toolchange = True
         self.seeking_first_layer = True
@@ -97,6 +97,8 @@ class DualRetractProcessor(Processor):
             if(self.seeking_squirt):
                 if(self.check_for_squirt(current_code+next_code)):
                     self.squirt_replace()
+                elif(self.check_for_significant_toolchange(current_code)):
+                    continue
             elif(self.seeking_first_layer):
                 if(self.check_for_layer(current_code)):
                     self.seeking_first_layer = False
@@ -105,25 +107,40 @@ class DualRetractProcessor(Processor):
                     continue
                 elif(self.check_for_significant_toolchange(current_code)):
                     if(self.seeking_first_toolchange):
-                        match_prev = re.match(self.prime, previous_code)
-                        match_next = re.match(self.prime, next_code)
-                        if((match_prev is not None) or (match_next is not None)):
-                            #If toolchanges are in the prime ignore
-                            self.current_tool = self.last_tool
-                            self.last_tool = -1
+                        if(self.check_if_in_prime(previous_code, next_code)):
                             continue
                         #if this is the first significant toolchange do an extra squirt
                         self.seeking_first_toolchange = False
                         self.squirt_tool(self.current_tool)
+                    else:
+                        self.seeking_squirt = True
                     self.snort_replace()
-                    self.seeking_squirt = True
 
         #TODO: not worry about this and let the prime handle it?
         #Squirt retracted tool at the end of the print
         self.squirt_tool(self.get_other_tool(self.current_tool))
-
+        
         return self.output
 
+
+    def check_if_in_prime(self, previous_code, next_code):
+        """
+            Checks if the current position is inside the prime block
+            that is inserted by a related processor
+
+            @param previous_code: string
+            @param next_code: string
+            @return: boolean: True if it is in the prime block
+        """
+        match_prev = re.match(self.prime, previous_code)
+        match_next = re.match(self.prime, next_code)
+        if((match_prev is not None) or (match_next is not None)):
+            #If toolchanges are in the prime ignore
+            self.current_tool = self.last_tool
+            self.last_tool = -1
+            return True
+        else:
+            return False
 
     def check_for_layer(self,string):
         match = re.match(self.layer_start, string)
@@ -144,6 +161,7 @@ class DualRetractProcessor(Processor):
             if(extruder_position == None):
                 extruder_position = match.group(2)
             self.last_snort['index'] = len(self.output)-1
+            self.last_snort['tool'] = self.current_tool
             self.last_snort['extruder_position'] = float(extruder_position)
             #Check if this is a SF snort
             match = re.match(self.SF_feedrate, string)
@@ -239,6 +257,7 @@ class DualRetractProcessor(Processor):
 
             #Reset Last Snort
             self.last_snort['index'] = None
+            self.last_snort['tool'] = None
             self.last_snort['extruder_position'] = None
 
 

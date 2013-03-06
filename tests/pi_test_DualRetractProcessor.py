@@ -12,11 +12,16 @@ class DualRetractProcessorTests(unittest.TestCase):
     def setUp(self):
         self.p = makerbot_driver.GcodeProcessors.DualRetractProcessor()
         self.p.profile = makerbot_driver.profile.Profile('Replicator2X')
-        self.p.retract_distance_mm = 20
-        self.p.squirt_reduction_mm = 1
-        self.p.squirt_feedrate = 300
-        self.p.snort_feedrate = 300
-        self.p.last_snort = {'index': None, 'extruder_position': None}
+        self.p.retract_distance_mm = self.p.profile.values["dualstrusion"][
+            "retract_distance_mm"]
+        self.p.squirt_reduction_mm = self.p.profile.values["dualstrusion"][
+            "squirt_reduce_mm"]
+        self.p.squirt_feedrate = self.p.profile.values["dualstrusion"][
+            "squirt_feedrate"]
+        self.p.snort_feedrate = self.p.profile.values["dualstrusion"][
+            "snort_feedrate"]
+
+        self.p.last_snort = {'index': None, 'tool': None, 'extruder_position': None}
 
     def tearDown(self):
         self.p = None
@@ -129,6 +134,8 @@ class DualRetractProcessorTests(unittest.TestCase):
 
         
     def test_check_for_snort(self):
+        #placeholder
+        self.p.current_tool = 0
         self.p.output = [0,1,2,3,4,5,6,7,8]
 
         cases = [
@@ -175,6 +182,24 @@ class DualRetractProcessorTests(unittest.TestCase):
             self.assertEqual(expect_next[index], next)
             index += 1
 
+
+    def test_check_if_in_prime(self):
+        #placeholder
+        self.p.last_tool = 0
+
+        cases = [
+            ('\n', 'G1 X-105.400 Y-74.000 Z0.270 F1800.000 (Right Prime Start)\n', True),
+            ('G1 X105.400 Y-74.000 Z0.270 F1800.000 A25.000 (Right Prime)\n', 
+                'G1 X105.400 Y-73.500 Z0.270 F1800.000 (Left Prime Start)\n', True),
+            ('G92 A0 B0 (Reset after prime)\n', 'G1 B-19 F300\n', True),
+            ('G1 F1200.000 A12.721 (squirt)\n', '(<layer> 0.235 )\n', False),
+            ('M73 P5.0 (progress 5%)\n', 'M135 T0\n', False)
+        ]
+
+        for case in cases:
+            self.assertEqual(self.p.check_if_in_prime(case[0], case[1]), case[2])
+            
+
     def test_process_gcode(self):
 
         start_dir = os.getcwd()
@@ -203,3 +228,5 @@ class DualRetractProcessorTests(unittest.TestCase):
         self.assertEqual(sf_out_gcodes, sf_expect_gcodes) 
 
         os.chdir(start_dir)
+
+

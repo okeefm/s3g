@@ -192,9 +192,9 @@ class TestEmptyLayerProcessor(unittest.TestCase):
     def test_check_for_layer_end(self):
         cases = [
             ("(Slice 1, 1 Extruder)\n",'mg'),
-            ("(<layer> 0.405 )\n",False),
+            ("(<layer> 0.405 )\n",None),
             ("(</layer>)\n",'sf'),
-            ("G1 Z0.270 F1380.000 (move Z)\n",False),
+            ("G1 Z0.270 F1380.000 (move Z)\n",None),
         ]
 
         for case in cases:
