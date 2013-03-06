@@ -5,13 +5,13 @@ import makerbot_driver
 
 from .LineTransformProcessor import LineTransformProcessor
 
-class Rep2XDualstrusionPurgeProcessor(LineTransformProcessor):
+class Rep2XDualstrusionPrimeProcessor(LineTransformProcessor):
 
     def __init__(self):
-        super(Rep2XDualstrusionPurgeProcessor, self).__init__()
+        super(Rep2XDualstrusionPrimeProcessor, self).__init__()
         map_addendum = {
             re.compile('M135\s[tT]\d'): self._set_toolhead,
-            re.compile('G1'): self._add_purge,
+            re.compile('G1'): self._add_prime,
         }
         self.code_map.update(map_addendum)
         self.looking_for_first_move = True
@@ -37,17 +37,17 @@ class Rep2XDualstrusionPurgeProcessor(LineTransformProcessor):
         ]
         return retract_commands
 
-    def _add_purge(self, match):
+    def _add_prime(self, match):
         toadd = []
         if self.looking_for_first_move:
             toadd.extend([
                 "M135 T0\n",
-                "G1 X-105.400 Y-74.000 Z0.270 F1800.000 (Right Purge Start)\n",
-                "G1 X105.400 Y-74.000 Z0.270 F1800.000 A25.000 (Right Purge)\n",
+                "G1 X-105.400 Y-74.000 Z0.270 F1800.000 (Right Prime Start)\n",
+                "G1 X105.400 Y-74.000 Z0.270 F1800.000 A25.000 (Right Prime)\n",
                 "M135 T1\n",
-                "G1 X105.400 Y-73.500 Z0.270 F1800.000 (Left Purge Start)\n",
-                "G1 X-105.400 Y-73.500 Z0.270 F1800.000 B25.000 (Left Purge)\n",
-                "G92 A0 B0 (Reset after purge)\n",
+                "G1 X105.400 Y-73.500 Z0.270 F1800.000 (Left Prime Start)\n",
+                "G1 X-105.400 Y-73.500 Z0.270 F1800.000 B25.000 (Left Prime)\n",
+                "G92 A0 B0 (Reset after prime)\n",
             ])
             toadd.extend(self._get_retract_commands(self.profile, self.current_toolchange))
             toadd.append(self.current_toolchange)

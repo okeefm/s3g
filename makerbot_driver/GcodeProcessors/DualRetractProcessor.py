@@ -107,7 +107,12 @@ class DualRetractProcessor(Processor):
                     continue
                 elif(self.check_for_significant_toolchange(current_code)):
                     if(self.seeking_first_toolchange):
-                        if(self.check_if_in_prime(previous_code, next_code)):
+                        match_prev = re.match(self.prime, previous_code)
+                        match_next = re.match(self.prime, next_code)
+                        if((match_prev is not None) or (match_next is not None)):
+                            #If toolchanges are in the prime ignore
+                            self.current_tool = self.last_tool
+                            self.last_tool = -1
                             continue
                         #if this is the first significant toolchange do an extra squirt
                         self.seeking_first_toolchange = False
