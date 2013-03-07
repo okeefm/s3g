@@ -16,7 +16,7 @@ class DualRetractProcessor(Processor):
             "^G1 F[0-9.-]+ [AB]([0-9.-]+) \(squirt\)|^G1 F[0-9.-]+\nG1 E([0-9.-]+)")
         self.toolchange = re.compile("^M135 T([0-9])")
         self.SF_feedrate = re.compile("^G1 F[0-9.-]+\n")
-        self.purge = re.compile(".*purge.*|.*Purge.*")
+        self.prime = re.compile(".*prime.*|.*Prime.*")
 
         self.TOOLHEADS = ['A', 'B']
 
@@ -111,12 +111,12 @@ class DualRetractProcessor(Processor):
                             continue
                         #if this is the first significant toolchange do an extra squirt
                         self.seeking_first_toolchange = False
-                        self.squirt_tool(self.current_tool)
+                        self.squirt_tool(self.current_tool, squirt_initial_inactive_tool=True)
                     else:
                         self.seeking_squirt = True
                     self.snort_replace()
 
-        #TODO: not worry about this and let the purge handle it?
+        #TODO: not worry about this and let the prime handle it?
         #Squirt retracted tool at the end of the print
         self.squirt_tool(self.get_other_tool(self.current_tool))
         
@@ -222,13 +222,19 @@ class DualRetractProcessor(Processor):
         return inactive_tool.get(tool, -1)
 
 
-    def squirt_tool(self, tool):
-        self.output.append("M135 T%i\n"%(tool))
-        self.output.append("G92 %s0\n"%(self.TOOLHEADS[tool]))
+    def squirt_tool(self, tool, squirt_initial_inactive_tool=False):
+        """
+            Inserts squirt command for given tool
+            @param tool: integer, tool to squirt
+            @param squirt_initial_inactve_tool: boolean, if this is the squirt of the initial
+                significant toolchange
+        """
+        if not squirt_initial_inactive_tool:
+            self.output.append("M135 T%i\n"%(tool))
+            self.output.append("G92 %s0\n"%(self.TOOLHEADS[tool]))
         self.output.append("G1 F%f %s%f\n"%(self.squirt_feedrate, self.TOOLHEADS[tool],
             self.retract_distance_mm))
         self.output.append("G92 %s0\n"%(self.TOOLHEADS[tool]))
-        self.output.append("M135 T%i\n"%(tool))
         
 
     def squirt_replace(self):

@@ -77,12 +77,34 @@ class DualRetractProcessorTests(unittest.TestCase):
 
         self.p.output = []
 
-        expected_output = ['M135 T0\n', 'G92 A0\n', 'G1 F%f A%f\n'%(self.p.squirt_feedrate, self.p.retract_distance_mm),
-            'G92 A0\n', 'M135 T0\n']
-
-        self.p.squirt_tool(0)
-
-        self.assertEqual(self.p.output, expected_output)
+        cases = [
+                (
+                    ['G1 F%f A%f\n'%(self.p.squirt_feedrate, self.p.retract_distance_mm), 'G92 A0\n'],
+                    0,
+                    True
+                ),
+                (
+                    ['G1 F%f B%f\n'%(self.p.squirt_feedrate, self.p.retract_distance_mm), 'G92 B0\n'],
+                    1,
+                    True
+                ),
+                (
+                    ['M135 T0\n', 'G92 A0\n', 'G1 F%f A%f\n'%(self.p.squirt_feedrate,
+                        self.p.retract_distance_mm), 'G92 A0\n'],
+                    0,
+                    False
+                ),
+                (
+                    ['M135 T1\n', 'G92 B0\n', 'G1 F%f B%f\n'%(self.p.squirt_feedrate,
+                        self.p.retract_distance_mm), 'G92 B0\n'],
+                    1,
+                    False
+                ),
+        ]
+        for case in cases:
+            self.p.output = []
+            self.p.squirt_tool(case[1], squirt_initial_inactive_tool=case[2])
+            self.assertEqual(self.p.output, case[0])
 
 
     def test_get_other_tool(self):

@@ -46,11 +46,8 @@ G1 F300.000000 A92.620000
 
 (Slice 1, 1 Extruder)
 M135 T1
-M135 T1
-G92 B0
 G1 F300.000000 B19.000000
 G92 B0
-M135 T1
 
 (Makerbot Industries)
 (This file contains digital fabrication directives in gcode format)
@@ -118,4 +115,3 @@ M135 T1
 G92 B0
 G1 F300.000000 B19.000000
 G92 B0
-M135 T1
