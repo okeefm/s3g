@@ -111,7 +111,7 @@ class DualRetractProcessor(Processor):
                             continue
                         #if this is the first significant toolchange do an extra squirt
                         self.seeking_first_toolchange = False
-                        self.squirt_tool(self.current_tool)
+                        self.squirt_tool(self.current_tool, squirt_initial_inactive_tool=True)
                     else:
                         self.seeking_squirt = True
                     self.snort_replace()
@@ -222,13 +222,19 @@ class DualRetractProcessor(Processor):
         return inactive_tool.get(tool, -1)
 
 
-    def squirt_tool(self, tool):
-        self.output.append("M135 T%i\n"%(tool))
-        self.output.append("G92 %s0\n"%(self.TOOLHEADS[tool]))
+    def squirt_tool(self, tool, squirt_initial_inactive_tool=False):
+        """
+            Inserts squirt command for given tool
+            @param tool: integer, tool to squirt
+            @param squirt_initial_inactve_tool: boolean, if this is the squirt of the initial
+                significant toolchange
+        """
+        if not squirt_initial_inactive_tool:
+            self.output.append("M135 T%i\n"%(tool))
+            self.output.append("G92 %s0\n"%(self.TOOLHEADS[tool]))
         self.output.append("G1 F%f %s%f\n"%(self.squirt_feedrate, self.TOOLHEADS[tool],
             self.retract_distance_mm))
         self.output.append("G92 %s0\n"%(self.TOOLHEADS[tool]))
-        self.output.append("M135 T%i\n"%(tool))
         
 
     def squirt_replace(self):
