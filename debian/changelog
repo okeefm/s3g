@@ -1,8 +1,8 @@
 makerbot-driver (2.0.1) precise; urgency=low
-  * Added Retraction processors for Replicator2X.
+  * Refactor of Dualstrusion retraction processors
   * Bugfixes to gcode parser to handle E commands
 
- -- MakerBot Industries dev team <dev@makerbot.com>  Mon, 26 Feb 2013 17:52:00  -0500
+ -- MakerBot Industries dev team <dev@makerbot.com>  Tue, 12 Mar 2013 17:52:00  -0500
 
 makerbot-driver (2.0.0) precise; urgency=low
   * Added gcode processors for better dualstrusion
