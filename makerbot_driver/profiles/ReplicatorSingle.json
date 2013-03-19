@@ -117,5 +117,6 @@
     "squirt_reduce_mm": "NULL",
     "squirt_feedrate": "NULL",
     "snort_feedrate" : "NULL"
-   }
+    },
+  "use_legacy_parser": 0,
 }
