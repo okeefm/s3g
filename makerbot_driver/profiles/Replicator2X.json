@@ -143,5 +143,6 @@
     "squirt_reduce_mm": 1,
     "squirt_feedrate": 300,
     "snort_feedrate" : 300
-    }
+    },
+  "use_legacy_parser": 0,
 }
