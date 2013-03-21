@@ -243,6 +243,10 @@ class DualRetractProcessor(Processor):
         squirt_line = "G1 F%f %s%f\n"%(self.squirt_feedrate, self.TOOLHEADS[self.current_tool],
             new_extruder_position)
         self.output[-1] = squirt_line
+        #This G92 is to help reduce the blobbing that occurs on tool startup by reducing
+        #the amount of plastic put out on squirt
+        set_extruder_pos_line = "G92 %s%f\n"%(self.TOOLHEADS[self.current_tool], self.squirt_extruder_pos)
+        self.output.append(set_extruder_pos_line)
 
 
     def snort_replace(self):
