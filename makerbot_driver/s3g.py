@@ -91,7 +91,6 @@ class s3g(object):
         response = self.writer.send_query_payload(payload)
         [response_code, version] = makerbot_driver.Encoder.unpack_response(
             '<BH', response)
-        # TODO: check response_code
         return version
 
     def get_name(self):
@@ -166,7 +165,6 @@ class s3g(object):
          software_variant,
          reserved_a,
          reserved_b] = makerbot_driver.Encoder.unpack_response('<BHHBBH', response)
-        # TODO: check response_code
 
         version_info = {
             'Version': version,
@@ -193,7 +191,6 @@ class s3g(object):
         response = self.writer.send_query_payload(payload)
 
         [response_code, sd_response_code] = makerbot_driver.Encoder.unpack_response('<BB', response)
-        # TODO: check response_code
         if sd_response_code != makerbot_driver.sd_error_dict['SUCCESS']:
             raise makerbot_driver.SDCardError(sd_response_code)
 
@@ -211,7 +208,6 @@ class s3g(object):
 
         [response_code, sdResponse] = makerbot_driver.Encoder.unpack_response(
             '<BI', response)
-        # TODO: check response_code
         return sdResponse
 
     def reset(self):
@@ -223,7 +219,6 @@ class s3g(object):
             makerbot_driver.host_query_command_dict['RESET'],
         )
 
-        # TODO: mismatch here.
         self.writer.send_action_payload(payload)
 
     def is_finished(self):
@@ -239,7 +234,6 @@ class s3g(object):
 
         [response_code, isFinished] = makerbot_driver.Encoder.unpack_response(
             '<B?', response)
-        # TODO: check response_code
         return isFinished
 
     def clear_buffer(self):
@@ -251,7 +245,6 @@ class s3g(object):
             makerbot_driver.host_query_command_dict['CLEAR_BUFFER'],
         )
 
-        # TODO: mismatch here.
         self.writer.send_action_payload(payload)
 
     def pause(self):
@@ -263,7 +256,6 @@ class s3g(object):
             makerbot_driver.host_query_command_dict['PAUSE'],
         )
 
-        # TODO: mismatch here.
         self.writer.send_action_payload(payload)
 
     def get_build_stats(self):
@@ -283,7 +275,6 @@ class s3g(object):
          build_minutes,
          line_number,
          reserved] = makerbot_driver.Encoder.unpack_response('<BBBBLL', response)
-        # TODO: check response_code
 
         info = {
             'BuildState': build_state,
@@ -312,7 +303,6 @@ class s3g(object):
          nonResponsivePacketsSent,
          packetRetries,
          noiseBytes] = makerbot_driver.Encoder.unpack_response('<BLLLLL', response)
-        # TODO: check response_code
 
         info = {
             'PacketsReceived': packetsReceived,
@@ -339,7 +329,6 @@ class s3g(object):
 
         [response_code, bitfield] = makerbot_driver.Encoder.unpack_response(
             '<BB', response)
-        # TODO: check response_code
 
         bitfield = makerbot_driver.Encoder.decode_bitfield(bitfield)
         flags = {
@@ -376,7 +365,6 @@ class s3g(object):
         response = self.writer.send_query_payload(payload)
 
         [response_code, extended_stop_response] = makerbot_driver.Encoder.unpack_response('<BB', response)
-        # TODO: check response_code
 
         if extended_stop_response != 0:
             raise makerbot_driver.ExtendedStopError
@@ -672,7 +660,6 @@ class s3g(object):
         response = self.writer.send_query_payload(payload)
         [response_code, buffer_size] = makerbot_driver.Encoder.unpack_response(
             '<BI', response)
-        # TODO: check response_code
 
         return buffer_size
 
@@ -704,7 +691,6 @@ class s3g(object):
         response = self.writer.send_query_payload(payload)
 
         [response_code, sd_response_code] = makerbot_driver.Encoder.unpack_response('<BB', response)
-        # TODO: check response_code
 
         if sd_response_code != makerbot_driver.sd_error_dict['SUCCESS']:
             raise makerbot_driver.SDCardError(sd_response_code)
@@ -724,7 +710,6 @@ class s3g(object):
         )
         response = self.writer.send_query_payload(payload)
         [response_code, sd_response_code, filename] = makerbot_driver.Encoder.unpack_response_with_string('<BB', response)
-        # TODO: check response_code
 
         if sd_response_code != makerbot_driver.sd_error_dict['SUCCESS']:
             raise makerbot_driver.SDCardError(sd_response_code)
@@ -743,7 +728,6 @@ class s3g(object):
 
         response = self.writer.send_query_payload(payload)
         [response_code, filename] = makerbot_driver.Encoder.unpack_response_with_string('<B', response)
-        # TODO: check response_code
 
         return filename
 
@@ -762,7 +746,6 @@ class s3g(object):
         [response_code,
          x, y, z, a, b,
          endstop_states] = makerbot_driver.Encoder.unpack_response('<BiiiiiH', response)
-        # TODO: check response_code
 
         return [x, y, z, a, b], endstop_states
 
@@ -1066,7 +1049,6 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['GET_VERSION'], payload)
         [response_code, version] = makerbot_driver.Encoder.unpack_response(
             '<BH', response)
-        # TODO: check response_code
 
         return version
 
@@ -1080,7 +1062,6 @@ class s3g(object):
         response = self.tool_query(
             tool_index, makerbot_driver.slave_query_command_dict['GET_PID_STATE'])
         [response_code, exError, exDelta, exLast, plError, plDelta, plLast] = makerbot_driver.Encoder.unpack_response('<Bhhhhhh', response)
-        # TODO: check response_code
         PIDVals = {
             "ExtruderError": exError,
             "ExtruderDelta": exDelta,
@@ -1115,7 +1096,6 @@ class s3g(object):
 
         [resonse_code, bitfield] = makerbot_driver.Encoder.unpack_response(
             '<BB', response)
-        # TODO: check response_code
 
         bitfield = makerbot_driver.Encoder.decode_bitfield(bitfield)
 
@@ -1221,7 +1201,6 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['GET_MOTOR_1_SPEED_RPM'])
         [response_code,
             speed] = makerbot_driver.Encoder.unpack_response('<BI', response)
-        # TODO: check response_code
         return speed
 
     def get_toolhead_temperature(self, tool_index):
@@ -1234,7 +1213,6 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['GET_TOOLHEAD_TEMP'])
         [response_code, temperature] = makerbot_driver.Encoder.unpack_response(
             '<BH', response)
-        # TODO: check response_code
 
         return temperature
 
@@ -1248,7 +1226,6 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['IS_TOOL_READY'])
         [response_code,
             ready] = makerbot_driver.Encoder.unpack_response('<BB', response)
-        # TODO: check response_code
 
         isReady = False
         if ready == 1:
@@ -1320,7 +1297,6 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['GET_PLATFORM_TEMP'])
         [response_code, temperature] = makerbot_driver.Encoder.unpack_response(
             '<BH', response)
-        # TODO: check response_code
 
         return temperature
 
@@ -1334,7 +1310,6 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['GET_TOOLHEAD_TARGET_TEMP'])
         [response_code, temperature] = makerbot_driver.Encoder.unpack_response(
             '<BH', response)
-        # TODO: check response_code
 
         return temperature
 
@@ -1348,7 +1323,6 @@ class s3g(object):
             tool_index, makerbot_driver.slave_query_command_dict['GET_PLATFORM_TARGET_TEMP'])
         [response_code, temperature] = makerbot_driver.Encoder.unpack_response(
             '<BH', response)
-        # TODO: check response_code
 
         return temperature
 
@@ -1363,7 +1337,6 @@ class s3g(object):
         [response_code,
             ready] = makerbot_driver.Encoder.unpack_response('<BB', response)
 
-        # TODO: check response_code
         isReady = False
         if ready == 1:
             isReady = True
