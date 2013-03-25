@@ -139,9 +139,9 @@ class MachineInquisitor(object):
         firmware_version = s3gDriver.get_version()
         
         try:   
-            s3gDriver.eeprom_reader(firmware_version) 
+            s3gDriver.init_eeprom_reader(firmware_version) 
         except  makerbot_driver.EEPROM.MissingEepromMapError:
-            s3gDriver.eeprom_reader(None)
+            s3gDriver.init_eeprom_reader(None)
 
         settings['tool_count'] = s3gDriver.get_toolhead_count()
         if settings['tool_count'] not in [1,2] : 
