@@ -55,7 +55,7 @@ class s3g(object):
         self.print_to_file_type = print_to_file_type
 
     @property
-    def eeprom_reader(self):
+    def eeprom_reader(self, firmware_version=None):
         if self._eeprom_reader is None:
             self._eeprom_reader = makerbot_driver.EEPROM.EepromReader.factory(
                 self)
