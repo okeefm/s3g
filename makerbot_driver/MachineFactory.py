@@ -57,6 +57,7 @@ class MachineFactory(object):
             profile = makerbot_driver.Profile(bestProfile, self.profile_dir)
             profile.values['print_to_file_type']=[machine_setup_dict['print_to_file_type']]
             profile.values['software_variant'] = machine_setup_dict['software_variant']
+            profile.values['tool_count_error'] = machine_setup_dict['tool_count_error']
             setattr(return_object, 'profile', profile)
             parser = makerbot_driver.Gcode.GcodeParser()
             parser.s3g = s3gBot
@@ -135,8 +136,20 @@ class MachineInquisitor(object):
         settings = {}
         s3gDriver = self.create_s3g(condition)
         settings['vid'], settings['pid'] = s3gDriver.get_vid_pid()
-        settings['tool_count'] = s3gDriver.get_toolhead_count()
+        firmware_version = s3gDriver.get_version()
         
+        try:   
+            s3gDriver.eeprom_reader(firmware_version) 
+        except  makerbot_driver.EEPROM.MissingEepromMapError:
+            s3gDriver.eeprom_reader(None)
+
+        settings['tool_count'] = s3gDriver.get_toolhead_count()
+        if settings['tool_count'] not in [1,2] : 
+            settings['tool_count'] = 1
+            settings['tool_count_error'] = True
+        else:
+            settings['tool_count_error'] = False
+
         try:
             version_settings = s3gDriver.get_advanced_version();
             settings['software_variant'] = hex(version_settings['SoftwareVariant'])
