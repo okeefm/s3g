@@ -104,7 +104,7 @@ class s3g(object):
 
     def get_toolhead_count(self):
         """
-        @return the toolhead count of this bot. -1 on error
+        @return the toolhead count of this bot
         """
         data = self.eeprom_reader.read_data('TOOL_COUNT')
         return data[0]
