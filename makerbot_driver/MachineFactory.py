@@ -5,7 +5,6 @@ import threading
 
 import makerbot_driver
 
-
 class ReturnObject(object):
 
     def __init__(self):
@@ -106,7 +105,7 @@ class MachineFactory(object):
         """
         vid_pid_matches = []
         for machine in makerbot_driver.gMachineClasses.values():
-            if machine['vid'] == machine_setup_dict['vid'] and machine['pid'] == machine_setup_dict['pid']:
+            if machine['vid'] == machine_setup_dict['vid'] and machine_setup_dict['pid'] in machine['pid']:
                 return machine['machineProfiles']
         return None
 
@@ -144,7 +143,7 @@ class MachineInquisitor(object):
             pass
   
         settings['tool_count'] = s3gDriver.get_toolhead_count()
-        if settings['tool_count'] not in [1,2] : 
+        if settings['tool_count'] not in makerbot_driver.constants.valid_toolhead_counts : 
             settings['tool_count'] = 1
             settings['tool_count_error'] = True
         else:

@@ -37,7 +37,7 @@
   },
   "baudrate"  : 115200,
   "VID"       : 9153,
-  "PID"       : 54036,
+  "PID"       : [54036],
   "print_start_sequence" : {
     "begin_print" : {
       "replicator_begin" : [

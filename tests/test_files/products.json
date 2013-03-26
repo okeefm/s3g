@@ -1,5 +1,5 @@
 {
-  "ExtrusionPrinters": { 
+  "ExtrusionPrintersV2": { 
     "TheReplicator" : "./TheReplicator.json",
     "Example" : "./Example.json"
   }

@@ -96,11 +96,11 @@ class Uploader(object):
         Assuming a product.json file has been pulled and loaded,
         explores that products.json file and wgets all machine json files.
         """
-        machines = self.products['ExtrusionPrinters']
+        machines = self.products['ExtrusionPrintersV2']
         for machine in machines:
-            f = self.products['ExtrusionPrinters'][machine]
+            f = self.products['ExtrusionPrintersV2'][machine]
             url = self.pathjoin(
-                self.source_url, self.products['ExtrusionPrinters'][machine])
+                self.source_url, self.products['ExtrusionPrintersV2'][machine])
             self.wget(url)
 
     def wget(self, url):
@@ -148,12 +148,12 @@ class Uploader(object):
         """
         path = os.path.join(
             self.dest_path,
-            self.products['ExtrusionPrinters'][machine],
+            self.products['ExtrusionPrintersV2'][machine],
         )
         path = os.path.normpath(path)
         return self.load_json_values(path)
 
-    def list_firmware_versions(self, machine):
+    def list_firmware_versions(self, machine, pid):
         """
         Given a machine name, returns all possible versions we can upload to
 
@@ -162,8 +162,8 @@ class Uploader(object):
         """
         values = self.get_firmware_values(machine)
         versions = []
-        for version in values['firmware']['versions']:
-            descriptor = values['firmware']['versions'][version][1]
+        for version in values['PID'][pid]['versions']:
+            descriptor = values['PID'][pid]['versions'][version][1]
             versions.append([version, descriptor])
         return versions
 
@@ -173,11 +173,14 @@ class Uploader(object):
 
         @return iterator machines: The machines we can upload firmware to
         """
-        return self.products['ExtrusionPrinters'].keys()
+        return self.products['ExtrusionPrintersV2'].keys()
 
-    def download_firmware(self, machine, version):
+        self.assertEqual(expected_profile, getattr(return_obj, 'profile'))
+        self.assertEqual(expected_parser, getattr(return_obj, 'gcodeparser'))
+
+    def download_firmware(self, machine, pid, version):
         values = self.get_firmware_values(machine)
-        values = values['firmware']
+        values = values['PID'][pid]
         try:
             hex_file = str(values['versions'][version][0])
         except KeyError:
@@ -186,7 +189,7 @@ class Uploader(object):
         hex_file_path = self.wget(hex_file_url)
         return hex_file_path
 
-    def parse_avrdude_command(self, port, machine, filename, local_avr=True):
+    def parse_avrdude_command(self, port, machine, pid, filename, local_avr=True):
         """
         Given a port, machine name, and firmware filename, parses out a command
         that invokes avrdude
@@ -197,7 +200,7 @@ class Uploader(object):
         @return str command: The command that invokes avrdude
         """
         values = self.get_firmware_values(machine)
-        values = values['firmware']
+        values = values['PID'][pid]
         if None is not self._avrdude_exe:
             process = self._avrdude_exe
         else:
@@ -242,7 +245,7 @@ class Uploader(object):
         s.baudrate = 115200
         s.close()
 
-    def upload_firmware(self, port, machine, filename):
+    def upload_firmware(self, port, machine, pid, filename):
         """
         Given a port, machine name, and firmware filename, invokes avrdude to
         upload that firmware to a specific type of machine.
@@ -251,8 +254,8 @@ class Uploader(object):
         @param str machine: The machine we are uploading to
         @param str filename: The firmware we want to upload
         """
-        self._logger.info('{"event":"uploading_firmware", "port":%s, "machine":%s, "filename":%s}', port, machine, filename)
-        call = self.parse_avrdude_command(port, machine, filename)
+        self._logger.info('{"event":"uploading_firmware", "port":%s, "machine":%s, "pid":%s, "filename":%s}', port, machine, pid, filename)
+        call = self.parse_avrdude_command(port, machine, pid, filename)
         self.toggle_machine(port)
         try:
             try:
@@ -262,7 +265,7 @@ class Uploader(object):
             except OSError:
                 self._logger.info('{"event":"trying external avrdude"}')
                 call = self.parse_avrdude_command(
-                    port, machine, filename, local_avr=False)
+                    port, machine, pid, filename, local_avr=False)
                 output = self.run_subprocess(call, stderr=subprocess.STDOUT)
                 self._logger.debug('output=%r', output)
         except subprocess.CalledProcessError as e:
