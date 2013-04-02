@@ -57,20 +57,21 @@ class DualRetractProcessorTests(unittest.TestCase):
 
         cases = [
             #Format: [input, output, extruder_position, current_tool]
-            ['G1 F2000.00 A12 (squirt)', "G1 F%f A%f\n"%(self.p.squirt_feedrate, 12-self.p.squirt_reduction_mm),12,0],
-            ['G1 F10 B123 (squirt)', "G1 F%f B%f\n"%(self.p.squirt_feedrate, 123-self.p.squirt_reduction_mm),123,1],
-            ['G1 F1200\nG1 E1200', "G1 F%f A%f\n"%(self.p.squirt_feedrate, 1200-self.p.squirt_reduction_mm),1200,0],
-            ['G1 F1\nG1 E13', "G1 F%f B%f\n"%(self.p.squirt_feedrate, 13-self.p.squirt_reduction_mm),13,1]
+            ['G1 F2000.00 A12 (squirt)', "G1 F%f A%f\n"%(self.p.squirt_feedrate, 12-self.p.squirt_reduction_mm), "G92 A%f\n"%(12), 12, 0],
+            ['G1 F10 B123 (squirt)', "G1 F%f B%f\n"%(self.p.squirt_feedrate, 123-self.p.squirt_reduction_mm), "G92 B%f\n"%(123), 123, 1],
+            ['G1 F1200\nG1 E1200', "G1 F%f A%f\n"%(self.p.squirt_feedrate, 1200-self.p.squirt_reduction_mm), "G92 A%f\n"%(1200), 1200, 0],
+            ['G1 F1\nG1 E13', "G1 F%f B%f\n"%(self.p.squirt_feedrate, 13-self.p.squirt_reduction_mm), "G92 B%f\n"%(13), 13, 1]
         ]
 
         for case in cases:
-            self.p.output = [None, None]
-            self.p.current_tool = case[3]
-            self.p.squirt_extruder_pos = case[2]
+            self.p.output = [None]
+            self.p.current_tool = case[4]
+            self.p.squirt_extruder_pos = case[3]
 
             self.p.squirt_replace()
 
-            self.assertEqual(self.p.output[-1], case[1])
+            self.assertEqual(self.p.output[-2], case[1])
+            self.assertEqual(self.p.output[-1], case[2])
 
 
     def test_squirt_tool(self):
@@ -235,6 +236,10 @@ class DualRetractProcessorTests(unittest.TestCase):
         mg_expect_gcodes = f_ex.readlines()
 
         mg_out_gcodes = self.p.process_gcode(mg_in_gcodes)
+        f=open('/home/wdc/out.out.out','w')
+        for line in mg_out_gcodes:
+            f.write(line)
+        f.close
 
         self.assertEqual(mg_out_gcodes, mg_expect_gcodes)
 
@@ -246,6 +251,10 @@ class DualRetractProcessorTests(unittest.TestCase):
         sf_expect_gcodes = f_ex.readlines()
 
         sf_out_gcodes = self.p.process_gcode(sf_in_gcodes)
+        f=open('/home/wdc/out.out.outsf','w')
+        for line in sf_out_gcodes:
+            f.write(line)
+        f.close
 
         self.assertEqual(sf_out_gcodes, sf_expect_gcodes) 
 
