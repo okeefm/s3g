@@ -145,5 +145,5 @@
     "squirt_feedrate": 300,
     "snort_feedrate" : 300
     },
-  "use_legacy_parser": 0,
+  "use_legacy_parser": 0
 }
