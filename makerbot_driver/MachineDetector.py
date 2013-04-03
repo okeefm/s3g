@@ -40,15 +40,15 @@ def get_gMachineDetector():
 # machine USB classes IE what VID/PID can map to what machine profiles
 gMachineClasses = {
     'The Replicator 2':
-    {'vid': 0x23C1, 'pid': 0xB015, 'machineProfiles': '.*Replicator2'},
+    {'vid': 0x23C1, 'pid': [0xB015, 0xB016], 'machineProfiles': '.*Replicator2'},
     'The Replicator':
-    {'vid': 0x23C1, 'pid': 0xD314, 'machineProfiles': '.*Replicator'},
+    {'vid': 0x23C1, 'pid': [0xD314], 'machineProfiles': '.*Replicator'},
     'MightyBoard':
-    {'vid': 0x23C1, 'pid': 0xB404, 'machineProfiles': '.*Replicator'},
+    {'vid': 0x23C1, 'pid': [0xB404], 'machineProfiles': '.*Replicator'},
     'TOM FTDI':
-    {'vid': 0x0403, 'pid': 0x6001, 'machineProfiles': '.*TOMStepstruder'},
+    {'vid': 0x0403, 'pid': [0x6001], 'machineProfiles': '.*TOMStepstruder'},
     'TOM 8U2':
-    {'vid': 0x2341, 'pid': 0x0010, 'machineProfiles': '.*TOMStepstruder'},
+    {'vid': 0x2341, 'pid': [0x0010], 'machineProfiles': '.*TOMStepstruder'},
 }
 
 
@@ -62,7 +62,7 @@ def get_vid_pid_by_name(name):
     """
     if name in gMachineClasses.keys():
         return (gMachineClasses[name]['vid'],
-                gMachineClasses[name]['pid'])
+                gMachineClasses[name]['pid'][0])
     return (None, None)
 
 
@@ -82,7 +82,7 @@ class MachineDetector(object):
     def get_machine_name_from_vid_pid(self, vid, pid):
         machine_name = None
         for key in gMachineClasses:
-            if gMachineClasses[key]['vid'] == vid and gMachineClasses[key]['pid'] == pid:
+            if gMachineClasses[key]['vid'] == vid and (pid in gMachineClasses[key]['pid']):
                 machine_name = key
                 break
         return machine_name
@@ -109,8 +109,11 @@ class MachineDetector(object):
             #Not all machine classes have a defined VID/PID
             try:
                 vid = gMachineClasses[machineClass]['vid']
-                pid = gMachineClasses[machineClass]['pid']
-                new_machines = self.list_ports_by_vid_pid(vid, pid)
+                pid_list = gMachineClasses[machineClass]['pid']
+               
+                new_machines = []
+                for pid in pid_list:
+                  new_machines.extend(self.list_ports_by_vid_pid(vid, pid))
 
                 for machine in list(new_machines):
                     self.machines_just_seen[machine['port']] = machine

@@ -21,18 +21,24 @@
 
 #include <stdint.h>
 
-namespace eeprom {
+enum {
+	ESTOP_CONF_NONE = 0x0,
+	ESTOP_CONF_ACTIVE_HIGH = 0x1,
+	ESTOP_CONF_ACTIVE_LOW = 0x2
+};
+
+namespace eeprom_offsets {
 
 const static uint16_t EEPROM_SIZE				= 0x0200;
 
 /// Version, low byte: 1 byte
 //$BEGIN_ENTRY
-//$type:B
+//$type:B $ignore:True
 const static uint16_t VERSION_LOW				= 0x0000;
 
 /// Version, high byte: 1 byte
 //$BEGIN_ENTRY
-//$type:B
+//$type:B $ignore:True
 const static uint16_t VERSION_HIGH				= 0x0001;
 
 /// Axis inversion flags: 1 byte.
@@ -66,12 +72,6 @@ const static uint16_t AXIS_HOME_POSITIONS		= 0x0060;
 //$BEGIN_ENTRY
 //$type:B
 const static uint16_t ESTOP_CONFIGURATION = 0x0074;
-
-enum {
-	ESTOP_CONF_NONE = 0x0,
-	ESTOP_CONF_ACTIVE_HIGH = 0x1,
-	ESTOP_CONF_ACTIVE_LOW = 0x2
-};
 
 //$BEGIN_ENTRY
 //$type:B
@@ -159,7 +159,7 @@ const static uint16_t FILAMENT_TRIP_A		= 0x00BB;
 const static uint16_t ABP_COPIES		= 0x00C3;
 
 //$BEGIN_ENTRY
-//$type:B
+//$type:B $ignore:True
 const static uint16_t UNUSED1			= 0x00C4;
 
 //Override the temperature set in the gcode file at the start of the build
@@ -225,29 +225,29 @@ const static uint16_t ACCEL_MAX_EXTRUDER_RETRACT= 0x014F;
 
 //uint32_t (4 bytes)
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1
+//$type:I $floating_point:True $exponent:-1 $ignore:True
 const static uint16_t UNUSED2	= 0x0153;
 
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1
+//$type:I $floating_point:True $exponent:-1 $ignore:True
 const static uint16_t UNUSED3			= 0x0157;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1
+//$type:I $floating_point:True $exponent:-1 $ignore:True
 const static uint16_t UNUSED4			= 0x015B;
 //$BEGIN_ENTRY
 //$type:I $floating_point:True $exponent:-5
 const static uint16_t ACCEL_ADVANCE_K2		= 0x015F;
 //$BEGIN_ENTRY
-//$type:I
+//$type:I $ignore:True
 const static uint16_t UNUSED5			= 0x0163;
 //$BEGIN_ENTRY
 //$type:I $floating_point:True $exponent:-5
 const static uint16_t ACCEL_ADVANCE_K		= 0x0167;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-2
+//$type:I $floating_point:True $exponent:-2 $ignore:True
 const static uint16_t UNUSED6			= 0x016B;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-4
+//$type:I $floating_point:True $exponent:-4 $ignore:True
 const static uint16_t UNUSED7			= 0x016F;
 
 //uint8_t (1 byte)
@@ -279,7 +279,7 @@ const static uint16_t HOMING_FEED_RATE_Y	= 0x0179;
 const static uint16_t HOMING_FEED_RATE_Z	= 0x017D;
 
 //$BEGIN_ENTRY
-//$type:I
+//$type:I $ignore:True
 const static uint16_t UNUSED8			= 0x0181;
 //$BEGIN_ENTRY
 //$type:I $floating_point:True $exponent:-1
@@ -288,15 +288,15 @@ const static uint16_t ACCEL_EXTRUDER_DEPRIME_A	= 0x0185;
 //$type:B
 const static uint16_t ACCEL_SLOWDOWN_FLAG	= 0x0189;
 //$BEGIN_ENTRY
-//$type:BBB
+//$type:BBB $ignore:True
 const static uint16_t UNUSED9			= 0x018A;
 //$BEGIN_ENTRY
-//$type:I
+//$type:I $ignore:True
 const static uint16_t UNUSED10			= 0x018D;
 
 //uint8_t (1 byte)
 //$BEGIN_ENTRY
-//$type:B
+//$type:B $ignore:True
 const static uint16_t UNUSED11			= 0x0191;
 
 //uint32_t (4 bytes)
@@ -358,7 +358,7 @@ const static uint16_t FILAMENT_TRIP_B		= 0x01DD;
 
 //Hardware vendor id (in this case, Sailfish vendor id) - (4 bytes)
 //$BEGIN_ENTRY
-//$type:BBBB
+//$type:BBBB 
 const static uint16_t VID_PID_INFO		 = 0x1E5;
 
 //Extruder hold (1 byte)

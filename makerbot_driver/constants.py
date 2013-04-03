@@ -115,3 +115,4 @@ timeout_length = 1.0
 s3g_version = 100
 max_tool_index = 127
 vid_pid = [0x23C1, 0xD314]
+valid_toolhead_counts = [1, 2]

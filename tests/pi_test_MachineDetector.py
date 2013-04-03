@@ -53,6 +53,7 @@ class TestMachineDetector(unittest.TestCase):
 
     def test_get_machine_name_from_vid_pid(self):
         cases = [
+            [0x23C1, 0xB016, "The Replicator 2"],
             [0x23C1, 0xB015, "The Replicator 2"],
             [0x23C1, 0xD314, "The Replicator"],
             [0x23C1, 0xB404, "MightyBoard"],

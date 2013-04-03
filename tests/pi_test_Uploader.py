@@ -132,9 +132,9 @@ class TestGetMachineJsonFiles(unittest.TestCase):
         self.wget_mock = mock.Mock()
         self.uploader.wget = self.wget_mock
         calls = self.wget_mock.mock_calls
-        machines = self.uploader.products['ExtrusionPrinters']
+        machines = self.uploader.products['ExtrusionPrintersV2']
         for machine, call in zip(machines, calls):
-            filename = self.uploader.products['ExtrusionPrinters'][machine]
+            filename = self.uploader.products['ExtrusionPrintersV2'][machine]
             firmware_url = urlparse.urljoin(self.uploader.source_url, filename)
             self.assertEqual(firmware_url, call[1][0])
 
@@ -155,14 +155,28 @@ class TestGetFirmwareVersions(unittest.TestCase):
         self.uploader = None
 
     def test_list_firmware_versions_bad_machine_name(self):
+        machine = 'I HOPE THIS ISNT A MACHINE NAME'
+        pid = 'pid_example'
         self.assertRaises(
             KeyError,
             self.uploader.list_firmware_versions,
-            'I HOPE THIS ISNT A MACHINE NAME'
+            machine,
+            pid
+        )
+
+    def test_list_firmware_versions_bad_pid_value(self):
+        machine = 'Example'
+        pid = 'pid_bad_example'
+        self.assertRaises(
+            KeyError,
+            self.uploader.list_firmware_versions,
+            machine,
+            pid
         )
 
     def test_list_firmware_versions_good_machine_name(self):
         machine = 'Example'
+        pid = 'pid_example'
         with open(os.path.join(
             self.uploader.source_url,
             machine + '.json',
@@ -171,10 +185,10 @@ class TestGetFirmwareVersions(unittest.TestCase):
         expected_versions = []
         #The version is the key, then the descriptor is the 1st element
         #in the key's value
-        for version in vals['firmware']['versions']:
-            descriptor = vals['firmware']['versions'][version][1]
+        for version in vals['PID'][pid]['versions']:
+            descriptor = vals['PID'][pid]['versions'][version][1]
             expected_versions.append([version, descriptor])
-        got_versions = self.uploader.list_firmware_versions(machine)
+        got_versions = self.uploader.list_firmware_versions(machine, pid)
         self.assertEqual(expected_versions, got_versions)
 
 
@@ -233,7 +247,7 @@ class TestListVersions(unittest.TestCase):
         )) as f:
             values = json.load(f)
         expected_machines = []
-        for machine in values['ExtrusionPrinters']:
+        for machine in values['ExtrusionPrintersV2']:
             expected_machines.append(machine)
         self.assertEqual(expected_machines, self.uploader.list_machines())
 
@@ -300,31 +314,43 @@ class TestParseAvrdudeCommand(unittest.TestCase):
         uploader = makerbot_driver.Firmware.Uploader(autoUpdate=False)
         port = '/dev/tty.usbmodemfa121'
         machine = "Example"
+        pid = 'pid_example'
         version = '0.1'
         self.assertRaises(AttributeError, uploader.parse_avrdude_command,
-                          port, machine, version)
+                          port, machine, pid, version)
 
     def test_parse_avrdude_command_cant_find_machine(self):
         port = '/dev/tty.usbmodemfa121'
         machine = "i really hope you dont have a file with this exact name"
+        pid = 'pid_example'
         version = '5.2'
         self.assertRaises(KeyError, self.uploader.parse_avrdude_command,
-                          port, machine, version)
+                          port, machine, pid, version)
+
+    def test_parse_avrdude_command_cant_find_pid(self):
+        port = '/dev/tty.usbmodemfa121'
+        machine = "Example"
+        pid = 'pid_bad_example'
+        version = '5.2'
+        self.assertRaises(KeyError, self.uploader.parse_avrdude_command,
+                          port, machine, pid, version)
 
     def test_parse_avrdude_command_cant_find_version(self):
         port = '/dev/tty.usbmodemfa121'
         machine = 'Example'
+        pid = 'pid_example'
         version = 'x.x'
         self.assertRaises(makerbot_driver.Firmware.UnknownVersionError,
-                          self.uploader.download_firmware, machine, version)
+                          self.uploader.download_firmware, machine, pid, version)
 
     def test_parse_avrdude_command_local(self):
         machine = 'Example'
+        pid = 'pid_example'
         wget_mock = mock.Mock()
         self.uploader.wget = wget_mock
         with open(os.path.join(self.uploader.source_url, machine + '.json')) as f:
             example_profile = json.load(f)
-        example_values = example_profile['firmware']
+        example_values = example_profile['PID'][pid]
         port = '/dev/tty.usbmodemfa121'
         version = '0.1'
         hex_url = example_values['versions'][version][0]
@@ -356,7 +382,7 @@ class TestParseAvrdudeCommand(unittest.TestCase):
         else:
             expected_call = "%s -C%s -p%s -b%i -c%s -P/dev/tty.usbmodemfa121 -Uflash:w:%s:i" % (avrdude_path, avrdude_conf_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
         expected_call = expected_call.split(' ')
-        got_call = self.uploader.parse_avrdude_command(port, machine, version)
+        got_call = self.uploader.parse_avrdude_command(port, machine, pid, version)
         #expected_call = expected_call.split(' ')
         expected_avrdude = expected_call[0]
         self.assertEqual(
@@ -391,11 +417,12 @@ class TestParseAvrdudeCommand(unittest.TestCase):
 
     def test_update_firmware(self):
         machine = 'Example'
+        pid = 'pid_example'
         wget_mock = mock.Mock()
         self.uploader.wget = wget_mock
         with open(os.path.join(self.uploader.source_url, machine + '.json')) as f:
             example_profile = json.load(f)
-        example_values = example_profile['firmware']
+        example_values = example_profile['PID'][pid]
         port = '/dev/tty.usbmodemfa121'
         version = '0.1'
         hex_url = example_values['versions'][version][0]
@@ -409,19 +436,20 @@ class TestParseAvrdudeCommand(unittest.TestCase):
         check_output_mock = mock.Mock()
         self.uploader.run_subprocess = check_output_mock
         expected_call = self.uploader.parse_avrdude_command(
-            port, machine, version)
-        self.uploader.upload_firmware(port, machine, version)
+            port, machine, pid, version)
+        self.uploader.upload_firmware(port, machine, pid, version)
         check_output_mock.assert_called_once_with(
             expected_call, stderr=subprocess.STDOUT)
         self.uploader.toggle_machine.assert_called_once_with(port)
 
     def test_parse_avrdude_command_global(self):
         machine = 'Example'
+        pid = 'pid_example'
         wget_mock = mock.Mock()
         self.uploader.wget = wget_mock
         with open(os.path.join(self.uploader.source_url, machine + '.json')) as f:
             example_profile = json.load(f)
-        example_values = example_profile['firmware']
+        example_values = example_profile['PID'][pid]
         port = '/dev/tty.usbmodemfa121'
         version = '0.1'
         hex_url = example_values['versions'][version][0]
@@ -445,7 +473,7 @@ class TestParseAvrdudeCommand(unittest.TestCase):
             expected_call = "%s -C%s -p%s -b%i -c%s -P/dev/tty.usbmodemfa121 -Uflash:w:%s:i" % (avrdude_path, avrdude_conf_path, example_values['part'], example_values['baudrate'], example_values['programmer'], hex_path)
         expected_call = expected_call.split(' ')
         got_call = self.uploader.parse_avrdude_command(
-            port, machine, version, local_avr=False)
+            port, machine, pid, version, local_avr=False)
         #expected_call = expected_call.split(' ')
         expected_avrdude = expected_call[0]
         self.assertEqual(expected_avrdude, avrdude_path)
