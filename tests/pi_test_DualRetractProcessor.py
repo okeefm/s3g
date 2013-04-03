@@ -251,10 +251,6 @@ class DualRetractProcessorTests(unittest.TestCase):
         sf_expect_gcodes = f_ex.readlines()
 
         sf_out_gcodes = self.p.process_gcode(sf_in_gcodes)
-        f=open('/home/wdc/out.out.outsf','w')
-        for line in sf_out_gcodes:
-            f.write(line)
-        f.close
 
         self.assertEqual(sf_out_gcodes, sf_expect_gcodes) 
 
