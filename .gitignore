@@ -11,3 +11,6 @@ dist
 pys3g.egg-info
 
 makerbot_driver/Firmware/avrdude
+
+.sconsign.dblite
+makerbot_driver.egg-info/
