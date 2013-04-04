@@ -106,7 +106,10 @@
             ]
         },
         "end_print": {
-            "tom_end": []
+            "tom_end": [
+                "M18 A B(Turn off A and B steppers)",
+                "M18 X Y Z(Turn off steppers after a build)"
+            ]
         }
     },
     "find_axis_maximum_timeout": 20,
