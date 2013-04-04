@@ -10,28 +10,24 @@
       "type": "B"
     }, 
     "ACCEL_ADVANCE_K": {
-      "exponent": "-5", 
-      "floating_point": "True", 
       "offset": "0x0167", 
-      "type": "I"
+      "type": "f", 
+      "unit": "factor * 100000"
     }, 
     "ACCEL_ADVANCE_K2": {
-      "exponent": "-5", 
-      "floating_point": "True", 
       "offset": "0x015F", 
-      "type": "I"
+      "type": "f", 
+      "unit": "factor * 100000"
     }, 
     "ACCEL_EXTRUDER_DEPRIME_A": {
-      "exponent": "-1", 
-      "floating_point": "True", 
       "offset": "0x0185", 
-      "type": "I"
+      "type": "f", 
+      "unit": "steps * 10"
     }, 
     "ACCEL_EXTRUDER_DEPRIME_B": {
-      "exponent": "-1", 
-      "floating_point": "True", 
       "offset": "0x01AA", 
-      "type": "I"
+      "type": "f", 
+      "unit": "steps * 10"
     }, 
     "ACCEL_MAX_ACCELERATION_A": {
       "offset": "0x0147", 
@@ -39,7 +35,7 @@
     }, 
     "ACCEL_MAX_ACCELERATION_B": {
       "offset": "0x01A6", 
-      "type": "I"
+      "type": "f"
     }, 
     "ACCEL_MAX_ACCELERATION_X": {
       "offset": "0x013B", 
@@ -82,34 +78,29 @@
       "type": "I"
     }, 
     "ACCEL_MAX_SPEED_CHANGE_A": {
-      "exponent": "-1", 
-      "floating_point": "True", 
       "offset": "0x019E", 
-      "type": "I"
+      "type": "f", 
+      "unit": "mm/s * 10"
     }, 
     "ACCEL_MAX_SPEED_CHANGE_B": {
-      "exponent": "-1", 
-      "floating_point": "True", 
       "offset": "0x01A2", 
-      "type": "I"
+      "type": "f", 
+      "unit": "mm/s * 10"
     }, 
     "ACCEL_MAX_SPEED_CHANGE_X": {
-      "exponent": "-1", 
-      "floating_point": "True", 
       "offset": "0x0192", 
-      "type": "I"
+      "type": "f", 
+      "unit": "mm/s * 10"
     }, 
     "ACCEL_MAX_SPEED_CHANGE_Y": {
-      "exponent": "-1", 
-      "floating_point": "True", 
       "offset": "0x0196", 
-      "type": "I"
+      "type": "f", 
+      "unit": "mm/s * 10"
     }, 
     "ACCEL_MAX_SPEED_CHANGE_Z": {
-      "exponent": "-1", 
-      "floating_point": "True", 
       "offset": "0x019A", 
-      "type": "I"
+      "type": "f", 
+      "unit": "mm/s * 10"
     }, 
     "ACCEL_SLOWDOWN_FLAG": {
       "offset": "0x0189", 
@@ -224,39 +215,42 @@
       "offset": "0x0082", 
       "type": "B"
     }, 
+    "PSTOP_ENABLE": {
+      "offset": "0x1EC", 
+      "type": "B"
+    }, 
     "RAM_USAGE_DEBUG": {
       "offset": "0x01D0", 
       "type": "I"
     }, 
+    "SD_USE_CRC": {
+      "offset": "0x1EB", 
+      "type": "B"
+    }, 
     "STEPS_PER_MM_A": {
-      "exponent": "-10", 
-      "floating_point": "True", 
       "offset": "0x00A3", 
-      "type": "q"
+      "type": "d", 
+      "unit": "steps * 10000000000"
     }, 
     "STEPS_PER_MM_B": {
-      "exponent": "-10", 
-      "floating_point": "True", 
       "offset": "0x00AB", 
-      "type": "q"
+      "type": "d", 
+      "unit": "steps * 10000000000"
     }, 
     "STEPS_PER_MM_X": {
-      "exponent": "-10", 
-      "floating_point": "True", 
       "offset": "0x008B", 
-      "type": "q"
+      "type": "d", 
+      "unit": "steps * 1000000000"
     }, 
     "STEPS_PER_MM_Y": {
-      "exponent": "-10", 
-      "floating_point": "True", 
       "offset": "0x0093", 
-      "type": "q"
+      "type": "d", 
+      "unit": "steps * 10000000000"
     }, 
     "STEPS_PER_MM_Z": {
-      "exponent": "-10", 
-      "floating_point": "True", 
       "offset": "0x009B", 
-      "type": "q"
+      "type": "d", 
+      "unit": "steps * 10000000000"
     }, 
     "TOOL0_TEMP": {
       "offset": "0x0080", 
@@ -269,6 +263,10 @@
     "TOOLHEAD_OFFSET_SETTINGS": {
       "offset": "0x01B0", 
       "type": "I"
+    }, 
+    "TOOLHEAD_OFFSET_SYSTEM": {
+      "offset": "0x1EA", 
+      "type": "B"
     }, 
     "TOOL_COUNT": {
       "offset": "0x01AE", 
