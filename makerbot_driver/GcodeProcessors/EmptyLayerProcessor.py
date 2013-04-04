@@ -9,140 +9,143 @@ class EmptyLayerProcessor(Processor):
 
     def __init__(self):
         super(EmptyLayerProcessor, self).__init__()
-        self.is_bundleable = True
-        self.layer_start = re.compile("^\((Slice|<layer>) [0-9.]+.*\)")
-        self.MG_nominal_comment = re.compile("^\(Slowing to 0\% of nominal speeds\)")
-        self.move_gcode = re.compile("^G1 .*")
+        self.layer_start = re.compile("^\(Slice [0-9.]+.*\)|^\(<layer> [0-9.]+.*\)")
         self.SF_layer_end = re.compile("^\(</layer>\)")
-        self.empty_line = re.compile("^\\n")
+        self.MG_layer_end = re.compile("^\(Slice [0-9.]+.*\)")
+
+        self.move_with_extrude = re.compile("^G1.*[ABE][0-9.-]+.*")
+        self.progress = re.compile("^M73")
 
 
-    def process_gcode(self, gcode_in, outfile = None):
-        if outfile != None:
-            return self.process_gcode_file(gcode_in, outfile)
-        elif(isinstance(gcode_in, list)):
-            return self.process_gcode_list(gcode_in)
+    def isGenerator(self,iterable):
+        """
+        Fucntion decides if the input iterable is a generator
+
+        @param iterable: iterable object
+        @return boolean: True if it is a generator
+        """
+        return hasattr(iterable, '__iter__') and not hasattr(iterable, '__len__')
 
 
-    def process_gcode_file(self, gcode_file_path, output_file_path,callback=None): 
-    #process gcode from a file, and output to a file     
-        self.code_index = 0
-        self.gcodes = self.index_file(gcode_file_path)
+    def process_gcode(self, gcode_in):
+        """
+        Main function for processor, iterates through the input and appends to the output
+        what is not in an empty layer
 
-        self.max_index = (len(self.gcodes)-1) 
-
-        self.gcode_fp = open(gcode_file_path, 'r')
-        self.output_fp = open(output_file_path, 'w')
-        print(str(self.output_fp))
-
-        while(self.code_index <= self.max_index):
-
-            self.gcode_fp.seek(self.gcodes[self.code_index])
-            current_code = self.gcode_fp.readline()
-            self.match = re.match(self.layer_start, current_code)
-            if self.match is not None:
-                print self.match.group()
-                if self.match.group(1) == '<layer>':
-                    self.is_empty, new_code_index = self._layer_test_if_empty(slicer='SF')
-                elif self.match.group(1) == 'Slice':
-                    self.is_empty, new_code_index = self._layer_test_if_empty(slicer='MG')
-                #layer_test_if_empty alters the seeked location so reseek current offset
-                self.gcode_fp.seek(self.gcodes[self.code_index])
-                if(self.is_empty ==  True):
-                    self.code_index = new_code_index
-                    continue #skip appending
-                elif((self.is_empty == -1) and (new_code_index == 'MG')):
-                #Hacky way to remove final empty slice for Miracle Grue 
-                    self.code_index += 7
-
-            if(self.code_index <= self.max_index):
-                self.gcode_fp.seek(self.gcodes[self.code_index])
-                current_code = self.gcode_fp.readline()
-                self.output_fp.write(current_code)
-                self.code_index += 1
-            else:
-                print ("CODE_INDEX GREATER THAN MAX_INDEX")
-                break
-        return True
-
-
-    def process_gcode_list(self, gcodes, callback=None):
-    #This processes gcode in the form of a list of gcodes, and the processed gcode is returned
-        self.gcodes = gcodes  
-        self.max_index = (len(self.gcodes)-1)      
+        @param gcode_in: iterable
+        @return output: output is a list of processed gcode
+        """
         self.output = []
-        self.code_index = 0
+        self.progress_in_layer = []
+        self.layer_buffer = []
+        self.test_if_empty = False
+        self.previous_code = ''
 
-        while(self.code_index <= self.max_index):
-            self.match = re.match(self.layer_start, self.gcodes[self.code_index])
-            if self.match is not None:
-                if self.match.group(1) == '<layer>':
-                    self.is_empty, self.new_code_index = self._layer_test_if_empty(slicer='SF')
-                elif self.match.group(1) == 'Slice':
-                    self.is_empty, self.new_code_index = self._layer_test_if_empty(slicer='MG')
-                if(self.is_empty ==  True):
-                    self.code_index = self.new_code_index
-                    continue #skip appending
-                print(str(self.new_code_index))
-                if((self.is_empty == -1) and (self.new_code_index == 'MG')):
-                #Hacky way to remove final empty slice for Miracle Grue 
-                    self.code_index += 7
+        if(self.isGenerator(gcode_in)):
+            self.gcode_iter = gcode_in
+        else:
+            self.gcode_iter = iter(gcode_in)
 
-            if(self.code_index <= self.max_index):
-                self.output.append(self.gcodes[self.code_index])
-                self.code_index += 1
+        for current in self.gcode_iter:
+            self.init_moves = 0
+
+            self.handle_layer_start_check(self.previous_code, current)
+
+            if(self.test_if_empty):
+                self.test_if_empty = False
+                if(self.layer_test_if_empty(self.init_moves)):
+                    #if layer is empty just append the progress
+                    for item in self.progress_in_layer: self.output.append(item)
+                else:
+                    #if layer is not empty add it to the output
+                    for item in self.layer_buffer: self.output.append(item)
+                self.progress_in_layer = []
+                self.layer_buffer = []
             else:
-                print ("CODE_INDEX GREATER THAN MAX_INDEX")
-                break
+                self.output.append(current)
+
         return self.output
-                
-      
-    def _layer_test_if_empty(self, slicer):
-        code_index = self.code_index+1
-        moves_in_layer = 0
-        comments_in_layer = 0
-
-        self.gcode_fp.seek(self.gcodes[code_index])
-        current_code = self.gcode_fp.readline()
-        while(code_index <= self.max_index):
-            #Checks for a specific comment or G1 commands
-            if(slicer == 'MG'):
-                if(re.match(self.empty_line, current_code)):
-                    break
-                if(re.match(self.move_gcode, current_code)):
-                    moves_in_layer += 1
-                if(re.match(self.MG_nominal_comment, current_code)):
-                    comments_in_layer += 1
-            elif(slicer == 'SF'):
-                if(re.match(self.SF_layer_end, current_code)):
-                    break
-                if(re.match(self.move_gcode, current_code)):
-                    moves_in_layer += 1
- 
-            code_index += 1
-            self.gcode_fp.seek(self.gcodes[code_index])
-            current_code = self.gcode_fp.readline()
-
-        if(slicer == 'MG'):
-            if((moves_in_layer <= 2) and (comments_in_layer >= 1)):
-                return (True, code_index)
-            else:
-                return (False, None)
-        elif(slicer == 'SF'):
-            if(moves_in_layer <= 1):
-                return (True, code_index+1) #avoids adding the </layer> tag
-            else:
-                return (False, None)
 
 
-    def index_file(self, filename):
+    def handle_layer_start_check(self, previous_code, current_code):
+        """
+        Checks if the current or previous code is a new layer and handles it accordingly
 
-        line_indexes = []
-        offset = 0
-        with open(filename, 'r') as f:
-            for line in f:
-                line_indexes.append(offset)    
-                offset += len(line)
-        return line_indexes
+        This function is mostly for Miracle-Grue as it does not have a layer end comment
 
-        
+        @param previous_code: gcode_string from the previous iteration (this is used for MG)
+        @param current_code: gcode string
+        """
+        if(self.check_for_layer_start(current_code)):
+            self.test_if_empty = True
+            self.layer_buffer.append(current_code)
+        elif(self.check_for_layer_start(previous_code)):
+            self.test_if_empty = True
+            self.layer_buffer.append(previous_code)
+            self.layer_buffer.append(current_code)
+            if(self.check_for_move_with_extrude(current_code)):
+                self.init_moves = 1
+
+
+    def layer_test_if_empty(self, init_moves):
+        """
+        Iterates through a the gcode layer until the layer ends or EOF.
+        It counts the number of moves with extrude commands in the layer,
+        and decides if a layer is empty base on that number.
+
+        @param init_moves: the inital moves_with_extrude in the layer (used for Miracle-Grue)
+        @return boolean: True if the layer is empty
+        """
+        moves_with_extrude = init_moves
+
+        for current in self.gcode_iter:
+            #put progress lines and a second list, if the slice is empty they
+            #will be appended to the output
+            if(self.check_for_progress(current)):
+                self.progress_in_layer.append(current)
+            elif(self.check_for_move_with_extrude(current)):
+                moves_with_extrude += 1
+            rv = self.check_for_layer_end(current)
+            if(rv != None):
+                if(rv == 'mg'):
+                    pass
+                    #Save the current code since it is most likely a slice header
+                    self.previous_code = current
+                elif(rv == 'sf'):
+                    self.layer_buffer.append(current)
+                break
+
+            self.layer_buffer.append(current)
+
+        if(moves_with_extrude > 0):
+            return False
+        else:
+            return True
+            
+
+    def check_for_move_with_extrude(self, string):
+        match = re.match(self.move_with_extrude, string)
+        return match is not None
+
+
+    def check_for_layer_start(self, string):
+        match = re.match(self.layer_start, string)
+        return match is not None
+
+
+    def check_for_layer_end(self, string):
+        match = re.match(self.MG_layer_end, string)
+        if match is not None:
+            return 'mg'
+        match = re.match(self.SF_layer_end, string)
+        if match is not None:
+            return 'sf'
+        else:
+            return None
+
+
+    def check_for_progress(self, string):
+        match = re.match(self.progress, string)
+        return match is not None
+
+

@@ -97,12 +97,25 @@
             ]
         },
         "end_print": {
-            "tom_end": []
+            "tom_end": [
+                "M18 A B(Turn off A and B steppers)",
+                "M18 X Y Z(Turn off steppers after a build)"
+            ]
         }
     },
     "find_axis_maximum_timeout": 20,
     "find_axis_minimum_timeout": 20,
+<<<<<<< HEAD
     "dualstrusion_retract_distance_mm": "NULL",
     "dualstrusion_squirt_reduce_mm": "NULL",
     "use_legacy_parser": true
+=======
+    "dualstrusion": {
+        "retract_distance_mm": "NULL",
+        "squirt_reduce_mm": "NULL",
+        "squirt_feedrate": "NULL",
+        "snort_feedrate" : "NULL"
+    },
+	"use_legacy_parser": true
+>>>>>>> 3c8b3230fa275c7d135d6bf62c5f57de5384c4df
 }

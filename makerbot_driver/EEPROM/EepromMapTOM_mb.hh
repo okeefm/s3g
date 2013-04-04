@@ -122,27 +122,27 @@ const static uint16_t BUZZER_REPEATS		= 0x008A;
 
 //Steps per mm, each one is 8 bytes long and are stored as int64_t
 //$BEGIN_ENTRY
-//$type:q $floating_point:True $exponent:-10
+//$type:d  $unit:steps * 1000000000
 const static uint16_t STEPS_PER_MM_X		= 0x008B;
 
 //Steps per mm, each one is 8 bytes long and are stored as int64_t
 //$BEGIN_ENTRY
-//$type:q $floating_point:True $exponent:-10
+//$type:d  $unit:steps * 10000000000
 const static uint16_t STEPS_PER_MM_Y		= 0x0093;
 
 //Steps per mm, each one is 8 bytes long and are stored as int64_t
 //$BEGIN_ENTRY
-//$type:q $floating_point:True $exponent:-10
+//$type:d  $unit:steps * 10000000000
 const static uint16_t STEPS_PER_MM_Z		= 0x009B;
 
 //Steps per mm, each one is 8 bytes long and are stored as int64_t
 //$BEGIN_ENTRY
-//$type:q $floating_point:True $exponent:-10
+//$type:d  $unit:steps * 10000000000
 const static uint16_t STEPS_PER_MM_A		= 0x00A3;
 
 //Steps per mm, each one is 8 bytes long and are stored as int64_t
 //$BEGIN_ENTRY
-//$type:q $floating_point:True $exponent:-10
+//$type:d  $unit:steps * 10000000000
 const static uint16_t STEPS_PER_MM_B		= 0x00AB;
 
 //int64_t (8 bytes) The filament used in steps
@@ -225,29 +225,29 @@ const static uint16_t ACCEL_MAX_EXTRUDER_RETRACT= 0x014F;
 
 //uint32_t (4 bytes)
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1 $ignore:True
+//$type:f  $unit:mm/s * 10 $ignore:True
 const static uint16_t UNUSED2	= 0x0153;
 
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1 $ignore:True
+//$type:f  $unit:mm/s * 10 $ignore:True
 const static uint16_t UNUSED3			= 0x0157;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1 $ignore:True
+//$type:f  $unit:mm/s * 10 $ignore:True
 const static uint16_t UNUSED4			= 0x015B;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-5
+//$type:f  $unit:factor * 100000
 const static uint16_t ACCEL_ADVANCE_K2		= 0x015F;
 //$BEGIN_ENTRY
-//$type:I $ignore:True
+//$type:f $ignore:True
 const static uint16_t UNUSED5			= 0x0163;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-5
+//$type:f  $unit:factor * 100000
 const static uint16_t ACCEL_ADVANCE_K		= 0x0167;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-2 $ignore:True
+//$type:f  $unit:mm/s * 100 $ignore:True
 const static uint16_t UNUSED6			= 0x016B;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-4 $ignore:True
+//$type:f  $unit:mm/s * 10000 $ignore:True
 const static uint16_t UNUSED7			= 0x016F;
 
 //uint8_t (1 byte)
@@ -282,7 +282,7 @@ const static uint16_t HOMING_FEED_RATE_Z	= 0x017D;
 //$type:I $ignore:True
 const static uint16_t UNUSED8			= 0x0181;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1
+//$type:f  $unit:steps * 10
 const static uint16_t ACCEL_EXTRUDER_DEPRIME_A	= 0x0185;
 //$BEGIN_ENTRY
 //$type:B
@@ -301,25 +301,25 @@ const static uint16_t UNUSED11			= 0x0191;
 
 //uint32_t (4 bytes)
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1
+//$type:f $unit:mm/s * 10
 const static uint16_t ACCEL_MAX_SPEED_CHANGE_X= 0x0192;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1
+//$type:f  $unit:mm/s * 10
 const static uint16_t ACCEL_MAX_SPEED_CHANGE_Y= 0x0196;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1
+//$type:f  $unit:mm/s * 10
 const static uint16_t ACCEL_MAX_SPEED_CHANGE_Z= 0x019A;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1
+//$type:f $unit:mm/s * 10 
 const static uint16_t ACCEL_MAX_SPEED_CHANGE_A= 0x019E;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1
+//$type:f  $unit:mm/s * 10
 const static uint16_t ACCEL_MAX_SPEED_CHANGE_B= 0x01A2;
 //$BEGIN_ENTRY
-//$type:I
+//$type:f
 const static uint16_t ACCEL_MAX_ACCELERATION_B= 0x01A6;
 //$BEGIN_ENTRY
-//$type:I $floating_point:True $exponent:-1
+//$type:f  $unit:steps * 10
 const static uint16_t ACCEL_EXTRUDER_DEPRIME_B= 0x01AA;
 // Tool count : 2 bytes
 //$BEGIN_ENTRY
@@ -365,6 +365,21 @@ const static uint16_t VID_PID_INFO		 = 0x1E5;
 //$BEGIN_ENTRY
 //$type:B
 const static uint16_t EXTRUDER_HOLD		 = 0x1E9;
+
+//Toolhead offset system (1 byte)
+//$BEGIN_ENTRY
+//$type:B
+const static uint16_t TOOLHEAD_OFFSET_SYSTEM     = 0x1EA;
+ 
+//Use SD card CRC checks (1 byte)
+//$BEGIN_ENTRY
+//$type:B
+const static uint16_t SD_USE_CRC             = 0x1EB;
+ 
+//P-Stop support (1 byte)
+//$BEGIN_ENTRY
+//$type:B
+const static uint16_t PSTOP_ENABLE           = 0x1EC;
 
 
 /// Reset Jetty Firmware defaults only

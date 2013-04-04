@@ -57,34 +57,6 @@ class GcodeStates(object):
                 '{"event":"gcode_state_change", "change":"build_name"}')
             self.values['build_name'] = build_name
 
-    def set_position(self, codes):
-        """
-        Given a dict of codes containing axes and values, sets those
-        axes values to the state's internal position's axes values.
-        If an E codes is defined, interpolates that E code's value
-        with the correct A or B axis.
-
-        @param dict codes:  A dictionary that contains axes and their
-            defined positions
-        """
-        if 'E' in codes:
-            if 'A' in codes or 'B' in codes:
-                gcode_error = makerbot_driver.Gcode.ConflictingCodesError()
-                gcode_error.values['ConflictingCodes'] = ['E', 'A', 'B']
-                raise gcode_error
-
-            #Cant interpolate E unless a tool_head is specified
-            if not 'tool_index' in self.values:
-                raise makerbot_driver.Gcode.NoToolIndexError
-
-            elif self.values['tool_index'] == 0:
-                setattr(self.position, 'A', codes['E'])
-
-            elif self.values['tool_index'] == 1:
-                setattr(self.position, 'B', codes['E'])
-
-        self.position.SetPoint(codes)
-
     def get_axes_values(self, key):
         """
         Given a key, queries the current profile's axis list
@@ -122,3 +94,30 @@ class GcodeStates(object):
             feedrates.append(self.profile.values['axes'][axis]['max_feedrate'])
             spm.append(self.profile.values['axes'][axis]['steps_per_mm'])
         return feedrates, spm
+
+    @staticmethod
+    def update_point_with_codes(point, codes, tool_index):
+        """
+        This function is static, so it can be used with non state-related
+        points.
+
+        Given a dict of codes containing axes and values, a point and
+        a tool_index, sets those axes values to the state's internal 
+        position's axes values. If an E codes is defined, interpolates 
+        that E code's value with the correct A or B axis.
+
+        @param Point point: Point to modify
+        @param dict codes:  A dictionary that contains axes and their
+            defined positions
+        @param int tool_index Current tool index
+        """
+        if 'E' in codes:
+            if 'A' in codes or 'B' in codes:
+                gcode_error = makerbot_driver.Gcode.ConflictingCodesError()
+                gcode_error.values['ConflictingCodes'] = ['E', 'A', 'B']
+                raise gcode_error
+            if tool_index is None:
+                raise makerbot_driver.Gcode.NoToolIndexError
+            index_map = {0: 'A', 1: 'B'}
+            setattr(point, index_map[tool_index], codes['E'])
+        point.SetPoint(codes)

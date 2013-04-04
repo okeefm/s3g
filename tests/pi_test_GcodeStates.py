@@ -91,87 +91,95 @@ class s3gHelperFunctionTests(unittest.TestCase):
         build_name = 9
         self.assertRaises(TypeError, self.g.set_build_name, build_name)
 
-    def test_set_position_no_axes(self):
+    def test_update_point_with_codes_only_a_and_b_has_tool_index(self):
+        point = makerbot_driver.Gcode.Point()
+        codes = {
+            'X': 1,
+            'Y': 2,
+            'Z': 3,
+            'A': 4,
+            'B': 5,
+        }
+        tool_index = 0
+        self.g.update_point_with_codes(point, codes, tool_index)
+        expected_point = [1, 2, 3, 4, 5]
+        got_point = point.ToList()
+        self.assertEqual(expected_point, got_point)
+
+    def test_update_point_with_codes_only_a_and_b_no_tool_index(self):
+        point = makerbot_driver.Gcode.Point()
+        codes = {
+            'X': 1,
+            'Y': 2,
+            'Z': 3,
+            'A': 4,
+            'B': 5,
+        }
+        tool_index = None
+        self.g.update_point_with_codes(point, codes, tool_index)
+        expected_point = [1, 2, 3, 4, 5]
+        got_point = point.ToList()
+        self.assertEqual(expected_point, got_point)
+
+    def test_update_point_with_codes_e_code_tool_index_0(self):
+        point = makerbot_driver.Gcode.Point()
+        codes = {
+            'X': 1,
+            'Y': 2,
+            'Z': 3,
+            'E': 4,
+        }
+        tool_index = 0
+        self.g.update_point_with_codes(point, codes, tool_index)
+        expected_point = [1, 2, 3, 4, None]
+        got_point = point.ToList()
+        self.assertEqual(expected_point, got_point)
+
+    def test_update_point_with_codes_e_code_tool_index_1(self):
+        point = makerbot_driver.Gcode.Point()
+        codes = {
+            'X': 1,
+            'Y': 2,
+            'Z': 3,
+            'E': 4,
+        }
+        tool_index = 1
+        self.g.update_point_with_codes(point, codes, tool_index)
+        expected_point = [1, 2, 3, None ,4]
+        got_point = point.ToList()
+        self.assertEqual(expected_point, got_point)
+
+    def test_update_point_with_codes_e_code_with_a_and_b_codes(self):
+        point = makerbot_driver.Gcode.Point()
+        codes = {
+            'X': 0,
+            'Y': 1,
+            'Z': 2,
+            'A': 3,
+            'B': 4,
+            'E': 5,
+        }
+        tool_index = 0
+        with self.assertRaises(makerbot_driver.Gcode.ConflictingCodesError):
+            self.g.update_point_with_codes(point, codes, tool_index)
+
+    def test_update_point_with_codes_e_code_no_tool_index(self):
+        point = makerbot_driver.Gcode.Point()
+        codes = {
+            'E': 0,
+        }
+        tool_index = None
+        with self.assertRaises(makerbot_driver.Gcode.NoToolIndexError):
+            self.g.update_point_with_codes(point, codes, tool_index)
+
+    def test_update_point_with_codes_no_codes(self):
+        point = makerbot_driver.Gcode.Point()
         codes = {}
-        self.g.set_position(codes)
-        expected_position = [None, None, None, None, None]
-        self.assertEqual(expected_position, self.g.position.ToList())
-
-    def test_set_position_e_and_a_codes(self):
-        codes = {
-            'E': 0,
-            'A': 0,
-        }
-        self.assertRaises(makerbot_driver.Gcode.ConflictingCodesError,
-                          self.g.set_position, codes)
-
-    def test_set_position_e_and_b_codes(self):
-        codes = {
-            'E': 0,
-            'B': 0,
-        }
-        self.assertRaises(makerbot_driver.Gcode.ConflictingCodesError,
-                          self.g.set_position, codes)
-
-    def test_set_position_e_and_a_and_b_codes(self):
-        codes = {
-            'E': 0,
-            'A': 0,
-            'B': 0,
-        }
-        self.assertRaises(makerbot_driver.Gcode.ConflictingCodesError,
-                          self.g.set_position, codes)
-
-    def test_set_position_e_code_no_tool_index(self):
-        codes = {'E': 0}
-        self.assertRaises(makerbot_driver.Gcode.NoToolIndexError,
-                          self.g.set_position, codes)
-
-    def test_set_position_e_code_tool_index_1(self):
-        codes = {'E': 2}
-        self.g.values['tool_index'] = 1
-        self.g.set_position(codes)
-        expected_position = [None, None, None, None, 2]
-        self.assertEqual(expected_position, self.g.position.ToList())
-
-    def test_set_position_e_code_tool_index_2(self):
-        codes = {'E': 2}
-        self.g.values['tool_index'] = 0
-        self.g.set_position(codes)
-        expected_position = [None, None, None, 2, None]
-        self.assertEqual(expected_position, self.g.position.ToList())
-
-    def test_set_position_a_and_b_codes(self):
-        codes = {
-            'A': 3,
-            'B': 4,
-        }
-        self.g.set_position(codes)
-        expected_position = [None, None, None, 3, 4]
-        self.assertEqual(expected_position, self.g.position.ToList())
-
-    def test_set_position_x_y_z(self):
-        codes = {
-            'X': 0,
-            'Y': 1,
-            'Z': 2,
-        }
-        self.g.set_position(codes)
-        expected_position = [0, 1, 2, None, None]
-        self.assertEqual(expected_position, self.g.position.ToList())
-
-    def test_set_position_extra_codes(self):
-        codes = {
-            'X': 0,
-            'Y': 1,
-            'Z': 2,
-            'A': 3,
-            'B': 4,
-            'Q': -1,
-        }
-        self.g.set_position(codes)
-        expected_position = [0, 1, 2, 3, 4]
-        self.assertEqual(expected_position, self.g.position.ToList())
+        tool_index = None
+        expected_point = [None, None, None, None, None]
+        self.g.update_point_with_codes(point, codes, tool_index)
+        got_point = point.ToList()
+        self.assertEqual(expected_point, got_point)
 
 
 class TestProfileInformationParsing(unittest.TestCase):

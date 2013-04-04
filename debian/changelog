@@ -1,3 +1,14 @@
+makerbot-driver (2.0.3) precise; urgency=low
+  * Added G92 after toolchange.
+
+ -- MakerBot Industries dev team <dev@makerbot.com>  Fri, 29 Mar 2013 17:59:00  -0500
+
+makerbot-driver (2.0.1) precise; urgency=low
+  * Refactor of Dualstrusion retraction processors
+  * Bugfixes to gcode parser to handle E commands
+
+ -- MakerBot Industries dev team <dev@makerbot.com>  Tue, 12 Mar 2013 17:52:00  -0500
+
 makerbot-driver (2.0.0) precise; urgency=low
   * Feature: Revision for MakerWare 2.0.0
 

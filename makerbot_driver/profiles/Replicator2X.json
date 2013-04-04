@@ -67,7 +67,6 @@
       },
     "start_position" : {
       "replicator_start_position": [
-
         "G92 X152 Y72 Z0 A0 B0",
         "G1 X#START_X Y#START_Y Z#START_Z F3300.0 (move to waiting position)",
         "G130 X20 Y20 A20 B20 (Lower stepper Vrefs while heating)"
@@ -139,6 +138,11 @@
     },
   "find_axis_maximum_timeout"  : 20,
   "find_axis_minimum_timeout"  : 20,
-  "dualstrusion_retract_distance_mm": 20,
-  "dualstrusion_squirt_reduce_mm": 5
+  "dualstrusion": {
+    "retract_distance_mm": 19,
+    "squirt_reduce_mm": 1,
+    "squirt_feedrate": 300,
+    "snort_feedrate" : 300
+    },
+  "use_legacy_parser": 0
 }
