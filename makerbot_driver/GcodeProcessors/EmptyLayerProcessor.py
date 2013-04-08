@@ -35,7 +35,6 @@ class EmptyLayerProcessor(Processor):
         @param gcode_in: iterable
         @return output: output is a list of processed gcode
         """
-        self.output = []
         self.progress_in_layer = []
         self.layer_buffer = []
         self.test_if_empty = False
@@ -55,16 +54,14 @@ class EmptyLayerProcessor(Processor):
                 self.test_if_empty = False
                 if(self.layer_test_if_empty(self.init_moves)):
                     #if layer is empty just append the progress
-                    for item in self.progress_in_layer: self.output.append(item)
+                    for item in self.progress_in_layer: yield item
                 else:
                     #if layer is not empty add it to the output
-                    for item in self.layer_buffer: self.output.append(item)
+                    for item in self.layer_buffer: yield item
                 self.progress_in_layer = []
                 self.layer_buffer = []
             else:
-                self.output.append(current)
-
-        return self.output
+                yield current
 
 
     def handle_layer_start_check(self, previous_code, current_code):
@@ -99,8 +96,8 @@ class EmptyLayerProcessor(Processor):
         moves_with_extrude = init_moves
 
         for current in self.gcode_iter:
-            #put progress lines and a second list, if the slice is empty they
-            #will be appended to the output
+            #put progress lines in a second list (buffer), if the slice is empty they
+            #will be added to the output
             if(self.check_for_progress(current)):
                 self.progress_in_layer.append(current)
             elif(self.check_for_move_with_extrude(current)):
