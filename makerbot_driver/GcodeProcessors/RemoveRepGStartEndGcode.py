@@ -6,12 +6,11 @@ from .Processor import Processor
 
 class RemoveRepGStartEndGcode(Processor):
 
-    def process_gcode(self, gcodes, callback=None):
+    def process_gcode(self, gcodes, gcode_info, callback=None):
         startgcode = False
         endgcode = False
-        count_total = len(gcodes)
-        count_current = 0
-        output = []
+        total_bytes = gcode_info['size_in_bytes']
+        current_byte_count = 0
 
         for code in gcodes:
             if startgcode:
@@ -29,12 +28,11 @@ class RemoveRepGStartEndGcode(Processor):
                     with self._condition:
                             if self._external_stop:
                                     raise makerbot_driver.ExternalStopError
-                            output.append(code)
-                count_current += 1
+                            yield code
+                current_byte_count += len(code)
                 if callback is not None:
-                    percent = int(100.0 * count_current / count_total)
+                    percent = int(100.0 * (current_byte_count / total_bytes))
                     callback(percent)
-        return output
 
     def get_comment_match(self, gcode, match):
         (codes, flags, comments) = makerbot_driver.Gcode.parse_line(gcode)
