@@ -59,8 +59,6 @@ class DualRetractProcessor(Processor):
         This function adds retractions and squirt tweaks to a gcode input
 
         @param gcode_in: iterable object containing gcode
-        @param profile_name: the name of the machine profile to use
-        @return output: iterable containing the processed gcode
         """
 
         self.retract_distance_mm = self.profile.values["dualstrusion"][
@@ -86,7 +84,7 @@ class DualRetractProcessor(Processor):
         self.SF_flag = False
         self.SF_handle_second_squirt_line = False
         self.buffer = []
-        self.buffering = False
+        self.flush_buffer = False
 
         for (previous_code,current_code,next_code) in self.sandwich_iter(gcode_in):    
             if(self.SF_handle_second_squirt_line):
@@ -102,9 +100,7 @@ class DualRetractProcessor(Processor):
                     self.seeking_first_layer = False
             else:
                 if(self.check_for_snort(current_code+next_code)):
-                    if(len(self.buffer) != 0):
-                        self.flush_buffer()
-                    self.buffering = True
+                    self.flush_buffer = True
                 elif(self.check_for_significant_toolchange(current_code)):
                     if(self.seeking_first_toolchange):
                         match_prev = re.match(self.prime, previous_code)
@@ -116,30 +112,28 @@ class DualRetractProcessor(Processor):
                         else:
                             #if this is the first significant toolchange do an extra squirt
                             self.seeking_first_toolchange = False
+                            #little bit hacky to get first significant toolchange before output
+                            #of squirt_tool()
+                            self.buffer.append(current_code)
                             self.squirt_tool(self.current_tool, squirt_initial_inactive_tool=True)
+                            #this is so duplicate current_codes aren't outputted
+                            current_code = ''
                     else:
                         self.seeking_squirt = True
                     self.snort_replace()
-                    self.buffering = False
 
-            if(self.buffering):
-                self.buffer.append(current_code)
-            else:
-                if(len(self.buffer) != 0):
-                    self.flush_buffer()
-                else:
-                    yield current_code
+            if(self.flush_buffer):
+                for line in self.buffer:
+                    yield line
+                self.buffer = []
+                self.flush_buffer = False
+            self.buffer.append(current_code)
 
-        #TODO: not worry about this and let the prime handle it?
         #Squirt retracted tool at the end of the print
         self.squirt_tool(self.get_other_tool(self.current_tool))
 
-    def flush_buffer(self):
-        import pdb
-        pdb.set_trace()
-        self.buffer.reverse()
-        while(len(self.buffer) != 0):
-            yield self.buffer.pop()
+        for line in self.buffer:
+            yield line
 
 
     def check_if_in_prime(self, previous_code, next_code):
@@ -160,6 +154,7 @@ class DualRetractProcessor(Processor):
             return True
         else:
             return False
+
 
     def check_for_layer(self,string):
         match = re.match(self.layer_start, string)
@@ -249,23 +244,24 @@ class DualRetractProcessor(Processor):
                 significant toolchange
         """
         if not squirt_initial_inactive_tool:
-            yield "M135 T%i\n"%(tool)
-            yield "G92 %s0\n"%(self.TOOLHEADS[tool])
-        yield "G1 F%f %s%f\n"%(self.squirt_feedrate, self.TOOLHEADS[tool],
-            self.retract_distance_mm)
-        yield "G92 %s0\n"%(self.TOOLHEADS[tool])
+            self.buffer.append("M135 T%i\n"%(tool))
+            self.buffer.append("G92 %s0\n"%(self.TOOLHEADS[tool]))
+        self.buffer.append("G1 F%f %s%f\n"%(self.squirt_feedrate, self.TOOLHEADS[tool],
+            self.retract_distance_mm))
+        self.buffer.append("G92 %s0\n"%(self.TOOLHEADS[tool]))
         
 
     def squirt_replace(self):
         new_extruder_position = self.squirt_extruder_pos-self.squirt_reduction_mm
 
-        squirt_line = "G1 F%f %s%f\n"%(self.squirt_feedrate, self.TOOLHEADS[self.current_tool],
-            new_extruder_position)
-        yield squirt_line
+        squirt_line = "G1 F%f %s%f\n"%(self.squirt_feedrate,
+            self.TOOLHEADS[self.current_tool], new_extruder_position)
+        self.buffer.append(squirt_line)
         #This G92 is to help reduce the blobbing that occurs on tool startup by reducing
         #the amount of plastic put out on squirt
-        set_extruder_pos_line = "G92 %s%f\n"%(self.TOOLHEADS[self.current_tool], self.squirt_extruder_pos)
-        yield set_extruder_pos_line
+        set_extruder_pos_line = "G92 %s%f\n"%(self.TOOLHEADS[self.current_tool],
+            self.squirt_extruder_pos)
+        self.buffer.append(set_extruder_pos_line)
 
 
     def snort_replace(self):
@@ -277,8 +273,8 @@ class DualRetractProcessor(Processor):
             snort_extruder_position = self.last_snort['extruder_position']
             new_extruder_position = snort_extruder_position-self.retract_distance_mm
 
-            snort_line = "G1 F%f %s%f\n"%(self.snort_feedrate, self.TOOLHEADS[self.last_tool],
-                new_extruder_position)
+            snort_line = "G1 F%f %s%f\n"%(self.snort_feedrate,
+                self.TOOLHEADS[self.last_tool], new_extruder_position)
             self.buffer[snort_index] = snort_line
             #if SF replace second line of the snort with a blank line
             if(self.SF_flag):
@@ -295,5 +291,4 @@ class DualRetractProcessor(Processor):
             return False
         else:
             return True
-
 
