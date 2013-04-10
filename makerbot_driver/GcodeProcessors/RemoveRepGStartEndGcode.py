@@ -9,7 +9,7 @@ class RemoveRepGStartEndGcode(Processor):
     def process_gcode(self, gcodes, gcode_info, callback=None):
         startgcode = False
         endgcode = False
-        total_bytes = gcode_info['size_in_bytes']
+        total_bytes = float(gcode_info['size_in_bytes'])
         current_byte_count = 0
 
         for code in gcodes:

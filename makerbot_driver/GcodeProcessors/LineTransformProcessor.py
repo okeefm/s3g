@@ -30,7 +30,7 @@ class LineTransformProcessor(Processor):
         @param callback for progress, expects 0-100 as percent 'done'
         @return A new gcode list post application of code_map transforms
         """
-        total_bytes = gcode_info['size_in_bytes']
+        total_bytes = float(gcode_info['size_in_bytes'])
         current_byte_count = 0
 
         for code in gcodes:

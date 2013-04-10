@@ -19,7 +19,7 @@ class ProgressProcessor(Processor):
 
     def process_gcode(self, gcodes, gcode_info, callback=None):
 
-        total_bytes = gcode_info['size_in_bytes']
+        total_bytes = float(gcode_info['size_in_bytes'])
 
         current_byte_count = 0
         current_percent = 0
@@ -29,9 +29,9 @@ class ProgressProcessor(Processor):
             new_percent = int(100.0 * (current_byte_count / total_bytes))
             if new_percent > current_percent:
                 progressmsg = self.create_progress_msg(new_percent)
-                with self._condition:
-                    self.test_for_external_stop(prelocked=True)
-                    yield progressmsg
+                #with self._condition:
+                #    self.test_for_external_stop(prelocked=True)
+                yield progressmsg
                 current_percent = new_percent
                 if callback is not None:
                     callback(current_percent)
