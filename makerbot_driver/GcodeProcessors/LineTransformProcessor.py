@@ -21,11 +21,12 @@ class LineTransformProcessor(Processor):
         super(LineTransformProcessor, self).__init__()
         self.code_map = {}  # map {compiled_regex:replace-funcion, }
 
-    def process_gcode(self, gcodes, gcode_info, callback=None):
+    def process_gcode(self, gcodes, gcode_info=None, callback=None):
         """ main line by line processing, inherited from Processor
         runs all code_map regex's on passed code, and saves
         replace results to return
         @param gcodes A gcode file
+        @param gcode_info dict with metadata about the gcode file being processed
         @param callback for progress, expects 0-100 as percent 'done'
         @return A new gcode list post application of code_map transforms
         """

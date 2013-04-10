@@ -27,7 +27,7 @@ class EmptyLayerProcessor(Processor):
         return hasattr(iterable, '__iter__') and not hasattr(iterable, '__len__')
 
 
-    def process_gcode(self, gcode_in):
+    def process_gcode(self, gcode_in, gcode_info=None):
         """
         Main function for processor, iterates through the input and appends to the output
         what is not in an empty layer

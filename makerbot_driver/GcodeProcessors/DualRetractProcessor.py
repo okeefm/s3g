@@ -54,7 +54,7 @@ class DualRetractProcessor(Processor):
         yield(prev,current,'')
 
 
-    def process_gcode(self, gcode_in):
+    def process_gcode(self, gcode_in, gcode_info=None):
         """
         This function adds retractions and squirt tweaks to a gcode input
 

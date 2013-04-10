@@ -17,7 +17,7 @@ class Processor(object):
         # ^ used for all of Processor internal locking
         self.is_bundleable = False
 
-    def process_gcode(self, gcodes, percentCallback=None):
+    def process_gcode(self, gcodes, gcode_info=None, percentCallback=None):
         """ Abstract method to call gcode processing. Child functions
         MUST call 'testForExternalStop() before they exit
         @param callback is expected to be a callback that takes a int value
