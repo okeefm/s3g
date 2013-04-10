@@ -21,12 +21,12 @@ class ProgressProcessor(Processor):
 
         total_bytes = gcode_info['size_in_bytes']
 
-        current_bytes = 0
+        current_byte_count = 0
         current_percent = 0
         for code in gcodes:
-            current_bytes += len(code)
+            current_byte_count += len(code)
             yield code
-            new_percent = int(100.0 * (current_bytes / total_bytes))
+            new_percent = int(100.0 * (current_byte_count / total_bytes))
             if new_percent > current_percent:
                 progressmsg = self.create_progress_msg(new_percent)
                 with self._condition:

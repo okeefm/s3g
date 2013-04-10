@@ -14,6 +14,7 @@ class TestAnchorProcessor(unittest.TestCase):
 
     def setUp(self):
         self.ap = makerbot_driver.GcodeProcessors.AnchorProcessor()
+        self.gcode_info = {'size_in_bytes': 0}
 
     def tearDown(self):
         self.ap = None
@@ -187,7 +188,9 @@ class TestAnchorProcessor(unittest.TestCase):
             "G1 X0 Y5 Z0.5 F5000\n",
             "G1 X50 Y100 Z200"
         ]
-        got_gcodes = self.ap.process_gcode(gcodes)
+        got_gcodes = []
+        for line in self.ap.process_gcode(gcodes, self.gcode_info):
+            got_gcodes.append(line)
         expected_codes = [
             "G1 Z%f F1000\n" % (.5),
             "G1 X0 Y5 Z0.5 F1000 E" + str(expected_distance) + "\n",

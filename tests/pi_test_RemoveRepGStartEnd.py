@@ -13,6 +13,7 @@ class RemoveRepGStartEnd(unittest.TestCase):
 
     def setUp(self):
         self.p = makerbot_driver.GcodeProcessors.RemoveRepGStartEndGcode()
+        self.gcode_info = {'size_in_bytes': 0}
 
     def tearDown(self):
         self.p = None
@@ -20,7 +21,9 @@ class RemoveRepGStartEnd(unittest.TestCase):
     def test_process_gcode_no_input(self):
         the_input = []
         expected_output = []
-        got_output = self.p.process_gcode(the_input)
+        got_output = []
+        for line in self.p.process_gcode(the_input, self.gcode_info):
+            got_output.append(line[0])
         self.assertEqual(expected_output, got_output)
 
     def test_process_gcode_with_only_start(self):
@@ -32,7 +35,9 @@ class RemoveRepGStartEnd(unittest.TestCase):
             "G1 X1 Y2 Z3 A4 B5\n",
         ]
         expected_output = ["G1 X1 Y2 Z3 A4 B5\n"]
-        got_output = self.p.process_gcode(the_input)
+        got_output = []
+        for line in self.p.process_gcode(the_input, self.gcode_info):
+            got_output.append(line)
         self.assertEqual(expected_output, got_output)
 
     def test_process_gcode_with_only_end(self):
@@ -44,7 +49,9 @@ class RemoveRepGStartEnd(unittest.TestCase):
             "G1 X1 Y2 Z3 A4 B5\n",
         ]
         expected_output = ["G1 X1 Y2 Z3 A4 B5\n"]
-        got_output = self.p.process_gcode(the_input)
+        got_output = []
+        for line in self.p.process_gcode(the_input, self.gcode_info):
+            got_output.append(line)
         self.assertEqual(expected_output, got_output)
 
     def test_process_gcode_with_start_and_end(self):
@@ -60,7 +67,9 @@ class RemoveRepGStartEnd(unittest.TestCase):
             "(end End.gcode\n",
         ]
         expected_output = ["G1 X1 Y2 Z3 A4 B5\n"]
-        got_output = self.p.process_gcode(the_input)
+        got_output = []
+        for line in self.p.process_gcode(the_input, self.gcode_info):
+            got_output.append(line)
         self.assertEqual(expected_output, got_output)
 
 if __name__ == "__main__":

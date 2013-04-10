@@ -47,7 +47,7 @@ class FanProcessor(Processor):
             return False
 
 
-    def process_gcode(self, gcodes):
+    def process_gcode(self, gcodes, callback=None):
         """
         This function adds in fan commands to gcode at a specified layer(specified
         by self.layer_count)
@@ -59,14 +59,14 @@ class FanProcessor(Processor):
         self.handle_raft = False
         
         layer_count = 0
-        for current_code in gcodes:
+        for code in gcodes:
 
-            yield current_code
+            yield code
 
             if(self.check_for_raft):
-                if(self.check_for_layer(current_code)):
+                if(self.check_for_layer(code)):
                     self.check_for_raft = False
-                elif(self.check_for_raft(current_code)):
+                elif(self.check_for_raft(code)):
                     self.handle_raft = True
                     self.check_for_raft = False
 
@@ -76,7 +76,7 @@ class FanProcessor(Processor):
                 self.handle_raft = False
                 continue
             else:
-                if(self.check_for_layer_end(current_code)):
+                if(self.check_for_layer_end(code)):
                     layer_count += 1
                     if(layer_count == self.layer_count):
                         yield self.fan_on

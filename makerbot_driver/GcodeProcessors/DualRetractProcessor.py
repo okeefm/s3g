@@ -84,6 +84,7 @@ class DualRetractProcessor(Processor):
         self.SF_flag = False
         self.SF_handle_second_squirt_line = False
         self.buffer = []
+        self.buffering = True
         self.flush_buffer = False
 
         for (previous_code,current_code,next_code) in self.sandwich_iter(gcode_in):    
@@ -117,7 +118,7 @@ class DualRetractProcessor(Processor):
                             self.buffer.append(current_code)
                             self.squirt_tool(self.current_tool, squirt_initial_inactive_tool=True)
                             #this is so duplicate current_codes aren't outputted
-                            current_code = ''
+                            self.buffering = False
                     else:
                         self.seeking_squirt = True
                     self.snort_replace()
@@ -127,7 +128,10 @@ class DualRetractProcessor(Processor):
                     yield line
                 self.buffer = []
                 self.flush_buffer = False
-            self.buffer.append(current_code)
+            if(self.buffering):
+                self.buffer.append(current_code)
+            else:
+                self.buffering = True
 
         #Squirt retracted tool at the end of the print
         self.squirt_tool(self.get_other_tool(self.current_tool))

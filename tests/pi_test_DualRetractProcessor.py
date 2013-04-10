@@ -41,16 +41,16 @@ class DualRetractProcessorTests(unittest.TestCase):
         ]
 		
         for case in cases:
-            self.p.output = [None, None]
+            self.p.buffer = [None, None]
             self.p.last_snort['index'] = 0
             self.p.last_snort['extruder_position'] = case[2]
             self.p.last_tool = case[3]
             self.p.SF_flag = case[4]
 
             self.p.snort_replace()
-            self.assertEqual(self.p.output[0], case[1])
+            self.assertEqual(self.p.buffer[0], case[1])
             if(case[4]):
-                self.assertEqual(self.p.output[1], '\n')
+                self.assertEqual(self.p.buffer[1], '\n')
 
 
     def test_squirt_replace(self):
@@ -64,19 +64,19 @@ class DualRetractProcessorTests(unittest.TestCase):
         ]
 
         for case in cases:
-            self.p.output = [None]
+            self.p.buffer = [None]
             self.p.current_tool = case[4]
             self.p.squirt_extruder_pos = case[3]
 
             self.p.squirt_replace()
 
-            self.assertEqual(self.p.output[-2], case[1])
-            self.assertEqual(self.p.output[-1], case[2])
+            self.assertEqual(self.p.buffer[-2], case[1])
+            self.assertEqual(self.p.buffer[-1], case[2])
 
 
     def test_squirt_tool(self):
 
-        self.p.output = []
+        self.p.buffer = []
 
         cases = [
                 (
@@ -103,9 +103,9 @@ class DualRetractProcessorTests(unittest.TestCase):
                 ),
         ]
         for case in cases:
-            self.p.output = []
+            self.p.buffer = []
             self.p.squirt_tool(case[1], squirt_initial_inactive_tool=case[2])
-            self.assertEqual(self.p.output, case[0])
+            self.assertEqual(self.p.buffer, case[0])
 
 
     def test_get_other_tool(self):
@@ -159,15 +159,15 @@ class DualRetractProcessorTests(unittest.TestCase):
     def test_check_for_snort(self):
         #placeholder
         self.p.current_tool = 0
-        self.p.output = [0,1,2,3,4,5,6,7,8]
+        self.p.buffer = [0,1,2,3,4,5,6,7,8]
 
         cases = [
             #Format: (input, last_snort_index, last_extruder_position, return_value, SF?)
-            ("G1 F625 A1200 (snort)\n", 8, float('1200'), True, False),
-            ("G1 F625 B-12 (snort)\n", 8, float('-12'), True, False),
+            ("G1 F625 A1200 (snort)\n", 0, float('1200'), True, False),
+            ("G1 F625 B-12 (snort)\n", 0, float('-12'), True, False),
             ("G90\n", None, None, False, False),
             ("M135 T1\n", None, None, False, False),
-            ("G1 F1200\nG1 E120\n", 8, float('120'), True, True),
+            ("G1 F1200\nG1 E120\n", 0, float('120'), True, True),
         ]
 
         for case in cases:
@@ -235,7 +235,9 @@ class DualRetractProcessorTests(unittest.TestCase):
         mg_in_gcodes = f_in.readlines()
         mg_expect_gcodes = f_ex.readlines()
 
-        mg_out_gcodes = self.p.process_gcode(mg_in_gcodes)
+        mg_out_gcodes = []
+        for line in self.p.process_gcode(mg_in_gcodes):
+            mg_out_gcodes.append(line)
 
         self.assertEqual(mg_out_gcodes, mg_expect_gcodes)
 
@@ -246,7 +248,9 @@ class DualRetractProcessorTests(unittest.TestCase):
         sf_in_gcodes = f_in.readlines()
         sf_expect_gcodes = f_ex.readlines()
 
-        sf_out_gcodes = self.p.process_gcode(sf_in_gcodes)
+        sf_out_gcodes = []
+        for line in self.p.process_gcode(sf_in_gcodes):
+            sf_out_gcodes.append(line)
 
         self.assertEqual(sf_out_gcodes, sf_expect_gcodes) 
 

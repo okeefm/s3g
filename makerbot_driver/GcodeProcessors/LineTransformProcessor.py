@@ -29,11 +29,19 @@ class LineTransformProcessor(Processor):
         @param callback for progress, expects 0-100 as percent 'done'
         @return A new gcode list post application of code_map transforms
         """
+        total_bytes = gcode_info['size_in_bytes']
+        current_byte_count = 0
+
         for code in gcodes:
             tcode = self._transform_code(code)
             with self._condition:
                 self.test_for_external_stop(prelocked=True)
-                yield tcode
+                for code in tcode:
+                    yield code
+            if callback is not None:
+                current_byte_count += len(code)
+                percent = int(100.0 * (current_byte_count / total_bytes))
+                callback(percent)
 
     def _transform_code(self, code):
         """ takes a single gcode, runs all transforms in code_map

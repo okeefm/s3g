@@ -14,6 +14,7 @@ class RpmProcessor(unittest.TestCase):
 
     def setUp(self):
         self.rp = makerbot_driver.GcodeProcessors.RpmProcessor()
+        self.gcode_info = {'size_in_bytes': 0}
 
     def tearDown(self):
         self.rp = None
@@ -64,10 +65,15 @@ class RpmProcessor(unittest.TestCase):
                 input_output_dict[key], self.rp._transform_m108(match_obj)
             )
 
-    def test_process_file_can_proces_parsable_file(self):
+    def test_process_file_can_process_parsable_file(self):
         #Make input temp file
         gcodes = ["M103\n", "M101\n", "M108 R2.51 T0\n", "M105\n"]
-        got_output = self.rp.process_gcode(gcodes)
+        got_output = []
+        for line in self.rp.process_gcode(gcodes, self.gcode_info):
+            try:
+                got_output.append(line)
+            except:
+                pass
         expected_output = ["M135 T0\n", "M105\n"]
         self.assertEqual(expected_output, got_output)
 

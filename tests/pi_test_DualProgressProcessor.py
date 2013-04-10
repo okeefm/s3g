@@ -13,6 +13,7 @@ class TestDualProgressUpdater(unittest.TestCase):
     def setUp(self):
         self.dpu = makerbot_driver.GcodeProcessors.DualstrusionProgressProcessor()
         self.prog_regex = self.dpu.code_map.keys()[0]
+        self.gcode_info = {'size_in_bytes': 0}
 
     def tearDown(self):
         self.dpu = None
@@ -62,7 +63,9 @@ class TestDualProgressUpdater(unittest.TestCase):
             'G1 X50 Y50 Z50',
             'M73 P5.0 (progress (5.0%))\n',
         ]
-        got_codes = self.dpu.process_gcode(incodes)
+        got_codes = []
+        for line in self.dpu.process_gcode(incodes, self.gcode_info):
+            got_codes.append(line)
         self.assertEqual(expected_codes, got_codes)
 
     def test_transform_progress_all_whole_numbers(self):

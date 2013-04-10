@@ -14,6 +14,7 @@ class TestToolSwapProcessor(unittest.TestCase):
 
     def setUp(self):
         self.tsp = makerbot_driver.GcodeProcessors.ToolSwapProcessor()
+        self.gcode_info = {'size_in_bytes': 0}
 
     def tearDown(self):
         self.tsp = None
@@ -61,7 +62,9 @@ class TestToolSwapProcessor(unittest.TestCase):
             'G92 B0\n',
             'G92 E0\n',
         ]
-        output = self.tsp.process_gcode(gcodes)
+        output = []
+        for line in self.tsp.process_gcode(gcodes, self.gcode_info):
+            output.append(line)
         self.assertEqual(expected_gcodes, output)
 
 if __name__ == "__main__":

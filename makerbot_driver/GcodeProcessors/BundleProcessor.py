@@ -11,8 +11,6 @@ class BundleProcessor(LineTransformProcessor):
         super(BundleProcessor, self).__init__()
         self.processors = []
         self.code_map = {}
-        self.progress_processor = ProgressProcessor()
-        self.do_progress = True
         # Held here for testing purposes
         self._super_process_gcode = super(BundleProcessor, self).process_gcode
 
@@ -22,21 +20,16 @@ class BundleProcessor(LineTransformProcessor):
             if processor.is_bundleable:
                 self.code_map.update(processor.code_map)
 
-    def process_gcode(self, gcodes, callback=None):
-        self.collate_codemaps()
+    def process_gcode(self, gcodes, gcode_info, callback=None):
+        self.callback = callback
         new_callback = None
-        progress_callback = None
-        if self.do_progress is False:
-            new_callback = callback
-        elif callback is not None:
-            self.callback = callback
+
+        self.collate_codemaps()
+
+        if self.callback is not None:
             new_callback = self.new_callback
-            progress_callback = self.progress_callback
-        output = self._super_process_gcode(gcodes, new_callback)
-        if self.do_progress:
-            output = self.progress_processor.process_gcode(
-                output, progress_callback)
-        return output
+        for code in self._super_process_gcode(gcodes, gcode_info, new_callback):
+            yield code
 
     def set_external_stop(self, value=True):
         super(BundleProcessor, self).set_external_stop(value)

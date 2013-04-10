@@ -136,7 +136,9 @@ class TestEmptyLayerProcessor(unittest.TestCase):
         ]
 
         for case in cases:
-            got_output = self.p.process_gcode(case[0])
+            got_output = []
+            for line in self.p.process_gcode(case[0]):
+                got_output.append(line)
             self.assertEqual(got_output, case[1])
 
 

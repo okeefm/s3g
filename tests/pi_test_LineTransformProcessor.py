@@ -13,6 +13,7 @@ class TestLineTransformProcessor(unittest.TestCase):
 
     def setUp(self):
         self.p = makerbot_driver.GcodeProcessors.LineTransformProcessor()
+        self.gcode_info = {'size_in_bytes': 0}
 
     def tearDown(self):
         self.p = None
@@ -43,7 +44,9 @@ class TestLineTransformProcessor(unittest.TestCase):
             "G2 X2 Y2 Z2",
         ]
         gcodes = lines
-        outlines = self.p.process_gcode(gcodes)
+        outlines = []
+        for line in self.p.process_gcode(gcodes, self.gcode_info):
+            outlines.append(line)
         self.assertEqual(gcodes, outlines)
 
     def test_process_file_code_map(self):
@@ -62,13 +65,17 @@ class TestLineTransformProcessor(unittest.TestCase):
             gcodes[2],
         ]
         self.p.code_map.update({"G1": _transform_g1})
-        got_output = self.p.process_gcode(gcodes)
+        got_output = []
+        for line in self.p.process_gcode(gcodes, self.gcode_info):
+            got_output.append(line)
         self.assertEqual(expected_output, got_output)
 
     def test_process_file_empty_iter(self):
         lines = []
         expected_output = []
-        got_output = self.p.process_gcode(lines)
+        got_output = []
+        for line in self.p.process_gcode(lines, self.gcode_info):
+            got_output.append(line)
         self.assertEqual(got_output, expected_output)
 
 
