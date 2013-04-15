@@ -215,7 +215,7 @@ def process_file_with_pro(the_file, pro):
     pro = factory.create_processor_from_name(pro)
     f = open(the_file)
     lines = list(f)
-    output = pro.process_gcode(lines)
+    output = pro.process_gcode(lines, gcode_info = {'size_in_bytes':1})
     with tempfile.NamedTemporaryFile(delete=False, suffix='.gcode') as f:
         processed_file_path = f.name
         for line in output:
