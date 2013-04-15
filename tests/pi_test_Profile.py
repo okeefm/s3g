@@ -62,7 +62,6 @@ class ProfileInitTests(unittest.TestCase):
             'ReplicatorDual',
             'ReplicatorSingle',
             'TOMStepstruderSingle',
-            'TOMStepstruderDual',
             'Replicator2',
             'Replicator2X',
         ]
@@ -104,7 +103,7 @@ class ProfileInitTests(unittest.TestCase):
 
     def test_search_profiles_with_regex(self):
         cases = [
-            ['.*Dual.*', ['ReplicatorDual.json', 'TOMStepstruderDual.json']],
+            ['.*Dual.*', ['ReplicatorDual.json']],
             ['.*Single.*', ['ReplicatorSingle.json', 'TOMStepstruderSingle.json']],
             ['.*Replicator.*', ['Replicator2.json',
                                 'ReplicatorDual.json',

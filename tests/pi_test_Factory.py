@@ -27,7 +27,7 @@ class TestFactory(unittest.TestCase):
         self.assertEqual(getattr(parser, 's3g'), None)
         self.assertTrue(parser.state.__class__.__name__ == 'LegacyGcodeStates')
         self.assertTrue(parser.state.profile.values['type']
-                        == "Thing-O-Matic Single, Stepstruder Mk6+")
+                        == 'Thing-O-Matic Single, Stepstruder Mk6 or Mk7')
 
     def test_create_parser(self):
         machine_name = 'ReplicatorSingle'
@@ -50,7 +50,7 @@ class TestFactory(unittest.TestCase):
         self.assertTrue(parser.s3g.writer.file.name == path)
         self.assertTrue(parser.state.__class__.__name__ == 'LegacyGcodeStates')
         self.assertTrue(parser.state.profile.values['type']
-                        == 'Thing-O-Matic Single, Stepstruder Mk6+')
+                        == 'Thing-O-Matic Single, Stepstruder Mk6 or Mk7')
 
     def test_create_print_to_file(self):
         machine_name = 'ReplicatorSingle'
