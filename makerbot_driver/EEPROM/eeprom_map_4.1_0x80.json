@@ -187,7 +187,7 @@
       "type": "B"
     }, 
     "MACHINE_NAME": {
-      "length": "31", 
+      "length": "32", 
       "offset": "0x0020", 
       "type": "s"
     }, 
@@ -215,17 +215,9 @@
       "offset": "0x0082", 
       "type": "B"
     }, 
-    "PSTOP_ENABLE": {
-      "offset": "0x1EC", 
-      "type": "B"
-    }, 
     "RAM_USAGE_DEBUG": {
       "offset": "0x01D0", 
       "type": "I"
-    }, 
-    "SD_USE_CRC": {
-      "offset": "0x1EB", 
-      "type": "B"
     }, 
     "STEPS_PER_MM_A": {
       "offset": "0x00A3", 
@@ -263,10 +255,6 @@
     "TOOLHEAD_OFFSET_SETTINGS": {
       "offset": "0x01B0", 
       "type": "I"
-    }, 
-    "TOOLHEAD_OFFSET_SYSTEM": {
-      "offset": "0x1EA", 
-      "type": "B"
     }, 
     "TOOL_COUNT": {
       "offset": "0x01AE", 
