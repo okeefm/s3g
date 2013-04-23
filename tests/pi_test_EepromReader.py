@@ -259,6 +259,20 @@ class TestEepromReader(unittest.TestCase):
         self.assertEqual(expected_values,
                          self.reader.read_value_from_eeprom(input_dict, 0))
 
+    def test_read_value_from_eeprom_true_float(self):
+        input_dict = {
+            'type': 'f',
+        }
+        value = 89.333
+        packed_value = struct.pack('<%s' % (input_dict['type']), value)
+        read_from_eeprom_mock = mock.Mock()
+        read_from_eeprom_mock.return_value = packed_value
+        self.reader.s3g.read_from_EEPROM = read_from_eeprom_mock
+        expected_value = struct.unpack(
+            '<%s' % (input_dict['type']), packed_value)
+        self.assertEqual(list(expected_value),
+                         self.reader.read_value_from_eeprom(input_dict, 0))
+
     def test_read_value_from_eeprom_one_value(self):
         input_dict = {
             'type': 'B',
@@ -346,6 +360,8 @@ class TestEepromReader(unittest.TestCase):
             ['B', 255],
             ['I', 252645135],
             ['H', 3855],
+            ['f', 18.99],
+            ['q', 0x4500009889450000],
         ]
         for case in cases:
             val = struct.pack('<%s' % (case[0]), case[1])

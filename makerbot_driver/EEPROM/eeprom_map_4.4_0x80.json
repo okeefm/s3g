@@ -152,6 +152,10 @@
       "offset": "0x0003", 
       "type": "B"
     }, 
+    "ENDSTOP_Z_MIN": {
+      "offset": "0x1ED", 
+      "type": "B"
+    }, 
     "ESTOP_CONFIGURATION": {
       "offset": "0x0074", 
       "tooltip": " 0 None, 1 Active High, 2 Active Low", 
@@ -232,6 +236,16 @@
       "offset": "0x0082", 
       "type": "B"
     }, 
+    "PSTOP_ENABLE": {
+      "constraints": "l,0,1", 
+      "offset": "0x1EC", 
+      "type": "B"
+    }, 
+    "SD_USE_CRC": {
+      "constraints": "l,0,1", 
+      "offset": "0x1EB", 
+      "type": "B"
+    }, 
     "STEPS_PER_MM_A": {
       "offset": "0x00A3", 
       "type": "q", 
@@ -269,6 +283,10 @@
       "offset": "0x01B0", 
       "type": "iii", 
       "unit": "steps"
+    }, 
+    "TOOLHEAD_OFFSET_SYSTEM": {
+      "offset": "0x1EA", 
+      "type": "B"
     }, 
     "TOOL_COUNT": {
       "offset": "0x01AE", 

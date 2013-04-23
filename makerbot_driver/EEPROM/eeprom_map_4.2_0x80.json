@@ -270,6 +270,10 @@
       "type": "iii", 
       "unit": "steps"
     }, 
+    "TOOLHEAD_OFFSET_SYSTEM": {
+      "offset": "0x1EA", 
+      "type": "B"
+    }, 
     "TOOL_COUNT": {
       "offset": "0x01AE", 
       "type": "B"

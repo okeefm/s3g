@@ -20,6 +20,11 @@ parser.add_option("-e", "--eeprom_entry", dest="eeprom_entry",
 parser.add_option("-c", "--context", dest="context",
                   help="context for the eeprom_entry, as comma separated values surrounded by quotes",
                   default="")
+parser.add_option("-d", "--map_directory", dest="map_directory", default="../makerbot_driver/EEPROM/",
+                  help="directory where the eeprom map is located")
+parser.add_option("-s", "--sofware_variant", dest="software_variant", default='0x00',
+                  help="software variant of desired eeprom map: makerbot: 0x00, sailfish:0x80")
+
 (options, args) = parser.parse_args()
 
 context = options.context.replace(' ', '')
@@ -42,6 +47,6 @@ returnobj = factory.build_from_port(port)
 r = getattr(returnobj, 's3g')
 
 reader = makerbot_driver.EEPROM.EepromReader.factory(
-    r, firmware_version=options.version)
+    r, options.version, options.software_variant, options.map_directory)
 
 print reader.read_data(options.eeprom_entry, context)
