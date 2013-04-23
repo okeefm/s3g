@@ -1304,6 +1304,16 @@ Payload
 
 Response (0 bytes)
 
+## 158 - Set BotStep sensitivity value used on new BotStep boards
+Set the sensitivity value for the BotSteps
+
+Payload
+
+    uint8: axis value (valid range 0-4) which axis pot to set
+    uint8: value (valid range 0-255)
+
+Response (0 bytes)
+
 # Tool Query Commands
 
 ## 00 - Get version: Query firmware for version information
