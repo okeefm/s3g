@@ -187,7 +187,7 @@
       "type": "B"
     }, 
     "MACHINE_NAME": {
-      "length": "32", 
+      "length": "16", 
       "offset": "0x0020", 
       "type": "s"
     }, 

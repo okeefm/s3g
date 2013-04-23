@@ -58,9 +58,9 @@ const static uint16_t AXIS_INVERSION			= 0x0002;
 //$type:B
 const static uint16_t ENDSTOP_INVERSION			= 0x0003;
 
-/// Name of this machine: 32 bytes
+/// Name of this machine: 16 bytes
 //$BEGIN_ENTRY
-//$type:s $length:32
+//$type:s $length:16
 const static uint16_t MACHINE_NAME				= 0x0020;
 
 /// Default locations for the axis: 5 x 32 bit = 20 bytes
