@@ -93,6 +93,8 @@ class DualRetractProcessor(Processor):
                 continue
 
             if(self.seeking_squirt):
+                #Check for more toolchange whilst seeking the next squirt
+                self.check_for_significant_toolchange(current_code)
                 if(self.check_for_squirt(current_code+next_code)):
                     self.squirt_replace()
                     continue
