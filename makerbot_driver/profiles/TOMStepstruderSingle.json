@@ -7,12 +7,12 @@
     "axes": {
         "X": {
             "platform_length": 106,
-            "max_feedrate": 4000,
+            "max_feedrate": 9600,
             "steps_per_mm": 47.069852
         },
         "Y": {
             "platform_length": 120,
-            "max_feedrate": 4000,
+            "max_feedrate": 9600,
             "steps_per_mm": 47.069852
         },
         "Z": {
