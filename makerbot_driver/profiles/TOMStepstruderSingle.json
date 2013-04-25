@@ -83,8 +83,8 @@
     "print_end_sequence": {
         "end_position": {
             "tom_end_position": [
-                "G162 Z F1000(home Z axis maximum)", 
-                "G1 X0 Y55 F3300"
+                "G1 X0 Y55 F3300",
+                "G162 Z F1000(home Z axis maximum)"
             ]
         },
         "cool_platform": {
