@@ -65,7 +65,7 @@ const static uint16_t MACHINE_NAME				= 0x0020;
 
 /// Default locations for the axis: 5 x 32 bit = 20 bytes
 //$BEGIN_ENTRY
-//$type:iiiii
+//$type:IIIII
 const static uint16_t AXIS_HOME_POSITIONS		= 0x0060;
 
 // Estop configuration byte: 1 byte.
@@ -86,7 +86,7 @@ const static uint16_t TOOL1_TEMP      		= 0x0081;
 const static uint16_t PLATFORM_TEMP   		= 0x0082;
 
 //$BEGIN_ENTRY
-//$type:B
+//$type:B $ignore:True
 const static uint16_t EXTRUDE_DURATION		= 0x0083;
 
 //$BEGIN_ENTRY
@@ -94,7 +94,7 @@ const static uint16_t EXTRUDE_DURATION		= 0x0083;
 const static uint16_t EXTRUDE_MMS     		= 0x0084;
 
 //$BEGIN_ENTRY
-//$type:B
+//$type:B $ignore:True
 const static uint16_t MOOD_LIGHT_SCRIPT		= 0x0085;
 
 //$BEGIN_ENTRY
@@ -282,7 +282,7 @@ const static uint16_t HOMING_FEED_RATE_Z	= 0x017D;
 //$type:I $ignore:True
 const static uint16_t UNUSED8			= 0x0181;
 //$BEGIN_ENTRY
-//$type:h  $unit:steps
+//$type:h  $unit:steps $constraints:l,0,32768
 const static uint16_t ACCEL_EXTRUDER_DEPRIME_A	= 0x0185;
 //$BEGIN_ENTRY
 //$type:B $constraints:l,0,1
@@ -319,7 +319,7 @@ const static uint16_t ACCEL_MAX_SPEED_CHANGE_B= 0x01A2;
 //$type:I $unit:mm/s/s
 const static uint16_t ACCEL_MAX_ACCELERATION_B= 0x01A6;
 //$BEGIN_ENTRY
-//$type:h  $unit:steps
+//$type:h  $unit:steps $constraints:l,0,32768
 const static uint16_t ACCEL_EXTRUDER_DEPRIME_B= 0x01AA;
 // Tool count : 1 bytes
 //$BEGIN_ENTRY
@@ -332,7 +332,7 @@ const static uint16_t TOOL_COUNT	      = 0x01AE;
 const static uint16_t TOOLHEAD_OFFSET_SETTINGS = 0x01B0;
 // axis lengths XYZAB 5*uint32_t = 20 bytes
 //$BEGIN_ENTRY
-//$type:IIIII $unit:steps
+//$type:IIIII $unit:steps $constraints:l,0,2147483647
 const static uint16_t AXIS_LENGTHS	       = 0x01BC;
 
 #ifdef STORE_RAM_USAGE_TO_EEPROM
@@ -368,12 +368,12 @@ const static uint16_t EXTRUDER_HOLD		 = 0x1E9;
 
 //Toolhead offset system (1 byte)
 //$BEGIN_ENTRY
-//$type:B
+//$type:B $constraints:l,0,1 $tooltip:checked indicates new system
 const static uint16_t TOOLHEAD_OFFSET_SYSTEM     = 0x1EA;
 
 //Use SD card CRC checks (1 byte)
 //$BEGIN_ENTRY
-//$type:B $constraints:l,0,1
+//$type:B  $tooltip:1=enabled all other values=disabled
 const static uint16_t SD_USE_CRC             = 0x1EB;
 
 /// Reset Jetty Firmware defaults only
