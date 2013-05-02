@@ -368,22 +368,22 @@ const static uint16_t EXTRUDER_HOLD		 = 0x1E9;
 
 //Toolhead offset system (1 byte)
 //$BEGIN_ENTRY
-//$type:B $constraints,l,0,1  $tooltip:checked indicates new system
+//$type:B $constraints:l,0,1  $tooltip:checked indicates new system
 const static uint16_t TOOLHEAD_OFFSET_SYSTEM     = 0x1EA;
 
 //Use SD card CRC checks (1 byte)
 //$BEGIN_ENTRY
-//$type:B $tooltip:1=enabled all other values=disabled
+//$type:B $tooltip:1 = enabled, all other values = disabled
 const static uint16_t SD_USE_CRC             = 0x1EB;
 
 //P-Stop support (1 byte)
 //$BEGIN_ENTRY
-//$type:B $constraints:l,0,1
+//$type:B $tooltip:1 = pause stop enabled, all other values = disabled
 const static uint16_t PSTOP_ENABLE           = 0x1EC;
 
 //ENDSTOP_Z_MIN (1 byte)
 //$BEGIN_ENTRY
-//$type:B $constraints:l,0,1
+//$type:B $tooltip:1 = Z endsdtop is at min, all other values = z enstop at max
 const static uint16_t ENDSTOP_Z_MIN              = 0x1ED;
 
 /// Reset Jetty Firmware defaults only
