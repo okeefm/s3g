@@ -282,7 +282,7 @@ const static uint16_t HOMING_FEED_RATE_Z	= 0x017D;
 //$type:I $ignore:True
 const static uint16_t UNUSED8			= 0x0181;
 //$BEGIN_ENTRY
-//$type:h  $unit:steps $constraints:m,0,32768
+//$type:i  $unit:steps $constraints:m,-32767,32767
 const static uint16_t ACCEL_EXTRUDER_DEPRIME_A	= 0x0185;
 //$BEGIN_ENTRY
 //$type:B $constraints:l,0,1
@@ -319,7 +319,7 @@ const static uint16_t ACCEL_MAX_SPEED_CHANGE_B= 0x01A2;
 //$type:I $unit:mm/s/s
 const static uint16_t ACCEL_MAX_ACCELERATION_B= 0x01A6;
 //$BEGIN_ENTRY
-//$type:h  $unit:steps $constraints:m,0,32768
+//$type:i  $unit:steps $constraints:m,-32767,32767
 const static uint16_t ACCEL_EXTRUDER_DEPRIME_B= 0x01AA;
 // Tool count : 1 bytes
 //$BEGIN_ENTRY
@@ -332,7 +332,7 @@ const static uint16_t TOOL_COUNT	      = 0x01AE;
 const static uint16_t TOOLHEAD_OFFSET_SETTINGS = 0x01B0;
 // axis lengths XYZAB 5*uint32_t = 20 bytes
 //$BEGIN_ENTRY
-//$type:IIIII $unit:steps $constraints:m,0,2147483647
+//$type:iiiii $unit:steps $constraints:m,0,2147483647
 const static uint16_t AXIS_LENGTHS	       = 0x01BC;
 
 #ifdef STORE_RAM_USAGE_TO_EEPROM

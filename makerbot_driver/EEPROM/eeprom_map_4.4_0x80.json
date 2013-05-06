@@ -22,15 +22,15 @@
       "unit": "factor * 100000"
     }, 
     "ACCEL_EXTRUDER_DEPRIME_A": {
-      "constraints": "l,0,32768", 
+      "constraints": "m,-32767,32767", 
       "offset": "0x0185", 
-      "type": "h", 
+      "type": "i", 
       "unit": "steps"
     }, 
     "ACCEL_EXTRUDER_DEPRIME_B": {
-      "constraints": "l,0,32768", 
+      "constraints": "m,-32767,32767", 
       "offset": "0x01AA", 
-      "type": "h", 
+      "type": "i", 
       "unit": "steps"
     }, 
     "ACCEL_MAX_ACCELERATION_A": {
@@ -131,9 +131,9 @@
       "type": "B"
     }, 
     "AXIS_LENGTHS": {
-      "constraints": "l,0,2147483647", 
+      "constraints": "m,0,2147483647", 
       "offset": "0x01BC", 
-      "type": "IIIII", 
+      "type": "iiiii", 
       "unit": "steps"
     }, 
     "BUZZER_REPEATS": {
