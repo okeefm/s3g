@@ -3,12 +3,12 @@
   "machinenames" : ["TheReplicator"],
   "axes"  : {
     "X" : {
-      "platform_length"        : 227,
+      "platform_length"        : 225,
       "max_feedrate"  : 12450,
       "steps_per_mm"  : 94.139704
     },
     "Y" : {
-      "platform_length"        : 148,
+      "platform_length"        : 145,
       "max_feedrate"  : 12450,
       "steps_per_mm"  : 94.139704
     },
@@ -53,7 +53,7 @@
           "M136 (enable build progress)",
           "M73 P0"
           ]
-      }, 
+      },
     "homing" : {
       "replicator_homing" : [
         "G162 X Y F2000(home XY axes maximum)",

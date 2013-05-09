@@ -3,17 +3,17 @@
   "machinenames" : ["TheReplicator2X"],
   "axes"  : {
     "X" : {
-      "platform_length" : 250,
+      "platform_length" : 246,
       "max_feedrate"  : 18000,
       "steps_per_mm"  : 88.573186
     },
     "Y" : {
-      "platform_length":  150,
+      "platform_length":  152,
       "max_feedrate"  : 18000,
       "steps_per_mm"  : 88.573186
     },
     "Z" : {
-      "platform_length": 160,
+      "platform_length": 155,
       "max_feedrate"  : 1170,
       "steps_per_mm"  : 400
     },
@@ -47,14 +47,14 @@
   },
   "baudrate"  : 115200,
   "VID"       : 9153,
-  "PID"       : [45077,45078], 
+  "PID"       : [45077,45078],
   "print_start_sequence" : {
     "begin_print" : {
       "replicator_begin" : [
         "M136 (enable build)",
         "M73 P0"
         ]
-      }, 
+      },
     "homing" : {
       "replicator_homing" : [
         "G162 X Y F2000(home XY axes maximum)",
@@ -80,7 +80,7 @@
       "heat_platform" : [
         "M109 S#PLATFORM_TEMP T0",
         "M134 T0"
-        ]    
+        ]
       },
     "heat_tools" : {
       "heat_0" : [
