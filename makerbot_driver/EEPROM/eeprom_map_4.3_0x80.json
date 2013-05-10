@@ -22,13 +22,15 @@
       "unit": "factor * 100000"
     }, 
     "ACCEL_EXTRUDER_DEPRIME_A": {
+      "constraints": "m,-32767,32767", 
       "offset": "0x0185", 
-      "type": "h", 
+      "type": "i", 
       "unit": "steps"
     }, 
     "ACCEL_EXTRUDER_DEPRIME_B": {
+      "constraints": "m,-32767,32767", 
       "offset": "0x01AA", 
-      "type": "h", 
+      "type": "i", 
       "unit": "steps"
     }, 
     "ACCEL_MAX_ACCELERATION_A": {
@@ -121,7 +123,7 @@
     }, 
     "AXIS_HOME_POSITIONS": {
       "offset": "0x0060", 
-      "type": "iiiii"
+      "type": "IIIII"
     }, 
     "AXIS_INVERSION": {
       "axis_expand": "True", 
@@ -129,8 +131,9 @@
       "type": "B"
     }, 
     "AXIS_LENGTHS": {
+      "constraints": "m,0,2147483647", 
       "offset": "0x01BC", 
-      "type": "IIIII", 
+      "type": "iiiii", 
       "unit": "steps"
     }, 
     "BUZZER_REPEATS": {
@@ -160,10 +163,6 @@
     "EXTRUDER_HOLD": {
       "constraints": "l,0,1", 
       "offset": "0x1E9", 
-      "type": "B"
-    }, 
-    "EXTRUDE_DURATION": {
-      "offset": "0x0083", 
       "type": "B"
     }, 
     "FILAMENT_LIFETIME_A": {
@@ -219,10 +218,6 @@
       "offset": "0x0086", 
       "type": "B"
     }, 
-    "MOOD_LIGHT_SCRIPT": {
-      "offset": "0x0085", 
-      "type": "B"
-    }, 
     "OVERRIDE_GCODE_TEMP": {
       "constraints": "l,0,1", 
       "offset": "0x00C5", 
@@ -233,8 +228,8 @@
       "type": "B"
     }, 
     "SD_USE_CRC": {
-      "constraints": "l,0,1", 
       "offset": "0x1EB", 
+      "tooltip": "1=enabled, all other values=disabled", 
       "type": "B"
     }, 
     "STEPS_PER_MM_A": {
@@ -276,7 +271,9 @@
       "unit": "steps"
     }, 
     "TOOLHEAD_OFFSET_SYSTEM": {
+      "constraints": "l,0,1", 
       "offset": "0x1EA", 
+      "tooltip": "checked indicates new system", 
       "type": "B"
     }, 
     "TOOL_COUNT": {

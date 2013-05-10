@@ -22,13 +22,15 @@
       "unit": "factor * 100000"
     }, 
     "ACCEL_EXTRUDER_DEPRIME_A": {
+      "constraints": "m,-32767,32767", 
       "offset": "0x0185", 
-      "type": "h", 
+      "type": "i", 
       "unit": "steps"
     }, 
     "ACCEL_EXTRUDER_DEPRIME_B": {
+      "constraints": "m,-32767,32767", 
       "offset": "0x01AA", 
-      "type": "h", 
+      "type": "i", 
       "unit": "steps"
     }, 
     "ACCEL_MAX_ACCELERATION_A": {
@@ -121,7 +123,7 @@
     }, 
     "AXIS_HOME_POSITIONS": {
       "offset": "0x0060", 
-      "type": "iiiii"
+      "type": "IIIII"
     }, 
     "AXIS_INVERSION": {
       "axis_expand": "True", 
@@ -129,8 +131,9 @@
       "type": "B"
     }, 
     "AXIS_LENGTHS": {
+      "constraints": "m,0,2147483647", 
       "offset": "0x01BC", 
-      "type": "IIIII", 
+      "type": "iiiii", 
       "unit": "steps"
     }, 
     "BUZZER_REPEATS": {
@@ -160,10 +163,6 @@
     "EXTRUDER_HOLD": {
       "constraints": "l,0,1", 
       "offset": "0x1E9", 
-      "type": "B"
-    }, 
-    "EXTRUDE_DURATION": {
-      "offset": "0x0083", 
       "type": "B"
     }, 
     "FILAMENT_LIFETIME_A": {
@@ -217,10 +216,6 @@
     }, 
     "MOOD_LIGHT_CUSTOM_RED": {
       "offset": "0x0086", 
-      "type": "B"
-    }, 
-    "MOOD_LIGHT_SCRIPT": {
-      "offset": "0x0085", 
       "type": "B"
     }, 
     "OVERRIDE_GCODE_TEMP": {
