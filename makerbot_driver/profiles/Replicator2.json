@@ -57,8 +57,8 @@
         "G1 X#START_X Y#START_Y Z#START_Z F3300.0 (move to waiting position)",
         "G130 X20 Y20 A20 B20 (Lower stepper Vrefs while heating)"
         ],
-      "start_x" : -112,
-      "start_y" : -73,
+      "start_x" : -141,
+      "start_y" : -74,
       "start_z" : 150
       },
     "heat_platform" : {
