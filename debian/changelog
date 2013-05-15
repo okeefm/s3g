@@ -1,3 +1,9 @@
+makerbot-driver (2.1.0) precise; urgency=low
+  * Changed over all GcodeProcessors to use iterators rather than lists
+  * Added support for ToMs
+
+ -- MakerBot Industries dev team <dev@makerbot.com>  Mon, 15 Apr 2013 18:49:00  -0500
+
 makerbot-driver (2.0.3) precise; urgency=low
   * Added G92 after toolchange.
 
