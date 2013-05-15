@@ -11,7 +11,7 @@ class DualRetractProcessor(Processor):
         super(DualRetractProcessor, self).__init__()
         self.layer_start = re.compile("^(;\s?Slice|\(<layer>) [0-9.]+.*", re.I)
         self.snort = re.compile(
-            "^G1.*[AB]([0-9.-]+).*;? (Retract|End of print)|^G1 F[0-9.-]+\nG1 E([0-9.-]+)", re.I)
+            "^G1.*[AB]([0-9.-]+).*;? (?:Retract|End of print)|^G1 F[0-9.-]+\nG1 E([0-9.-]+)", re.I)
         self.squirt = re.compile(
             "^G1.*[AB]([0-9.-]+).*;? Restart|^G1 F[0-9.-]+\nG1 E([0-9.-]+)", re.I)
         self.toolchange = re.compile("^M135 T([0-9])")
@@ -98,6 +98,7 @@ class DualRetractProcessor(Processor):
                     self.squirt_replace()
                     continue
             elif(self.seeking_first_layer):
+                self.check_for_significant_toolchange(current_code)
                 if(self.check_for_layer(current_code)):
                     self.seeking_first_layer = False
             else:

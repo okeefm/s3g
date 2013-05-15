@@ -121,12 +121,12 @@ class DualRetractProcessorTests(unittest.TestCase):
         cases = [  
             #Format: (input, expected_return_value, extruder_position)
             ("G90\n",False, None),
-            ("G1 F20 A12 (squirt)\n",True, float('12')),
+            ("G1 F20 A12; Restart\n",True, float('12')),
             ("M101\n",False, None),
             ("G21\n",False, None),
             ("G1 F1200\nG1 E120\n",True, float('120')),
             ("M108\n",False, None),
-            ("G1 F6255757 A12000000 (squirt)\n",True, float('12000000')),
+            ("G1 F6255757 A12000000; Restart\n",True, float('12000000')),
         ]
 
         for case in cases:
@@ -163,8 +163,8 @@ class DualRetractProcessorTests(unittest.TestCase):
 
         cases = [
             #Format: (input, last_snort_index, last_extruder_position, return_value, SF?)
-            ("G1 F625 A1200 (snort)\n", 0, float('1200'), True, False),
-            ("G1 F625 B-12 (snort)\n", 0, float('-12'), True, False),
+            ("G1 F625 A1200; Retract\n", 0, float('1200'), True, False),
+            ("G1 F625 B-12; End of print\n", 0, float('-12'), True, False),
             ("G90\n", None, None, False, False),
             ("M135 T1\n", None, None, False, False),
             ("G1 F1200\nG1 E120\n", 0, float('120'), True, True),
@@ -184,7 +184,7 @@ class DualRetractProcessorTests(unittest.TestCase):
         cases = [
             ("G1 F625 A1200 (snort)\n",False),
             ("(<layer> 0.135 )\n",True),
-            ("(Slice 1, 1 Extruder)\n",True),
+            ("; Slice 1\n",True),
             ("M135 T0\n",False)
         ]
 
