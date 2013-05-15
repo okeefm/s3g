@@ -9,11 +9,11 @@ import makerbot_driver
 class DualRetractProcessor(Processor):
     def __init__(self):
         super(DualRetractProcessor, self).__init__()
-        self.layer_start = re.compile("^\((Slice|<layer>) [0-9.]+.*\)")
+        self.layer_start = re.compile("^(;\s?Slice|\(<layer>) [0-9.]+.*", re.I)
         self.snort = re.compile(
-            "^G1 F[0-9.-]+ [AB]([0-9.-]+) \(snort\)|^G1 F[0-9.-]+\nG1 E([0-9.-]+)")
+            "^G1.*[AB]([0-9.-]+).*;? (Retract|End of print)|^G1 F[0-9.-]+\nG1 E([0-9.-]+)", re.I)
         self.squirt = re.compile(
-            "^G1 F[0-9.-]+ [AB]([0-9.-]+) \(squirt\)|^G1 F[0-9.-]+\nG1 E([0-9.-]+)")
+            "^G1.*[AB]([0-9.-]+).*;? Restart|^G1 F[0-9.-]+\nG1 E([0-9.-]+)", re.I)
         self.toolchange = re.compile("^M135 T([0-9])")
         self.SF_feedrate = re.compile("^G1 F[0-9.-]+\n")
         self.prime = re.compile(".*prime.*|.*Prime.*")
@@ -60,7 +60,6 @@ class DualRetractProcessor(Processor):
 
         @param gcode_in: iterable object containing gcode
         """
-
         self.retract_distance_mm = self.profile.values["dualstrusion"][
             "retract_distance_mm"]
         self.squirt_reduction_mm = self.profile.values["dualstrusion"][
@@ -93,7 +92,7 @@ class DualRetractProcessor(Processor):
                 continue
 
             if(self.seeking_squirt):
-                #Check for more toolchange whilst seeking the next squirt
+                #Check for more toolchanges whilst seeking the next squirt
                 self.check_for_significant_toolchange(current_code)
                 if(self.check_for_squirt(current_code+next_code)):
                     self.squirt_replace()
