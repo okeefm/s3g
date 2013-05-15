@@ -1,3 +1,9 @@
+makerbot-driver (2.2.0) precise; urgency=low
+  * Updated Rep2 profile start position
+  * Updated GcodeProcessors to comply with the new Miracle Grue gcode standard
+
+ -- MakerBot Industries dev team <dev@makerbot.com>  Wed, 15 May 2013 18:24:00  -0500
+
 makerbot-driver (2.1.0) precise; urgency=low
   * Changed over all GcodeProcessors to use iterators rather than lists
   * Added support for ToMs
