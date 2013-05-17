@@ -314,7 +314,7 @@ const static uint16_t AXIS_HOME_POSITIONS_MM	= 0x0224;
 /// in steps.  3 x 32 bits = 12 bytes
 //$BEGIN_ENTRY
 //$type:iii $constraints:m,-2000,35000 $unit:µm
-const static uint16_t TOOLHEAD_OFFSET_SETTINGS_MM = 0x0238;
+const static uint16_t TOOLHEAD_OFFSET_SETTINGS_UM = 0x0238;
 //$BEGIN_ENTRY
 //$type:B $contraints:m,0,30 $units:min
 const static uint16_t HEATER_TIMEOUT_ON_CANCEL = 0x0244;
