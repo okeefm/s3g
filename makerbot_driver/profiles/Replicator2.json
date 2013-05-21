@@ -62,7 +62,8 @@
       "start_z" : 50
       },
     "heat_platform" : {
-      "no_heat" : []
+      "no_heat" : [],
+      "heat_platform" : []
       },
     "heat_tools" : {
       "heat_0" : [
@@ -87,7 +88,8 @@
         ]
       },
     "cool_platform": {
-      "no_cool" : []
+      "no_cool" : [],
+      "cool_platform" : []
       },
     "cool_tools": {
       "cool_0" : ["M104 S0 T0"]
