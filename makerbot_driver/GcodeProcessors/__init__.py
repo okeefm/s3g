@@ -1,4 +1,4 @@
-all = ['ProcessorFactory', 'Processor', 'ProgressProcessor', 'Skeinforge50Processor', 'SkeinforgeVersionChecker', 'ToolchangeProcessor', 'SingletonTProcessor', 'RpmProcessor', 'SlicerProcessor', 'SlicerVersionChecker', 'CoordinateRemovalProcessor', 'RemoveRepGStartEndGcode', 'LineTransformProcessor', 'GetTemperatureProcessor', 'SetTemperatureProcessor', 'AbpProcessor', 'BundleProcessor', 'RemoveProgressProcessor', 'AnchorProcessor', 'ToolSwapProcessor', 'DualstrusionProgressProcessor', 'FanProcessor', 'errors', 'EmptyLayerProcessor', 'Rep2XDualstrusionPrimeProcessor', 'Rep2XSinglePrimeProcessor', 'DualRetractProcessor']
+all = ['ProcessorFactory', 'Processor', 'ProgressProcessor', 'Skeinforge50Processor', 'SkeinforgeVersionChecker', 'ToolchangeProcessor', 'SingletonTProcessor', 'RpmProcessor', 'SlicerProcessor', 'SlicerVersionChecker', 'CoordinateRemovalProcessor', 'RemoveRepGStartEndGcode', 'LineTransformProcessor', 'GetTemperatureProcessor', 'SetTemperatureProcessor', 'AbpProcessor', 'BundleProcessor', 'RemoveProgressProcessor', 'AnchorProcessor', 'ToolSwapProcessor', 'DualstrusionProgressProcessor', 'FanProcessor', 'errors', 'EmptyLayerProcessor', 'Rep2XDualstrusionPrimeProcessor', 'Rep2XSinglePrimeProcessor', 'DualRetractProcessor', 'RemoveMGStartPositionProcessor']
 
 from ProcessorFactory import *
 from Processor import *
@@ -23,4 +23,5 @@ from EmptyLayerProcessor import *
 from Rep2XDualstrusionPrimeProcessor import *
 from Rep2XSinglePrimeProcessor import *
 from DualRetractProcessor import *
+from RemoveMGStartPositionProcessor import *
 from errors import *
