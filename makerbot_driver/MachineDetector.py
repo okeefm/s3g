@@ -40,7 +40,7 @@ def get_gMachineDetector():
 # machine USB classes IE what VID/PID can map to what machine profiles
 gMachineClasses = {
     'The Replicator 2':
-    {'vid': 0x23C1, 'pid': [0xB015, 0xB016], 'machineProfiles': '.*Replicator2'},
+    {'vid': 0x23C1, 'pid': [0xB015, 0xB016, 0xB017], 'machineProfiles': '.*Replicator2'},
     'The Replicator':
     {'vid': 0x23C1, 'pid': [0xD314], 'machineProfiles': '.*Replicator'},
     'MightyBoard':
