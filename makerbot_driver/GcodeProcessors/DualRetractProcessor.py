@@ -70,8 +70,12 @@ class DualRetractProcessor(Processor):
             "snort_feedrate"]
 
 
-        if(not self.profile_supports_processor()):
-            return
+        if(self.retract_distance_mm == 0 or (not self.profile_supports_processor())):
+            #If self.retract_distance_mm is NULL or 0 then don't run the processor on
+            #the gcode
+            for code in gcode_in:
+                yield code
+            raise StopIteration
 
         self.current_tool = -1
         self.last_tool = -1
