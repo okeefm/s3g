@@ -85,10 +85,17 @@ class MachineFactory(object):
         if 'vid' in machine_setup_dict and 'pid' in machine_setup_dict:
             regex = self.get_profile_regex_has_vid_pid(machine_setup_dict)
         if '.*Replicator2' == regex:
-            if regex and machine_setup_dict.get('tool_count', 0) == 2:
+            #if the pid does not belong to the legacy Rep2's then no toolcount
+            #inquiry is necessary, return the Rep2 regex
+            if(makerbot_driver.get_vid_pid_by_name('The Replicator 2')[1] ==
+              machine_setup_dict['pid']):
+                pass
+            elif regex and machine_setup_dict.get('tool_count', 0) == 2:
                 regex = regex + 'X'
             elif machine_setup_dict.get('tool_count', 0) != 1:
                 regex = None
+        elif '.*Replicator2X' == regex:
+            pass
         else:
             if regex and machine_setup_dict.get('tool_count', 0) == 1:
                 regex = regex + 'Single'
