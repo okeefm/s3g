@@ -39,6 +39,7 @@ def get_gMachineDetector():
 
 # machine USB classes IE what VID/PID can map to what machine profiles
 gMachineClasses = {
+    #Replicator 2(legacy) is for the Rep2 and 2X bots that share a PID
     'The Replicator 2(legacy)':
     {'vid': 0x23C1, 'pid': [0xB015], 'machineProfiles': '.*Replicator2'},
     'The Replicator 2':
