@@ -1,3 +1,8 @@
+makerbot-driver (2.2.1) precise; urgency=low
+  * Support for RevH MightyBoard PIDs
+
+ -- MakerBot Industries dev team <dev@makerbot.com>  Tue, 18 Jun 2013 16:06:00  -0500
+
 makerbot-driver (2.2.0) precise; urgency=low
   * Updated Rep2 profile start position
   * Updated GcodeProcessors to comply with the new Miracle Grue gcode standard
