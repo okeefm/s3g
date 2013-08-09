@@ -4,6 +4,10 @@ import shutil
 import optparse
 import sys
 
+avrdude_name = ""
+platform_folder = ""
+files = []
+
 parser = optparse.OptionParser()
 parser.add_option('-p', '--platform', dest='platform',
                   help='The platform you are you', default=None)
